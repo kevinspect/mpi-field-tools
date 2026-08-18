@@ -3,9 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#11186A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
+  <link rel="manifest" href="./site.webmanifest">
   <meta name="theme-color" content="#000000">
   <meta name="description" content="Michigan Property Inspections' standalone field tool for equipment ages, MPI report comments, and searchable inspector SOP procedures.">
-  <meta name="mpi-photo-review-endpoint" content="">
   <title>MPI Field Tools — Equipment Age, Comments & SOP</title>
   <style>
     :root {
@@ -264,6 +267,19 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
+
+    .offline-setup-note {
+      margin: 14px 0 0;
+      padding: 12px 15px;
+      color: var(--ink-2);
+      background: #eef6fb;
+      border: 1px solid #cddfeb;
+      border-radius: 11px;
+      font-size: 11.5px;
+      line-height: 1.55;
+    }
+
+    .offline-setup-note strong { color: var(--forest-2); }
 
     .form-panel { padding: clamp(24px, 4vw, 38px); }
 
@@ -784,7 +800,7 @@
 
     .comment-type-switch {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 5px;
       margin: 2px 0 24px;
       padding: 5px;
@@ -810,105 +826,6 @@
       box-shadow: 0 5px 14px rgba(17, 24, 106, .18);
     }
 
-    .mode-online-dot {
-      display: inline-block;
-      width: 6px;
-      height: 6px;
-      margin-left: 5px;
-      background: var(--bright-blue);
-      border-radius: 50%;
-      vertical-align: 1px;
-    }
-
-    .comment-type-btn[aria-pressed="true"] .mode-online-dot { background: #fff; }
-
-    .photo-upload-field {
-      margin-bottom: 20px;
-      padding: 15px;
-      background: #f7fafc;
-      border: 1px solid #d5e3ed;
-      border-radius: 14px;
-    }
-
-    .photo-upload-label {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 78px;
-      margin-top: 8px;
-      padding: 16px;
-      color: var(--ink);
-      background: #fff;
-      border: 1.5px dashed #91b5d2;
-      border-radius: 11px;
-      font-size: 13px;
-      font-weight: 850;
-      text-align: center;
-      cursor: pointer;
-    }
-
-    .photo-upload-label:hover,
-    .photo-upload-label:focus-within { background: #eef6fb; border-color: var(--bright-blue); }
-
-    .photo-preview-wrap {
-      position: relative;
-      overflow: hidden;
-      margin-top: 10px;
-      background: var(--forest-2);
-      border-radius: 11px;
-    }
-
-    .photo-preview-wrap img {
-      display: block;
-      width: 100%;
-      max-height: 290px;
-      object-fit: contain;
-    }
-
-    .photo-preview-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 9px 11px;
-      color: #fff;
-      background: rgba(11,16,80,.96);
-      font-size: 10px;
-    }
-
-    .photo-remove-btn {
-      padding: 6px 8px;
-      color: #fff;
-      background: transparent;
-      border: 1px solid rgba(255,255,255,.34);
-      border-radius: 7px;
-      font: inherit;
-      font-weight: 800;
-    }
-
-    .photo-service-status {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      margin: 11px 0 0;
-      color: var(--ink-2);
-      font-size: 10.5px;
-      line-height: 1.45;
-    }
-
-    .photo-service-status::before {
-      content: "";
-      flex: none;
-      width: 8px;
-      height: 8px;
-      margin-top: 3px;
-      background: var(--bright-blue);
-      border-radius: 50%;
-    }
-
-    .photo-service-status.offline::before,
-    .photo-service-status.setup::before { background: var(--orange); }
-
     .comment-form textarea,
     .comment-output {
       width: 100%;
@@ -927,6 +844,42 @@
       font: inherit;
       font-size: 15px;
       line-height: 1.55;
+    }
+
+    .comment-context-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .comment-context-grid .field { min-width: 0; margin-top: 0; }
+
+    .comment-detail-input {
+      width: 100%;
+      min-height: 50px;
+      padding: 0 14px;
+      color: var(--ink);
+      background: #fff;
+      border: 1.5px solid #bfb8a9;
+      border-radius: 11px;
+      outline: none;
+      font: inherit;
+      font-size: 13px;
+      transition: border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .comment-detail-input:focus {
+      border-color: var(--bright-blue);
+      box-shadow: 0 0 0 4px rgba(47, 117, 181, .14);
+    }
+
+    .comment-detail-hint {
+      display: block;
+      margin-top: 6px;
+      color: var(--ink-2);
+      font-size: 10.5px;
+      line-height: 1.4;
     }
 
     .comment-form textarea:focus {
@@ -1017,6 +970,8 @@
       line-height: 1.68;
     }
 
+    .comment-output[readonly] { cursor: default; resize: vertical; }
+
     .comment-output::placeholder { color: rgba(255,255,255,.36); }
 
     .comment-output:focus {
@@ -1024,121 +979,7 @@
       box-shadow: 0 0 0 4px rgba(180, 135, 32, .16);
     }
 
-    .photo-review-panel {
-      position: relative;
-      z-index: 1;
-      margin-top: 22px;
-      padding: 18px;
-      background: rgba(255,255,255,.065);
-      border: 1px solid rgba(255,255,255,.13);
-      border-radius: 13px;
-    }
-
-    .photo-review-status {
-      margin: 0;
-      color: rgba(255,255,255,.75);
-      font-size: 12px;
-      line-height: 1.55;
-    }
-
-    .photo-review-status.error { color: #ffd2ca; }
-
-    .photo-review-status.loading::before {
-      content: "";
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      margin-right: 8px;
-      border: 2px solid rgba(255,255,255,.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: photo-spin .8s linear infinite;
-      vertical-align: -1px;
-    }
-
-    @keyframes photo-spin { to { transform: rotate(360deg); } }
-
-    .photo-review-section { margin-top: 16px; }
-
-    .photo-review-section h4,
-    .photo-confirm-label {
-      display: block;
-      margin: 0 0 7px;
-      color: #fff;
-      font-size: 11px;
-      font-weight: 900;
-      letter-spacing: .035em;
-      text-transform: uppercase;
-    }
-
-    .photo-review-list {
-      margin: 0;
-      padding-left: 18px;
-      color: rgba(255,255,255,.78);
-      font-size: 12px;
-      line-height: 1.55;
-    }
-
-    .photo-review-list li + li { margin-top: 5px; }
-
-    .photo-uncertainty {
-      margin: 0;
-      color: rgba(255,255,255,.55);
-      font-size: 11px;
-      line-height: 1.55;
-    }
-
-    .photo-safety-flag {
-      display: inline-block;
-      margin: 14px 0 0;
-      padding: 6px 8px;
-      color: #fff4d2;
-      background: rgba(180,135,32,.24);
-      border: 1px solid rgba(244,201,106,.38);
-      border-radius: 7px;
-      font-size: 10px;
-      font-weight: 850;
-    }
-
-    .photo-confirm-text {
-      width: 100%;
-      min-height: 112px;
-      padding: 13px;
-      color: #fff;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.2);
-      border-radius: 10px;
-      outline: none;
-      resize: vertical;
-      font: inherit;
-      font-size: 12px;
-      line-height: 1.55;
-    }
-
-    .photo-confirm-text:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(180,135,32,.15); }
-
-    .photo-review-actions {
-      display: flex;
-      gap: 9px;
-      margin-top: 12px;
-    }
-
-    .photo-generate-btn {
-      flex: 1;
-      min-height: 44px;
-      padding: 0 13px;
-      color: var(--forest);
-      background: var(--orange);
-      border: 0;
-      border-radius: 9px;
-      font-size: 11px;
-      font-weight: 900;
-    }
-
-    .photo-generate-btn:disabled,
     .decode-btn:disabled { cursor: not-allowed; opacity: .48; transform: none; }
-
-    .photo-final-output { min-height: 290px; }
 
     .comment-result-actions {
       position: relative;
@@ -1669,10 +1510,10 @@
       .comment-builder { padding-top: 54px; }
       .comment-form, .comment-result-panel { padding: 22px 18px 24px; }
       .comment-type-switch { grid-template-columns: 1fr; }
+      .comment-context-grid { grid-template-columns: 1fr; gap: 14px; }
       .comment-actions { align-items: stretch; flex-direction: column; }
       .comment-actions .secondary-btn { width: 100%; }
       .comment-result-actions { align-items: stretch; flex-direction: column; }
-      .photo-review-actions { flex-direction: column; }
       .copy-comment-btn { width: 100%; }
       .sop-guide { padding-top: 54px; }
       .sop-version-bar { align-items: flex-start; flex-direction: column; gap: 7px; }
@@ -1699,7 +1540,7 @@
     </div>
     <div class="topbar-actions">
       <a class="sop-jump" href="#sop-guide">SOP guide</a>
-      <div class="offline-badge">Runs locally · no upload</div>
+      <div class="offline-badge" id="offlineStatus">Works offline after first visit</div>
     </div>
   </header>
 
@@ -1782,6 +1623,8 @@
       </aside>
     </section>
 
+    <p class="offline-setup-note"><strong>Offline setup:</strong> Open this site once while connected and wait for “Offline access is now ready.” For easier field access, use the phone browser’s Add to Home Screen option. After setup, the decoder, comment builder, and SOP guide can reopen without cell service.</p>
+
     <section class="comment-builder" id="comment-builder" aria-labelledby="comment-builder-title">
       <div class="comment-heading">
         <div>
@@ -1804,7 +1647,6 @@
           <div class="comment-type-switch" role="group" aria-label="Comment type">
             <button class="comment-type-btn" id="defectModeBtn" type="button" aria-pressed="true">Defect comment</button>
             <button class="comment-type-btn" id="limitationModeBtn" type="button" aria-pressed="false">Limitation comment</button>
-            <button class="comment-type-btn" id="photoModeBtn" type="button" aria-pressed="false">Photo review<span class="mode-online-dot" aria-hidden="true"></span></button>
           </div>
 
           <div class="field">
@@ -1817,18 +1659,10 @@
             <p class="rule-hint">Choose the matching component category from your MPI report template, or leave Auto-detect selected.</p>
           </div>
 
-          <div class="photo-upload-field" id="photoUploadField" hidden>
-            <label for="photoInput">Defect photo</label>
-            <input id="photoInput" type="file" accept="image/*" capture="environment" hidden>
-            <label class="photo-upload-label" id="photoUploadLabel" for="photoInput" role="button" tabindex="0">Take a photo or choose one from this phone</label>
-            <div class="photo-preview-wrap" id="photoPreviewWrap" hidden>
-              <img id="photoPreview" alt="Selected inspection photo preview">
-              <div class="photo-preview-bar">
-                <span id="photoMeta">Photo ready</span>
-                <button class="photo-remove-btn" id="removePhotoBtn" type="button">Remove</button>
-              </div>
-            </div>
-            <p class="photo-service-status" id="photoServiceStatus" role="status">Checking online photo review…</p>
+          <div class="field">
+            <label for="commentLocation">Location</label>
+            <input class="comment-detail-input" id="commentLocation" type="text" maxlength="180" autocomplete="off" placeholder="Example: Living room, north wall">
+            <span class="comment-detail-hint">Name the room, side, level, or exact component location.</span>
           </div>
 
           <div class="field">
@@ -1840,11 +1674,34 @@
             </div>
           </div>
 
+          <div class="comment-context-grid">
+            <div class="field">
+              <label for="commentExtent" id="comment-extent-label">Extent / quantity</label>
+              <input class="comment-detail-input" id="commentExtent" type="text" maxlength="220" autocomplete="off" placeholder="Example: Two areas approximately 6 inches wide">
+              <span class="comment-detail-hint" id="comment-extent-hint">State how many components or how much area was affected.</span>
+            </div>
+            <div class="field">
+              <label for="commentTestResult" id="comment-test-label">Test or operation result</label>
+              <input class="comment-detail-input" id="commentTestResult" type="text" maxlength="260" autocomplete="off" placeholder="Example: Continued running after the flush cycle">
+              <span class="comment-detail-hint" id="comment-test-hint">Record what happened when operated or tested.</span>
+            </div>
+            <div class="field">
+              <label for="commentRelated" id="comment-related-label">Related visible conditions</label>
+              <input class="comment-detail-input" id="commentRelated" type="text" maxlength="260" autocomplete="off" placeholder="Example: No visible staining or damage nearby">
+              <span class="comment-detail-hint" id="comment-related-hint">Include only conditions actually visible during the inspection.</span>
+            </div>
+            <div class="field">
+              <label for="commentAction" id="comment-action-label">Inspector action / limitation</label>
+              <input class="comment-detail-input" id="commentAction" type="text" maxlength="260" autocomplete="off" placeholder="Example: Testing was stopped to avoid further leakage">
+              <span class="comment-detail-hint" id="comment-action-hint">Note any safe action taken or why testing was stopped.</span>
+            </div>
+          </div>
+
           <div class="comment-actions">
             <button class="decode-btn" id="generateCommentBtn" type="submit">Generate MPI defect</button>
             <button class="secondary-btn" id="clearCommentBtn" type="button">Clear</button>
           </div>
-          <p class="privacy-note" id="commentPrivacyNote">The note stays on this device. Review the generated wording and edit it to match the property before adding it to the report.</p>
+          <p class="privacy-note" id="commentPrivacyNote">The information stays on this device. Review each field before generating the final read-only report comment.</p>
         </form>
 
         <section class="panel comment-result-panel" aria-labelledby="comment-result-title">
@@ -1852,32 +1709,10 @@
             <div>
               <span class="result-status" id="comment-format-label">MPI defect format</span>
               <h3 id="comment-result-title">Generated report comment</h3>
-              <p>You can edit the wording directly before copying it.</p>
+              <p>The generated wording is locked. Correct the field information and generate it again if changes are needed.</p>
             </div>
           </div>
-          <div class="photo-review-panel" id="photoReviewPanel" hidden>
-            <p class="photo-review-status" id="photoReviewStatus" role="status">Add a clear photo and a short description, then select Analyze photo.</p>
-            <div id="photoReviewResults" hidden>
-              <span class="photo-safety-flag" id="photoSafetyFlag" hidden>Possible safety concern — inspector confirmation required</span>
-              <div class="photo-review-section">
-                <h4>Visible findings</h4>
-                <ul class="photo-review-list" id="photoFindingsList"></ul>
-              </div>
-              <div class="photo-review-section" id="photoUncertaintySection" hidden>
-                <h4>Could not be confirmed from the photo</h4>
-                <p class="photo-uncertainty" id="photoUncertainties"></p>
-              </div>
-              <div class="photo-review-section">
-                <label class="photo-confirm-label" for="confirmedPhotoFinding">Inspector-confirmed condition</label>
-                <textarea class="photo-confirm-text" id="confirmedPhotoFinding" maxlength="1200" placeholder="Review and edit the visible condition before generating the report comment."></textarea>
-                <div class="photo-review-actions">
-                  <button class="photo-generate-btn" id="generateFromPhotoBtn" type="button">Generate MPI defect</button>
-                  <button class="photo-remove-btn" id="analyzeAgainBtn" type="button">Analyze again</button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <textarea class="comment-output" id="commentOutput" aria-label="Generated editable inspection comment" placeholder="Your formatted comment will appear here after you enter an inspection note."></textarea>
+          <textarea class="comment-output" id="commentOutput" aria-label="Generated read-only inspection comment" placeholder="Your formatted comment will appear here after you enter the inspection details." readonly></textarea>
           <div class="comment-result-actions" id="commentResultActions">
             <small id="comment-result-note">The tool uses the saved defect wording from your MPI report template when it finds a close match. Review it for property-specific accuracy.</small>
             <button class="copy-comment-btn" id="copyCommentBtn" type="button" disabled>Copy full comment</button>
@@ -2429,16 +2264,28 @@
       const clearBtn = document.getElementById("clearBtn");
       const commentForm = document.getElementById("commentForm");
       const commentArea = document.getElementById("commentArea");
+      const commentLocation = document.getElementById("commentLocation");
       const defectInput = document.getElementById("defectInput");
+      const commentExtent = document.getElementById("commentExtent");
+      const commentTestResult = document.getElementById("commentTestResult");
+      const commentRelated = document.getElementById("commentRelated");
+      const commentAction = document.getElementById("commentAction");
       const commentOutput = document.getElementById("commentOutput");
       const defectModeBtn = document.getElementById("defectModeBtn");
       const limitationModeBtn = document.getElementById("limitationModeBtn");
-      const photoModeBtn = document.getElementById("photoModeBtn");
       const commentBuilderTitle = document.getElementById("comment-builder-title");
       const commentBuilderDescription = document.getElementById("comment-builder-description");
       const commentNoteTitle = document.getElementById("comment-note-title");
       const commentNoteHelp = document.getElementById("comment-note-help");
       const commentNoteLabel = document.getElementById("comment-note-label");
+      const commentExtentLabel = document.getElementById("comment-extent-label");
+      const commentExtentHint = document.getElementById("comment-extent-hint");
+      const commentTestLabel = document.getElementById("comment-test-label");
+      const commentTestHint = document.getElementById("comment-test-hint");
+      const commentRelatedLabel = document.getElementById("comment-related-label");
+      const commentRelatedHint = document.getElementById("comment-related-hint");
+      const commentActionLabel = document.getElementById("comment-action-label");
+      const commentActionHint = document.getElementById("comment-action-hint");
       const generateCommentBtn = document.getElementById("generateCommentBtn");
       const commentModeBadge = document.getElementById("commentModeBadge");
       const commentPrivacyNote = document.getElementById("commentPrivacyNote");
@@ -2449,24 +2296,6 @@
       const clearCommentBtn = document.getElementById("clearCommentBtn");
       const copyCommentBtn = document.getElementById("copyCommentBtn");
       const commentResultActions = document.getElementById("commentResultActions");
-      const photoUploadField = document.getElementById("photoUploadField");
-      const photoInput = document.getElementById("photoInput");
-      const photoUploadLabel = document.getElementById("photoUploadLabel");
-      const photoPreviewWrap = document.getElementById("photoPreviewWrap");
-      const photoPreview = document.getElementById("photoPreview");
-      const photoMeta = document.getElementById("photoMeta");
-      const removePhotoBtn = document.getElementById("removePhotoBtn");
-      const photoServiceStatus = document.getElementById("photoServiceStatus");
-      const photoReviewPanel = document.getElementById("photoReviewPanel");
-      const photoReviewStatus = document.getElementById("photoReviewStatus");
-      const photoReviewResults = document.getElementById("photoReviewResults");
-      const photoSafetyFlag = document.getElementById("photoSafetyFlag");
-      const photoFindingsList = document.getElementById("photoFindingsList");
-      const photoUncertaintySection = document.getElementById("photoUncertaintySection");
-      const photoUncertainties = document.getElementById("photoUncertainties");
-      const confirmedPhotoFinding = document.getElementById("confirmedPhotoFinding");
-      const generateFromPhotoBtn = document.getElementById("generateFromPhotoBtn");
-      const analyzeAgainBtn = document.getElementById("analyzeAgainBtn");
       const sopSearch = document.getElementById("sopSearch");
       const sopClearSearch = document.getElementById("sopClearSearch");
       const sopChapter = document.getElementById("sopChapter");
@@ -2475,11 +2304,9 @@
       const sopResultCount = document.getElementById("sopResultCount");
       const sopResults = document.getElementById("sopResults");
       const sopDetail = document.getElementById("sopDetail");
+      const offlineStatus = document.getElementById("offlineStatus");
       const toast = document.getElementById("toast");
-      const PHOTO_REVIEW_ENDPOINT = document.querySelector('meta[name="mpi-photo-review-endpoint"]')?.content.trim() || "";
       let commentType = "defect";
-      let photoDataUrl = "";
-      let photoRequestController = null;
       let copyPayload = "";
       let toastTimer;
       let activeSopId = "";
@@ -2993,6 +2820,10 @@
         const runningToilet = /toilet/.test(lower) && /continuous(?:ly)? running|run(?:s|ning)? continuously|(?:would|will|does) not stop running|keeps? running/.test(lower);
 
         if (runningToilet) return "Bathroom Toilets - Continuous Running";
+        if (/\bpaint(?:ed|ing)?\b|\bcoating\b/.test(lower) && /damag|dmage|peel|chip|flak|blister|wear|scuff|deteriorat/.test(lower)) {
+          const subject = component === "General" ? "Painted Surfaces" : component;
+          return `${subject} - Damaged Paint Finish`;
+        }
 
         if (component === "Heating Equipment / Cooling System" && nonOperating) return "Heating Equipment / Cooling System - Units Did Not Operate";
         if (component === "Heating Equipment" && nonOperating) return "Heating Equipment - Unit Did Not Operate";
@@ -3067,6 +2898,7 @@
         const runningToilet = /toilet/.test(text) && /continuous(?:ly)? running|run(?:s|ning)? continuously|(?:would|will|does) not stop running|keeps? running/.test(text);
         let detail = "";
 
+        if (/^(?:paint\s+(?:damage|dmage)|damaged\s+paint|paint\s+damaged|paint\s+finish\s+damaged)\.?$/i.test(base.trim())) return "Damage to the paint finish was observed.";
         if (runningToilet) detail = "The fixture continued to refill rather than shutting off normally, indicating a defect within the tank or flush-control components.";
         else if (/bathroom exhaust fan/.test(text) && nonOperating) detail = "Because the fan did not operate, its airflow, duct condition, and exterior termination could not be fully evaluated.";
         else if (nonOperating) detail = "Because the component did not respond to normal operating controls, its full operation, performance, and serviceability could not be evaluated during the inspection.";
@@ -3087,6 +2919,7 @@
         const text = `${component} ${note}`.toLowerCase();
         const nonOperating = /did not operate|does not operate|would not operate|inoperable|failed to operate|no response|no power/.test(text);
         if (/toilet/.test(text) && /continuous(?:ly)? running|run(?:s|ning)? continuously|(?:would|will|does) not stop running|keeps? running/.test(text)) return "A continuously running toilet can waste a substantial amount of water and increase utility costs. The condition commonly indicates a defective or improperly adjusted flapper, fill valve, float assembly, or flush mechanism and may cause premature wear if it remains uncorrected.";
+        if (/\bpaint(?:ed|ing)?\b|\bcoating\b/.test(text) && /damag|dmage|peel|chip|flak|blister|wear|scuff|deteriorat/.test(text)) return "The damaged paint affects the finished appearance and can leave the underlying material with reduced protection from normal wear. Loose or deteriorated paint may continue to chip or peel; however, paint damage alone does not establish the cause or condition of the underlying material.";
         if (/toilet/.test(text) && /loose|rock|movement|not secure/.test(text)) return "Movement at the toilet can damage or break the seal at the drain connection. A failed seal can allow wastewater and moisture into the flooring, leading to concealed subfloor deterioration and unsanitary conditions.";
         if (/slow(?:ly)? drain|drain(?:s|ed)? slow|blocked|clogged|obstructed|backed up|non-draining/.test(text)) return "Slow or obstructed drainage indicates a restriction in the fixture trap or branch drain. The restriction can progress to a complete blockage, wastewater backup, or overflow that leaves the fixture unusable and damages nearby finishes.";
         if (/plumb|sink|toilet|faucet|fixture|drain|water supply|distribution/.test(text) && /active leak|leaking|\bleak\b|dripping/.test(text)) return "Ongoing leakage wastes water and can damage cabinets, flooring, subflooring, framing, and finishes. Moisture that remains concealed can support fungal or microbial growth and may increase the scope and cost of repairs.";
@@ -3147,6 +2980,7 @@
         const text = `${component} ${note}`.toLowerCase();
         const nonOperating = /did not operate|does not operate|would not operate|inoperable|failed to operate|no response|no power/.test(text);
         if (/toilet/.test(text) && /continuous(?:ly)? running|run(?:s|ning)? continuously|(?:would|will|does) not stop running|keeps? running/.test(text)) return "Have a qualified plumbing contractor evaluate the toilet and repair or replace the defective tank or flush-control components as needed. After repair, confirm that the toilet flushes, refills, shuts off normally, and remains free of leakage.";
+        if (/\bpaint(?:ed|ing)?\b|\bcoating\b/.test(text) && /damag|dmage|peel|chip|flak|blister|wear|scuff|deteriorat/.test(text)) return "Have the affected surface properly prepared and refinished with compatible materials. Repair any loose or damaged substrate found during preparation, and correct a moisture source only if staining, dampness, or active leakage is separately confirmed.";
         if (/missing screens?/.test(text)) return "Install properly fitted screens where missing and check the remaining accessible screens for damage or poor fit. Confirm that each affected window can be opened, closed, and secured normally after the work is complete.";
         if (/storm door/.test(text) && /misalign|rub|bind|contact/.test(text)) return "Have a qualified contractor adjust or repair the storm door, hinges, closer, and frame as needed so the door operates smoothly without contact. Replace damaged hardware or materials and verify proper latching after repair.";
         if (/floor covering|flooring|carpet/.test(text)) return "Repair or replace the damaged floor covering to provide a secure, even walking surface. The underlying floor should be examined during repairs and any concealed moisture or subfloor damage should also be corrected.";
@@ -3230,10 +3064,21 @@
         return selectedArea?.startsWith("item:") ? decodeURIComponent(selectedArea.slice(5)) : "";
       }
 
+      function shouldUseConservativeFallback(note, component, type) {
+        if (component === "General") return true;
+        if (type !== "defect") return false;
+        const normalized = normalizeTemplateText(note);
+        const mentionsPaint = /\bpaint(?:ed|ing)?\b|\bcoating\b/.test(normalized);
+        if (!mentionsPaint) return false;
+        const supportsSpecificPaintComment = /\bmoisture\b|\bwater\b|\bleak\b|\bstain\b|\bbump out\b|\bsoffit\b|\btrim\b|\bexposed wood\b|\brot\b|\bpainted shut\b/.test(normalized);
+        return !supportsSpecificPaintComment;
+      }
+
       function matchTemplateComment(note, selectedArea, type) {
         const selectedItem = selectedReportItem(selectedArea);
         const noteTokens = templateTokens(note);
         const component = inferComponent(note, selectedArea);
+        if (shouldUseConservativeFallback(note, component, type)) return null;
         const contextTokens = templateTokens(`${note} ${component}`);
         const componentTokens = templateTokens(`${component} ${selectedItem}`);
         const issueTokens = new Set([...noteTokens].filter(token => !componentTokens.has(token)));
@@ -3258,13 +3103,54 @@
         return best.titleHits >= minimumTitleHits && best.score >= minimumScore ? best.indexed.comment : null;
       }
 
-      function formatTemplateComment(comment) {
+      function normalizeCommentDetails(details = {}) {
+        const clean = value => String(value || "").trim().replace(/\s+/g, " ");
+        return {
+          location: clean(details.location),
+          extent: clean(details.extent),
+          testResult: clean(details.testResult),
+          related: clean(details.related),
+          action: clean(details.action)
+        };
+      }
+
+      function hasCommentDetails(details) {
+        return Object.values(details).some(Boolean);
+      }
+
+      function commentMatchingText(note, details) {
+        return [note, details.extent, details.testResult, details.related].filter(Boolean).join(" ");
+      }
+
+      function labeledFact(label, value) {
+        return value ? `${label}: ${ensureSentence(value)}` : "";
+      }
+
+      function buildFactNarrative(note, details, type, component) {
+        const base = type === "defect" ? observationFor(ensureSentence(note), component) : ensureSentence(note);
+        const facts = [
+          base,
+          labeledFact("Location", details.location),
+          labeledFact("Extent", details.extent),
+          labeledFact(type === "limit" ? "Effect on inspection" : "Test result", details.testResult),
+          labeledFact("Related visible conditions", details.related),
+          labeledFact(type === "limit" ? "Required for full inspection" : "Inspector action", details.action)
+        ];
+        return facts.filter(Boolean).join(" ");
+      }
+
+      function formatTemplateComment(comment, factNarrative = "") {
         const formattedText = comment.text
           .replace(/\s+(Implication:)/g, "\n\n$1")
           .replace(/\s+(Effect on Inspection:)/g, "\n\n$1")
           .replace(/\s+(Recommendation:)/g, "\n\n$1")
           .replace(/\s+(Recommended Follow-Up:)/g, "\n\n$1");
-        return `${comment.title}\n\n${formattedText}`;
+        let result = `${comment.title}\n\n${formattedText}`;
+        if (!factNarrative) return result;
+        if (comment.type === "limit") {
+          return result.replace(/Limitation:[\s\S]*?(?=\n\n(?:Effect on Inspection|Recommendation|Recommended Follow-Up):)/, `Limitation: ${factNarrative}`);
+        }
+        return result.replace(/Observation:[\s\S]*?(?=\n\nImplication:)/, `Observation: ${factNarrative}`);
       }
 
       function limitationReason(note) {
@@ -3294,11 +3180,16 @@
         return subjects[component] || component.toLowerCase();
       }
 
-      function buildLimitationComment(note, selectedArea) {
-        const component = inferComponent(note, selectedArea);
-        const reason = limitationReason(note);
+      function buildLimitationComment(note, selectedArea, details = {}) {
+        const matchingText = commentMatchingText(note, details);
+        const componentText = [matchingText, details.location].filter(Boolean).join(" ");
+        const component = inferComponent(componentText, selectedArea);
+        const reason = limitationReason(matchingText);
         const subject = limitationSubject(component);
-        return `${component} - Limited Inspection - ${reason.title}\n\nLimitation: The ${subject} was not fully visible, accessible, or operable because of ${reason.clause}.\n\nEffect on Inspection: The concealed or untested portions could not be evaluated, and defects may be present that were not identified during this inspection.\n\nRecommendation: Correct or remove the limiting condition and have the ${subject} inspected or functionally tested when safe access and normal operating conditions are available.`;
+        const factNarrative = hasCommentDetails(details)
+          ? buildFactNarrative(note, details, "limit", component)
+          : `The ${subject} was not fully visible, accessible, or operable because of ${reason.clause}.`;
+        return `${component} - Limited Inspection - ${reason.title}\n\nLimitation: ${factNarrative}\n\nEffect on Inspection: The concealed or untested portions could not be evaluated, and defects may be present that were not identified during this inspection.\n\nRecommendation: Correct or remove the limiting condition and have the ${subject} inspected or functionally tested when safe access and normal operating conditions are available.`;
       }
 
       function sanitizeCompanyLanguage(value) {
@@ -3310,16 +3201,20 @@
           .trim();
       }
 
-      function buildMpiComment(note, selectedArea, type = "defect") {
-        const templateMatch = matchTemplateComment(note, selectedArea, type);
-        if (templateMatch) return sanitizeCompanyLanguage(formatTemplateComment(templateMatch));
-        if (type === "limit") return sanitizeCompanyLanguage(buildLimitationComment(note, selectedArea));
+      function buildMpiComment(note, selectedArea, type = "defect", suppliedDetails = {}) {
+        const details = normalizeCommentDetails(suppliedDetails);
+        const matchingText = commentMatchingText(note, details);
+        const componentText = [matchingText, details.location].filter(Boolean).join(" ");
+        const component = inferComponent(componentText, selectedArea);
+        const factNarrative = hasCommentDetails(details) ? buildFactNarrative(note, details, type, component) : "";
+        const templateMatch = matchTemplateComment(matchingText, selectedArea, type);
+        if (templateMatch) return sanitizeCompanyLanguage(formatTemplateComment(templateMatch, factNarrative));
+        if (type === "limit") return sanitizeCompanyLanguage(buildLimitationComment(note, selectedArea, details));
         const initialObservation = ensureSentence(note);
-        const component = inferComponent(initialObservation, selectedArea);
-        const observation = observationFor(initialObservation, component);
-        const title = templateTitleFor(initialObservation, component);
-        const implication = implicationFor(observation, component);
-        const recommendation = recommendationFor(observation, component);
+        const observation = factNarrative || observationFor(initialObservation, component);
+        const title = templateTitleFor(matchingText, component);
+        const implication = implicationFor(`${observation} ${matchingText}`, component);
+        const recommendation = recommendationFor(`${observation} ${matchingText}`, component);
         return sanitizeCompanyLanguage(`${title}\n\nObservation: ${observation}\n\nImplication: ${implication}\n\nRecommendation: ${recommendation}`);
       }
 
@@ -3397,6 +3292,26 @@
         toast.textContent = message;
         toast.classList.add("show");
         toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+      }
+
+      async function initializeOfflineAccess() {
+        if (location.protocol === "file:") {
+          offlineStatus.textContent = "Offline saving activates after publish";
+          return;
+        }
+        if (!("serviceWorker" in navigator)) {
+          offlineStatus.textContent = "Offline saving unavailable in this browser";
+          return;
+        }
+        try {
+          const wasAlreadySaved = Boolean(navigator.serviceWorker.controller);
+          await navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" });
+          await navigator.serviceWorker.ready;
+          offlineStatus.textContent = "Saved for offline use";
+          if (!wasAlreadySaved) showToast("Offline access is now ready");
+        } catch (_) {
+          offlineStatus.textContent = "Reconnect once to finish offline setup";
+        }
       }
 
       function normalizeSopText(value) {
@@ -3654,246 +3569,53 @@
         renderSopResults();
       }
 
-      function setPhotoStatus(message, state = "") {
-        photoReviewStatus.textContent = message;
-        photoReviewStatus.className = `photo-review-status${state ? ` ${state}` : ""}`;
-      }
-
-      function updatePhotoAvailability() {
-        photoServiceStatus.classList.remove("offline", "setup");
-        if (!PHOTO_REVIEW_ENDPOINT) {
-          photoServiceStatus.textContent = "Online photo review setup is still required. The offline defect and limitation builders remain available.";
-          photoServiceStatus.classList.add("setup");
-        } else if (!navigator.onLine) {
-          photoServiceStatus.textContent = "No internet connection. Reconnect to analyze this photo; the offline builders still work.";
-          photoServiceStatus.classList.add("offline");
-        } else {
-          photoServiceStatus.textContent = "Online photo review is available. The photo is sent only after you select Analyze photo.";
-        }
-        if (commentType === "photo") generateCommentBtn.disabled = !PHOTO_REVIEW_ENDPOINT || !navigator.onLine;
-      }
-
-      function resetPhotoReview() {
-        if (photoRequestController) photoRequestController.abort();
-        photoRequestController = null;
-        photoReviewResults.hidden = true;
-        photoSafetyFlag.hidden = true;
-        photoFindingsList.replaceChildren();
-        photoUncertaintySection.hidden = true;
-        photoUncertainties.textContent = "";
-        confirmedPhotoFinding.value = "";
-        commentOutput.value = "";
-        copyCommentBtn.disabled = true;
-        if (commentType === "photo") {
-          commentOutput.hidden = true;
-          commentResultActions.hidden = true;
-          setPhotoStatus("Add a clear photo and a short description, then select Analyze photo.");
-        }
-      }
-
-      function clearSelectedPhoto() {
-        photoDataUrl = "";
-        photoInput.value = "";
-        photoPreview.removeAttribute("src");
-        photoPreviewWrap.hidden = true;
-        photoUploadLabel.hidden = false;
-        photoMeta.textContent = "Photo ready";
-        resetPhotoReview();
-      }
-
-      function readFileAsDataUrl(file) {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = () => reject(new Error("The photo could not be read."));
-          reader.readAsDataURL(file);
-        });
-      }
-
-      function loadPhotoImage(src) {
-        return new Promise((resolve, reject) => {
-          const image = new Image();
-          image.onload = () => resolve(image);
-          image.onerror = () => reject(new Error("This photo format could not be opened. Try taking a new photo or choosing a JPEG or PNG image."));
-          image.src = src;
-        });
-      }
-
-      async function preparePhoto(file) {
-        if (!file || !file.type.startsWith("image/")) throw new Error("Choose an image file.");
-        if (file.size > 12 * 1024 * 1024) throw new Error("The selected photo is larger than 12 MB. Choose a smaller image.");
-        const originalUrl = await readFileAsDataUrl(file);
-        const image = await loadPhotoImage(originalUrl);
-        const maximumDimension = 1600;
-        const scale = Math.min(1, maximumDimension / Math.max(image.naturalWidth, image.naturalHeight));
-        const width = Math.max(1, Math.round(image.naturalWidth * scale));
-        const height = Math.max(1, Math.round(image.naturalHeight * scale));
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const context = canvas.getContext("2d", { alpha: false });
-        context.fillStyle = "#fff";
-        context.fillRect(0, 0, width, height);
-        context.drawImage(image, 0, 0, width, height);
-        return { dataUrl: canvas.toDataURL("image/jpeg", .82), width, height };
-      }
-
-      function validPhotoReview(data) {
-        return data && Array.isArray(data.visibleFindings) && typeof data.confirmationSummary === "string";
-      }
-
-      function renderPhotoReview(data) {
-        photoFindingsList.replaceChildren();
-        const findings = data.visibleFindings.filter(item => typeof item === "string" && item.trim()).slice(0, 8);
-        findings.forEach(finding => {
-          const item = document.createElement("li");
-          item.textContent = finding.trim();
-          photoFindingsList.appendChild(item);
-        });
-        if (!findings.length) {
-          const item = document.createElement("li");
-          item.textContent = "No reliable visible finding was identified. Add a clearer photo or more detail.";
-          photoFindingsList.appendChild(item);
-        }
-        const uncertainties = Array.isArray(data.uncertainties)
-          ? data.uncertainties.filter(item => typeof item === "string" && item.trim()).slice(0, 6)
-          : [];
-        photoUncertaintySection.hidden = !uncertainties.length;
-        photoUncertainties.textContent = uncertainties.join(" ");
-        photoSafetyFlag.hidden = !data.safetyFlag;
-        confirmedPhotoFinding.value = sanitizeCompanyLanguage(data.confirmationSummary);
-        photoReviewResults.hidden = false;
-        setPhotoStatus("Review the visible findings below. Edit the confirmed condition so it matches what you observed before generating the MPI comment.");
-      }
-
-      async function analyzePhoto() {
-        const description = defectInput.value.trim();
-        if (!PHOTO_REVIEW_ENDPOINT) {
-          setPhotoStatus("Online photo review is not connected yet. Complete the one-time endpoint setup before using this mode.", "error");
-          return;
-        }
-        if (!navigator.onLine) {
-          setPhotoStatus("An internet connection is required to analyze the photo.", "error");
-          return;
-        }
-        if (!photoDataUrl) {
-          photoUploadLabel.focus();
-          showToast("Add a defect photo first");
-          return;
-        }
-        if (!description) {
-          defectInput.focus();
-          showToast("Add a short description and location");
-          return;
-        }
-
-        photoReviewResults.hidden = true;
-        commentResultTitle.textContent = "Photo findings to confirm";
-        commentOutput.hidden = true;
-        commentResultActions.hidden = true;
-        generateCommentBtn.disabled = true;
-        generateCommentBtn.textContent = "Analyzing photo…";
-        setPhotoStatus("Reviewing the visible condition and your description…", "loading");
-        photoRequestController = new AbortController();
-        const timeout = setTimeout(() => photoRequestController.abort(), 55000);
-
-        try {
-          const response = await fetch(PHOTO_REVIEW_ENDPOINT, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              imageDataUrl: photoDataUrl,
-              description,
-              reportItem: selectedReportItem(commentArea.value) || "Auto-detect from the inspection description"
-            }),
-            signal: photoRequestController.signal
-          });
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok) throw new Error(data.error || "The photo review service could not complete the request.");
-          if (!validPhotoReview(data)) throw new Error("The photo review returned an incomplete result. Please try again.");
-          renderPhotoReview(data);
-        } catch (error) {
-          const message = error.name === "AbortError"
-            ? "The photo review took too long. Check the connection and try again."
-            : error.message;
-          setPhotoStatus(message, "error");
-        } finally {
-          clearTimeout(timeout);
-          photoRequestController = null;
-          generateCommentBtn.textContent = "Analyze photo";
-          updatePhotoAvailability();
-        }
-      }
-
-      function generateCommentFromPhoto() {
-        const confirmed = confirmedPhotoFinding.value.trim();
-        if (!confirmed) {
-          confirmedPhotoFinding.focus();
-          showToast("Confirm the visible condition first");
-          return;
-        }
-        commentOutput.value = buildMpiComment(confirmed, commentArea.value, "defect");
-        commentOutput.hidden = false;
-        commentResultActions.hidden = false;
-        commentOutput.scrollTop = 0;
-        commentOutput.scrollLeft = 0;
-        copyCommentBtn.disabled = false;
-        commentResultTitle.textContent = "Generated defect comment";
-        if (window.innerWidth < 861) commentOutput.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-
       function setCommentType(type) {
         commentType = type;
         const limitation = type === "limit";
-        const photo = type === "photo";
         defectModeBtn.setAttribute("aria-pressed", String(type === "defect"));
         limitationModeBtn.setAttribute("aria-pressed", String(limitation));
-        photoModeBtn.setAttribute("aria-pressed", String(photo));
-        photoUploadField.hidden = !photo;
-        photoReviewPanel.hidden = !photo;
-        commentModeBadge.textContent = photo ? "Online" : "Offline";
-        commentBuilderTitle.textContent = photo ? "Build a defect comment from a photo." : limitation ? "Build a limitation comment." : "Build a defect comment.";
-        commentBuilderDescription.textContent = photo
-          ? "Add a clear photo and a short inspection description. Online photo review identifies visible details for you to confirm, then the saved MPI template wording builds the report comment."
-          : limitation
-            ? "Describe what prevented full visibility, access, or operation. The tool matches your note to the established limitation comments in your MPI report template."
-            : "Describe what you observed in plain language. The tool matches your note to the established defect comments in your MPI report template.";
-        commentNoteTitle.textContent = photo ? "Add a defect photo and description" : limitation ? "Enter the inspection limitation" : "Enter the inspection note";
-        commentNoteHelp.textContent = photo
-          ? "Include the location and what you noticed. The photo review reports only visible evidence and asks you to confirm it."
-          : limitation
-            ? "Include the component, what restricted the inspection, and whether visibility, access, or operation was affected."
-            : "For the best match, include the location, extent of the condition, and what happened when tested.";
-        commentNoteLabel.textContent = photo ? "What did you observe and where?" : limitation ? "What limited the inspection?" : "What did you observe?";
-        defectInput.placeholder = photo
-          ? "Example: Dark discoloration was visible at a breaker connection inside the electrical panel."
-          : limitation
-            ? "Example: Stored items in front of the electrical panel restricted access and prevented a full inspection."
-            : "Example: The heating and cooling systems did not operate when the thermostat controls were activated.";
-        generateCommentBtn.textContent = photo ? "Analyze photo" : limitation ? "Generate MPI limitation" : "Generate MPI defect";
-        commentFormatLabel.textContent = photo ? "Online photo review" : limitation ? "MPI limitation format" : "MPI defect format";
-        commentResultTitle.textContent = photo ? "Photo findings to confirm" : limitation ? "Generated limitation comment" : "Generated defect comment";
+        commentModeBadge.textContent = "Offline";
+        commentBuilderTitle.textContent = limitation ? "Build a limitation comment." : "Build a defect comment.";
+        commentBuilderDescription.textContent = limitation
+          ? "Describe what prevented full visibility, access, or operation. The tool matches your note to the established limitation comments in your MPI report template."
+          : "Describe what you observed in plain language. The tool matches your note to the established defect comments in your MPI report template.";
+        commentNoteTitle.textContent = limitation ? "Enter the inspection limitation" : "Enter the inspection note";
+        commentNoteHelp.textContent = limitation
+          ? "Complete the fields below so the limitation explains what was restricted, where it occurred, and how the inspection was affected."
+          : "Complete the fields below so the comment reflects the actual location, extent, test result, and related visible conditions.";
+        commentNoteLabel.textContent = limitation ? "What limited the inspection?" : "What did you observe?";
+        defectInput.placeholder = limitation
+          ? "Example: Stored items in front of the electrical panel restricted access and prevented a full inspection."
+          : "Example: The heating and cooling systems did not operate when the thermostat controls were activated.";
+        commentExtentLabel.textContent = limitation ? "Restricted area / extent" : "Extent / quantity";
+        commentExtent.placeholder = limitation ? "Example: Panel cover and required working clearance" : "Example: Two areas approximately 6 inches wide";
+        commentExtentHint.textContent = limitation ? "Identify which portions or functions were restricted." : "State how many components or how much area was affected.";
+        commentTestLabel.textContent = limitation ? "Effect on inspection" : "Test or operation result";
+        commentTestResult.placeholder = limitation ? "Example: The panel interior was not inspected" : "Example: Continued running after the flush cycle";
+        commentTestHint.textContent = limitation ? "State exactly what could not be viewed, accessed, or operated." : "Record what happened when operated or tested.";
+        commentRelatedLabel.textContent = limitation ? "Accessible portions inspected" : "Related visible conditions";
+        commentRelated.placeholder = limitation ? "Example: The panel exterior and service conductors were visible" : "Example: No visible staining or damage nearby";
+        commentRelatedHint.textContent = limitation ? "Document what was still inspected without overstating the scope." : "Include only conditions actually visible during the inspection.";
+        commentActionLabel.textContent = limitation ? "Required for full inspection" : "Inspector action / limitation";
+        commentAction.placeholder = limitation ? "Example: Remove stored items and reinspect before closing" : "Example: Testing was stopped to avoid further leakage";
+        commentActionHint.textContent = limitation ? "State what must change before the component can be fully inspected." : "Note any safe action taken or why testing was stopped.";
+        generateCommentBtn.textContent = limitation ? "Generate MPI limitation" : "Generate MPI defect";
+        commentFormatLabel.textContent = limitation ? "MPI limitation format" : "MPI defect format";
+        commentResultTitle.textContent = limitation ? "Generated limitation comment" : "Generated defect comment";
         commentOutput.placeholder = limitation
           ? "Your formatted limitation comment will appear here after you enter the inspection note."
           : "Your formatted defect comment will appear here after you enter the inspection note.";
-        commentResultNote.textContent = photo
-          ? "The AI suggests visible findings only. The final wording still comes from the saved MPI comment library whenever a close match is found."
-          : limitation
-            ? "The tool uses the saved limitation wording from your MPI report template when it finds a close match. Review it for property-specific accuracy."
-            : "The tool uses the saved defect wording from your MPI report template when it finds a close match. Review it for property-specific accuracy.";
-        commentPrivacyNote.textContent = photo
-          ? "Online feature: the selected photo and description are sent securely for analysis only after you select Analyze photo. Confirm the result before using it in a report."
-          : "The note stays on this device. Review the generated wording and edit it to match the property before adding it to the report.";
-        commentOutput.classList.toggle("photo-final-output", photo);
+        commentResultNote.textContent = limitation
+          ? "The tool uses the saved limitation wording from your MPI report template when it finds a close match. Review it for property-specific accuracy."
+          : "The tool uses the saved defect wording from your MPI report template when it finds a close match. Review it for property-specific accuracy.";
+        commentPrivacyNote.textContent = "The information stays on this device. The generated comment is read-only; correct the fields and generate it again if changes are needed.";
         commentOutput.value = "";
         commentOutput.scrollTop = 0;
         commentOutput.scrollLeft = 0;
         copyCommentBtn.disabled = true;
-        commentOutput.hidden = photo;
-        commentResultActions.hidden = photo;
-        resetPhotoReview();
+        commentOutput.hidden = false;
+        commentResultActions.hidden = false;
         generateCommentBtn.disabled = false;
-        if (photo) updatePhotoAvailability();
       }
 
       function updateConfig() {
@@ -3956,78 +3678,40 @@
 
       defectModeBtn.addEventListener("click", () => setCommentType("defect"));
       limitationModeBtn.addEventListener("click", () => setCommentType("limit"));
-      photoModeBtn.addEventListener("click", () => setCommentType("photo"));
-
-      photoInput.addEventListener("change", async () => {
-        const file = photoInput.files?.[0];
-        if (!file) return;
-        photoUploadLabel.textContent = "Preparing photo…";
-        photoUploadLabel.setAttribute("aria-busy", "true");
-        try {
-          const prepared = await preparePhoto(file);
-          photoDataUrl = prepared.dataUrl;
-          photoPreview.src = photoDataUrl;
-          photoPreviewWrap.hidden = false;
-          photoUploadLabel.hidden = true;
-          const compressedBytes = Math.round((photoDataUrl.length - photoDataUrl.indexOf(",") - 1) * .75);
-          photoMeta.textContent = `${prepared.width} × ${prepared.height} · about ${Math.max(1, Math.round(compressedBytes / 1024))} KB`;
-          resetPhotoReview();
-          setPhotoStatus("Photo ready. Add or review the description, then select Analyze photo.");
-        } catch (error) {
-          clearSelectedPhoto();
-          setPhotoStatus(error.message, "error");
-          showToast(error.message);
-        } finally {
-          photoUploadLabel.textContent = "Take a photo or choose one from this phone";
-          photoUploadLabel.removeAttribute("aria-busy");
-        }
-      });
-
-      photoUploadLabel.addEventListener("keydown", event => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          photoInput.click();
-        }
-      });
-
-      removePhotoBtn.addEventListener("click", () => {
-        clearSelectedPhoto();
-        photoUploadLabel.focus();
-      });
-
-      analyzeAgainBtn.addEventListener("click", () => analyzePhoto());
-      generateFromPhotoBtn.addEventListener("click", generateCommentFromPhoto);
-      window.addEventListener("online", updatePhotoAvailability);
-      window.addEventListener("offline", updatePhotoAvailability);
 
       commentExampleBtn.addEventListener("click", () => {
         commentArea.value = "auto";
-        defectInput.value = commentType === "photo"
-          ? "Dark discoloration was visible at a breaker connection inside the electrical panel."
-          : commentType === "limit"
-            ? "Stored items in front of the electrical panel restricted access and prevented a full inspection."
-            : "The heating and cooling systems did not operate when the thermostat controls were activated.";
-        if (commentType === "photo" && !photoDataUrl) {
-          showToast("Example added — now take or choose a photo");
-          photoUploadLabel.focus();
+        if (commentType === "limit") {
+          commentLocation.value = "Basement";
+          defectInput.value = "Stored items obstructed access in front of the electrical panel.";
+          commentExtent.value = "The panel cover and required working clearance were restricted";
+          commentTestResult.value = "The panel interior was not inspected";
+          commentRelated.value = "The accessible panel exterior was viewed";
+          commentAction.value = "Remove the stored items and have the panel inspected before closing";
         } else {
-          commentForm.requestSubmit();
+          commentLocation.value = "Hallway and living room thermostats";
+          defectInput.value = "The heating and cooling systems did not operate when the thermostat controls were activated.";
+          commentExtent.value = "Both installed systems were affected";
+          commentTestResult.value = "Neither system responded at either thermostat";
+          commentRelated.value = "No normal equipment operation was observed";
+          commentAction.value = "Testing was discontinued after the systems did not respond";
         }
+        commentForm.requestSubmit();
       });
 
       clearCommentBtn.addEventListener("click", () => {
         commentArea.value = "auto";
+        commentLocation.value = "";
         defectInput.value = "";
+        commentExtent.value = "";
+        commentTestResult.value = "";
+        commentRelated.value = "";
+        commentAction.value = "";
         commentOutput.value = "";
         commentOutput.scrollTop = 0;
         commentOutput.scrollLeft = 0;
         copyCommentBtn.disabled = true;
-        if (commentType === "photo") clearSelectedPhoto();
         defectInput.focus();
-      });
-
-      commentOutput.addEventListener("input", () => {
-        copyCommentBtn.disabled = !commentOutput.value.trim();
       });
 
       copyCommentBtn.addEventListener("click", () => {
@@ -4037,17 +3721,20 @@
 
       commentForm.addEventListener("submit", event => {
         event.preventDefault();
-        if (commentType === "photo") {
-          analyzePhoto();
-          return;
-        }
         const note = defectInput.value.trim();
         if (!note) {
           defectInput.focus();
           showToast("Enter an inspection note first");
           return;
         }
-        commentOutput.value = buildMpiComment(note, commentArea.value, commentType);
+        const details = {
+          location: commentLocation.value,
+          extent: commentExtent.value,
+          testResult: commentTestResult.value,
+          related: commentRelated.value,
+          action: commentAction.value
+        };
+        commentOutput.value = buildMpiComment(note, commentArea.value, commentType, details);
         commentOutput.scrollTop = 0;
         commentOutput.scrollLeft = 0;
         copyCommentBtn.disabled = false;
@@ -4088,6 +3775,7 @@
       setCommentType("defect");
       populateReportItems();
       initializeSopGuide();
+      initializeOfflineAccess();
       updateConfig();
     })();
   </script>

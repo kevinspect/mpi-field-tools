@@ -1,0 +1,10 @@
+{
+  "name": "Michigan Property Inspections Field Tools",
+  "short_name": "MPI Field Tools",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#11186A",
+  "description": "Offline equipment date decoder, MPI comment builder, and inspector SOP guide."
+}
