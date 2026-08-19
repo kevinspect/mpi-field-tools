@@ -1,5 +1,5 @@
-const CACHE_NAME = "mpi-field-tools-shell-v1";
-const APP_SHELL = ["./", "./index.html", "./site.webmanifest"];
+const CACHE_NAME = "mpi-field-tools-shell-v2";
+const APP_SHELL = ["./", "./index.html", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", event => {
   event.waitUntil(

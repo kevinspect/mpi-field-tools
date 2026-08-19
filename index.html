@@ -6,6 +6,8 @@
   <meta name="theme-color" content="#11186A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
   <link rel="manifest" href="./site.webmanifest">
   <meta name="theme-color" content="#000000">
   <meta name="description" content="Michigan Property Inspections' standalone field tool for equipment ages, MPI report comments, and searchable inspector SOP procedures.">
@@ -846,42 +848,6 @@
       line-height: 1.55;
     }
 
-    .comment-context-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-      margin-top: 20px;
-    }
-
-    .comment-context-grid .field { min-width: 0; margin-top: 0; }
-
-    .comment-detail-input {
-      width: 100%;
-      min-height: 50px;
-      padding: 0 14px;
-      color: var(--ink);
-      background: #fff;
-      border: 1.5px solid #bfb8a9;
-      border-radius: 11px;
-      outline: none;
-      font: inherit;
-      font-size: 13px;
-      transition: border-color .16s ease, box-shadow .16s ease;
-    }
-
-    .comment-detail-input:focus {
-      border-color: var(--bright-blue);
-      box-shadow: 0 0 0 4px rgba(47, 117, 181, .14);
-    }
-
-    .comment-detail-hint {
-      display: block;
-      margin-top: 6px;
-      color: var(--ink-2);
-      font-size: 10.5px;
-      line-height: 1.4;
-    }
-
     .comment-form textarea:focus {
       border-color: var(--bright-blue);
       box-shadow: 0 0 0 4px rgba(47, 117, 181, .14);
@@ -1510,7 +1476,6 @@
       .comment-builder { padding-top: 54px; }
       .comment-form, .comment-result-panel { padding: 22px 18px 24px; }
       .comment-type-switch { grid-template-columns: 1fr; }
-      .comment-context-grid { grid-template-columns: 1fr; gap: 14px; }
       .comment-actions { align-items: stretch; flex-direction: column; }
       .comment-actions .secondary-btn { width: 100%; }
       .comment-result-actions { align-items: stretch; flex-direction: column; }
@@ -1639,7 +1604,7 @@
           <div class="panel-heading">
             <div>
               <h2 id="comment-note-title">Enter the inspection note</h2>
-              <p id="comment-note-help">For the best match, include the location, extent of the condition, and what happened when tested.</p>
+              <p id="comment-note-help">Enter the visible condition or test result in plain language.</p>
             </div>
             <span class="step-count" id="commentModeBadge">Offline</span>
           </div>
@@ -1660,12 +1625,6 @@
           </div>
 
           <div class="field">
-            <label for="commentLocation">Location</label>
-            <input class="comment-detail-input" id="commentLocation" type="text" maxlength="180" autocomplete="off" placeholder="Example: Living room, north wall">
-            <span class="comment-detail-hint">Name the room, side, level, or exact component location.</span>
-          </div>
-
-          <div class="field">
             <label for="defectInput" id="comment-note-label">What did you observe?</label>
             <textarea id="defectInput" maxlength="900" placeholder="Example: The heating and cooling systems did not operate when the thermostat controls were activated. The furnace and air conditioner did not respond at either thermostat." required></textarea>
             <div class="example-row">
@@ -1674,34 +1633,11 @@
             </div>
           </div>
 
-          <div class="comment-context-grid">
-            <div class="field">
-              <label for="commentExtent" id="comment-extent-label">Extent / quantity</label>
-              <input class="comment-detail-input" id="commentExtent" type="text" maxlength="220" autocomplete="off" placeholder="Example: Two areas approximately 6 inches wide">
-              <span class="comment-detail-hint" id="comment-extent-hint">State how many components or how much area was affected.</span>
-            </div>
-            <div class="field">
-              <label for="commentTestResult" id="comment-test-label">Test or operation result</label>
-              <input class="comment-detail-input" id="commentTestResult" type="text" maxlength="260" autocomplete="off" placeholder="Example: Continued running after the flush cycle">
-              <span class="comment-detail-hint" id="comment-test-hint">Record what happened when operated or tested.</span>
-            </div>
-            <div class="field">
-              <label for="commentRelated" id="comment-related-label">Related visible conditions</label>
-              <input class="comment-detail-input" id="commentRelated" type="text" maxlength="260" autocomplete="off" placeholder="Example: No visible staining or damage nearby">
-              <span class="comment-detail-hint" id="comment-related-hint">Include only conditions actually visible during the inspection.</span>
-            </div>
-            <div class="field">
-              <label for="commentAction" id="comment-action-label">Inspector action / limitation</label>
-              <input class="comment-detail-input" id="commentAction" type="text" maxlength="260" autocomplete="off" placeholder="Example: Testing was stopped to avoid further leakage">
-              <span class="comment-detail-hint" id="comment-action-hint">Note any safe action taken or why testing was stopped.</span>
-            </div>
-          </div>
-
           <div class="comment-actions">
             <button class="decode-btn" id="generateCommentBtn" type="submit">Generate MPI defect</button>
             <button class="secondary-btn" id="clearCommentBtn" type="button">Clear</button>
           </div>
-          <p class="privacy-note" id="commentPrivacyNote">The information stays on this device. Review each field before generating the final read-only report comment.</p>
+          <p class="privacy-note" id="commentPrivacyNote">The note stays on this device. The generated comment is read-only; update the note and generate it again if changes are needed.</p>
         </form>
 
         <section class="panel comment-result-panel" aria-labelledby="comment-result-title">
@@ -2264,12 +2200,7 @@
       const clearBtn = document.getElementById("clearBtn");
       const commentForm = document.getElementById("commentForm");
       const commentArea = document.getElementById("commentArea");
-      const commentLocation = document.getElementById("commentLocation");
       const defectInput = document.getElementById("defectInput");
-      const commentExtent = document.getElementById("commentExtent");
-      const commentTestResult = document.getElementById("commentTestResult");
-      const commentRelated = document.getElementById("commentRelated");
-      const commentAction = document.getElementById("commentAction");
       const commentOutput = document.getElementById("commentOutput");
       const defectModeBtn = document.getElementById("defectModeBtn");
       const limitationModeBtn = document.getElementById("limitationModeBtn");
@@ -2278,14 +2209,6 @@
       const commentNoteTitle = document.getElementById("comment-note-title");
       const commentNoteHelp = document.getElementById("comment-note-help");
       const commentNoteLabel = document.getElementById("comment-note-label");
-      const commentExtentLabel = document.getElementById("comment-extent-label");
-      const commentExtentHint = document.getElementById("comment-extent-hint");
-      const commentTestLabel = document.getElementById("comment-test-label");
-      const commentTestHint = document.getElementById("comment-test-hint");
-      const commentRelatedLabel = document.getElementById("comment-related-label");
-      const commentRelatedHint = document.getElementById("comment-related-hint");
-      const commentActionLabel = document.getElementById("comment-action-label");
-      const commentActionHint = document.getElementById("comment-action-hint");
       const generateCommentBtn = document.getElementById("generateCommentBtn");
       const commentModeBadge = document.getElementById("commentModeBadge");
       const commentPrivacyNote = document.getElementById("commentPrivacyNote");
@@ -3581,24 +3504,12 @@
           : "Describe what you observed in plain language. The tool matches your note to the established defect comments in your MPI report template.";
         commentNoteTitle.textContent = limitation ? "Enter the inspection limitation" : "Enter the inspection note";
         commentNoteHelp.textContent = limitation
-          ? "Complete the fields below so the limitation explains what was restricted, where it occurred, and how the inspection was affected."
-          : "Complete the fields below so the comment reflects the actual location, extent, test result, and related visible conditions.";
-        commentNoteLabel.textContent = limitation ? "What limited the inspection?" : "What did you observe?";
+          ? "Enter what prevented visibility, access, or operation in plain language."
+          : "Enter the visible condition or test result in plain language.";
+        commentNoteLabel.textContent = "What did you observe?";
         defectInput.placeholder = limitation
           ? "Example: Stored items in front of the electrical panel restricted access and prevented a full inspection."
           : "Example: The heating and cooling systems did not operate when the thermostat controls were activated.";
-        commentExtentLabel.textContent = limitation ? "Restricted area / extent" : "Extent / quantity";
-        commentExtent.placeholder = limitation ? "Example: Panel cover and required working clearance" : "Example: Two areas approximately 6 inches wide";
-        commentExtentHint.textContent = limitation ? "Identify which portions or functions were restricted." : "State how many components or how much area was affected.";
-        commentTestLabel.textContent = limitation ? "Effect on inspection" : "Test or operation result";
-        commentTestResult.placeholder = limitation ? "Example: The panel interior was not inspected" : "Example: Continued running after the flush cycle";
-        commentTestHint.textContent = limitation ? "State exactly what could not be viewed, accessed, or operated." : "Record what happened when operated or tested.";
-        commentRelatedLabel.textContent = limitation ? "Accessible portions inspected" : "Related visible conditions";
-        commentRelated.placeholder = limitation ? "Example: The panel exterior and service conductors were visible" : "Example: No visible staining or damage nearby";
-        commentRelatedHint.textContent = limitation ? "Document what was still inspected without overstating the scope." : "Include only conditions actually visible during the inspection.";
-        commentActionLabel.textContent = limitation ? "Required for full inspection" : "Inspector action / limitation";
-        commentAction.placeholder = limitation ? "Example: Remove stored items and reinspect before closing" : "Example: Testing was stopped to avoid further leakage";
-        commentActionHint.textContent = limitation ? "State what must change before the component can be fully inspected." : "Note any safe action taken or why testing was stopped.";
         generateCommentBtn.textContent = limitation ? "Generate MPI limitation" : "Generate MPI defect";
         commentFormatLabel.textContent = limitation ? "MPI limitation format" : "MPI defect format";
         commentResultTitle.textContent = limitation ? "Generated limitation comment" : "Generated defect comment";
@@ -3608,7 +3519,7 @@
         commentResultNote.textContent = limitation
           ? "The tool uses the saved limitation wording from your MPI report template when it finds a close match. Review it for property-specific accuracy."
           : "The tool uses the saved defect wording from your MPI report template when it finds a close match. Review it for property-specific accuracy.";
-        commentPrivacyNote.textContent = "The information stays on this device. The generated comment is read-only; correct the fields and generate it again if changes are needed.";
+        commentPrivacyNote.textContent = "The note stays on this device. The generated comment is read-only; update the note and generate it again if changes are needed.";
         commentOutput.value = "";
         commentOutput.scrollTop = 0;
         commentOutput.scrollLeft = 0;
@@ -3681,32 +3592,15 @@
 
       commentExampleBtn.addEventListener("click", () => {
         commentArea.value = "auto";
-        if (commentType === "limit") {
-          commentLocation.value = "Basement";
-          defectInput.value = "Stored items obstructed access in front of the electrical panel.";
-          commentExtent.value = "The panel cover and required working clearance were restricted";
-          commentTestResult.value = "The panel interior was not inspected";
-          commentRelated.value = "The accessible panel exterior was viewed";
-          commentAction.value = "Remove the stored items and have the panel inspected before closing";
-        } else {
-          commentLocation.value = "Hallway and living room thermostats";
-          defectInput.value = "The heating and cooling systems did not operate when the thermostat controls were activated.";
-          commentExtent.value = "Both installed systems were affected";
-          commentTestResult.value = "Neither system responded at either thermostat";
-          commentRelated.value = "No normal equipment operation was observed";
-          commentAction.value = "Testing was discontinued after the systems did not respond";
-        }
+        defectInput.value = commentType === "limit"
+          ? "Stored items in front of the electrical panel restricted access and prevented a full inspection."
+          : "The heating and cooling systems did not operate when the thermostat controls were activated.";
         commentForm.requestSubmit();
       });
 
       clearCommentBtn.addEventListener("click", () => {
         commentArea.value = "auto";
-        commentLocation.value = "";
         defectInput.value = "";
-        commentExtent.value = "";
-        commentTestResult.value = "";
-        commentRelated.value = "";
-        commentAction.value = "";
         commentOutput.value = "";
         commentOutput.scrollTop = 0;
         commentOutput.scrollLeft = 0;
@@ -3727,14 +3621,7 @@
           showToast("Enter an inspection note first");
           return;
         }
-        const details = {
-          location: commentLocation.value,
-          extent: commentExtent.value,
-          testResult: commentTestResult.value,
-          related: commentRelated.value,
-          action: commentAction.value
-        };
-        commentOutput.value = buildMpiComment(note, commentArea.value, commentType, details);
+        commentOutput.value = buildMpiComment(note, commentArea.value, commentType);
         commentOutput.scrollTop = 0;
         commentOutput.scrollLeft = 0;
         copyCommentBtn.disabled = false;
