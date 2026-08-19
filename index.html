@@ -2904,9 +2904,17 @@
       function ensureSentence(value) {
         let text = value.trim().replace(/\s+/g, " ");
         text = text
+          .replace(/\b(?:dmage|damge|dammage)\b/gi, "damage")
+          .replace(/\b(?:verticles|verticals)\b/gi, "vertical")
+          .replace(/\b(?:recptacle|receptical|recepticle)\b/gi, "receptacle")
+          .replace(/\b(?:shingels|shingls)\b/gi, "shingles")
           .replace(/^i (?:found|noticed|saw)\b/i, "The inspector observed")
           .replace(/^we (?:found|noticed|saw)\b/i, "The inspector observed")
           .replace(/^(?:the )?(?:washing machine|clothes washer|washer)\s+(?:is |was )?(?:leaking|leaks?)\b/i, "Leakage was observed at the washing machine")
+          .replace(/^(?:roof\s+)?shingles?\s+(?:is |are |was |were )?missing\b/i, "Missing roof shingles were observed")
+          .replace(/^(?:a |an |the )?receptacle\s+(?:has |had |tested with |showed )?open ground\b/i, "An open-ground condition was identified at the receptacle")
+          .replace(/^(?:the )?(?:a\/?c|ac|air conditioner|air conditioning|cooling)\s+system\s+(?:is |was )?(?:not cooling|did not cool|cooling poorly)\b/i, "The cooling system did not provide adequate cooling")
+          .replace(/^(?:the )?water heater\s+(?:tpr|temperature[- ]pressure relief)\s+discharge pipe\s+(?:is |was )?missing\b/i, "The water heater temperature-pressure relief valve discharge pipe was missing")
           .replace(/\bdidn't\b/gi, "did not")
           .replace(/\bdoesn't\b/gi, "does not")
           .replace(/\bwasn't\b/gi, "was not")
@@ -2948,41 +2956,167 @@
 
       function componentFromReportSelection(note, selected) {
         const item = decodeURIComponent(selected.slice(5));
-        const lower = note.toLowerCase();
+        const lower = defectMatchText(note);
+        const itemKey = item.toLowerCase()
+          .replace(/&/g, "and")
+          .replace(/[—–,-]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
 
         if (item === "General" || item === "General/Overview") return inferComponent(note, "auto");
-        if (item === "Heating System") return "Heating Equipment";
+        if (item === "Basement - General, Moisture and Structure") {
+          if (/foundation|foundation wall|cmu|block wall|crack/.test(lower)) return "Foundation";
+          if (/joist|beam|post|column|support|framing|structure|structural|notch|bore|cut/.test(lower)) return "Basement Structure";
+          if (/moisture|water|leak|stain|damp|efflorescen|mold|microbial/.test(lower)) return "Basement Moisture";
+          return "Basement";
+        }
+        if (["Heating System", "Heating System Information"].includes(item)) return "Heating Equipment";
         if (["Cooling System Information", "AC Condenser", "Split A/C Unit"].includes(item)) return "Cooling System";
-        if (item === "Hot Water Source") return "Water Heater";
+        if (["Hot Water Source", "Hot Water Systems, Controls, Flues & Vents"].includes(item)) {
+          return /flue|vent|combustion/.test(lower) ? "Combustion Venting" : "Water Heater";
+        }
         if (item === "Low-Slope and Membrane Roofing") return "Membrane Roofing";
-        if (item === "Roof Coverings - General") return "Roof Covering";
+        if (["Roof Coverings - General", "Roof Covering", "Coverings"].includes(item)) return "Roof Covering";
         if (item === "Garage Vehicle Door") return "Garage Door";
-        if (item === "Ceiling, Walls, Doors and Firewalls in Garage") return "Garage Fire Separation";
-        if (item.startsWith("Electrical Panel - ")) return "Electrical Panel";
-        if (["GFCI", "GFCIs and Electrical"].includes(item)) return "Electrical Receptacle";
-        if (item === "Gutters and Downspouts") {
+        if (item === "Main Fuel Supply Shut-Off Valve") return "Fuel Gas Supply";
+        if (item === "Service Grounding and Bonding") return "Electrical Grounding / Bonding";
+        if (item === "Main Water Shut-Off Valve") return /bond|ground/.test(lower) ? "Electrical Grounding / Bonding" : "Plumbing";
+        if (item === "Sewage Ejector and Floor Drainage") return /sewage|ejector/.test(lower) ? "Sewage Ejector" : "Floor Drainage";
+        if (item === "Water Heater Expansion and Recirculation") return /expansion/.test(lower) ? "Thermal Expansion Control" : "Water Heater";
+        if (item === "HVAC Filter") return "HVAC Filter";
+        if (item === "Generators, Transfer Equipment and EV Charging") {
+          if (/\bev\b|electric vehicle|charger|charging/.test(lower)) return "EV Charging Equipment";
+          if (/generator|transfer switch|backfeed/.test(lower)) return "Generator / Transfer Equipment";
+          return "Generator / EV Equipment";
+        }
+        if (item === "Interior Condition") {
+          const inferred = inferComponent(note, "auto");
+          return inferred === "General" ? "Interior Condition" : inferred;
+        }
+        if (item === "Door") return /exterior|entry|storm/.test(lower) ? "Exterior Doors" : "Doors";
+        if (item === "Exterior Door") return "Exterior Doors";
+        if (/^(?:ceiling walls (?:doors )?and firewalls in garage|moisture intrusion in garage)$/.test(itemKey)) return "Garage Fire Separation";
+        if (item.startsWith("Electrical Panel - ") || /^(?:panelboards|subboard) and breakers$/.test(itemKey)) return "Electrical Panel";
+        if (["Service-Entrance Conductors", "Electric Meter and Base", "Electric Meter & Base", "Main Service Disconnect"].includes(item)) return "Electrical Service";
+        if (["Electric in Garage", "Electric in the Garage", "Electric", "Electrical"].includes(item)) return "Electrical";
+        if (/^(?:afci|gfci|gfcis)(?: and (?:afci|electrical|electric in bathroom))?$/.test(itemKey)) return "Electrical Receptacle";
+        if (/^gutters?(?: and downspouts?)?$/.test(itemKey) || item === "Downspouts") {
           if (/downspout/.test(lower) && !/gutter/.test(lower)) return "Downspouts";
           if (/gutter/.test(lower) && !/downspout/.test(lower)) return "Gutters";
           return "Roof Drainage";
         }
-        if (item === "Floors, Walls and Ceilings") {
+        if (/^(?:floors walls (?:and )?ceilings|wall ceiling and floors)$/.test(itemKey)) {
           if (/floor|flooring|carpet|tile|laminate|hardwood|\blvp\b/.test(lower)) return "Floors";
-          if (/wall|ceiling|drywall/.test(lower)) return "Walls / Ceilings";
+          if (/wall|ceiling|drywall|nail pop|fastener pop|fixture footprint|previous light fixture/.test(lower)) return "Walls / Ceilings";
+          return "Interior Finishes";
         }
-        if (item === "Sinks, Tubs and Showers") {
+        if (/^sinks tubs and showers$/.test(itemKey)) {
           if (/sink|lavatory|faucet/.test(lower)) return "Bathroom Sink";
           if (/shower|bathtub|\btub\b/.test(lower)) return "Bathtub / Shower";
           return "Bathroom Plumbing";
         }
-        if (item === "Countertops and Cabinets") {
+        if (/^countertops and cabinets$/.test(itemKey)) {
           if (/\bcounter(?:top)?s?\b|worktop/.test(lower)) return "Countertop";
           if (/\bcabinet(?:ry|s)?\b|cupboard|drawer/.test(lower)) return "Cabinets";
           return "Countertops and Cabinets";
         }
-        if (item === "Lighting, Switches and Receptacles" && /receptacle|outlet|gfci|gfi\b/.test(lower)) return "Electrical Receptacle";
-        if (item === "OPTIONAL - Fireplace (Wood-Burning or Gas)") return "Fireplace / Chimney";
+        if (itemKey === "cabinetry ceiling walls and floor") {
+          if (/cabinet|cupboard|drawer/.test(lower)) return "Cabinets";
+          if (/counter/.test(lower)) return "Countertop";
+          if (/floor|flooring|carpet|tile|linoleum|laminate|hardwood|\blvp\b/.test(lower)) return "Floors";
+          if (/wall|ceiling|drywall/.test(lower)) return "Walls / Ceilings";
+          return "Bathroom Interior Finishes";
+        }
+        if (item === "Brick and Masonry Veneer") return "Brick / Masonry Veneer";
+        if (["Siding and Exterior Trim", "Siding, Flashing & Trim", "Siding, Flashing and Trim"].includes(item)) return "Siding / Trim";
+        if (item === "Flashings") return "Exterior Flashing";
+        if (/^eaves so(?:ffit|t)s and fascia$/.test(itemKey)) return "Soffit / Fascia";
+        if (/^decks balconies porches and steps$/.test(itemKey)) return "Deck / Balcony";
+        if (/^walkways(?: patios)? and driveways$/.test(itemKey)) return "Walkways / Driveways";
+        if (item === "Site, Grading, Drainage and Vegetation" || /^vegetation grading drainage and retaining walls$/.test(itemKey)) {
+          if (/retaining wall/.test(lower)) return "Retaining Wall";
+          if (/tree|vegetation|shrub|bush|branch|landscap/.test(lower)) return "Vegetation / Trees";
+          return "Site Drainage";
+        }
+        if (item === "Presence of Smoke and CO Detectors") return "Smoke / Carbon Monoxide Alarms";
+        if (["Drain, Waste and Vent Systems", "Exterior Faucets and Hose Bibbs", "Kitchen Sink", "Utility Sink", "Water Pressure and Functional Flow", "Water Supply", "Water Supply and Distribution Systems", "Water Supply & Distribution Systems"].includes(item)) return "Plumbing";
+        if (["Boiler and Hydronic Components", "Garage Heater", "Radiators", "Thermostat Controls"].includes(item)) return "Heating Equipment";
+        if (["Combustion Air and Venting", "Flue Gas Vent Pipes"].includes(item)) return "Combustion Venting";
+        if (["Condensate Management", "Ductwork", "HVAC Filter", "HVAC Supply Registers", "HVAC, Ducts and Plumbing", "HVAC and Ducts", "Humidifier and Mechanical Ventilation"].includes(item)) return "HVAC Components";
+        if (["Chimneys and Roof Penetrations", "Chimneys and Other Roof Penetrations", "Skylights, Chimneys & Other Roof Penetrations"].includes(item)) {
+          if (/skylight/.test(lower)) return "Skylight";
+          return /chimney/.test(lower) ? "Fireplace / Chimney" : "Roof Penetration";
+        }
+        if (item === "Plumbing Vent Pipes") return "Roof Penetration";
+        if (["Insulation", "Insulation in Attic"].includes(item)) return "Attic Insulation";
+        if (item === "Ventilation") return "Attic Ventilation";
+        if (item === "Structure") return "Attic Structure";
+        if (["Stairs, Steps, Stoops, Stairways and Ramps", "Stairs, Steps, Stoops, Stairways & Ramps"].includes(item)) return "Stairs / Guards / Handrails";
+        if (/^lighting(?: fixtures)? switches and receptacles$/.test(itemKey)) {
+          if (/receptacle|outlet|gfci|gfi\b|open ground|polarity/.test(lower)) return "Electrical Receptacle";
+          return "Lighting / Switches / Receptacles";
+        }
+        if (["OPTIONAL - Fireplace (Wood-Burning or Gas)", "Wood Burning and Gas Fireplace", "Wood-Burning Stove", "Factory-Built Chimney"].includes(item)) return "Fireplace / Chimney";
+        if (item === "Under-Floor Crawlspace") return "Crawlspace";
+        if (item === "Clothes Washer") return "Washing Machine";
+        if (item === "Bathroom Exhaust Fan / Window" || item.endsWith("Bathroom - Bathroom Exhaust Fan / Window")) return "Bathroom Exhaust Fan";
+        if (item.endsWith("Bathroom - GFCI & Electric in Bathroom")) return "Electrical Receptacle";
+        if (item === "Laundry Room, Electric, and Tub") {
+          const inferred = inferComponent(note, "auto");
+          return inferred === "General" ? "Laundry" : inferred;
+        }
+        if (item === "External Cubby Area") return "Exterior Structure";
         if (item === "OPTIONAL - Emergency Escape and Rescue Openings") return "Emergency Escape and Rescue Openings";
         return item.replace(/^OPTIONAL - /, "");
+      }
+
+      function defectMatchText(value) {
+        return String(value || "")
+          .toLowerCase()
+          .replace(/\b(?:dmage|damge|dammage)\b/g, "damage")
+          .replace(/\b(?:verticles|verticals)\b/g, "vertical")
+          .replace(/\b(?:horizontals)\b/g, "horizontal")
+          .replace(/\b(?:recptacle|receptical|recepticle)\b/g, "receptacle")
+          .replace(/\b(?:shingels|shingls)\b/g, "shingles")
+          .replace(/\b(?:gutter?s)\b/g, match => match)
+          .replace(/\b(?:wont|won't)\b/g, "would not")
+          .replace(/\b(?:doesnt|doesn't)\b/g, "does not")
+          .replace(/\b(?:didnt|didn't)\b/g, "did not")
+          .replace(/\b(?:isnt|isn't)\b/g, "is not")
+          .replace(/\b(?:arent|aren't)\b/g, "are not")
+          .replace(/\b(?:did|does|would|will) not work\b/g, "did not operate")
+          .replace(/\b(?:is|was|are|were)?\s*not working\b/g, "did not operate")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function affirmativeDefectText(value) {
+        return defectMatchText(value)
+          .replace(/\bno water flow\b/g, "water flow unavailable")
+          .replace(/\bno running water\b/g, "water unavailable")
+          .replace(/\b(?:no|without)\s+(?:(?:visible|active|significant|current|apparent)\s+)?(?:(?:signs?|evidence|indications?)\s+of\s+)?(?:scorching|burn marks?|melting|arcing|overheating|excessive heat|hot spots?)(?:\s*(?:,\s*(?:(?:and|or)\s+)?|(?:and|or)\s+)(?:scorching|burn marks?|melting|arcing|overheating|excessive heat|hot spots?)){0,4}\b/g, " ")
+          .replace(/\b(?:no|without)\s+(?:(?:visible|active|significant|current|apparent)\s+)?(?:(?:signs?|evidence|indications?)\s+of\s+)?(?:gas odor|odor of gas|gas leakage|gas leaks?|combustion[- ]gas spillage|spillage|backdrafting|back-drafting|soot|scorching|burn marks?|melting|arcing|overheating|excessive heat|hot spots?|carbon monoxide)(?:\s*(?:,|and|or)\s*(?:no\s+)?(?:(?:visible|active|significant|current|apparent)\s+)?(?:gas odor|odor of gas|gas leakage|gas leaks?|combustion[- ]gas spillage|spillage|backdrafting|back-drafting|soot|scorching|burn marks?|melting|arcing|overheating|excessive heat|hot spots?|carbon monoxide)){0,4}\b/g, " ")
+          .replace(/\b(?:no|without)\s+(?:(?:visible|active|significant|current|apparent)\s+)?(?:(?:signs?|evidence|indications?)\s+of\s+)?(?:standing water|interior leakage|moisture|water|leakage|leaks?|staining|stains?|dampness|wetness|efflorescence|movement|displacement|bowing|settlement|shifting|damage|deterioration|rot|decay|corrosion|rust|mold|mildew|fungal growth|arcing|overheating|excessive heat|hot spots?)(?:\s*(?:,|and|or)\s*(?:no\s+)?(?:(?:visible|active|significant|current|apparent)\s+)?(?:standing water|interior leakage|moisture|water|leakage|leaks?|staining|stains?|dampness|wetness|efflorescence|movement|displacement|bowing|settlement|shifting|damage|deterioration|rot|decay|corrosion|rust|mold|mildew|fungal growth|arcing|overheating|excessive heat|hot spots?)){0,4}\b/g, " ")
+          .replace(/\b(?:moisture|water|leakage|leaks?|staining|stains?|dampness|wetness|efflorescence|movement|displacement|bowing|settlement|shifting|damage|deterioration|rot|decay|corrosion|rust|mold|mildew|fungal growth|arcing|overheating|excessive heat|hot spots?)\s+(?:was|were|is|are)\s+not\s+(?:observed|present|visible|detected|noted)\b/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function carbonMonoxidePpm(value) {
+        const text = defectMatchText(value);
+        if (!/carbon monoxide|\bco\b/.test(text)) return null;
+        const match = text.match(/\b(\d+(?:\.\d+)?)\s*ppm\b/);
+        if (!match) return null;
+        const reading = Number(match[1]);
+        return Number.isFinite(reading) ? reading : null;
+      }
+
+      function elevatedCarbonMonoxide(value) {
+        const text = defectMatchText(value);
+        if (!/carbon monoxide|\bco\b/.test(text)) return false;
+        const reading = carbonMonoxidePpm(text);
+        return /high|elevated|unsafe|failed|unacceptable|excessive|rapidly increasing|sustained|rising/.test(text)
+          || (reading !== null && reading >= 35);
       }
 
       function inferComponent(note, selected) {
@@ -2990,10 +3124,22 @@
           if (selected.startsWith("item:")) return componentFromReportSelection(note, selected);
           return selected;
         }
+        const text = affirmativeDefectText(note);
         const rules = [
+          [/sewage ejector|ejector (?:pump|basin|pit|alarm)/i, "Sewage Ejector"],
+          [/(?:active )?gas leak|gas odor|odor of gas|fuel (?:shutoff|shut-off)|gas (?:shutoff|shut-off|supply line|connector|valve|meter|regulator)/i, "Fuel Gas Supply"],
+          [/combustion (?:vent|venting|connector|air)|flue gas vent|vent connector|backdraft|back-draft|combustion[- ]gas spillage|draft hood/i, "Combustion Venting"],
+          [/(?:high|elevated|unsafe|failed|unacceptable).*carbon monoxide|carbon monoxide.*(?:high|elevated|unsafe|failed|unacceptable)|(?:high|elevated|unsafe|failed|unacceptable).*(?:\bco\b).*?(?:read|screen|test)|(?:\bco\b).*?(?:read|screen|test).*(?:high|elevated|unsafe|failed|unacceptable)/i, "Heating Equipment"],
+          [/garage.*(?:house|entry|interior).*door.*(?:self[- ]clos|automatic[- ]clos)|(?:self[- ]clos|automatic[- ]clos).*garage.*door/i, "Garage Fire Separation"],
+          [/missing bonding jumper|bonding jumper|grounding electrode|ground rod|grounded conductor|grounding conductor|service bonding/i, "Electrical Grounding / Bonding"],
+          [/generator|transfer switch|transfer equipment|backfeed|power inlet/i, "Generator / Transfer Equipment"],
+          [/(?:\bev\b|electric vehicle).*(?:charger|charging|equipment)|(?:charger|charging equipment).*(?:\bev\b|electric vehicle)/i, "EV Charging Equipment"],
           [/garbage disposal|food waste disposer/i, "Garbage Disposal"],
-          [/bathroom.*(?:exhaust fan|vent fan)|(?:exhaust fan|vent fan).*bathroom/i, "Bathroom Exhaust Fan"],
-          [/(?:bathroom|lavatory).*sink|sink drain/i, "Bathroom Sink"],
+          [/bathroom.*(?:exhaust fan|vent fan)|(?:exhaust fan|vent fan).*bathroom|\bbath fan\b/i, "Bathroom Exhaust Fan"],
+          [/receptacle|outlet|gfci|gfi\b/i, "Electrical Receptacle"],
+          [/toilet|commode/i, "Toilet"],
+          [/(?:bathroom|lavatory).*sink|sink drain|lavatory faucet/i, "Bathroom Sink"],
+          [/(?:kitchen )?sink.*(?:leak|drip)|(?:leak|drip).*(?:kitchen )?sink|under.*sink/i, "Plumbing"],
           [/washing machine|clothes washer|\bwasher\b/i, "Washing Machine"],
           [/clothes dryer|\bdryer\b/i, "Clothes Dryer"],
           [/dishwasher/i, "Dishwasher"],
@@ -3003,36 +3149,56 @@
           [/\bcounter(?:top)?s?\b|worktop/i, "Countertop"],
           [/\bcabinet(?:ry|s)?\b|cupboard|drawer/i, "Cabinets"],
           [/water heater|hot water tank/i, "Water Heater"],
-          [/garage door opener|overhead garage door|garage vehicle door/i, "Garage Door"],
+          [/temperature.?pressure relief|\btpr\b|relief valve/i, "Water Heater"],
+          [/smoke (?:alarm|detector)|carbon monoxide (?:alarm|detector)|(?:alarm|detector).*carbon monoxide|\bco (?:alarm|detector)\b/i, "Smoke / Carbon Monoxide Alarms"],
+          [/garage door opener|overhead garage door|garage vehicle door|\bgarage door\b/i, "Garage Door"],
           [/service panel|electrical panel|breaker panel|fuse panel/i, "Electrical Panel"],
-          [/receptacle|outlet|gfci|gfi\b/i, "Electrical Receptacle"],
+          [/\bpanel wiring\b|\bpanel cover\b|\bpanel\b.*(?:breaker|wiring|wire|cover|knockout|fastener|screw|conductor|neutral|ground)|subpanel|aluminum branch[- ]circuit|branch[- ]circuit aluminum/i, "Electrical Panel"],
+          [/panelboard|dead front|breaker knockout|double[- ]?tap|double[- ]?lug|doubled (?:hot|neutral)|multiple conductors.*breaker/i, "Electrical Panel"],
+          [/service entrance|service drop|electric meter|meter base|main disconnect/i, "Electrical Service"],
+          [/light fixture|lighting fixture|switch|cover plate|faceplate/i, "Lighting / Switches / Receptacles"],
           [/heating and cooling|heating.*cooling|cooling.*heating|\bhvac systems?\b/i, "Heating Equipment / Cooling System"],
+          [/hvac filter|air filter.*(?:furnace|hvac)|furnace.*filter/i, "HVAC Filter"],
           [/furnace|boiler|heating system|heat exchanger/i, "Heating Equipment"],
-          [/air conditioner|air conditioning|\ba\/c\b|condenser|cooling system/i, "Cooling System"],
+          [/air conditioner|air conditioning|\ba\/c\b|\bac\b|condenser|cooling system|refrigerant line|suction line|liquid line/i, "Cooling System"],
+          [/tree|vegetation|shrub|bush|landscap/i, "Vegetation / Trees"],
           [/asphalt|shingle/i, "Asphalt Shingles"],
           [/metal roof|metal panel/i, "Metal Roofing"],
           [/membrane|low[- ]slope|epdm|tpo/i, "Membrane Roofing"],
+          [/skylight/i, "Skylight"],
+          [/plumbing vent|vent pipe collar|roof vent boot/i, "Roof Penetration"],
           [/roof covering|roofing|\broof\b/i, "Roof Covering"],
           [/downspout/i, "Downspouts"],
           [/gutter/i, "Gutters"],
-          [/soffit|fascia/i, "Soffit / Fascia"],
+          [/soffit|fascia|\beaves?\b/i, "Soffit / Fascia"],
           [/storm door/i, "Exterior Door"],
           [/exterior door|entry door/i, "Exterior Doors"],
+          [/\bdoor\b|weatherstrip/i, "Doors"],
+          [/brick|masonry veneer|stone veneer/i, "Brick / Masonry Veneer"],
           [/window screens?|\bwindow\b|\bscreens?\b/i, "Exterior Windows"],
-          [/floor covering|carpet|flooring|\bfloor\b/i, "Floors"],
+          [/crawlspace.*standing water|standing water.*crawlspace|crawl space.*standing water|standing water.*crawl space/i, "Crawlspace"],
+          [/negative grading|neutral grading|grading|standing water|negative slope|drainage.*(?:house|home|foundation)/i, "Site Drainage"],
+          [/garage floor|garage.*concrete.*crack/i, "Garage Floor"],
           [/(?:basement|foundation).*(?:vertical|horizontal|step|hairline)?\s*crack|(?:vertical|horizontal|step|hairline)\w*\s+crack.*(?:basement|foundation)/i, "Foundation"],
           [/foundation|footing/i, "Foundation"],
+          [/asbestos.*tile|tile.*asbestos/i, "Floors"],
+          [/floor covering|carpet|flooring|\bfloor\b/i, "Floors"],
+          [/walkway|sidewalk|driveway|patio/i, "Walkways / Driveways"],
+          [/retaining wall/i, "Retaining Wall"],
           [/deck|porch|balcony/i, "Deck / Balcony"],
-          [/siding|exterior cladding|exterior trim/i, "Siding / Trim"],
+          [/stairway|\bstairs?\b|\bsteps?\b|guardrail|handrail|railing/i, "Stairs / Guards / Handrails"],
+          [/siding|exterior cladding|exterior trim|rotted trim|trim rot/i, "Siding / Trim"],
           [/chimney|fireplace|flue/i, "Fireplace / Chimney"],
-          [/toilet|commode/i, "Toilet"],
           [/shower|bathtub|\btub\b/i, "Bathtub / Shower"],
           [/septic/i, "Septic System"],
           [/sump pump/i, "Sump Pump"],
           [/bathroom.*plumb|plumb.*bathroom/i, "Bathroom Plumbing"],
-          [/plumb|drain|supply pipe|water pipe|faucet|fixture/i, "Plumbing"],
+          [/plumb|drain|supply pipe|water pipe|water pressure|faucet|fixture/i, "Plumbing"],
           [/wire|electrical|breaker|junction box/i, "Electrical"],
-          [/attic.*vent|vent.*attic/i, "Attic Ventilation"],
+          [/attic.*(?:insulat|vermiculite)|(?:insulat|vermiculite).*attic/i, "Attic Insulation"],
+          [/attic.*vent|vent.*attic|soffit baffle|attic.*baffle|baffle.*attic/i, "Attic Ventilation"],
+          [/roof sheathing|roof framing|rafter|truss/i, "Attic Structure"],
+          [/vapor barrier|ground cover/i, "Crawlspace"],
           [/attic/i, "Attic"],
           [/crawlspace|crawl space/i, "Crawlspace"],
           [/basement/i, "Basement"],
@@ -3044,12 +3210,16 @@
           [/wall|ceiling|drywall/i, "Walls / Ceilings"],
           [/dishwasher|range|oven|refrigerator|microwave|appliance/i, "Appliance"]
         ];
-        const match = rules.find(([pattern]) => pattern.test(note));
-        return match ? match[1] : "General";
+        const match = rules.find(([pattern]) => pattern.test(text));
+        if (match) return match[1];
+        return elevatedCarbonMonoxide(note) ? "Combustion / Carbon Monoxide" : "General";
       }
 
-      function conditionTitle(note) {
-        const lower = note.toLowerCase();
+      function conditionTitle(note, component = "") {
+        const lower = affirmativeDefectText(note);
+        const headingOnly = defectMatchText(note).replace(/[—–-]+$/g, "").trim();
+        const issuePhrase = headingOnly.split(/\s+[—–-]\s+/).at(-1).replace(/[.!?]+$/g, "").trim();
+        if (/^(?:lighting fixtures? switches?(?: and)? receptacles?|under[- ]?(?:floor|oor) crawl ?space)$/.test(headingOnly)) return "Condition Noted";
         if (/foundation|basement wall|cmu wall|block wall/.test(lower) && /vertical\w*\s+crack|crack.*vertical/.test(lower)) return "Vertical Crack";
         if (/foundation|basement wall|cmu wall|block wall/.test(lower) && /horizontal\w*\s+crack|crack.*horizontal/.test(lower)) return "Horizontal Crack";
         if (/foundation|basement wall|cmu wall|block wall/.test(lower) && /step\w*\s+crack|stair[- ]step crack/.test(lower)) return "Step Cracking";
@@ -3059,16 +3229,39 @@
         if (/storm door/.test(lower) && /misalign|rub|bind|contact/.test(lower)) return "Storm Door Misaligned";
         if (/(?:bathroom|exhaust|vent).*fan/.test(lower) && /inadequate|not vent|poor ventilation|did not operate|noisy/.test(lower)) return "Inadequate Ventilation";
         if (/improvised|makeshift|temporary repair/.test(lower)) return "Improvised Repair";
-        if (/heating.*cooling|cooling.*heating|\bhvac\b/.test(lower) && /did not operate|does not operate|would not operate|inoperable|failed to operate|no response|no power/.test(lower)) return "System Did Not Operate";
-        if (/did not operate|does not operate|would not operate|inoperable|failed to operate|no response|no power/.test(lower)) return "Did Not Operate";
+        if (/(?:not cooling|did not cool|cooling poorly|inadequate cooling|insufficient cooling|poor cooling|reduced cooling)/.test(lower)) return "Inadequate Cooling Performance";
+        if (/heating.*cooling|cooling.*heating|\bhvac\b/.test(lower) && /did not operate|does not operate|would not operate|not operable|not operating|not functional|inoperable|not functioning|failed to operate|did not activate|failed to activate|did not turn on|would not turn on|did not ignite|would not ignite|not igniting|did not heat|not heating|did not respond|no airflow|no response|no power/.test(lower)) return "System Did Not Operate";
+        if (/did not operate|does not operate|would not operate|not operable|not operating|not functional|inoperable|inoperative|not functioning|non[- ]functioning|failed to operate|did not activate|failed to activate|did not turn on|would not turn on|did not ignite|would not ignite|not igniting|did not heat|not heating|did not respond|no airflow|no water flow|no running water|water flow unavailable|water unavailable|no response|no power/.test(lower)) return "Did Not Operate";
         if (/slow(?:ly)? drain|drain(?:s|ed)? slow/.test(lower)) return "Slow Drainage";
         if (/backed up|clogged|blocked|obstructed/.test(lower)) return "Obstructed";
         if (/active leak|leaking|\bleak\b|dripping/.test(lower)) return "Leakage Observed";
-        if (/water stain|moisture stain|evidence of moisture|water damage|\bwet\b/.test(lower)) return "Evidence of Moisture";
+        if (/water stain|moisture stain|evidence of moisture|water damage|\bwet\b|damp/.test(lower)) return "Moisture Staining or Damage";
+        if (/fogged|failed (?:insulated )?(?:glass )?seal|broken seal|condensation between/.test(lower)) return "Failed Insulated-Glass Seal";
+        if (/painted shut|sealed shut|would not open|will not open|stuck closed/.test(lower)) return "Inoperable / Painted Shut";
+        if (/would not close|will not close|does not close|would not latch|will not latch|does not latch/.test(lower)) return "Does Not Close or Latch";
+        if (/granule loss|granular loss/.test(lower)) return "Granule Loss";
+        if (/lift|buckl|curl|unsealed/.test(lower) && /shingle|roof/.test(lower)) return "Lifted or Buckled";
+        if (/cover plate|faceplate|dead front|knockout/.test(lower) && /missing|open|absent/.test(lower)) return "Missing Cover / Filler";
+        if (/no gfci|missing gfci|lacks? gfci|not gfci protected|without gfci/.test(defectMatchText(note))) return "Missing GFCI Protection";
         if (/double[- ]?tap|double[- ]?lug/.test(lower)) return "Multiple Conductors at Breaker";
         if (/open ground|not grounded|ungrounded/.test(lower)) return "Improper Grounding";
         if (/reverse polarity|reversed polarity/.test(lower)) return "Reversed Polarity";
-        if (/trip hazard|uneven/.test(lower)) return "Trip Hazard";
+        if (/trip hazard|uneven|sloped/.test(lower)) return "Uneven / Trip Hazard";
+        if (/stain|discolor/.test(lower)) return "Staining / Discoloration";
+        if (/peel|flak|blister|paint.*crack/.test(lower)) return "Paint Finish Deterioration";
+        if (/poor.*patch|patch.*poor|incomplete repair/.test(lower)) return "Poor / Incomplete Repair";
+        if (/mold|mildew|fungal|algae/.test(lower)) return "Microbial or Biological Growth";
+        if (/end of.*life|aged|old|obsolete/.test(lower)) return "Aged Condition";
+        const missingAfter = issuePhrase.match(/^missing\s+(.{3,80})$/i);
+        if (missingAfter) return `Missing ${titleCase(missingAfter[1].split(/\s+/).slice(0, 8).join(" "))}`;
+        const missingBefore = issuePhrase.match(/^(.{3,80}?)\s+(?:is\s+|was\s+)?missing$/i);
+        if (missingBefore) return `Missing ${titleCase(missingBefore[1].split(/\s+/).slice(0, 8).join(" "))}`;
+        const inoperableSubject = issuePhrase.match(/^(.{3,80}?)\s+(?:did not operate|inoperable|not operable)$/i);
+        if (inoperableSubject) return `${titleCase(inoperableSubject[1].split(/\s+/).slice(0, 8).join(" "))} Did Not Operate`;
+        const inadequateSubject = issuePhrase.match(/^inadequate\s+(.{3,80})$/i);
+        if (inadequateSubject) return `Inadequate ${titleCase(inadequateSubject[1].split(/\s+/).slice(0, 8).join(" "))}`;
+        const damagedSubject = issuePhrase.match(/^damaged\s+(.{3,80})$/i);
+        if (damagedSubject) return `Damaged ${titleCase(damagedSubject[1].split(/\s+/).slice(0, 8).join(" "))}`;
         if (/inadequate|insufficient|poor ventilation/.test(lower)) return "Inadequate";
         if (/improper|incorrect|not properly/.test(lower)) return "Improper Installation";
         if (/misalign|rub|bind/.test(lower)) return "Misaligned";
@@ -3078,7 +3271,6 @@
         if (/corrosion|corroded|rust/.test(lower)) return "Corrosion";
         if (/deteriorat|rotted|\brot\b/.test(lower)) return "Deteriorated";
         if (/damag|broken|hole/.test(lower)) return "Damaged";
-        if (/end of.*life|aged|old/.test(lower)) return "Aged Condition";
 
         let phrase = note.split(/[.;]/)[0]
           .replace(/^(?:the inspector observed|the inspector noted|observed|noted)\s+(?:that\s+)?/i, "")
@@ -3089,25 +3281,75 @@
       }
 
       function templateTitleFor(note, component) {
-        const lower = note.toLowerCase();
-        const nonOperating = /did not operate|does not operate|would not operate|inoperable|failed to operate|no response|no power/.test(lower);
+        const original = defectMatchText(note);
+        const lower = affirmativeDefectText(note);
+        const nonOperating = /did not operate|does not operate|would not operate|not operable|not operating|not functional|inoperable|inoperative|not functioning|non[- ]functioning|failed to operate|did not activate|failed to activate|did not turn on|would not turn on|did not ignite|would not ignite|not igniting|did not heat|not heating|did not respond|no airflow|no water flow|no running water|water flow unavailable|water unavailable|no response|no power/.test(lower);
         const damaged = /damag|broken|hole|impact/.test(lower);
-        const runningToilet = /toilet/.test(lower) && /continuous(?:ly)? running|run(?:s|ning)? continuously|(?:would|will|does) not stop running|keeps? running/.test(lower);
+        const runningToilet = /toilet/.test(original) && /continuous(?:ly)? running|run(?:s|ning)? continuously|(?:would|will|does) not stop running|keeps? running/.test(original);
+        const elevatedCo = elevatedCarbonMonoxide(note);
 
         if (runningToilet) return "Bathroom Toilets - Continuous Running";
+        if (/^lighting fixtures?,? switches?,? (?:and )?receptacles?\s*[—–-]*$/.test(original)) return "Lighting / Switches / Receptacles - Condition Noted";
+        if (/^under[- ]?(?:floor|oor) crawl ?space\s*[—–-]*$/.test(original)) return "Crawlspace - Condition Noted";
         if (component === "Countertop" && /crack|split|fracture/.test(lower)) return "Countertops and Cabinets - Cracked Countertop";
         if (component === "Countertop" && /chip|damag|broken|hole|impact/.test(lower)) return "Countertops and Cabinets - Damaged Countertop";
         if (component === "Countertop" && /loose|separat|movement|not secure/.test(lower)) return "Countertops and Cabinets - Loose or Separating Countertop";
         if (component === "Cabinets" && /damag|broken|crack|split|hole|impact/.test(lower)) return "Countertops and Cabinets - Damaged Cabinet";
-        if (component === "Foundation" && /vertical\w*\s+crack|crack.*vertical/.test(lower)) return "Foundation - Vertical Crack in Basement Wall";
+        if (component === "Foundation" && /vertical\w*\s+crack|crack.*vertical/.test(lower)) return "Foundation - Vertical Cracking in Foundation Wall";
         if (component === "Foundation" && /horizontal\w*\s+crack|crack.*horizontal/.test(lower)) return "Foundation - Horizontal Foundation Wall Crack";
         if (component === "Foundation" && /step\w*\s+crack|stair[- ]step crack/.test(lower)) return "Foundation - Step Cracking";
         if (component === "Foundation" && /crack/.test(lower)) return "Foundation - Crack Observed";
+        if (component === "Fuel Gas Supply") {
+          if (/active gas leak|gas leak/.test(lower)) return "Fuel Shutoff - Active Gas Leak Detected";
+          if (/gas odor|odor of gas/.test(lower)) return "Fuel Gas Supply - Gas Odor Detected";
+          if (/loose|unsupported|not secure/.test(lower) && /gas (?:line|connector|piping)|fuel (?:line|piping)/.test(lower)) return "Fuel Shutoff - Loose Gas Supply Line";
+          if (/corrosion|corroded|rust/.test(lower) && /gas meter|fuel meter/.test(lower)) return "Fuel Shutoff - Corrosion at Gas Meter";
+          if (/improper|incorrect|unapproved|flexible connector/.test(lower)) return "Fuel Gas Supply - Improper Connection";
+        }
+        if (component === "Combustion Venting") {
+          if (/backdraft|back-draft|spillage/.test(lower)) return "Combustion Venting - Evidence of Backdrafting or Spillage";
+          if (/loose|disconnect|separat|detached/.test(lower)) return "Combustion Vent Connector - Loose or Disconnected";
+          if (/corrosion|corroded|rust|perforat|hole/.test(lower)) return "Combustion Vent Connector - Corroded or Perforated";
+          if (/improper.*(?:slope|support)|(?:slope|support).*improper|sag|unsupported/.test(lower)) return "Combustion Vent Connector - Improper Slope or Support";
+          if (/condensation|moisture|water stain|deteriorat/.test(lower)) return "Combustion Venting - Condensation or Moisture Deterioration";
+          if (/combustion air/.test(lower) && /missing|blocked|restrict|obstruct/.test(lower)) return "Combustion Air - Opening Missing, Blocked, or Restricted";
+        }
+        if (component === "Heating Equipment" && elevatedCo) return "Heating Equipment - Elevated Carbon Monoxide Reading";
+        if (component === "Water Heater" && elevatedCo) return "Water Heater - Elevated Carbon Monoxide Reading";
+        if (component === "Combustion / Carbon Monoxide" && elevatedCo) return "Combustion Safety - Elevated Carbon Monoxide Reading";
+        if (component === "Electrical Grounding / Bonding") {
+          if (/bonding jumper/.test(lower) && /missing|absent|not observed|not installed/.test(lower)) return "Electrical Grounding / Bonding - Missing Bonding Jumper";
+          if (/grounding electrode conductor|\bgec\b/.test(lower) && /missing|absent|damag|loose|disconnect/.test(lower)) return "Electrical Grounding / Bonding - Grounding Electrode Conductor Deficient";
+          if (/ground rod/.test(lower) && /raised|not flush|trip/.test(lower)) return "Electrical Grounding / Bonding - Ground Rod Not Flush";
+        }
         if (component === "Electrical Panel" && /overheat|excessive heat|hot spot/.test(lower)) return "Electrical Panel - Evidence of Overheating";
+        if (component === "Electrical Panel" && /aluminum branch[- ]circuit|branch[- ]circuit aluminum|solid aluminum/.test(lower)) return "Electrical Panel - Aluminum Branch-Circuit Conductors";
+        if (component === "Electrical Panel" && /subpanel/.test(lower) && /ground.*neutral|neutral.*ground/.test(lower) && /not separated|bonded together|same (?:bar|terminal)/.test(lower)) return "Electrical Panel - Subpanel Grounds and Neutrals Not Separated";
+        if (component === "Electrical Panel" && /damag|deteriorat|crack|brittle/.test(lower) && /conductor insulation|wire insulation/.test(lower)) return "Electrical Panel - Damaged Conductor Insulation";
+        if (component === "Electrical Panel" && /oversized|exceeds?.*rating|overcurrent.*exceed/.test(lower) && /breaker|fuse|overcurrent|panel rating/.test(lower)) return "Electrical Panel - Overcurrent Protection Exceeds Rating";
+        if (component === "Electrical Panel" && /double[- ]?tap|double[- ]?lug|doubled hot|multiple conductors.*breaker/.test(lower)) return "Electrical Panel - Multiple Conductors at Breaker";
+        if (component === "Electrical Panel" && /doubled neutral|multiple neutrals/.test(lower)) return "Electrical Panel - Doubled Neutrals";
+        if (component === "Electrical Panel" && /open.*knockout|missing.*filler|filler.*missing/.test(lower)) return "Electrical Panel - Open Breaker Knockout / Filler Missing";
+        if (component === "Electrical Panel" && /knockout.*open/.test(lower)) return "Electrical Panel - Open Breaker Knockout / Filler Missing";
+        if (component === "Electrical Panel" && /missing.*(?:fastener|screw)|(?:fastener|screw).*missing/.test(lower)) return "Electrical Panel - Missing Cover Fasteners";
+        if (component === "Electrical Panel" && /corrosion|corroded|rust/.test(lower)) return "Electrical Panel - Corrosion / Rust";
+        if (component === "Electrical Panel" && /splice|splicing/.test(lower)) return "Electrical Panel - Wire Splicing";
+        if (component === "Electrical Panel" && /crowd|wire management|disorganized/.test(lower)) return "Electrical Panel - Wire Crowding / Management";
+        if (component === "Electrical Panel" && /incorrect|improper/.test(lower) && /screw|fastener/.test(lower)) return "Electrical Panel - Improper Cover Fasteners";
+        if (component === "Electrical Panel" && /panel cover|dead front/.test(lower) && /damag|misfit|miss fitted|not fit/.test(lower)) return "Electrical Panel - Damaged or Misfitted Cover";
+        if (component === "Electrical Panel" && /foreign object|contamin|debris|dust accumulation/.test(lower)) return "Electrical Panel - Foreign Material / Contamination";
+        if (component === "Electrical Service" && /low clearance|too low/.test(lower)) return "Service-Entrance Conductors - Low Clearance";
+        if (component === "Electrical Service" && /missing.*disconnect|disconnect.*missing/.test(lower)) return "Main Service Disconnect - Missing";
         if ((component === "Exterior Windows" || component === "Windows") && /crack|broken/.test(lower) && /glass|pane/.test(lower)) return `${component} - Cracked / Broken Glass Pane`;
+        if ((component === "Exterior Windows" || component === "Windows") && /fogged|failed (?:insulated )?(?:glass )?seal|broken seal|condensation between/.test(lower)) return `${component} - Failed Insulated-Glass Seal`;
         if ((component === "Exterior Windows" || component === "Windows") && /seal|weatherstrip/.test(lower) && /damag|deteriorat|fail|loose|missing/.test(lower)) return `${component} - Deteriorated or Failing Seals`;
+        if ((component === "Exterior Windows" || component === "Windows") && /painted shut|sealed shut|would not open|does not open|stuck closed/.test(lower)) return `${component} - Inoperable / Painted Shut`;
+        if ((component === "Exterior Windows" || component === "Windows") && /water stain|moisture|water damage|\bwet\b|damp/.test(lower)) return `${component} - Moisture Staining or Damage`;
+        if ((component === "Exterior Windows" || component === "Windows") && /hardware/.test(lower) && /damag|broken|loose|missing|inoperable/.test(lower)) return `${component} - Damaged or Inoperable Hardware`;
         if ((component === "Exterior Windows" || component === "Windows") && /damag|broken|hole/.test(lower)) return `${component} - Damaged Window`;
         if ((component === "Doors" || component === "Exterior Doors" || component === "Exterior Door") && /would not latch|does not latch|did not latch|will not latch/.test(lower)) return `${component} - Door Does Not Close or Latch`;
+        if ((component === "Doors" || component === "Exterior Doors" || component === "Exterior Door") && /stick|bind|rub/.test(lower)) return `${component} - Door Sticking or Binding`;
+        if ((component === "Doors" || component === "Exterior Doors" || component === "Exterior Door") && /weatherstrip/.test(lower) && /missing|damag|deteriorat/.test(lower)) return `${component} - Weatherstripping Missing or Damaged`;
         if (/\bpaint(?:ed|ing)?\b|\bcoating\b/.test(lower) && /damag|dmage|peel|chip|flak|blister|wear|scuff|deteriorat/.test(lower)) {
           const subject = component === "General" ? "Painted Surfaces" : component;
           return `${subject} - Damaged Paint Finish`;
@@ -3116,10 +3358,26 @@
         if (component === "Heating Equipment / Cooling System" && nonOperating) return "Heating Equipment / Cooling System - Units Did Not Operate";
         if (component === "Heating Equipment" && nonOperating) return "Heating Equipment - Unit Did Not Operate";
         if (component === "Cooling System" && nonOperating) return "Cooling System - Unit Did Not Operate";
+        if (component === "Cooling System" && /not cooling|did not cool|cooling poorly|inadequate cooling|insufficient cooling|poor cooling|reduced cooling/.test(lower)) return "Cooling System - Inadequate Cooling Performance";
+        if (component === "Cooling System" && /noisy|noise|rattle|grind|squeal|vibrat/.test(lower)) return "Cooling System - Abnormal Noise or Vibration";
+        if (component === "Cooling System" && /old|aged|end of.*life/.test(lower)) return "Cooling System - Aged Equipment";
+        if (component === "Cooling System" && /missing.*insulation|insulation.*missing/.test(lower) && /refrigerant|suction|line/.test(lower)) return "AC Condenser - Missing Refrigerant-Line Insulation";
+        if (component === "Cooling System" && /dirty|clogged|blocked/.test(lower) && /coil|condenser/.test(lower)) return "AC Condenser - Dirty or Clogged Coil";
+        if (component === "Cooling System" && /elevated|raised|wood/.test(lower) && /support|platform|base/.test(lower)) return "AC Condenser - Deficient Support Platform";
+        if (component === "Heating Equipment" && /corrosion|corroded|rust/.test(lower)) return "Heating Equipment - Corrosion / Rust";
+        if (component === "Heating Equipment" && /leak|drip|water/.test(lower)) return "Heating Equipment - Leakage Observed";
+        if ((component === "HVAC Filter" || component === "HVAC Components") && /dirty|clogged|restrict/.test(lower) && /filter/.test(lower)) return "HVAC Filter - Dirty or Restricted";
+        if ((component === "HVAC Filter" || component === "HVAC Components") && /cover|panel/.test(lower) && /missing|absent/.test(lower)) return "HVAC Filter - Access Cover Missing";
         if (component === "Washing Machine" && /active leak|leaking|leakage|\bleak\b|dripping/.test(lower)) return "Washing Machine - Laundry - Leakage Observed";
+        if (component === "Washing Machine" && /missing.*(?:pan|catch pan)|(?:pan|catch pan).*missing/.test(lower)) return "Washing Machine - Missing Catch Pan";
+        if (component === "Dishwasher" && /active leak|leaking|leakage|\bleak\b|dripping/.test(lower)) return "Dishwasher - Leakage Observed";
+        if (component === "Clothes Dryer" && /vent|duct|exhaust/.test(lower) && /disconnect|restrict|clog|screen|foil|plastic|improper|damag/.test(lower)) return "Clothes Dryer - Deficient Exhaust Vent";
+        if (component === "Range/Oven/Cooktop" && /knob|control/.test(lower) && /missing|damag|broken/.test(lower)) return "Range / Oven / Cooktop - Missing or Damaged Controls";
 
         if (component === "Bathroom Exhaust Fan") {
           if (nonOperating) return "Bathroom Exhaust Fan - Inoperable Exhaust Fan";
+          if (/fan/.test(lower) && /missing|absent|not installed/.test(lower)) return "Bathroom Exhaust Fan - Missing Exhaust Fan";
+          if (/not vent|does not vent|discharg.*attic|terminat.*attic|no exterior termination/.test(lower)) return "Bathroom Exhaust Fan - Not Vented to Exterior";
           if (/insufficient|inadequate|poor airflow|would not hold/.test(lower)) return "Bathroom Exhaust Fan - Insufficient Airflow from Exhaust Fan";
           if (/noisy|noise|rattle|squeal/.test(lower)) return "Bathroom Exhaust Fan - Noisy Operation";
           if (/missing.*cover|cover.*missing/.test(lower)) return "Bathroom Exhaust Fan - Missing Cover";
@@ -3130,14 +3388,17 @@
           if (nonOperating && /jam|hum|buzz|obstruct/.test(lower)) return "Garbage Disposal - Not Operating (Appears Jammed)";
           if (nonOperating) return "Garbage Disposal - Did Not Operate";
           if (/exposed.*wir|wir.*exposed/.test(lower)) return "Garbage Disposal - Exposed Wiring";
+          if (/noise|noisy|rattle|grind|hum|buzz|excessive sound/.test(lower)) return "Garbage Disposal - Excessive or Abnormal Noise";
         }
+
+        if (component === "Refrigerator" && /handle/.test(lower) && /broken|damag|loose|missing/.test(lower)) return "Refrigerator - Damaged or Missing Handle";
 
         if (component === "Garage Fire Separation") {
           if (/wall|ceiling|drywall/.test(lower) && /damag/.test(lower) && /unfinished|incomplete|missing/.test(lower)) return "Garage Fire Separation - Damaged or Incomplete Wall/Ceiling Coverings";
           if (/impact/.test(lower) && /wall|drywall/.test(lower)) return "Garage Fire Separation - Impact Damage to Wall Surface";
           if (/crack/.test(lower) && /seam|drywall/.test(lower)) return "Garage Fire Separation - Cracked Drywall Seams";
           if (/peel/.test(lower) && /tape|seam/.test(lower)) return "Garage Fire Separation - Peeling Drywall Tape at Seams";
-          if (/unsealed|opening|penetration/.test(lower)) return "Garage Fire Separation - Unsealed Penetration";
+          if (/unsealed|opening|penetration|\bhole\b/.test(lower)) return "Garage Fire Separation - Unsealed Penetration";
         }
 
         if (component === "Exterior Windows" && /missing/.test(lower) && /screens?/.test(lower)) return "Exterior Windows - Windows and Doors - Missing Screens";
@@ -3147,13 +3408,27 @@
           if (damaged) return "Exterior Doors - Damaged Storm Door";
         }
 
-        if (component === "Floors" && damaged) {
+        if (component === "Floors" && damaged && !/moisture|water damage|water stain|\bwet\b|asbestos/.test(lower)) {
           if (/hardwood/.test(lower)) return "Floors - Damaged Hardwood Flooring";
           if (/laminate/.test(lower)) return "Floors - Damaged Laminate Flooring";
           if (/\blvp\b|luxury vinyl/.test(lower)) return "Floors - Damaged LVP Flooring";
           if (/carpet/.test(lower)) return "Floors - Damaged Carpet";
           if (/tile/.test(lower)) return "Floors - Damaged Tile Flooring";
           return "Floors - Damaged Floor Covering";
+        }
+        if (component === "Floors" && /uneven|sloped|sag|trip hazard/.test(lower)) return "Floors - Uneven or Sloped Flooring";
+        if (component === "Floors" && /loose|lift|separat|movement|buckl/.test(lower)) return "Floors - Loose, Lifting, or Separated Flooring";
+        if (component === "Floors" && /moisture|water damage|water stain|\bwet\b/.test(lower)) return "Floors - Moisture-Damaged Flooring";
+
+        if (component === "Walls / Ceilings") {
+          if (/drywall.*(?:seam|tape)|(?:seam|tape).*drywall/.test(lower) && /crack|separat|peel/.test(lower)) return "Walls / Ceilings - Drywall Seam or Tape Cracking";
+          if (/nail pop|fastener pop/.test(lower)) return "Walls / Ceilings - Drywall Fastener Pops";
+          if (/fixture footprint|previous light fixture/.test(lower)) return "Walls / Ceilings - Previous Fixture Footprint / Finish Difference";
+          if (/poor.*patch|patch.*poor|incomplete repair/.test(lower)) return "Walls / Ceilings - Poor or Incomplete Patching";
+          if (/water stain|moisture|water damage|\bwet\b|damp/.test(lower)) return "Walls / Ceilings - Moisture Staining or Damage";
+          if (/paint/.test(lower) && /crack|peel|flak|blister|deteriorat/.test(lower)) return "Walls / Ceilings - Paint Finish Deterioration";
+          if (/crack|split/.test(lower)) return "Walls / Ceilings - Cracking";
+          if (damaged) return "Walls / Ceilings - Damaged Finish";
         }
 
         if (component === "Bathroom Sink") {
@@ -3167,21 +3442,128 @@
           if (/missing/.test(lower)) return "Asphalt Shingles - Missing Shingles";
           if (damaged) return "Asphalt Shingles - Damaged or Torn";
           if (/lift|unsealed/.test(lower)) return "Asphalt Shingles - Lifted and Unsealed Shingles";
+          if (/granule loss|granular loss/.test(lower)) return "Asphalt Shingles - Granule Loss";
+          if (/end of.*life|aged|old|severely deteriorat/.test(lower)) return "Asphalt Shingles - Near End of Service Life";
+        }
+        if (component === "Roof Covering") {
+          if (/unsealed|exposed/.test(lower) && /nail|fastener/.test(lower)) return "Roof Covering - Exposed or Unsealed Fasteners";
+          if (/under[- ]?driven/.test(lower) && /nail|fastener/.test(lower)) return "Roof Covering - Under-Driven Fasteners";
+          if (/prior repair|previous repair|signs? of.*repair/.test(lower)) return "Roof Covering - Evidence of Prior Repairs";
+          if (/granule loss|granular loss/.test(lower)) return "Roof Covering - Granule Loss";
+          if (/moss|lichen|biological growth/.test(lower)) return "Roof Covering - Moss or Lichen Growth";
+          if (/debris/.test(lower)) return "Roof Covering - Debris Accumulation";
+          if (/lift|buckl|curl|unsealed/.test(lower)) return "Roof Covering - Lifting or Buckling";
+          if (damaged || /crack|torn|deteriorat/.test(lower)) return "Roof Covering - Damaged or Deteriorated";
         }
         if (component === "Metal Roofing" && /improvised|makeshift|improper repair|patch/.test(lower)) return "Metal Roofing - Improper Metal-Roof Repair";
         if (component === "Membrane Roofing" && /improvised|makeshift|improper repair|patch/.test(lower)) return "Membrane Roofing - Improper Membrane Repair or Patching";
 
-        if ((component === "Gutters" || component === "Roof Drainage") && /debris|clog|block/.test(lower)) return "Gutters - Debris Accumulation";
-        if ((component === "Downspouts" || component === "Roof Drainage") && /too close|at foundation|near foundation/.test(lower)) return "Downspouts - Discharge Too Close to Foundation";
+        if ((component === "Gutters" || component === "Roof Drainage") && /debris|clog|block|leaves|full of/.test(lower)) return "Gutters - Debris Accumulation";
+        if ((component === "Gutters" || component === "Roof Drainage") && /missing|absent/.test(lower)) return "Gutters - Missing";
+        if ((component === "Gutters" || component === "Roof Drainage") && /loose|sag|damag|disconnect/.test(lower)) return "Gutters - Loose, Sagging, or Damaged";
+        if ((component === "Downspouts" || component === "Roof Drainage") && /too close|at foundation|near foundation|next to foundation|near (?:the )?(?:house|home)|drain(?:s|ing)? near (?:the )?(?:house|home)/.test(lower)) return "Downspouts - Discharge Too Close to Foundation";
+        if (component === "Downspouts" && /detach|disconnect|loose/.test(lower)) return "Downspouts - Detached or Disconnected";
         if (component === "Electrical Receptacle" && /reverse polarity|reversed polarity/.test(lower)) return "Electrical Receptacles - Reversed Polarity";
         if (component === "Electrical Receptacle" && /open ground|not grounded|ungrounded/.test(lower)) return "Electrical Receptacles - Open Ground";
+        if (component === "Electrical Receptacle" && /overheat|scorch|burn|melt|heat damage/.test(lower)) return "Electrical Receptacles - Evidence of Overheating";
+        if (component === "Electrical Receptacle" && /no gfci|missing gfci|lacks? gfci|not gfci protected|without gfci/.test(original)) return "Electrical Receptacles - Missing GFCI Protection";
+        if (component === "Electrical Receptacle" && /gfci|gfi\b/.test(lower) && /did not trip|failed.*test|not testing|would not reset|did not reset|inoperable/.test(lower)) return "Electrical Receptacles - GFCI Did Not Test / Reset Properly";
+        if (component === "Electrical Receptacle" && /loose|wobbl/.test(lower)) return "Electrical Receptacles - Loose Receptacle";
+        if (component === "Electrical Receptacle" && /cover plate|faceplate/.test(lower) && /missing|absent|damag|broken/.test(lower)) return "Lighting, Switches and Receptacles - Missing or Damaged Cover Plate";
+        if (component === "Lighting / Switches / Receptacles" && /cover plate|faceplate/.test(lower) && /missing|absent/.test(lower)) return "Lighting, Switches and Receptacles - Missing Cover Plate";
+        if (component === "Lighting / Switches / Receptacles" && /light|fixture/.test(lower) && nonOperating) return "Lighting Fixtures - Did Not Operate";
+        if (component === "Electrical" && /exposed|unterminated|open ended/.test(lower) && /wire|wiring|conductor/.test(lower)) return "Electrical - Exposed or Improperly Terminated Wiring";
 
-        return `${component} - ${conditionTitle(note)}`;
+        if (component === "Water Heater") {
+          if (/missing.*(?:tpr|relief).*pipe|(?:tpr|relief).*pipe.*missing|no.*(?:tpr|relief).*pipe/.test(lower)) return "Water Heater - Missing TPR Discharge Pipe";
+          if (/tpr|relief valve/.test(lower) && /improper|incorrect|defect|terminat/.test(lower)) return "Water Heater - Deficient TPR Valve Discharge";
+          if (/missing.*(?:(?:catch|drain) pan|water heater pan)|(?:(?:catch|drain) pan|water heater pan).*missing|water heater.*pan.*missing/.test(lower)) return "Water Heater - Missing Catch Pan";
+          if (/leak|drip/.test(lower)) return "Water Heater - Leakage Observed";
+          if (/corrosion|corroded|rust/.test(lower)) return "Water Heater - Corrosion / Rust";
+        }
+
+        if (component === "Sewage Ejector") {
+          if (/basin|cover|lid/.test(lower) && /missing|loose|damag|not sealed|unsealed|open/.test(lower)) return "Sewage Ejector - Basin Cover Missing or Not Sealed";
+          if (/alarm/.test(lower) && /missing|absent|disconnect|inoperable|did not operate|failed/.test(lower)) return "Sewage Ejector - Alarm Missing or Inoperable";
+          if (/check valve/.test(lower) && /missing|absent|defect|inoperable|failed/.test(lower)) return "Sewage Ejector - Check Valve Missing or Defective";
+          if (/pump/.test(lower) && nonOperating) return "Sewage Ejector - Pump Did Not Operate";
+        }
+
+        if (component === "Smoke / Carbon Monoxide Alarms" && /missing|absent|not installed/.test(lower)) {
+          if (/carbon monoxide|\bco\b/.test(lower)) return "Carbon Monoxide Alarms - Missing";
+          return "Smoke Alarms - Missing";
+        }
+        if (component === "Sump Pump" && nonOperating) return "Sump Pump - Did Not Operate";
+        if (component === "Sump Pump" && /check valve/.test(lower) && /missing|absent|not installed/.test(lower)) return "Sump Pump - Missing Check Valve at Discharge";
+        if (component === "Sump Pump" && /failed to shut off|runs continuously|would not stop/.test(lower)) return "Sump Pump - Failed to Shut Off";
+        if (component === "Sump Pump" && /backup system|battery backup|no backup/.test(lower)) return "Sump Pump - Backup System Recommended";
+        if (component === "Septic System" && /backup|backed up|sewage|overflow/.test(lower)) return "Septic System - Sewage Backup or Overflow";
+
+        if (component === "Garage Door" && /auto(?:matic)?[- ]?reverse|safety reverse|photo[- ]?eye|photoelectric|pressure reverse/.test(lower) && /did not operate|failed|inoperable|would not reverse|not reverse/.test(lower)) return "Garage Door - Safety Reverse Did Not Operate";
+        if (component === "Garage Fire Separation" && /door/.test(lower) && /self[- ]clos|automatic[- ]clos/.test(lower) && /missing|absent|not equipped|did not close/.test(lower)) return "Garage Fire Separation - House Entry Door Missing Self-Closing Device";
+        if (component === "Crawlspace" && /standing water|ponding|water on (?:the )?ground/.test(lower)) return "Crawlspace - Standing Water";
+
+        if (component === "Built-in Microwave" && /burn odor|burning odor|scorch|melt|heat damage/.test(lower)) return "Built-in Microwave - Burn Odor or Scorching";
+
+        if (component === "Siding / Trim") {
+          if (/missing|absent/.test(lower)) return "Siding / Trim - Missing Materials";
+          if (/loose|separat/.test(lower)) return "Siding / Trim - Loose or Separated";
+          if (/rot|deteriorat|decay/.test(lower)) return "Siding / Trim - Deterioration / Rot";
+          if (/mold|mildew|algae|biological growth/.test(lower)) return "Siding / Trim - Biological Growth";
+          if (/improper|incorrect/.test(lower) && /flash|trim|install/.test(lower)) return "Siding / Trim - Improper Installation or Flashing";
+          if (damaged || /crack|split|warp|buckl/.test(lower)) return "Siding / Trim - Damaged or Distorted";
+        }
+
+        if (component === "Brick / Masonry Veneer") {
+          if (/step.*crack|stair[- ]step crack/.test(lower)) return "Brick / Masonry Veneer - Step Cracking";
+          if (/crack/.test(lower)) return "Brick / Masonry Veneer - Cracking";
+          if (/separat|gap|movement|displacement/.test(lower)) return "Brick / Masonry Veneer - Separation or Movement";
+          if (/mortar|repoint/.test(lower) && /deteriorat|missing|loose|crumbl/.test(lower)) return "Brick / Masonry Veneer - Mortar Deterioration";
+        }
+
+        if (component === "Deck / Balcony") {
+          if (/rail|guard|handrail/.test(lower) && /loose|unsafe|missing|inadequate|damag/.test(lower)) return "Deck / Porch - Deficient Guard or Handrail";
+          if (/stair|step/.test(lower) && /deteriorat|rot|damag|loose|unsafe/.test(lower)) return "Deck / Porch - Deteriorated or Unsafe Steps";
+          if (/rot|deteriorat|decay/.test(lower)) return "Deck / Porch - Deteriorated Wood Components";
+          if (/loose/.test(lower) && /board|deck/.test(lower)) return "Deck / Porch - Loose Decking Boards";
+        }
+
+        if (component === "Walkways / Driveways") {
+          if (/crack/.test(lower)) return "Walkways / Driveways - Cracking";
+          if (/uneven|trip hazard|heav|settle/.test(lower)) return "Walkways / Driveways - Uneven Surface / Trip Hazard";
+          if (/deteriorat|crumbl|spall/.test(lower)) return "Walkways / Driveways - Deteriorated Surface";
+        }
+
+        if (component === "Site Drainage" && /negative|neutral|toward.*(?:home|house|foundation)|slope.*(?:home|house|foundation)/.test(lower)) return "Site Drainage - Negative or Neutral Grading";
+        if (component === "Site Drainage" && /standing water|ponding/.test(lower)) return "Site Drainage - Standing Water";
+        if (component === "Vegetation / Trees" && /overhang|tree.*roof|branch.*roof/.test(lower)) return "Vegetation / Trees - Overhanging Branches";
+        if (component === "Vegetation / Trees" && /contact|close|against|heavy vegetation/.test(lower)) return "Vegetation / Trees - Too Close to Structure";
+
+        if (component === "Attic Insulation" && /missing|insufficient|inadequate|thin|low|deficien/.test(lower)) return "Attic Insulation - Insulation Deficiency";
+        if (component === "Attic Ventilation" && /baffle/.test(lower) && /missing|loose|blocked|damag/.test(lower)) return "Attic Ventilation - Missing, Loose, or Blocked Baffles";
+        if (component === "Attic" && /animal|rodent|wildlife/.test(lower)) return "Attic - Evidence of Animal Activity";
+        if (component === "Crawlspace" && /vapor barrier|ground cover/.test(lower) && /missing|absent|incomplete/.test(lower)) return "Crawlspace - Missing or Incomplete Vapor Barrier";
+        if (component === "Garage Floor" && /crack/.test(lower)) return "Garage Floor - Concrete Cracking";
+        if (component === "Stairs / Guards / Handrails") {
+          if (/handrail/.test(lower) && /missing|absent|not installed/.test(lower)) return "Stairs / Handrails - Missing Handrail";
+          if (/handrail|guardrail|railing/.test(lower) && /loose|unstable|unsafe|damag/.test(lower)) return "Stairs / Handrails - Loose or Unsafe Rail";
+          if (/stair|step/.test(lower) && /loose|uneven|damag|deteriorat|unsafe/.test(lower)) return "Stairs / Steps - Deficient Condition";
+        }
+        if ((component === "Floors" || component === "Walls / Ceilings" || component === "Interior Condition") && /possible|suspect/.test(lower) && /asbestos/.test(lower)) return `${component} - Suspected Asbestos-Containing Material`;
+        if (component === "Fireplace / Chimney") {
+          if (/chimney crown/.test(lower) && /crack|damag|deteriorat/.test(lower)) return "Chimney - Cracked or Deteriorated Crown";
+          if (/creosote|soot buildup/.test(lower)) return "Wood-Burning Fireplace - Creosote Buildup";
+          if (/hearth|firebox/.test(lower) && /crack|damag|deteriorat|gap/.test(lower)) return "Fireplace - Damaged Hearth or Firebox Materials";
+          if (/flashing/.test(lower) && /damag|deteriorat|loose|missing|improper/.test(lower)) return "Chimney - Deficient Flashing";
+        }
+
+        return `${component} - ${conditionTitle(note, component)}`;
       }
 
       function observationFor(note, component) {
         const base = ensureSentence(note);
-        const text = `${component} ${base}`.toLowerCase();
+        const text = defectMatchText(`${component} ${base}`);
+        const positiveText = `${component} ${affirmativeDefectText(base)}`.toLowerCase();
 
         if (/^(?:paint\s+(?:damage|dmage)|damaged\s+paint|paint\s+damaged|paint\s+finish\s+damaged)\.?$/i.test(base.trim())) return "Damage to the paint finish was observed.";
         if (component === "Foundation" && /vertical\w*\s+crack|crack.*vertical/.test(text)) {
@@ -3199,11 +3581,37 @@
           }
           return statements.join(" ");
         }
-        if (component === "Electrical Panel" && /overheat|excessive heat|hot spot/.test(text)) return "Evidence of overheating was observed at the electrical panel.";
+        if (component === "Electrical Panel" && /overheat|excessive heat|hot spot/.test(positiveText)) return "Evidence of overheating was observed at the electrical panel.";
+        if (component === "Fuel Gas Supply" && /active gas leak|gas leak/.test(positiveText)) return "An active gas leak was identified at the fuel-gas supply component.";
+        if (component === "Fuel Gas Supply" && /gas odor|odor of gas/.test(positiveText)) return "A gas odor was detected at the fuel-gas supply component.";
+        if (component === "Combustion Venting" && /backdraft|back-draft|spillage/.test(positiveText)) return "Evidence consistent with combustion-gas backdrafting or spillage was observed at the fuel-burning equipment.";
+        if (component === "Combustion Venting" && /loose|disconnect|separat|detached/.test(positiveText)) return "The combustion vent connector was loose, separated, or disconnected.";
+        if (component === "Combustion Venting" && /corrosion|corroded|rust|perforat|hole/.test(positiveText)) return "Corrosion or perforation was observed at the combustion vent connector.";
+        if (["Heating Equipment", "Water Heater", "Combustion / Carbon Monoxide"].includes(component) && elevatedCarbonMonoxide(base)) {
+          const reading = base.match(/\b\d+(?:\.\d+)?\s*ppm\b/i)?.[0];
+          return reading
+            ? `An elevated carbon-monoxide reading of ${reading} was obtained at the fuel-burning equipment.`
+            : "An elevated or otherwise unacceptable carbon-monoxide reading was obtained at the fuel-burning equipment.";
+        }
+        if (component === "Electrical Panel" && /aluminum branch[- ]circuit|branch[- ]circuit aluminum|solid aluminum/.test(positiveText)) return "Solid aluminum branch-circuit conductors were observed in the electrical panel.";
+        if (component === "Electrical Panel" && /subpanel/.test(positiveText) && /ground.*neutral|neutral.*ground/.test(positiveText) && /not separated|bonded together|same (?:bar|terminal)/.test(positiveText)) return "Grounding and neutral conductors were not separated in the subpanel.";
+        if (component === "Electrical Grounding / Bonding" && /bonding jumper/.test(positiveText) && /missing|absent|not observed|not installed/.test(positiveText)) return "A required or expected bonding jumper was not observed at the noted component.";
+        if (component === "Electrical Receptacle" && /overheat|scorch|burn|melt|heat damage/.test(positiveText)) return "Evidence of overheating was observed at the receptacle.";
+        if (component === "Electrical" && /exposed|unterminated|open ended/.test(positiveText) && /wire|wiring|conductor/.test(positiveText)) return "Exposed or improperly terminated electrical wiring was observed.";
+        if (component === "Garage Fire Separation" && /door/.test(positiveText) && /self[- ]clos|automatic[- ]clos/.test(positiveText) && /missing|absent|not equipped|did not close/.test(positiveText)) return "The door between the attached garage and the house was not equipped with a functional self-closing device.";
+        if (component === "Garage Door" && /auto(?:matic)?[- ]?reverse|safety reverse|photo[- ]?eye|photoelectric|pressure reverse/.test(positiveText) && /did not operate|failed|inoperable|would not reverse|not reverse/.test(positiveText)) return "The garage-door opener's safety-reversal feature did not operate when tested.";
+        if (component === "Sewage Ejector" && /basin|cover|lid/.test(positiveText) && /missing|loose|damag|not sealed|unsealed|open/.test(positiveText)) return "The sewage-ejector basin cover was missing, loose, damaged, or not effectively sealed.";
+        if (component === "Sewage Ejector" && /alarm/.test(positiveText) && /missing|absent|disconnect|inoperable|did not operate|failed/.test(positiveText)) return "The sewage-ejector high-water alarm was missing, disconnected, or did not operate when tested.";
+        if (component === "Sewage Ejector" && /check valve/.test(positiveText) && /missing|absent|defect|inoperable|failed/.test(positiveText)) return "The sewage-ejector discharge check valve was missing or defective.";
+        if (component === "Sump Pump" && /check valve/.test(positiveText) && /missing|absent|not installed/.test(positiveText)) return "A check valve was not installed at the sump-pump discharge piping.";
+        if (component === "Crawlspace" && /standing water|ponding|water on (?:the )?ground/.test(positiveText)) return "Standing water was observed in the crawlspace.";
+        if (component === "Built-in Microwave" && /burn odor|burning odor|scorch|melt|heat damage/.test(positiveText)) return "A burn odor, scorching, melting, or heat damage was observed at the built-in microwave.";
         if (component === "Countertop" && /^(?:cracked|split|fractured)\s+(?:kitchen\s+)?counter(?:top)?\.?$/i.test(base.trim())) return "A crack was observed in the kitchen countertop.";
         if (component === "Countertop" && /^(?:the\s+)?(?:kitchen\s+)?counter(?:top)?\s+(?:is\s+|was\s+)?(?:cracked|split|fractured)\.?$/i.test(base.trim())) return "A crack was observed in the kitchen countertop.";
+        if (component === "Cooling System" && /did not provide adequate cooling|not cooling|did not cool|cooling poorly|inadequate cooling|insufficient cooling/.test(text)) return "The cooling system did not provide adequate cooling when operated.";
         if ((component === "Exterior Windows" || component === "Windows") && /^damaged\s+window\.?$/i.test(base)) return "Damage was observed at the window.";
         if ((component === "Exterior Windows" || component === "Windows") && /crack|broken/.test(text) && /glass|pane/.test(text)) return "Cracked or broken window glass was observed.";
+        if ((component === "Exterior Windows" || component === "Windows") && /fogged|failed (?:insulated )?(?:glass )?seal|broken seal|condensation between/.test(text)) return "Fogging or condensation was observed between the panes, consistent with a failed insulated-glass seal.";
         if ((component === "Exterior Windows" || component === "Windows") && /seal|weatherstrip/.test(text) && /damag|deteriorat|fail|loose|missing/.test(text)) {
           const statements = ["The window seal was observed to be damaged or deteriorated."];
           if (/\b(?:no|without)\s+(?:(?:visible|active)\s+)?(?:(?:signs?|evidence|indications?)\s+of\s+)?(?:moisture|water|leakage|staining|dampness)\b/.test(text)) {
@@ -3212,107 +3620,345 @@
           return statements.join(" ");
         }
         if (/toilet/.test(text) && /(?:would|will|does) not stop running|keeps? running|run(?:s|ning)? continuously/.test(text)) return "The toilet would not stop running.";
+        const noteText = defectMatchText(base);
+        const shortNote = noteText.replace(/[.!?]+$/g, "").split(/\s+/).length <= 8 && !/[;,]/.test(noteText);
+        if (shortNote) {
+          if (component === "Toilet" && /loose|rock|wobbl/.test(noteText)) return "The toilet was loose at the floor.";
+          if (component === "Toilet" && /leak|drip/.test(noteText) && /base|floor/.test(noteText)) return "Leakage was observed at the base of the toilet.";
+          if ((component === "Bathroom Sink" || component === "Bathroom Plumbing") && /slow.*drain|drain.*slow/.test(noteText)) return "The bathroom sink drained slowly when tested.";
+          if (component === "Plumbing" && /leak/.test(noteText) && /under|beneath/.test(noteText) && /sink/.test(noteText)) return "Leakage was observed beneath the sink.";
+          if (component === "Plumbing" && /low.*water pressure|water pressure.*low/.test(noteText)) return "Low water pressure was observed.";
+          if (component === "Sump Pump" && /did not operate|inoperable|failed/.test(noteText)) return "The sump pump did not operate when tested.";
+          if (component === "Water Heater" && /rust|corrosion/.test(noteText)) return "Corrosion was observed at the water heater.";
+          if (component === "Water Heater" && /pan/.test(noteText) && /missing|absent/.test(noteText)) return "A catch pan was not installed beneath the water heater.";
+          if (component === "Heating Equipment" && /rust|corrosion/.test(noteText)) return "Corrosion was observed at the heating equipment.";
+          if (component === "Heating Equipment" && /did not operate|inoperable|failed/.test(noteText)) return "The heating equipment did not operate when tested.";
+          if (component === "HVAC Filter" && /dirty|clog|restrict/.test(noteText)) return "The HVAC filter was visibly dirty.";
+          if (component === "Cooling System" && /noisy|noise|rattle|grind|squeal|vibrat/.test(noteText)) return "The cooling system produced abnormal noise or vibration during operation.";
+          if (component === "Cooling System" && /condenser.*coil.*dirty|dirty.*condenser.*coil/.test(noteText)) return "The condenser coil was visibly dirty.";
+          if (component === "Cooling System" && /refrigerant|suction|line/.test(noteText) && /insulation/.test(noteText) && /missing|absent/.test(noteText)) return "Insulation was missing from the refrigerant line.";
+          if (component === "Dishwasher" && /leak|drip/.test(noteText)) return "Leakage was observed at the dishwasher.";
+          if (component === "Garbage Disposal" && /hum|buzz/.test(noteText)) return "The garbage disposal produced a humming sound when operated.";
+          if (component === "Clothes Dryer" && /vent|duct|exhaust/.test(noteText) && /disconnect|detach/.test(noteText)) return "The dryer exhaust duct was disconnected.";
+          if (component === "Range/Oven/Cooktop" && /knob|control/.test(noteText) && /missing|absent/.test(noteText)) return "A control knob was missing from the range or oven.";
+          if (component === "Refrigerator" && /handle/.test(noteText) && /broken|damag|missing|loose/.test(noteText)) return "The refrigerator handle was damaged or missing.";
+          if (component === "Built-in Microwave" && /did not operate|inoperable|failed/.test(noteText)) return "The built-in microwave did not operate when tested.";
+          if (component === "Asphalt Shingles" && /missing/.test(noteText)) return "Missing asphalt shingles were observed on the roof.";
+          if (component === "Asphalt Shingles" && /lift|unsealed|curl|buckl/.test(noteText)) return "Lifted or unsealed asphalt shingles were observed.";
+          if (component === "Roof Covering" && /nail|fastener/.test(noteText) && /exposed|unsealed/.test(noteText)) return "An exposed or unsealed roof fastener was observed.";
+          if ((component === "Gutters" || component === "Roof Drainage") && /leaves|debris|clog|full of/.test(noteText)) return "Leaves or debris were observed in the gutter.";
+          if (component === "Downspouts" && /near.*(?:house|home)|too close|foundation/.test(noteText)) return "The downspout discharged too close to the foundation.";
+          if ((component === "Exterior Windows" || component === "Windows") && /painted shut|sealed shut/.test(noteText)) return "The window was painted or sealed shut and could not be operated.";
+          if ((component === "Doors" || component === "Exterior Doors" || component === "Exterior Door") && /would not latch|does not latch|did not latch/.test(noteText)) return "The door did not latch when operated.";
+          if ((component === "Doors" || component === "Exterior Doors" || component === "Exterior Door") && /weatherstrip/.test(noteText) && /missing|absent/.test(noteText)) return "Weatherstripping was missing from the door.";
+          if (component === "Walls / Ceilings" && /drywall.*crack|crack.*drywall/.test(noteText)) return "Cracking was observed in the drywall finish.";
+          if (component === "Walls / Ceilings" && /nail pop|fastener pop/.test(noteText)) return "Drywall fastener pops were observed at the ceiling or wall finish.";
+          if (component === "Walls / Ceilings" && /patch/.test(noteText) && /poor|incomplete|uneven/.test(noteText)) return "A poor or incomplete drywall patch was observed.";
+          if (component === "Walls / Ceilings" && /water stain|moisture stain/.test(noteText)) return "Moisture staining was observed at the ceiling or wall finish.";
+          if (component === "Floors" && /carpet/.test(noteText) && /loose|lift|separat/.test(noteText)) return "Loose carpet was observed.";
+          if (component === "Floors" && /uneven|slop|sag/.test(noteText)) return "Uneven or sloped flooring was observed.";
+          if (component === "Siding / Trim" && /siding/.test(noteText) && /loose|separat/.test(noteText)) return "Loose or separated siding was observed.";
+          if (component === "Siding / Trim" && /trim/.test(noteText) && /rot|deteriorat|decay/.test(noteText)) return "Rot or deterioration was observed at the exterior trim.";
+          if (component === "Brick / Masonry Veneer" && /step.*crack|crack.*step/.test(noteText)) return "Step cracking was observed in the brick or masonry veneer.";
+          if (component === "Deck / Balcony" && /rail|guard|handrail/.test(noteText) && /loose|unsafe/.test(noteText)) return "The deck or porch railing was loose.";
+          if (component === "Deck / Balcony" && /step/.test(noteText) && /rot|deteriorat|decay/.test(noteText)) return "Rot or deterioration was observed at the porch or deck steps.";
+          if (component === "Walkways / Driveways" && /driveway/.test(noteText) && /crack/.test(noteText)) return "Cracking was observed in the driveway.";
+          if (component === "Walkways / Driveways" && /walkway|sidewalk/.test(noteText) && /trip hazard|uneven/.test(noteText)) return "An uneven area or trip hazard was observed at the walkway.";
+          if (component === "Site Drainage" && /negative grading|slope.*(?:house|home|foundation)/.test(noteText)) return "The adjacent grade sloped toward or did not provide positive drainage away from the building.";
+          if (component === "Vegetation / Trees" && /branch|tree/.test(noteText) && /roof|overhang/.test(noteText)) return "Tree branches overhung the roof.";
+          if (component === "Electrical Panel" && /double[- ]?tap|multiple conductors|double[- ]?lug/.test(noteText)) return "Multiple conductors were connected to a single breaker terminal in the electrical panel.";
+          if (component === "Electrical Panel" && /knockout/.test(noteText) && /open|missing/.test(noteText)) return "An open breaker knockout was observed at the electrical panel.";
+          if (component === "Electrical Receptacle" && /reverse|reversed/.test(noteText) && /polarity/.test(noteText)) return "Reversed polarity was identified at the receptacle.";
+          if (component === "Electrical Receptacle" && /open ground|ungrounded|not grounded/.test(noteText)) return "An open-ground condition was identified at the receptacle.";
+          if (component === "Electrical Receptacle" && /gfci|gfi\b/.test(noteText) && /did not trip|failed.*test/.test(noteText)) return "The GFCI receptacle did not trip when tested.";
+          if (component === "Smoke / Carbon Monoxide Alarms" && /smoke/.test(noteText) && /missing|absent/.test(noteText)) return "A smoke alarm was not installed in the noted area.";
+          if (component === "Smoke / Carbon Monoxide Alarms" && /carbon monoxide|\bco\b/.test(noteText) && /missing|absent/.test(noteText)) return "A carbon-monoxide alarm was not installed in the noted area.";
+          if (component === "Attic Insulation" && /low|thin|insufficient|inadequate/.test(noteText)) return "The visible attic insulation depth was low or insufficient.";
+          if (component === "Attic Ventilation" && /baffle/.test(noteText) && /missing|absent/.test(noteText)) return "Ventilation baffles were missing at one or more attic eaves.";
+          if (component === "Crawlspace" && /vapor barrier|ground cover/.test(noteText) && /missing|absent/.test(noteText)) return "A ground vapor barrier was not installed in the crawlspace.";
+          if (component === "Garage Fire Separation" && /drywall|wall|ceiling/.test(noteText) && /hole|opening|penetration/.test(noteText)) return "An open hole or penetration was observed in the garage wall or ceiling covering.";
+          if (component === "Stairs / Guards / Handrails" && /handrail/.test(noteText) && /missing|absent/.test(noteText)) return "A handrail was not installed at the stairs.";
+          if (component === "Fireplace / Chimney" && /chimney crown/.test(noteText) && /crack/.test(noteText)) return "Cracking was observed in the chimney crown.";
+          if (component === "Bathroom Exhaust Fan" && /not vent|does not vent/.test(noteText)) return "The bathroom exhaust fan did not discharge to the exterior.";
+          if (component === "Septic System" && /backup|backed up|overflow/.test(noteText)) return "A sewage backup or overflow condition was observed at the septic system.";
+        }
         return base;
       }
 
       function implicationFor(note, component) {
-        const text = `${component} ${note}`.toLowerCase();
-        const nonOperating = /did not operate|does not operate|would not operate|inoperable|failed to operate|no response|no power/.test(text);
+        const text = `${component} ${affirmativeDefectText(note)}`.toLowerCase();
+        const nonOperating = /did not operate|does not operate|would not operate|not operable|not operating|not functional|inoperable|inoperative|not functioning|non[- ]functioning|failed to operate|did not activate|failed to activate|did not turn on|would not turn on|did not ignite|would not ignite|not igniting|did not heat|not heating|did not respond|no airflow|no water flow|no running water|water flow unavailable|water unavailable|no response|no power/.test(text);
         if (/toilet/.test(text) && /continuous(?:ly)? running|run(?:s|ning)? continuously|(?:would|will|does) not stop running|keeps? running/.test(text)) return "A continuously running toilet can waste a substantial amount of water and increase utility costs. The condition commonly indicates a defective or improperly adjusted flapper, fill valve, float assembly, or flush mechanism and may cause premature wear if it remains uncorrected.";
         if (/countertop/.test(text) && /crack|split|fracture|chip|damag|broken/.test(text)) return "A cracked or damaged countertop can continue to separate or chip during normal use, creating sharp edges and reducing the surface's durability. Liquids and debris can enter the damaged area and may affect the countertop substrate or supporting cabinetry, particularly where the defect is near a sink or seam.";
         if (/countertop/.test(text) && /loose|separat|movement|not secure/.test(text)) return "Movement or separation can reduce countertop support and strain seams, fasteners, backsplashes, sinks, and adjoining cabinetry. Continued use may enlarge the separation and allow moisture or debris into areas that are difficult to clean or inspect.";
         if (/cabinet/.test(text) && /damag|broken|crack|split|loose|missing/.test(text)) return "Damaged cabinet components can affect normal door or drawer operation, support, and long-term durability. Loose or deteriorated parts may worsen with continued use and can create sharp edges or allow a door, drawer, or stored item to shift unexpectedly.";
         if (/foundation/.test(text) && /vertical\w*\s+crack|crack.*vertical/.test(text)) return "Vertical foundation-wall cracks may be associated with concrete shrinkage or settlement. Changes in the crack's width, length, or displacement may indicate continued movement, and an open crack can provide a path for future moisture intrusion even when no moisture is visible at the time of inspection.";
         if (/foundation/.test(text) && /horizontal\w*\s+crack|crack.*horizontal|step\w*\s+crack|stair[- ]step crack/.test(text)) return "Horizontal or step cracking can be associated with foundation movement or lateral soil pressure. Continued movement may widen or displace the crack, affect connected materials, and reduce the wall's ability to perform as intended.";
+        if (/possible|suspect/.test(text) && /asbestos/.test(text)) return "The material may contain asbestos, but its composition cannot be confirmed visually. Damaged, friable, cut, sanded, drilled, or otherwise disturbed suspect material can release fibers; unnecessary disturbance should be avoided until the material is properly assessed.";
+        if (/vermiculite/.test(text)) return "Vermiculite insulation may contain asbestos, but its composition cannot be confirmed visually. Disturbing the material can release dust and potentially hazardous fibers, so the insulation should remain undisturbed until it has been evaluated by an appropriately qualified professional.";
+        if (/siding \/ trim/.test(text) && /mildew|algae|biological growth/.test(text)) return "Surface biological growth can stain the exterior finish and retain moisture against siding or trim. If allowed to remain, it may accelerate coating or material deterioration and can obscure the condition of the surface below.";
+        if (/mold|mildew|fungal|microbial growth/.test(text)) return "Visible mold-like or microbial growth may be associated with elevated moisture and can damage susceptible finishes or materials. A visual inspection cannot identify the organism, determine the full concealed extent, or establish health effects.";
+        if (/electrical receptacle/.test(text) && /overheat|scorch|burn|melt|heat damage/.test(text)) return "Overheating or scorching at a receptacle can indicate a loose connection, overload, damaged conductor, or failing device. Continued use can lead to arcing, melting, loss of power, shock, or fire.";
+        if (/burn odor|burning odor|scorch|melted|heat damage/.test(text)) return "A burn odor, scorching, melting, or heat damage may indicate electrical overheating or an internal component failure. Continued operation can worsen equipment damage and may create a shock, burn, smoke, or fire hazard.";
+        if (/fuel gas supply/.test(text) && /active gas leak|gas leak|gas odor|odor of gas/.test(text)) return "Fuel-gas leakage can accumulate and ignite, creating a fire or explosion hazard. Exposure may also cause illness or asphyxiation, and operation of nearby switches, equipment, or ignition sources can increase the danger.";
+        if (/heating equipment|water heater|combustion \/ carbon monoxide/.test(text) && elevatedCarbonMonoxide(note)) return "An elevated carbon-monoxide reading may indicate unsafe combustion, venting, or equipment operation. Carbon monoxide is colorless and odorless and can cause serious illness or death when it accumulates in occupied areas.";
+        if (/combustion venting/.test(text) && /backdraft|back-draft|spillage/.test(text)) return "Backdrafting or combustion-gas spillage can introduce carbon monoxide and moisture into the building. The condition may involve blocked or defective venting, pressure imbalance, equipment malfunction, or inadequate combustion air and presents a serious occupant-safety concern.";
+        if (/combustion venting/.test(text) && /loose|disconnect|separat|detached|corrosion|corroded|perforat|hole|improper.*(?:slope|support)|sag|unsupported/.test(text)) return "A loose, damaged, corroded, or improperly supported vent connector may discharge combustion gases, including carbon monoxide, into the building instead of venting them safely outdoors. Heat and condensate can also damage nearby materials.";
+        if (/combustion venting/.test(text) && /combustion air/.test(text) && /missing|blocked|restrict|obstruct/.test(text)) return "Restricted combustion air can cause incomplete combustion, unstable draft, appliance spillage, and elevated carbon-monoxide production. Fuel-burning equipment may not operate safely or reliably until adequate combustion air is provided.";
+        if (/sewage ejector/.test(text) && /basin|cover|lid/.test(text) && /missing|loose|damag|not sealed|unsealed|open/.test(text)) return "An open or poorly sealed sewage-ejector basin can release sewer gases and moisture and leave an unsanitary opening. It may also expose occupants to moving or energized components within the basin.";
+        if (/sewage ejector/.test(text) && /alarm/.test(text) && /missing|absent|disconnect|inoperable|did not operate|failed/.test(text)) return "Without a reliable high-water alarm, occupants may not receive warning of pump failure or rising wastewater before the basin overflows or sewage backs up into the building.";
+        if (/sewage ejector/.test(text) && /check valve/.test(text) && /missing|absent|defect|inoperable|failed/.test(text)) return "A missing or defective ejector check valve can allow wastewater to flow back into the basin after each pump cycle. Backflow can cause repeated cycling, premature pump wear, loss of capacity, and an increased risk of sewage backup.";
+        if (/electrical panel/.test(text) && /aluminum branch[- ]circuit|branch[- ]circuit aluminum|solid aluminum/.test(text)) return "Solid aluminum branch-circuit connections can loosen or oxidize over time, particularly where devices or connectors are not rated and installed for aluminum conductors. Deteriorated connections can overheat or arc and increase the risk of fire.";
+        if (/electrical panel/.test(text) && /subpanel/.test(text) && /ground.*neutral|neutral.*ground/.test(text) && /not separated|bonded together|same (?:bar|terminal)/.test(text)) return "Bonding neutrals and equipment-grounding conductors together downstream of the service disconnect can place normal return current on metal enclosures and grounding paths. This creates objectionable current and can increase shock risk.";
+        if (/electrical grounding \/ bonding/.test(text) && /bonding jumper/.test(text) && /missing|absent|not observed|not installed/.test(text)) return "Missing or deficient bonding may prevent metal piping and related components from remaining at the same electrical potential. During a fault, exposed metal can become energized and protective devices may not operate as intended, increasing shock risk.";
+        if (/electrical receptacle/.test(text) && /overheat|scorch|burn|melt|heat damage/.test(text)) return "Overheating or scorching at a receptacle can indicate a loose connection, overload, damaged conductor, or failing device. Continued use can lead to arcing, melting, loss of power, shock, or fire.";
+        if (/garage fire separation/.test(text) && /door/.test(text) && /self[- ]clos|automatic[- ]clos/.test(text)) return "Without a functional self-closing device, the garage-to-house door may remain open and reduce the intended separation between the garage and living areas. Smoke, fire, and vehicle exhaust can spread more readily into the home.";
+        if (/garage door/.test(text) && /auto(?:matic)?[- ]?reverse|safety reverse|photo[- ]?eye|photoelectric|pressure reverse/.test(text)) return "A garage-door opener that does not reverse as intended may continue closing on a person, pet, vehicle, or object. The failed safety feature creates a crushing and entrapment hazard.";
+        if (/sump pump/.test(text) && /check valve/.test(text) && /missing|absent|not installed/.test(text)) return "Without a check valve, water in the discharge line can flow back into the sump basin after each pump cycle. This can cause repeated cycling, reduce pumping efficiency, accelerate pump wear, and shorten service life.";
+        if (/crawlspace/.test(text) && /standing water|ponding|water on (?:the )?ground/.test(text)) return "Standing water raises crawlspace humidity and can contribute to wood deterioration, corrosion, damaged insulation, odors, and fungal or microbial growth. Persistent water may also indicate a drainage, groundwater, plumbing, or sump-system condition requiring correction.";
+        if (/walkways|driveways|garage floor/.test(text) && /crack|spall|crumbl|uneven|trip hazard/.test(text)) return "Cracking, displacement, or surface deterioration can worsen with traffic and seasonal movement. Raised edges or loose material can create a trip hazard, and open cracks may allow water to accelerate deterioration of the concrete or supporting base.";
+        if (/walls \/ ceilings/.test(text) && /crack|drywall seam|nail pop|fastener pop|poor.*patch|incomplete repair/.test(text)) return "The condition affects the finished surface and may continue to widen, separate, or become more visible with normal building movement. The visible condition alone does not establish whether the cause is cosmetic, seasonal, or related to movement elsewhere in the building.";
+        if (/walls \/ ceilings/.test(text) && /fixture footprint|previous light fixture/.test(text)) return "The visible outline or finish difference at the former fixture location is primarily a cosmetic condition. It may remain noticeable after installation of a smaller fixture and can include unpainted, uneven, or incompletely finished surface material around the electrical box.";
+        if (/walls \/ ceilings/.test(text) && /damag|hole|unfinished/.test(text) && !/\bpaint(?:ed|ing)?\b|\bcoating\b/.test(text)) return "Damaged or incomplete wall and ceiling finishes can continue to deteriorate and may leave edges or underlying materials exposed. The affected area may also interfere with the intended finished appearance and, where applicable, the continuity of a required separation.";
         if (/\bpaint(?:ed|ing)?\b|\bcoating\b/.test(text) && /damag|dmage|peel|chip|flak|blister|wear|scuff|deteriorat/.test(text)) return "The damaged paint affects the finished appearance and can leave the underlying material with reduced protection from normal wear. Loose or deteriorated paint may continue to chip or peel; however, paint damage alone does not establish the cause or condition of the underlying material.";
+        if (/floors/.test(text) && /uneven|sloped|loose|lift|separat|movement|buckl|damag/.test(text)) return "The affected flooring may continue to move, separate, or wear under normal foot traffic. Uneven, loose, or damaged areas can create a trip hazard and may increase the amount of flooring that requires repair if the condition progresses.";
         if (/toilet/.test(text) && /loose|rock|movement|not secure/.test(text)) return "Movement at the toilet can damage or break the seal at the drain connection. A failed seal can allow wastewater and moisture into the flooring, leading to concealed subfloor deterioration and unsanitary conditions.";
-        if (/slow(?:ly)? drain|drain(?:s|ed)? slow|blocked|clogged|obstructed|backed up|non-draining/.test(text)) return "Slow or obstructed drainage indicates a restriction in the fixture trap or branch drain. The restriction can progress to a complete blockage, wastewater backup, or overflow that leaves the fixture unusable and damages nearby finishes.";
+        if (/slow(?:ly)? drain|drain(?:s|ed)? slow|not draining|blocked|clogged|obstructed|backed up|backing up|non-draining/.test(text) && !/gutter|downspout|roof drainage|cooling system|condenser coil|hvac filter/.test(text)) return "Slow or obstructed drainage indicates a restriction in the fixture trap or branch drain. The restriction can progress to a complete blockage, wastewater backup, or overflow that leaves the fixture unusable and damages nearby finishes.";
+        if (/bathroom plumbing|bathroom sink|bathtub \/ shower|kitchen sink|utility sink|plumbing/.test(text) && /trap|spout|shower control|faucet control|gap at bathtub|water backing|escaping from sink/.test(text)) return "A defect at the fixture, trap, spout, or controls can interfere with normal use and may allow leakage or wastewater discharge into the cabinet, floor, or wall assembly. Gaps at tub or shower components can also allow water behind the finished surface.";
+        if (/bathroom plumbing|bathroom sink|bathtub \/ shower|toilet|plumbing/.test(text) && /inadequate clearance|insufficient clearance|too close/.test(text)) return "Inadequate fixture clearance can restrict safe, comfortable use and maintenance access. Contact with adjacent surfaces may also damage the fixture, controls, finishes, or plumbing connections during normal operation.";
         if (/plumb|sink|toilet|faucet|fixture|drain|water supply|distribution/.test(text) && /active leak|leaking|\bleak\b|dripping/.test(text)) return "Ongoing leakage wastes water and can damage cabinets, flooring, subflooring, framing, and finishes. Moisture that remains concealed can support fungal or microbial growth and may increase the scope and cost of repairs.";
         if (/sump pump/.test(text) && nonOperating) return "An inoperable sump pump cannot remove groundwater from the basin. During wet weather or a rise in groundwater, the basin can overflow and contribute to basement or crawlspace flooding, moisture damage, and microbial growth.";
         if (/water pressure|functional flow/.test(text) && /low|weak|reduced|poor/.test(text)) return "Low functional flow can prevent multiple fixtures from operating normally at the same time. The condition can result from restricted piping, a valve problem, supply limitations, or concealed leakage that requires further diagnosis.";
-        if (/gas leak|combustion|carbon monoxide|\bco\b|flue|vent connector/.test(text)) return "Improper fuel-gas or combustion venting can allow fire, burn, or carbon monoxide hazards to develop. Exhaust gases may spill into occupied areas, and excess heat or condensation can damage the appliance and surrounding materials.";
-        if (/gfci|gfi\b/.test(text) && /missing|absent|not protect|did not trip|inoperable|failed/.test(text)) return "Without effective ground-fault protection, a person using equipment near water or grounded surfaces may not be protected from a potentially severe electrical shock. Other receptacles connected downstream may also lack the intended protection.";
+        if (/gas leak|combustion|carbon monoxide|\bco\b|flue|vent connector/.test(text) && !/alarms/.test(text)) return "Improper fuel-gas or combustion venting can allow fire, burn, or carbon monoxide hazards to develop. Exhaust gases may spill into occupied areas, and excess heat or condensation can damage the appliance and surrounding materials.";
+        if (/gfci|gfi\b/.test(text) && /missing|absent|not protect|did not trip|inoperable|failed|no gfci|without gfci/.test(text)) return "Without effective ground-fault protection, a person using equipment near water or grounded surfaces may not be protected from a potentially severe electrical shock. Other receptacles connected downstream may also lack the intended protection.";
         if (/reverse polarity|reversed polarity/.test(text)) return "Reversed polarity leaves switched or threaded portions of connected equipment energized when they are expected to be neutral. This increases shock risk during normal use, bulb replacement, or appliance service.";
         if (/open ground|not grounded|ungrounded/.test(text)) return "An open equipment ground removes an intended fault-current path. A metal appliance or tool connected at the receptacle can remain energized during a fault instead of causing the breaker to trip promptly, increasing shock risk.";
         if (/double[- ]?tap|double[- ]?lug|multiple conductors/.test(text)) return "A terminal not designed for multiple conductors may not clamp each wire securely. A loose connection can overheat, arc, damage the breaker or conductor insulation, and create a fire hazard.";
         if (/electrical panel|breaker panel|service panel/.test(text) && /corrosion|corroded|rust|moisture|water/.test(text)) return "Moisture and corrosion in electrical equipment can degrade conductive parts and interfere with reliable breaker operation. Deteriorated connections can overheat or arc, increasing shock, equipment-damage, and fire risk.";
-        if (/electrical|receptacle|outlet|breaker|wire|panel|service disconnect|grounding|bonding/.test(text)) return "The reported electrical defect can interfere with the system's ability to carry or interrupt current safely. Depending on the concealed extent, it can result in shock, overheating, arcing, equipment damage, or fire at the affected component and related wiring.";
+        if (/electrical|receptacle|outlet|breaker|wire|wiring|conductor|panel|service disconnect|grounding|bonding/.test(text)) return "The reported electrical defect can interfere with the system's ability to carry or interrupt current safely. Depending on the concealed extent, it can result in shock, overheating, arcing, equipment damage, or fire at the affected component and related wiring.";
+        if (/smoke \/ carbon monoxide alarms/.test(text) && /missing|absent|not installed|did not operate|failed/.test(text)) return "Missing or inoperable alarms can delay warning of smoke, fire, or carbon monoxide. Occupants may have less time to recognize the hazard and leave the building safely.";
         if (/bathroom exhaust fan|inadequate ventilation|poor ventilation|not vent/.test(text)) return "Without effective exhaust ventilation, moisture and odors can remain in the bathroom. Repeated moisture accumulation may damage finishes and can contribute to fungal or microbial growth.";
+        if (/hvac filter|hvac components/.test(text) && /dirty|clogged|restrict/.test(text) && /filter/.test(text)) return "A dirty or restricted filter can reduce airflow, increase blower and equipment operating stress, and reduce heating or cooling performance. Continued operation can increase energy use and contribute to coil icing, overheating, or premature equipment wear.";
+        if (/cooling system/.test(text) && /dirty|clogged|blocked/.test(text) && /coil|condenser/.test(text)) return "Debris or blockage at the outdoor coil restricts heat transfer and airflow. The system may run longer, cool less effectively, use more energy, and place added stress on the fan and compressor.";
+        if (/cooling system|air condition|condenser/.test(text) && /not cooling|did not cool|inadequate|insufficient|poor|reduced/.test(text) && /cool|performance|temperature/.test(text)) return "Inadequate cooling response means the system may not maintain comfortable indoor conditions or provide normal dehumidification. The cause can involve airflow, controls, equipment condition, refrigerant performance, or distribution and requires diagnostic testing beyond a visual inspection.";
+        if (/hvac components|ductwork|hvac duct/.test(text) && /disconnect|unsealed|loose|unsupported|no airflow|terminat.*attic|exhaust.*attic/.test(text)) return "Disconnected, unsealed, unsupported, or improperly terminated duct components can reduce delivered airflow or discharge moisture and contaminants into the building. Leakage or poor support may also contribute to condensation, material damage, or contamination entering the distribution system.";
+        if (/heating|cooling|furnace|boiler|air condition|condenser|\bhvac\b/.test(text) && /old|aged|end of.*life|near.*service life|beyond.*service life/.test(text)) return "Older heating or cooling equipment may have reduced reliability and can require repair or replacement with limited notice. Age alone does not establish present failure, but parts availability, efficiency, and the likelihood of a major component failure generally become greater as equipment approaches or exceeds its typical service life.";
+        if (/heating|cooling|furnace|boiler|air condition|condenser|\bhvac\b/.test(text) && /abnormal|unusual|excessive/.test(text) && /noise|sound|vibration/.test(text)) return "Abnormal noise or vibration can indicate loose, worn, imbalanced, or failing equipment components. Continued operation may worsen the condition, reduce performance, and lead to an unexpected shutdown or more extensive repair.";
+        if (/heating|cooling|furnace|boiler|\bhvac\b/.test(text) && /delayed service|delayed maintenance|maintenance overdue|dirty air filter/.test(text)) return "Delayed maintenance or a dirty filter can reduce airflow and efficiency, increase operating stress, and allow minor service issues to progress. The equipment's present condition and safe performance cannot be established from appearance alone.";
+        if (/heating|cooling|furnace|boiler|garage heater|\bhvac\b/.test(text) && /unsafe|open knockout|missing.*cover|cabinet opening/.test(text)) return "An unsafe operating or cabinet condition can expose energized, hot, moving, or combustion-related components and may interfere with safe equipment operation. Openings can also allow debris or accidental contact inside the cabinet.";
+        if (/cooling system|ac condenser|condenser/.test(text) && /not level|unlevel|not properly leveled|deficient support|support platform/.test(text)) return "An unstable or unlevel outdoor unit can strain refrigerant connections, affect condensate or lubricant management, and increase vibration. Deteriorated or improvised supports may also allow the equipment to shift or settle further.";
+        if (/cooling system|ac condenser|condenser/.test(text) && /vegetation|clearance|too close|blocked access|not accessible/.test(text)) return "Restricted clearance or access can reduce airflow, impede service, and allow vegetation or debris to contact the equipment. Reduced airflow can lower performance and increase operating stress on the fan and compressor.";
         if (/heating|cooling|furnace|boiler|air condition|condenser|thermostat|\bhvac\b/.test(text) && nonOperating) return "The system's heating or cooling performance could not be verified and it may not provide reliable operation when needed. The condition may involve the controls, electrical supply, fuel supply, distribution system, or the equipment itself; further diagnostic testing is required to determine the cause.";
         if (/heating|furnace|boiler|radiator|ductwork|hvac filter/.test(text) && /corrosion|leak|damag|deteriorat|loose|missing|improper/.test(text)) return "The defect can reduce heat delivery, increase energy use, and place added stress on the heating equipment. If leakage, combustion, or venting is involved, continued operation can also damage surrounding materials or create an occupant-safety concern.";
         if (/cooling|air condition|condenser|split a\/c/.test(text) && /corrosion|leak|damag|deteriorat|loose|missing|improper/.test(text)) return "The defect can reduce cooling and dehumidification, increase operating costs, and accelerate compressor or fan wear. Condensate or refrigerant-related problems can also cause equipment shutdown and moisture damage around the system.";
         if (/garbage disposal/.test(text) && nonOperating) return "The disposal could not be evaluated for normal operation. A failed or jammed disposal may interfere with sink use and can contribute to drainage, leakage, or electrical concerns.";
+        if (/garbage disposal/.test(text) && /noise|noisy|rattle|grind|excessive sound/.test(text)) return "Abnormal noise can indicate a loose object, worn bearing, damaged grinding component, or insecure mounting. Continued operation may worsen the damage, interfere with sink drainage, or lead to leakage at the mounting or drain connections.";
+        if (/refrigerator/.test(text) && /handle/.test(text) && /broken|damag|loose|missing/.test(text)) return "A damaged or missing handle can make the door difficult to operate and may place added strain on the door, hinges, or remaining attachment points. Continued use can enlarge the damage or prevent the door from sealing consistently.";
+        if (/refrigerator/.test(text) && /compressor|fan/.test(text) && /noise|sound|vibration/.test(text)) return "Abnormal refrigerator compressor or fan noise can indicate a loose, worn, or failing component. Continued operation may worsen the condition and can lead to loss of cooling or food-storage function.";
+        if (/refrigerator/.test(text) && /water line/.test(text) && /disconnect|loose|damag|leak/.test(text)) return "A disconnected or damaged refrigerator water line can leak when the supply is opened or the appliance calls for water. Leakage can damage cabinets, flooring, and concealed materials around or below the appliance.";
         if (/dishwasher/.test(text) && /leak|drain|nonoperat|did not operate|would not operate/.test(text)) return "The dishwasher cannot be relied upon to complete a normal wash and drain cycle. Leakage or drainage failure can damage cabinets and flooring, while an operating defect may conceal problems with the appliance, water connection, drain connection, or electrical supply.";
         if (/range|oven|cooktop/.test(text) && nonOperating) return "The affected cooking function was not available and the appliance could not be fully evaluated. A control, heating-element, burner, fuel-supply, or electrical defect may be present and could create unreliable operation or a fire or combustion concern.";
         if (/clothes dryer/.test(text) && /vent|duct|lint|exhaust/.test(text)) return "Restricted, disconnected, or improper dryer exhaust can retain heat and moisture and allow lint to accumulate. This increases drying time, energy use, moisture damage, and the risk of a lint fire.";
         if (/washing machine/.test(text) && /hose|drain|leak|connection/.test(text)) return "A deficient washer supply or drain connection can release a large volume of water during operation. Leakage or overflow can quickly damage flooring, walls, and concealed materials and may affect rooms below.";
         if (/water heater/.test(text) && nonOperating) return "Reliable hot-water production could not be confirmed. The condition may involve the controls, energy supply, safety devices, or the tank itself, and may result in loss of hot water or further equipment damage.";
         if (/water heater/.test(text) && /leak|corrosion|rust|deteriorat/.test(text)) return "Leakage or corrosion at the water heater can progress to tank or connection failure and an uncontrolled release of water. Surrounding finishes and stored contents may be damaged, and the unit's remaining service life may be limited.";
+        if (/water heater/.test(text) && /tpr|relief valve|discharge pipe/.test(text)) return "The temperature-and-pressure relief system is a critical safety component intended to discharge excessive temperature or pressure. A missing, restricted, improperly routed, or defective discharge arrangement can expose occupants to scalding water or prevent safe discharge during an abnormal condition.";
+        if (/water heater/.test(text) && /catch pan|drain pan/.test(text) && /missing|absent/.test(text)) return "Without a suitable catch pan and drain where one is needed, leakage from the tank or connections may spread to surrounding finishes or areas below before it is discovered. The pan does not prevent a leak, but it can help contain and direct minor leakage.";
+        if (/water heater/.test(text) && /inadequate hot water|low hot water temperature|temperature.*low/.test(text)) return "Inadequate hot-water temperature can limit normal fixture use and may indicate a control, heating, mixing, or equipment-performance problem. Temperature adjustment without diagnosis can create a scalding risk or fail to correct the underlying defect.";
+        if (/water heater/.test(text) && /old|aged|near.*service life|exceed.*service life/.test(text)) return "An older water heater has an increased likelihood of leakage, control failure, or loss of hot-water production with limited notice. Age alone does not establish present failure, but remaining service life and parts availability may be limited.";
+        if (/bathroom plumbing|bathroom sink|kitchen sink|plumbing/.test(text) && /hot and cold.*revers|revers.*hot and cold/.test(text)) return "Reversed hot and cold controls can cause unexpected water temperature at the fixture and increase the risk of scalding or user error. The condition also indicates that the supply connections or fixture controls are not arranged as intended.";
+        if (/bathroom plumbing|bathroom sink|kitchen sink|plumbing/.test(text) && /no hot water|inadequate hot water|low water flow|inadequate water flow/.test(text)) return "The fixture did not provide the expected water temperature or functional flow. The condition can limit normal use and may result from the fixture, supply piping, shutoff valves, water-heating system, or another upstream restriction.";
+        if (/drain \/ waste \/ vent|plumbing/.test(text) && /unsupported|inadequate.*support|poor support/.test(text) && /pipe|drain|vent/.test(text)) return "Inadequately supported piping can sag, lose proper slope, strain joints, and allow leakage or drainage restrictions to develop. Movement can also damage nearby finishes or connected fixtures.";
         if (/septic|sewer/.test(text)) return "The condition may contribute to unsanitary discharge, slow drainage, backups, or damage to the sewage-disposal system. Repairs can be disruptive and costly if the underlying cause is not corrected promptly.";
-        if (/foundation|structur|bow|settle|sag/.test(text)) return "The condition may affect load transfer, structural performance, or the operation of connected finishes and components. Movement or deterioration may continue and lead to additional damage if the cause is not corrected.";
+        if (/foundation|structur|bow|settle|sag/.test(text) && !/gutter|downspout|roof drainage|site drainage/.test(text)) return "The condition may affect load transfer, structural performance, or the operation of connected finishes and components. Movement or deterioration may continue and lead to additional damage if the cause is not corrected.";
         if (/asphalt shingle|roof covering|metal roofing|membrane roofing/.test(text) && /missing|lift|unsealed|damag|torn|crack|deteriorat|patch|improper/.test(text)) return "The defect interrupts the roof covering's ability to shed water and resist wind. Rain can reach the underlayment or decking, causing concealed deterioration, damaged insulation, and interior leakage; adjacent materials may also loosen or deteriorate.";
         if (/flashing|roof penetration|plumbing vent pipe|skylight|chimney/.test(text) && /missing|loose|open|gap|improper|damag|deteriorat|seal/.test(text)) return "A deficient roof penetration or flashing detail creates a direct water-entry point. Leakage can remain concealed while damaging roof decking, framing, insulation, and interior finishes around the opening.";
         if (/gutter/.test(text) && /debris|clog|block|overflow|sag|loose|missing|damag/.test(text)) return "The gutter cannot consistently collect and carry roof runoff to the downspouts. Overflow can wet fascia and siding, erode soil, and concentrate water next to the foundation, increasing the chance of basement or crawlspace moisture.";
-        if (/downspout/.test(text) && /foundation|too close|short|missing|disconnect|damag/.test(text)) return "Roof runoff can be discharged or concentrated next to the foundation instead of being carried away from the building. This can saturate backfill, contribute to basement or crawlspace moisture, erode soil, and increase foundation movement.";
-        if (/roof|shingle|flashing|soffit|fascia|gutter|downspout/.test(text)) return "The reported defect can reduce weather protection or interfere with controlled roof drainage. Continued exposure can damage roof decking, fascia, framing, insulation, siding, and interior finishes before leakage becomes readily visible.";
+        if (/downspout/.test(text) && /foundation|too close|short|missing|disconnect|detach|loose|damag|near (?:the )?(?:house|home)/.test(text)) return "Roof runoff can be discharged or concentrated next to the foundation instead of being carried away from the building. This can saturate backfill, contribute to basement or crawlspace moisture, erode soil, and increase foundation movement.";
+        if (/roof|shingle|flashing|soffit|fascia|gutter|downspout/.test(text) && !/vegetation \/ trees/.test(text)) return "The reported defect can reduce weather protection or interfere with controlled roof drainage. Continued exposure can damage roof decking, fascia, framing, insulation, siding, and interior finishes before leakage becomes readily visible.";
         if (/grading|site drainage|standing water|negative slope/.test(text)) return "Poor drainage can direct or retain water near the building. This can contribute to basement or crawlspace moisture, foundation movement, soil erosion, and deterioration of exterior materials.";
+        if (/vegetation \/ trees/.test(text) && /overhang|overhung|branch.*roof|tree.*roof|contact|close|against|heavy vegetation/.test(text)) return "Vegetation in contact with or close to the building can retain moisture, restrict inspection and maintenance, damage finishes, and provide access for insects or wildlife. Overhanging limbs can also damage roof or wall materials during wind or ice loading.";
         if (/deck|balcony|porch|step|stair|handrail|guardrail|ramp/.test(text)) return "The condition can reduce the stability or safe use of the walking surface, stairs, guard, or handrail. Continued deterioration or movement can lead to a fall, structural failure, or damage at the building connection.";
-        if (/siding|exterior trim|brick|masonry veneer|wall flashing|penetration|soffit|fascia/.test(text)) return "The exterior defect can admit water or pests behind the finished surface and accelerate deterioration of sheathing, framing, and adjacent trim. Concealed damage may expand before it becomes visible from the exterior.";
+        if (/siding|exterior trim|brick|masonry veneer|wall flashing|penetration|soffit|fascia/.test(text) && !/garage fire separation/.test(text)) return "The exterior defect can admit water or pests behind the finished surface and accelerate deterioration of sheathing, framing, and adjacent trim. Concealed damage may expand before it becomes visible from the exterior.";
         if (/garage door/.test(text)) return "Improper garage-door operation can damage the door, tracks, springs, or opener and may create an injury hazard. Failure of a safety or support component can allow unexpected door movement.";
         if (/garage/.test(text) && /wall|ceiling|drywall/.test(text)) return "Damaged or unfinished garage wall and ceiling coverings can allow further material deterioration. Where these surfaces separate the garage from living areas, openings or incomplete finishes may reduce the intended resistance to the spread of smoke and fire.";
         if (/floor covering|flooring|carpet|trip hazard|uneven|\bfloors?\b/.test(text)) return "Loose, damaged, or uneven flooring can create a trip hazard and will often deteriorate further under normal foot traffic. Gaps, movement, or moisture damage can also affect the underlayment or subfloor and increase the scope of repair.";
         if (/wall|ceiling|drywall/.test(text) && /crack|damag|hole|loose|sag|unfinished/.test(text)) return "Damaged wall or ceiling material can loosen, spread, or conceal moisture, framing movement, or other defects behind the finished surface. In garages or fire-separated areas, openings can also reduce the intended resistance to smoke and fire.";
         if (/missing screens?/.test(text)) return "Missing screens can allow insects and debris to enter when the windows are open. The condition also limits the occupants' ability to use the windows for ventilation while maintaining insect protection.";
         if (/storm door/.test(text) && /misalign|rub|bind|contact/.test(text)) return "Continued rubbing or binding can damage the door, frame, hinges, or closer and may eventually prevent normal operation. A door that does not align correctly may also provide reduced weather protection.";
+        if (/window/.test(text) && /fogged|failed.*seal|condensation between/.test(text)) return "Fogging or condensation between panes indicates loss of the insulating-glass seal. The window's insulating performance and visibility are reduced, and the condition generally cannot be corrected by cleaning the accessible glass surfaces.";
         if (/window/.test(text) && /crack|broken|damag.*glass|glass.*damag/.test(text)) return "Damaged glass can break further and create a cut or fall hazard. The opening may also lose weather resistance, security, and insulating performance until the glazing is repaired.";
         if (/window/.test(text) && /seal|weatherstrip/.test(text) && /damag|deteriorat|fail|loose|missing/.test(text)) return "A damaged or deteriorated window seal can allow air leakage and reduce energy performance. If the condition progresses, water may enter around the assembly and damage adjoining finishes even when no moisture is visible at the time of inspection.";
+        if (/window/.test(text) && /hardware/.test(text) && /damag|broken|loose|missing|inoperable/.test(text)) return "Defective window hardware can prevent smooth opening, closing, latching, or support of the sash. Continued operation may damage the sash or frame and can affect security, ventilation, and emergency use where applicable.";
         if (/window/.test(text) && /would not open|painted shut|stuck|inoperable|did not operate/.test(text)) return "The window cannot provide normal ventilation and may not serve as an emergency escape opening where one is required. Continued force can damage the sash, frame, balances, or hardware.";
+        if (/window/.test(text) && /water stain|moisture|water damage|\bwet\b|damp/.test(text)) return "The observed moisture or staining indicates that water or condensation has affected the window area. Continued exposure can deteriorate the sill, trim, wall finishes, and concealed materials around the opening if the source remains active.";
         if (/door/.test(text) && /would not latch|does not latch|lock|security|gap|weatherstrip/.test(text)) return "The door may not provide reliable security or a continuous weather seal. Air and water leakage can damage adjacent finishes and increase energy loss, while defective latching can allow unintended opening.";
         if (/door|window/.test(text)) return "Continued operation can worsen damage to the sash, slab, frame, hinges, or hardware and may eventually prevent the component from closing or latching. Exterior openings may also allow air or water entry and reduce security and energy performance.";
         if (/smoke|carbon monoxide|\bco detector|\bco alarm/.test(text)) return "Missing, improperly located, or inoperable alarms can delay warning of smoke, fire, or carbon monoxide. Occupants may have less time to recognize the hazard and leave the building safely.";
-        if (/attic|insulation|ventilation/.test(text) && /insufficient|missing|blocked|damag|improper/.test(text)) return "Deficient attic insulation or ventilation can increase heat loss, condensation, and seasonal roof-deck moisture. Persistent imbalance can contribute to higher energy use, ice damming, deteriorated sheathing, and fungal or microbial growth.";
+        if (/attic|insulation|ventilation/.test(text) && /insufficient|missing|blocked|damag|improper|low|marginal|compressed|displaced|inadequate/.test(text)) return "Deficient attic insulation or ventilation can increase heat loss, condensation, and seasonal roof-deck moisture. Persistent imbalance can contribute to higher energy use, ice damming, deteriorated sheathing, and fungal or microbial growth.";
+        if (/attic|crawlspace|basement|exterior/.test(text) && /animal|rodent|wildlife|nest|droppings/.test(text)) return "Animal activity can damage insulation, wiring, ducts, vents, and finishes and may create unsanitary conditions. Openings used for entry can also allow recurring pest or moisture intrusion until they are properly identified and sealed.";
+        if (/crawlspace/.test(text) && /vapor barrier|ground cover/.test(text) && /missing|absent|incomplete|no vapor|no ground cover/.test(text)) return "Exposed soil can release ground moisture into the crawlspace. Elevated humidity may contribute to condensation, wood deterioration, corrosion, odors, and fungal or microbial growth on susceptible materials.";
+        if (/crawlspace|attic/.test(text) && /debris|trash|waste|abandoned material/.test(text)) return "Debris and stored or abandoned material can conceal conditions, restrict access, retain moisture, and provide harborage for insects or rodents. Combustible material may also increase fire loading where it is near electrical or heat-producing components.";
+        if (/crawlspace/.test(text) && /wood.*(?:soil|earth|ground)|(?:soil|earth|ground).*wood/.test(text)) return "Wood in contact with soil is vulnerable to sustained moisture exposure, decay, and wood-destroying insect activity. Deterioration can reduce the capacity of framing or supports and may extend beyond the visibly affected area.";
+        if (/crawlspace|basement|foundation/.test(text) && /efflorescen/.test(text)) return "Efflorescence indicates that moisture has moved through or across the masonry and deposited salts at the surface. It does not by itself establish active leakage, but repeated moisture movement can deteriorate coatings, mortar, or masonry and may accompany higher interior humidity.";
+        if (/emergency escape|rescue opening|egress/.test(text) && /inadequate|small|restricted|blocked|inoperable/.test(text)) return "An inadequate or inoperable emergency escape and rescue opening can delay or prevent exit from the room and can restrict emergency access by responders. This is a life-safety concern in sleeping areas and other locations where such an opening is required.";
+        if (/fireplace|chimney/.test(text) && /damper/.test(text) && /not function|inoperable|stuck|damag/.test(text)) return "A damper that does not operate properly can prevent normal control of combustion air and exhaust. Smoke or combustion gases may enter the room, and the fireplace cannot be relied upon for safe operation until the defect is corrected.";
+        if (/fireplace|chimney/.test(text) && /hearth|firebox/.test(text) && /clearance|crack|damag|deteriorat|gap/.test(text)) return "Deficient hearth or firebox materials can allow excessive heat, sparks, or embers to reach adjacent combustible materials. Cracks, gaps, or inadequate clearance increase the risk of fire and material damage during use.";
+        if (/fireplace|chimney/.test(text) && /creosote|soot buildup/.test(text)) return "Creosote is combustible and can ignite within the chimney or flue. Accumulation also restricts inspection of the venting surfaces and may indicate incomplete combustion or a need for more frequent cleaning.";
+        if (/chimney|masonry/.test(text) && /repoint|mortar/.test(text)) return "Deteriorated or missing mortar can allow water entry and continued masonry movement or material loss. Freeze-thaw cycling and weather exposure can enlarge joints and loosen adjacent masonry if repointing is delayed.";
+        if (/exhaust hood|dryer vent termination/.test(text) && /screen|garage|blocked|improper/.test(text)) return "A screened, blocked, or improperly located exhaust termination can restrict airflow and allow heat, lint, moisture, or contaminants to accumulate. Dryer exhaust terminating in a garage or behind a screen can increase moisture, indoor-air, and lint-fire concerns.";
+        if (/exterior faucet|hose bibb|plumbing/.test(text) && /hose connected|freezing condition|freeze/.test(text)) return "A hose left connected during freezing conditions can trap water in the faucet and piping. Freezing can rupture the faucet or concealed supply pipe and cause leakage when the system thaws or is used.";
+        if (/fence/.test(text) && /gate|latch/.test(text) && /not function|broken|damag|missing/.test(text)) return "A gate that does not latch reliably can open unintentionally and may not provide the intended boundary or security. The condition can be especially important where the fence encloses a pool, pets, children, or another hazard.";
+        if (/fuel shutoff|gas meter|propane regulator/.test(text) && /bird nest|nest|debris|not labeled|missing label/.test(text)) return "Obstruction or contamination at fuel equipment can interfere with ventilation, regulator operation, or service access. Missing identification can delay emergency shutoff or service and increase the chance of operating the wrong valve.";
+        if (/sump pump/.test(text) && /failed to shut off|runs continuously|would not stop/.test(text)) return "A sump pump that does not shut off can overheat, wear prematurely, or fail when groundwater rises. The condition may involve the float, switch, pump position, check valve, or discharge arrangement.";
+        if (/sump pump/.test(text) && /backup system|battery backup|no backup/.test(text)) return "Without an independent backup, the sump system may be unable to remove water during a power outage, primary-pump failure, or unusually high inflow. The basin can overflow and contribute to basement or crawlspace water damage.";
+        if (/sump pump|utility sink/.test(text) && /drain.*sump|sump.*drain/.test(text)) return "Discharging a plumbing fixture into a sump basin can introduce wastewater, soap, lint, or debris into equipment intended for groundwater. This can create unsanitary conditions, clog or damage the pump, and result in improper discharge.";
+        if (/expansion tank|thermal expansion/.test(text) && /waterlog|failed|not observed|missing/.test(text)) return "A missing or failed thermal-expansion control may allow pressure to rise when water is heated in a closed plumbing system. Repeated pressure increases can stress the water heater, relief valve, fixture valves, and piping connections.";
+        if (/water supply|well pressure|private well|wellhead/.test(text) && /excessive pressure|pressure fluctuation|water hammer|pipe movement|waterlog|failed/.test(text)) return "Unstable or excessive water pressure can strain pipes, valves, fixtures, and the water-heating system and may cause noise, leakage, or shortened component life. At a well system, a waterlogged or failed pressure tank can cause rapid pump cycling and premature pump wear.";
+        if (/water supply|well equipment|wellhead|private well/.test(text) && /exposed.*wiring|unsafe wiring|casing too low|surface water|exposed.*pipe/.test(text)) return "Exposed wiring or vulnerable well and water-supply components can create shock, contamination, freezing, or physical-damage concerns. A low or poorly protected well casing may allow surface water and contaminants to reach the well opening.";
+        if (/vegetation \/ trees/.test(text) && /wood-destroying|wdo|wdi|termite|insect activity/.test(text)) return "Wood-destroying insect activity can damage framing, trim, and other cellulose materials. Visible evidence may represent a larger concealed infestation or prior damage that cannot be fully evaluated during a visual inspection.";
+        if (/attic ventilation|ventilation/.test(text) && /elevated temperature|excessive heat|attic.*hot/.test(text)) return "Elevated attic temperature may indicate inadequate ventilation, blocked intake or exhaust openings, insulation deficiencies, or heat transfer from the building. Persistent heat can increase cooling demand and accelerate aging of roof and attic materials.";
+        if (/walkways \/ driveways/.test(text) && /pitting|rutting|depression|tree root|surface slopes toward|slope.*home/.test(text)) return "Surface deterioration, depressions, root displacement, or slope toward the building can retain or direct water, worsen with traffic and weather, and create uneven walking or driving surfaces. Water directed toward the home can also contribute to foundation-area moisture.";
+        if (/walls \/ ceilings|walls/.test(text) && /prior.*repair|previous.*repair|substandard.*repair|incomplete.*repair/.test(text)) return "Prior or incomplete repair indicates that the surface has been altered and may not provide a durable, uniform finish. The original cause and condition behind the repaired area cannot be confirmed from the visible surface alone, and cracking or separation may recur.";
+        if (/prior.*repair|previous.*repair|evidence of.*repair/.test(text)) return "Evidence of prior repair indicates that the component has been altered, but the original condition, repair method, and concealed extent cannot be confirmed from the visible surface alone. The repair may require maintenance or further correction if movement, leakage, or deterioration recurs.";
+        if (/microwave|range|oven|cooktop/.test(text) && /inadequate.*(?:distance|clearance)|too close/.test(text)) return "Inadequate clearance between cooking equipment and adjacent combustible or heat-sensitive materials can cause overheating, surface damage, and a fire hazard. The installation may also interfere with safe operation and service access.";
+        if (/microwave|dishwasher|garbage disposal|washing machine|clothes washer|clothes dryer|range|oven|cooktop|refrigerator|appliance/.test(text)) return "The reported appliance defect can interfere with normal, reliable operation and may worsen with continued use. Depending on the component involved, related electrical, fuel, water, drain, vent, mounting, or heat concerns may also be present and require diagnostic testing.";
+        if (/crawlspace|attic/.test(text) && /abandoned.*material|debris|trash|waste/.test(text)) return "Abandoned materials and debris can conceal conditions, restrict access, retain moisture, and provide harborage for insects or rodents. Combustible material may also increase fire loading where it is near electrical or heat-producing components.";
+        if (/hvac registers|hvac components|heating/.test(text) && /no permanent heat|no heat source|missing heat source/.test(text)) return "Without a permanent heat source or delivered airflow, the room may not maintain suitable temperatures during cold weather. This can affect occupant comfort and may increase the risk of condensation or freezing at vulnerable piping and finishes.";
+        if (/utility sink|sink/.test(text) && /stain|discolor/.test(text)) return "Staining affects the fixture's appearance and may represent wear, residue, corrosion, or prior moisture exposure. The visible condition alone does not establish an active leak or the condition of concealed materials.";
+        if (/water supply|plumbing/.test(text) && /abandoned|redundant/.test(text) && /drain|pipe/.test(text)) return "Abandoned or redundant piping can remain open, leak, collect debris, or allow sewer gas or contaminants into the building if it is not properly disconnected and capped. Its routing and connection to concealed systems may be uncertain.";
+        if (/water supply|plumbing/.test(text) && /isolation point|shutoff valve|isolation valve/.test(text) && /defect|damag|inoperable|not operat/.test(text)) return "A defective or inaccessible isolation valve can prevent prompt shutoff during leakage, repair, or an emergency. Forcing a deteriorated valve can cause leakage or failure at the valve and connected piping.";
+        if (/water supply|plumbing/.test(text) && /deficien.*hot and cold|hot and cold water supply/.test(text)) return "A deficiency in the hot or cold water supply can limit fixture use and may indicate restricted piping, a closed or defective valve, connection problems, or a water-heating issue. The visible inspection cannot determine the concealed source.";
+        if (/water supply|plumbing/.test(text) && /exposed.*(?:supply|water).*line|exposed.*pipe/.test(text)) return "Exposed water-supply piping is vulnerable to freezing, impact, corrosion, and accidental damage. Failure can release a substantial amount of water and damage nearby or concealed materials.";
+        if (/asbestos/.test(text)) return "The material may contain asbestos, but its composition cannot be confirmed visually. Damaged or disturbed asbestos-containing material can release hazardous fibers, so unnecessary disturbance should be avoided until the material is properly evaluated.";
         if (/leak|moisture|water stain|water damage|\bwet\b|dripping/.test(text)) return "The observed moisture can deteriorate finishes, framing, insulation, and fasteners beyond the visibly affected area. If the source remains active, concealed material damage and fungal or microbial growth can continue to develop.";
         if (nonOperating) return "The component's operation and performance could not be verified, and it may not function when needed. The condition could involve a failed control, power-supply problem, obstruction, or internal component failure.";
         if (/improvised|makeshift|improper|incorrect/.test(text)) return "The installation or repair does not provide the predictable support, drainage, weather protection, or safety intended for the component. It can fail prematurely and may conceal leakage, damage, or unsafe connections that are not visible during a limited inspection.";
         if (/missing|absent|not installed/.test(text)) return "The missing part cannot provide its intended protection, support, control, or finished closure. Related components may be left exposed to damage or may not operate safely and reliably until the assembly is made complete.";
+        if (/worn|wear|weathered/.test(text)) return "Wear reduces the component's remaining durability and can progress with normal use or exposure. Worn surfaces, hardware, seals, or finishes may eventually affect normal operation or require more extensive repair if maintenance is delayed.";
+        if (/abnormal|unusual|excessive/.test(text) && /noise|sound|vibration/.test(text)) return "Abnormal noise or vibration can indicate loose, worn, imbalanced, or damaged moving components. Continued operation may worsen the condition or lead to loss of function.";
+        if (/not level|unlevel|out of level/.test(text)) return "An out-of-level component may operate, drain, support loads, or close improperly and can continue to shift if the supporting surface is unstable. The visible condition may also indicate settlement or inadequate installation support.";
+        if (/poor workmanship|workmanship.*poor/.test(text)) return "Poor workmanship can reduce the component's durability, fit, support, or weather resistance and may conceal additional installation deficiencies. The full effect depends on the materials and connections that are not visible.";
         if (/loose|unsecured|not secure/.test(text)) return "Movement can enlarge fastener holes, strain connected materials, and lead to detachment or failure during normal use or weather exposure. The defect can also damage adjoining finishes and create an injury hazard if the component falls or shifts.";
         if (/corrosion|corroded|rust|deteriorat|rotted|\brot\b/.test(text)) return "Material loss reduces the component's remaining strength and service life. Deterioration commonly progresses once protective surfaces have failed and can spread to fasteners, connections, or adjoining concealed materials.";
-        if (/crack|split|fracture/.test(text)) return "The crack indicates that the material has lost continuity and can no longer distribute stress as intended. Normal use, movement, moisture, or freeze-thaw exposure can enlarge the defect and damage connected materials.";
-        if (/damag|broken|hole/.test(text)) return "The damaged component has reduced serviceability and may no longer provide its intended support, seal, enclosure, or protection. Continued use or exposure can enlarge the defect and extend damage into adjoining or concealed materials.";
+        if (/crack|split|fracture/.test(text)) return "The visible crack affects the condition and serviceability of the material and may enlarge with normal use or movement. The cause and full depth cannot be determined from the visible surface alone, so changes in width, length, or displacement should be addressed.";
+        if (/damag|broken|hole/.test(text)) return "The damaged component has reduced serviceability and may not perform or appear as intended. Continued use or exposure can enlarge the affected area and increase the amount of repair or replacement needed.";
         return "The reported condition reduces the component's reliability and leaves its remaining performance uncertain. If it is not corrected, normal use or exposure can lead to loss of function, premature failure, and damage to connected materials.";
       }
 
       function recommendationFor(note, component) {
-        const text = `${component} ${note}`.toLowerCase();
-        const nonOperating = /did not operate|does not operate|would not operate|inoperable|failed to operate|no response|no power/.test(text);
+        const text = `${component} ${affirmativeDefectText(note)}`.toLowerCase();
+        const nonOperating = /did not operate|does not operate|would not operate|not operable|not operating|not functional|inoperable|inoperative|not functioning|non[- ]functioning|failed to operate|did not activate|failed to activate|did not turn on|would not turn on|did not ignite|would not ignite|not igniting|did not heat|not heating|did not respond|no airflow|no water flow|no running water|water flow unavailable|water unavailable|no response|no power/.test(text);
         if (/toilet/.test(text) && /continuous(?:ly)? running|run(?:s|ning)? continuously|(?:would|will|does) not stop running|keeps? running/.test(text)) return "Have a qualified plumbing contractor evaluate the toilet and repair or replace the defective tank or flush-control components as needed. After repair, confirm that the toilet flushes, refills, shuts off normally, and remains free of leakage.";
         if (/countertop/.test(text) && /crack|split|fracture|chip|damag|broken|loose|separat|movement|not secure/.test(text)) return "Have a qualified countertop or cabinet contractor repair or replace the affected countertop using a method appropriate for the material and extent of damage. During the work, inspect the substrate and supporting cabinetry for related damage, then verify the finished surface is stable, smooth, and properly sealed.";
         if (/cabinet/.test(text) && /damag|broken|crack|split|loose|missing/.test(text)) return "Have a qualified cabinet contractor repair or replace the affected door, drawer, hardware, or cabinet component as needed. After repair, verify the cabinetry is secure, properly supported, and operates smoothly without binding or unintended movement.";
         if (/foundation/.test(text) && /vertical\w*\s+crack|crack.*vertical/.test(text)) return "Monitor the crack for changes in width, length, displacement, or moisture intrusion and seal or repair it as appropriate. Have a qualified foundation contractor evaluate the condition if displacement is present or if the crack widens, lengthens, or shows signs of continued movement.";
         if (/foundation/.test(text) && /horizontal\w*\s+crack|crack.*horizontal|step\w*\s+crack|stair[- ]step crack/.test(text)) return "Have a qualified foundation contractor or structural engineer evaluate the cracking, determine whether movement is active, and specify any necessary repairs. Correct contributing drainage or soil-pressure conditions and monitor the repaired area for additional movement.";
+        if (/possible|suspect/.test(text) && /asbestos/.test(text)) return "Avoid disturbing the suspect material. Have a qualified asbestos professional evaluate and sample it when confirmation is needed, and complete repair, encapsulation, or removal in accordance with applicable requirements before work that could disturb the material.";
+        if (/vermiculite/.test(text)) return "Avoid disturbing the vermiculite insulation. Have a qualified asbestos professional evaluate and sample the material when confirmation is needed, and complete any required containment, removal, or related work in accordance with applicable requirements.";
+        if (/siding \/ trim/.test(text) && /mildew|algae|biological growth/.test(text)) return "Have a qualified exterior contractor clean the affected surfaces using methods and products compatible with the siding and trim. Correct conditions that retain moisture or restrict drying, and repair any coating or material deterioration found after cleaning.";
+        if (/mold|mildew|fungal|microbial growth/.test(text)) return "Identify and correct any active moisture source, then have the visible growth and affected materials evaluated and cleaned or removed using an appropriate scope and containment method. Consider a qualified mold or remediation professional when the area is extensive, concealed, recurrent, or involves occupants with specific health concerns.";
+        if (/electrical receptacle/.test(text) && /overheat|scorch|burn|melt|heat damage/.test(text)) return "Do not use the affected receptacle. Have a licensed electrical contractor determine the source of overheating, repair or replace damaged devices, conductors, and connections, and inspect similar accessible receptacles on the circuit before power is restored and the circuit is tested.";
+        if (/burn odor|burning odor|scorch|melted|heat damage/.test(text)) return "Stop using the affected component and have an appropriately qualified appliance technician or electrical contractor determine the source of overheating. Repair or replace damaged wiring and components, then test the equipment for safe operation before reuse.";
+        if (/fuel gas supply/.test(text) && /active gas leak|gas leak|gas odor|odor of gas/.test(text)) return "Treat the condition as urgent. Do not operate the affected equipment or create an ignition source. Leave the area and contact the gas utility or emergency services when gas odor or leakage remains present; have a qualified gas technician locate and repair the leak, then test the complete affected fuel-gas system before service is restored.";
+        if (/heating equipment|water heater|combustion \/ carbon monoxide/.test(text) && elevatedCarbonMonoxide(note)) return "Discontinue operation of the affected fuel-burning equipment and have a qualified HVAC contractor promptly evaluate the appliance, combustion air, venting, draft, and safety controls. Complete combustion and carbon-monoxide testing before returning the equipment to service, and confirm appropriate carbon-monoxide alarms are installed and operational.";
+        if (/combustion venting/.test(text) && /backdraft|back-draft|spillage/.test(text)) return "Discontinue use of the affected fuel-burning equipment and obtain prompt evaluation by a qualified HVAC contractor. Correct the equipment, venting, combustion-air, and pressure conditions as needed, then complete draft, combustion, and carbon-monoxide testing before the equipment is returned to service.";
+        if (/combustion venting/.test(text) && /loose|disconnect|separat|detached|corrosion|corroded|perforat|hole|improper.*(?:slope|support)|sag|unsupported|combustion air/.test(text)) return "Do not operate the affected fuel-burning equipment until a qualified HVAC contractor has repaired or replaced the vent connector and corrected its slope, support, clearance, and combustion-air conditions as applicable. Perform draft, combustion, and carbon-monoxide testing before returning the equipment to service.";
+        if (/sewage ejector/.test(text) && /basin|cover|lid/.test(text) && /missing|loose|damag|not sealed|unsealed|open/.test(text)) return "Have a qualified plumbing contractor promptly install or repair a secure, gas-tight sewage-ejector basin cover. Seal the pipe and wiring penetrations, protect electrical components, and test the pump and alarm for proper operation after correction.";
+        if (/sewage ejector/.test(text) && /alarm/.test(text) && /missing|absent|disconnect|inoperable|did not operate|failed/.test(text)) return "Have a qualified plumbing or electrical contractor install, reconnect, or repair the sewage-ejector high-water alarm. Test the alarm through its accessible controls, verify a reliable power source, and confirm the pump and check valve operate normally.";
+        if (/sewage ejector/.test(text) && /check valve/.test(text) && /missing|absent|defect|inoperable|failed/.test(text)) return "Have a qualified plumbing contractor install or replace the sewage-ejector discharge check valve using components suitable for wastewater service. Test several pump cycles afterward and verify there is no backflow, leakage, or abnormal cycling.";
+        if (/electrical panel/.test(text) && /aluminum branch[- ]circuit|branch[- ]circuit aluminum|solid aluminum/.test(text)) return "Have a licensed electrical contractor evaluate the accessible aluminum branch-circuit wiring and every accessible termination, identify compatible devices and connectors, and complete approved repairs where needed. Verify connections are properly prepared, torqued, and protected from overheating.";
+        if (/electrical panel/.test(text) && /subpanel/.test(text) && /ground.*neutral|neutral.*ground/.test(text) && /not separated|bonded together|same (?:bar|terminal)/.test(text)) return "Have a licensed electrical contractor separate neutral and equipment-grounding conductors in the subpanel, provide the required isolated neutral bar and bonded grounding bar, and verify the feeder and enclosure bonding arrangement before the panel is returned to service.";
+        if (/electrical grounding \/ bonding/.test(text) && /bonding jumper/.test(text) && /missing|absent|not observed|not installed/.test(text)) return "Have a licensed electrical contractor evaluate the grounding and bonding arrangement and install the required bonding jumper using approved materials and connections. Verify electrical continuity and the complete grounding and bonding system after correction.";
+        if (/electrical receptacle/.test(text) && /overheat|scorch|burn|melt|heat damage/.test(text)) return "Do not use the affected receptacle. Have a licensed electrical contractor determine the source of overheating, repair or replace damaged devices, conductors, and connections, and inspect similar accessible receptacles on the circuit before power is restored and the circuit is tested.";
+        if (/garage fire separation/.test(text) && /door/.test(text) && /self[- ]clos|automatic[- ]clos/.test(text)) return "Have a qualified contractor install or repair an appropriate self-closing device at the garage-to-house door. Confirm the door closes fully and latches from the open position without being held or obstructed, and maintain the intended separation between the garage and living areas.";
+        if (/garage door/.test(text) && /auto(?:matic)?[- ]?reverse|safety reverse|photo[- ]?eye|photoelectric|pressure reverse/.test(text)) return "Avoid automatic operation until a qualified garage-door contractor has repaired and adjusted the opener and all safety-reversal features. After correction, confirm photoelectric and contact-reversal operation using the manufacturer's test procedure.";
+        if (/sump pump/.test(text) && /check valve/.test(text) && /missing|absent|not installed/.test(text)) return "Have a qualified plumbing or waterproofing contractor install a suitable check valve in the sump-pump discharge line. Test several complete pump cycles afterward and confirm normal shutoff, minimal backflow, secure piping, and discharge away from the building.";
+        if (/crawlspace/.test(text) && /standing water|ponding|water on (?:the )?ground/.test(text)) return "Have a qualified drainage, waterproofing, or plumbing contractor identify and correct the source of crawlspace water. Evaluate grading, downspouts, drains, sump equipment, and accessible piping as applicable; remove standing water safely, dry affected materials, and assess visible wood, insulation, and wiring for related damage.";
+        if (/walls \/ ceilings|walls/.test(text) && /prior.*repair|previous.*repair|substandard.*repair|incomplete.*repair/.test(text)) return "Have a qualified contractor evaluate and complete durable repairs to the affected wall or ceiling finish. Address visible movement or another confirmed underlying cause before refinishing, and monitor the repaired area for recurrence.";
+        if (/walkways|driveways|garage floor/.test(text) && /crack|spall|crumbl|uneven|trip hazard/.test(text)) return "Have a qualified concrete or paving contractor repair or replace the affected area as appropriate for the width, displacement, and extent of deterioration. Provide a stable, even walking or driving surface and correct contributing settlement or drainage conditions identified during the work.";
+        if (/walls \/ ceilings/.test(text) && /crack|drywall seam|nail pop|fastener pop|poor.*patch|incomplete repair|damag|hole|unfinished/.test(text) && !/\bpaint(?:ed|ing)?\b|\bcoating\b/.test(text)) return "Have a qualified contractor repair and finish the affected wall or ceiling surface using compatible materials. Before refinishing, determine whether visible movement, loose material, or another active condition requires correction, and monitor repaired cracks for recurrence.";
+        if (/walls \/ ceilings/.test(text) && /fixture footprint|previous light fixture/.test(text)) return "Have a qualified finish contractor patch, smooth, prime, and paint the visible fixture footprint as needed. Confirm the electrical box and fixture remain securely installed and that any openings around the box are properly covered before refinishing.";
         if (/\bpaint(?:ed|ing)?\b|\bcoating\b/.test(text) && /damag|dmage|peel|chip|flak|blister|wear|scuff|deteriorat/.test(text)) return "Have the affected surface properly prepared and refinished with compatible materials. Repair any loose or damaged substrate found during preparation, and correct a moisture source only if staining, dampness, or active leakage is separately confirmed.";
         if (/missing screens?/.test(text)) return "Install properly fitted screens where missing and check the remaining accessible screens for damage or poor fit. Confirm that each affected window can be opened, closed, and secured normally after the work is complete.";
         if (/storm door/.test(text) && /misalign|rub|bind|contact/.test(text)) return "Have a qualified contractor adjust or repair the storm door, hinges, closer, and frame as needed so the door operates smoothly without contact. Replace damaged hardware or materials and verify proper latching after repair.";
-        if (/floor covering|flooring|carpet/.test(text)) return "Repair or replace the damaged floor covering to provide a secure, even walking surface. The underlying floor should be examined during repairs and any concealed moisture or subfloor damage should also be corrected.";
+        if (/floor covering|flooring|carpet|\bfloors\b/.test(text)) return "Have a qualified flooring contractor secure, repair, or replace the affected flooring as needed to provide a stable, even walking surface. Inspect the accessible substrate during the work and correct related damage only where it is actually found.";
         if (/bathroom exhaust fan|inadequate ventilation|poor ventilation|not vent/.test(text)) return "Have a qualified contractor evaluate the fan, switch, duct, and exterior termination; repair or replace deficient components as needed. Confirm that the system moves air effectively and discharges directly to the exterior rather than into an attic or other enclosed space.";
-        if (/gas leak|combustion|carbon monoxide|\bco\b|flue|vent connector/.test(text)) return "Have a qualified HVAC or plumbing contractor evaluate the complete fuel-burning appliance and venting system and make all necessary corrections before continued operation. After repair, confirm proper draft, combustion, safety-control operation, and carbon monoxide performance.";
+        if (/hvac filter|hvac components/.test(text) && /dirty|clogged|restrict/.test(text) && /filter/.test(text)) return "Replace the filter with the correct size and type, clean the accessible filter compartment, and confirm unrestricted airflow and proper cover installation. Have a qualified HVAC contractor service the system if airflow remains restricted or the equipment shows signs of overheating, icing, or abnormal operation.";
+        if (/cooling system/.test(text) && /dirty|clogged|blocked/.test(text) && /coil|condenser/.test(text)) return "Have a qualified HVAC contractor clean the outdoor coil using methods suitable for the equipment and correct vegetation, debris, or clearance conditions restricting airflow. Operate and test the system afterward to confirm normal cooling response.";
+        if (/cooling system|air condition|condenser/.test(text) && /not cooling|did not cool|inadequate|insufficient|poor|reduced/.test(text) && /cool|performance|temperature/.test(text)) return "Have a qualified HVAC contractor diagnose the inadequate cooling response, evaluate airflow and the complete system, and complete repairs or service as needed. Operate the system under suitable conditions after correction and document the supply/return temperature response.";
+        if (/hvac components|ductwork|hvac duct/.test(text) && /disconnect|unsealed|loose|unsupported|no airflow|terminat.*attic|exhaust.*attic/.test(text)) return "Have a qualified HVAC contractor reconnect, seal, support, reroute, or repair the affected duct and distribution components using approved materials. Confirm secure connections, exterior termination where required, suitable support, and normal airflow after correction.";
+        if (/heating|cooling|furnace|boiler|air condition|condenser|\bhvac\b/.test(text) && /old|aged|end of.*life|near.*service life|beyond.*service life/.test(text)) return "Budget for repair or replacement and have the system serviced and evaluated by a qualified HVAC contractor. Continue normal maintenance and monitor operation, but do not delay correction of any separate safety, leakage, combustion, or performance defect.";
+        if (/heating|cooling|furnace|boiler|air condition|condenser|\bhvac\b/.test(text) && /abnormal|unusual|excessive/.test(text) && /noise|sound|vibration/.test(text)) return "Have a qualified HVAC contractor identify the source of the abnormal noise or vibration and repair or replace loose, worn, or failing components as needed. Operate the system afterward to confirm quiet, stable, and normal performance.";
+        if (/heating|cooling|furnace|boiler|\bhvac\b/.test(text) && /delayed service|delayed maintenance|maintenance overdue|dirty air filter/.test(text)) return "Have a qualified HVAC contractor complete the overdue service, replace the filter with the correct size and type, clean accessible equipment, and evaluate system operation and safety controls. Correct defects identified during service and restore the maintenance schedule.";
+        if (/heating|cooling|furnace|boiler|garage heater|\bhvac\b/.test(text) && /unsafe|open knockout|missing.*cover|cabinet opening/.test(text)) return "Have a qualified HVAC or electrical contractor correct the unsafe installation or cabinet opening before continued operation as appropriate. Restore approved covers or fillers and verify safe equipment, wiring, venting, and control operation.";
+        if (/cooling system|ac condenser|condenser/.test(text) && /not level|unlevel|not properly leveled|deficient support|support platform/.test(text)) return "Have a qualified HVAC contractor provide a stable, durable, level support for the outdoor unit and correct any strained or damaged connections. Verify proper clearances, vibration control, and normal operation after the support is corrected.";
+        if (/cooling system|ac condenser|condenser/.test(text) && /vegetation|clearance|too close|blocked access|not accessible/.test(text)) return "Remove or trim vegetation and relocate obstructions to provide the manufacturer-required service and airflow clearances around the outdoor unit. Have a qualified HVAC contractor clean and evaluate the unit if airflow has been restricted or the coil is dirty.";
+        if (/gas leak|combustion|carbon monoxide|\bco\b|flue|vent connector/.test(text) && !/alarms/.test(text)) return "Have a qualified HVAC or plumbing contractor evaluate the complete fuel-burning appliance and venting system and make all necessary corrections before continued operation. After repair, confirm proper draft, combustion, safety-control operation, and carbon monoxide performance.";
         if (/electrical|receptacle|outlet|gfci|gfi\b|breaker|wire|panel|polarity|ground/.test(text)) return "Have a licensed electrical contractor determine the cause and full extent of the condition and complete repairs using approved methods and materials. The repaired component and similar accessible components should be tested for safe, proper operation.";
+        if (/smoke \/ carbon monoxide alarms/.test(text)) return "Install, replace, or restore the required smoke and carbon-monoxide alarms in the appropriate locations in accordance with current manufacturer instructions and applicable requirements. Test each alarm after installation and maintain the devices at the recommended intervals.";
         if (/washing machine|clothes washer/.test(text) && /active leak|leaking|leakage|\bleak\b|dripping/.test(text)) return "Have a qualified appliance technician or plumbing contractor identify the source of the washing machine leakage and repair or replace the affected appliance, supply hose, drain hose, valve, or connection as needed. After repair, operate the washing machine through a normal fill and drain cycle while checking all accessible connections and nearby materials for leakage.";
         if (/heating|cooling|furnace|boiler|air condition|condenser|thermostat|\bhvac\b/.test(text)) {
           return nonOperating
             ? "Have a qualified HVAC contractor diagnose the system, determine why it did not respond to the controls, and complete repairs or replacement as needed. Request that the complete system—including the thermostat, equipment, safety controls, and distribution—be fully operated and tested before closing, with the results and completed work documented."
             : "Have a qualified HVAC contractor evaluate the complete system, determine the cause and extent of the condition, and complete repairs or replacement as needed. Afterward, have the system fully operated and tested to confirm normal, reliable performance.";
         }
+        if (/water heater/.test(text) && /tpr|relief valve|discharge pipe/.test(text)) return "Have a qualified plumbing contractor correct the temperature-and-pressure relief valve and discharge piping using approved materials and routing. Confirm the valve is properly installed, unobstructed, and terminates at a safe, visible location without creating a scalding hazard.";
+        if (/water heater/.test(text) && /catch pan|drain pan/.test(text) && /missing|absent/.test(text)) return "Install a properly sized water-heater catch pan and route its drain to an approved visible location where required or appropriate for the installation. Verify that the pan and drain remain unobstructed and do not create a trip or leakage concern.";
+        if (/water heater/.test(text) && /inadequate hot water|low hot water temperature|temperature.*low/.test(text)) return "Have a qualified plumbing contractor evaluate the water-heating controls, energy source, mixing components, and unit performance and correct the cause of inadequate temperature. Verify a stable, safe hot-water temperature at representative fixtures after repair.";
+        if (/water heater/.test(text) && /old|aged|near.*service life|exceed.*service life/.test(text)) return "Budget for water-heater replacement and have a qualified plumbing contractor service and evaluate the unit. Continue normal maintenance and monitor the tank and connections for leakage, but correct separate safety, venting, or performance defects promptly.";
+        if (/bathroom plumbing|bathroom sink|kitchen sink|plumbing/.test(text) && /hot and cold.*revers|revers.*hot and cold/.test(text)) return "Have a qualified plumbing contractor correct the supply connections or fixture controls so hot and cold water are delivered in the intended orientation. Test the fixture afterward for normal temperature response, flow, drainage, and leakage.";
+        if (/bathroom plumbing|bathroom sink|kitchen sink|plumbing/.test(text) && /no hot water|inadequate hot water|low water flow|inadequate water flow/.test(text)) return "Have a qualified plumbing contractor determine whether the condition originates at the fixture, shutoff valves, supply piping, or water-heating system and complete repairs as needed. Retest the fixture for normal flow, temperature response, drainage, and leakage.";
+        if (/drain \/ waste \/ vent|plumbing/.test(text) && /unsupported|inadequate.*support|poor support/.test(text) && /pipe|drain|vent/.test(text)) return "Have a qualified plumbing contractor install suitable supports and correct the piping alignment and slope as needed. Inspect strained joints for leakage and test the affected drain or supply piping after the work is complete.";
+        if (/bathroom plumbing|bathroom sink|bathtub \/ shower|kitchen sink|utility sink|plumbing/.test(text) && /trap|spout|shower control|faucet control|gap at bathtub|water backing|escaping from sink/.test(text)) return "Have a qualified plumbing contractor repair or replace the affected trap, spout, controls, seals, or fixture connection and close gaps using materials suitable for wet locations. Test the fixture for normal control, flow, drainage, and leakage after repair.";
+        if (/bathroom plumbing|bathroom sink|bathtub \/ shower|toilet|plumbing/.test(text) && /inadequate clearance|insufficient clearance|too close/.test(text)) return "Have a qualified plumbing or remodeling contractor correct the fixture clearance or arrangement as practical so the component can be used and serviced safely. Verify normal operation and leak-free connections after the work is complete.";
+        if (/sump pump/.test(text) && /failed to shut off|runs continuously|would not stop/.test(text)) return "Have a qualified plumbing or waterproofing contractor diagnose the float, switch, pump position, check valve, and discharge arrangement and correct the cause of continuous operation. Test several complete pump cycles afterward and confirm normal shutoff.";
+        if (/sump pump/.test(text) && /backup system|battery backup|no backup/.test(text)) return "Consider installing an independently powered sump-pump backup and high-water alarm appropriate for the expected inflow and discharge arrangement. Test and maintain both the primary and backup systems at the manufacturer's recommended intervals.";
+        if (/sump pump|utility sink/.test(text) && /drain.*sump|sump.*drain/.test(text)) return "Have a qualified plumbing contractor reroute the fixture discharge to an approved sanitary drainage connection and clean the sump basin and pump as needed. Test both systems afterward for proper, leak-free operation.";
+        if (/expansion tank|thermal expansion/.test(text) && /waterlog|failed|not observed|missing/.test(text)) return "Have a qualified plumbing contractor determine whether thermal-expansion control is required, test the existing tank where present, and install or replace properly sized equipment as needed. Verify normal system pressure and leak-free operation after correction.";
+        if (/water supply|well pressure|private well|wellhead/.test(text) && /excessive pressure|pressure fluctuation|water hammer|pipe movement|waterlog|failed/.test(text)) return "Have a qualified plumbing or well contractor test the pressure controls, tank, piping, and related valves and correct the source of unstable or excessive pressure. Secure moving piping and verify stable pressure and functional flow after repair.";
+        if (/water supply|well equipment|wellhead|private well/.test(text) && /exposed.*wiring|unsafe wiring|casing too low|surface water|exposed.*pipe/.test(text)) return "Have qualified well and electrical contractors protect wiring and piping and correct wellhead height, sealing, and drainage as applicable. Verify that surface water is directed away from the well and that electrical components are properly enclosed and grounded.";
+        if (/exterior faucet|hose bibb|plumbing/.test(text) && /hose connected|freezing condition|freeze/.test(text)) return "Disconnect hoses before freezing weather and have a qualified plumbing contractor inspect and repair the faucet or supply piping if freezing or leakage is suspected. Confirm normal shutoff and leak-free operation afterward.";
         if (/water heater/.test(text)) return "Have a qualified plumbing contractor evaluate the water heater, determine the cause and extent of the condition, and repair or replace the unit as needed. Afterward, verify proper heating, leak-free operation, safe venting where applicable, and operation of the required safety controls.";
         if (/plumb|sink drain|toilet|faucet|fixture|sump pump|septic|sewer|drainage pipe/.test(text)) return "Have a qualified plumbing contractor determine the cause and full extent of the condition and complete permanent repairs using appropriate materials. Inspect accessible adjoining materials for leakage or damage and test the repaired component under normal operating conditions.";
-        if (/roof|shingle|flashing|soffit|fascia|gutter|downspout/.test(text)) return "Have a qualified roofing contractor determine the cause and extent of the condition and repair or replace affected materials. When the area is opened, inspect the decking, underlayment, flashing, and adjacent materials and correct any concealed moisture damage found.";
-        if (/foundation|structur|bow|settle|sag/.test(text)) return "Have a qualified structural contractor or structural engineer evaluate the condition, determine whether movement is active, and specify any necessary repairs. Correct contributing moisture, drainage, or support conditions and repair affected finishes after the structural work is complete.";
+        if (/gutter/.test(text) && /debris|clog|block|overflow|sag|loose|missing|damag/.test(text)) return "Clean, secure, repair, or replace the affected gutter sections as needed so roof runoff flows freely to the downspouts. Correct slope and joint leakage, provide secure attachments, and verify performance during rainfall or controlled water testing when appropriate.";
+        if (/downspout/.test(text) && /foundation|too close|short|near (?:the )?(?:house|home)/.test(text)) return "Extend or reroute the downspout discharge so roof runoff is carried away from the foundation to a suitable drainage location without creating erosion or a trip hazard. Verify the extension remains connected and observe the area during rainfall for ponding or backflow.";
+        if (/downspout/.test(text) && /missing|disconnect|detach|loose|damag/.test(text)) return "Repair, reconnect, secure, or replace the affected downspout components so roof runoff is carried away from the building. Verify joints and attachments remain secure and that discharge does not concentrate water next to the foundation.";
+        if (/roof|shingle|flashing|soffit|fascia|gutter|downspout/.test(text) && !/vegetation \/ trees/.test(text)) return "Have a qualified roofing contractor determine the cause and extent of the condition and repair or replace affected materials. When the area is opened, inspect the decking, underlayment, flashing, and adjacent materials and correct any concealed moisture damage found.";
+        if (/foundation|structur|bow|settle|sag/.test(text) && !/site drainage/.test(text)) return "Have a qualified structural contractor or structural engineer evaluate the condition, determine whether movement is active, and specify any necessary repairs. Correct contributing moisture, drainage, or support conditions and repair affected finishes after the structural work is complete.";
         if (/chimney|fireplace|masonry/.test(text)) return "Have a qualified chimney or masonry contractor inspect the complete assembly and repair deteriorated or unsafe components as needed. The fireplace and venting system should be cleaned and tested for safe operation before use.";
         if (/garage door/.test(text)) return "Have a qualified garage-door contractor inspect the door, tracks, springs, cables, opener, and safety-reversal features and complete repairs or adjustments as needed. Confirm smooth operation and proper safety-reversal performance after repair.";
+        if (/stairs \/ guards \/ handrails/.test(text)) return "Have a qualified contractor repair, secure, or install the affected stair, guard, or handrail components as needed. Confirm stable walking surfaces, secure graspable handrails, and guards that resist normal loads before regular use.";
         if (/garage/.test(text) && /wall|ceiling|drywall/.test(text)) return "Have a qualified contractor repair and finish the affected wall and ceiling coverings using appropriate materials. Maintain the required separation between the garage and living areas, seal openings and penetrations, and inspect concealed framing for damage when exposed.";
+        if (/refrigerator/.test(text) && /compressor|fan/.test(text) && /noise|sound|vibration/.test(text)) return "Have a qualified appliance technician identify the source of the refrigerator noise and repair or replace loose, worn, or failing fan, compressor, mounting, or related components. Confirm stable temperatures and normal quiet operation afterward.";
+        if (/refrigerator/.test(text) && /water line/.test(text) && /disconnect|loose|damag|leak/.test(text)) return "Have a qualified appliance technician or plumbing contractor reconnect, repair, or cap the refrigerator water line using approved components. Operate the dispenser and ice-maker connection where applicable and check all accessible areas for leakage.";
+        if (/exhaust hood|dryer vent termination/.test(text) && /screen|garage|blocked|improper/.test(text)) return "Have a qualified dryer-vent or HVAC contractor reroute or correct the termination, remove prohibited screens or obstructions, and clean accessible lint accumulation. Verify unobstructed discharge to the exterior after correction.";
+        if (/clothes dryer/.test(text) && /vent|duct|exhaust/.test(text) && /disconnect|restrict|clog|screen|foil|plastic|improper|damag/.test(text)) return "Have a qualified dryer-vent or HVAC contractor replace, reconnect, clean, and support the dryer exhaust duct as needed using approved smooth-metal components. Route it to a proper exterior termination, minimize restrictions, and verify unobstructed airflow after correction.";
         if (/garbage disposal|dishwasher|washing machine|clothes washer|clothes dryer|range|oven|refrigerator|microwave|appliance/.test(text)) return "Have a qualified appliance technician determine the cause and full extent of the condition and repair or replace the appliance as needed. After repair, test the appliance through a normal operating cycle and check its electrical, plumbing, venting, and mounting connections as applicable.";
+        if (/walkways \/ driveways/.test(text) && /pitting|rutting|depression|tree root|surface slopes toward|slope.*home/.test(text)) return "Have a qualified concrete, paving, or drainage contractor repair or replace deteriorated and displaced areas and correct slopes that direct water toward the building. Provide a stable, even surface and monitor the repaired area for settlement or drainage problems.";
         if (/grading|site drainage|standing water|negative slope/.test(text)) return "Have a qualified drainage or landscaping contractor correct grading and drainage so surface water flows away from the building and does not pond near the foundation. Coordinate downspout discharge and other drainage components, then monitor the area during rainfall to confirm improvement.";
+        if (/vegetation \/ trees/.test(text) && /wood-destroying|wdo|wdi|termite|insect activity/.test(text)) return "Have a qualified pest-control or wood-destroying-insect professional evaluate the visible evidence and accessible surrounding materials, determine whether activity is current, and provide treatment and repair recommendations. Replace wood that has lost serviceable strength and correct moisture or soil-contact conditions that contribute to infestation.";
+        if (/vegetation \/ trees/.test(text)) return "Trim or remove vegetation as needed to provide clearance from the roof, siding, foundation, and service equipment. Have a qualified tree professional address large, damaged, or overhanging limbs, and maintain access for inspection and normal exterior maintenance.";
+        if (/deck \/ balcony/.test(text) && /rail|guard|handrail|stair|step|rot|deteriorat|loose|unsafe|damag/.test(text)) return "Have a qualified deck or carpentry contractor repair or replace the affected decking, stair, guard, handrail, or support components as needed. Confirm secure connections, stable walking surfaces, and safe guard and handrail performance after repairs.";
+        if (/siding \/ trim/.test(text)) return "Have a qualified exterior contractor repair, secure, or replace the affected siding, trim, and flashing components as needed. Restore a continuous weather-resistant exterior and inspect the exposed substrate for related damage during the work.";
+        if (/crawlspace/.test(text) && /vapor barrier|ground cover/.test(text)) return "Install a durable ground vapor retarder over the exposed soil, overlap and secure seams, and extend the material around supports in accordance with accepted practice. Address standing water or active drainage problems separately rather than relying on the vapor retarder alone.";
+        if (/crawlspace|attic/.test(text) && /debris|trash|waste|abandoned.*material/.test(text)) return "Remove debris and abandoned materials, then inspect the newly accessible surfaces for moisture, pest activity, damaged wiring, and material deterioration. Keep required access routes and service clearances open.";
+        if (/crawlspace/.test(text) && /wood.*(?:soil|earth|ground)|(?:soil|earth|ground).*wood/.test(text)) return "Have a qualified contractor remove soil contact, provide durable separation and proper support, and replace wood that has lost serviceable strength. Correct drainage or moisture conditions and have suspected wood-destroying insect activity evaluated where present.";
+        if (/crawlspace|basement|foundation/.test(text) && /efflorescen/.test(text)) return "Evaluate exterior grading, drainage, gutters, downspouts, and visible foundation openings; correct confirmed sources of moisture and remove loose deposits using methods suitable for the masonry. Monitor the area during wet weather and pursue further evaluation if moisture remains active or recurrent.";
+        if (/attic insulation/.test(text)) return "Have a qualified insulation contractor correct the insulation deficiency while maintaining required clearances from heat-producing equipment and preserving attic ventilation paths. Afterward, verify uniform coverage and that soffit, ridge, and other vents remain unobstructed.";
+        if (/attic ventilation/.test(text)) return "Have a qualified roofing or ventilation contractor correct blocked, missing, loose, or damaged ventilation components and provide a balanced path for intake and exhaust air. Verify that insulation and baffles do not obstruct the airflow openings.";
+        if (/emergency escape|rescue opening|egress/.test(text) && /inadequate|small|restricted|blocked|inoperable/.test(text)) return "Have a qualified contractor correct the emergency escape and rescue opening so it opens normally and provides the required clear opening and access. Keep the opening unobstructed and verify operation after repair.";
+        if (/fireplace|chimney/.test(text) && /damper|hearth|firebox/.test(text)) return "Have a qualified chimney or fireplace contractor inspect and repair the damper, hearth, firebox, and related clearances as applicable. Clean and test the complete fireplace and venting system before use.";
+        if (/attic|crawlspace|basement|exterior/.test(text) && /animal|rodent|wildlife|nest|droppings/.test(text)) return "Have a qualified pest or wildlife-control contractor identify and address the activity, remove contaminated materials as appropriate, and seal entry openings without blocking required ventilation. Repair damage to wiring, insulation, ducts, vents, or finishes found during the work.";
+        if (/window/.test(text) && /water stain|moisture|water damage|\bwet\b|damp/.test(text)) return "Have a qualified window or exterior contractor identify and correct the source of moisture at the window. Repair damaged seals, flashing, trim, or finishes as needed, and inspect adjoining materials during the work for related deterioration.";
+        if (/window/.test(text) && /fogged|failed.*seal|condensation between/.test(text)) return "Have a qualified window contractor replace the failed insulated-glass unit or window assembly as appropriate. Verify normal operation, secure latching, and intact perimeter weather sealing after the work is complete.";
         if (/door|window/.test(text)) return "Have a qualified contractor determine the cause of the condition and adjust, repair, or replace the component as needed. Verify smooth operation, secure latching, and suitable weather sealing after the work is complete.";
+        if (/fence/.test(text) && /gate|latch/.test(text)) return "Have a qualified fence contractor repair or replace the gate, latch, hinges, and posts as needed so the gate closes and latches reliably. Confirm any enclosure-specific safety requirements before regular use.";
+        if (/fuel shutoff|gas meter|propane regulator/.test(text) && /bird nest|nest|debris|not labeled|missing label/.test(text)) return "Have a qualified fuel-gas contractor remove obstructions without damaging the equipment, restore required clearances and ventilation, and label shutoff valves or meters where appropriate. Verify safe, accessible operation and leak-free connections after correction.";
+        if (/worn|wear|weathered/.test(text)) return "Have the affected component maintained, refinished, repaired, or replaced as appropriate for the material and extent of wear. Correct loose or damaged parts found during the work and verify normal use afterward.";
+        if (/abnormal|unusual|excessive/.test(text) && /noise|sound|vibration/.test(text)) return "Have an appropriately qualified contractor identify the source of the abnormal noise or vibration and repair, secure, or replace affected components as needed. Test the component after correction to confirm stable, normal operation.";
+        if (/not level|unlevel|out of level/.test(text)) return "Have a qualified contractor correct the supporting surface and level or realign the component as needed. Verify secure support and normal operation, drainage, or closure after the work is complete.";
+        if (/poor workmanship|workmanship.*poor/.test(text)) return "Have a qualified contractor evaluate the installation and correct deficient materials, connections, support, sealing, or finish work as applicable. Inspect adjacent areas exposed during correction for related defects.";
         return "Have a qualified contractor determine the cause and full extent of the condition and complete repairs or replacement using appropriate methods and materials. Afterward, test the component under normal operating conditions and correct any related damage discovered during the work.";
       }
 
@@ -3425,6 +4071,12 @@
       }
 
       function matchTemplateComment(note, selectedArea, type) {
+        // Defect observations must be based only on the inspector's note. The large
+        // saved library is intentionally not used as a fuzzy defect autocomplete;
+        // close word matches can contain property-specific facts that were never
+        // observed at the current inspection. Controlled rules below provide the
+        // MPI title, implication, and recommendation without importing those facts.
+        if (type === "defect") return null;
         const selectedItem = selectedReportItem(selectedArea);
         const noteTokens = templateTokens(note);
         const component = inferComponent(note, selectedArea);
@@ -3492,7 +4144,15 @@
       }
 
       function formatTemplateComment(comment, factNarrative = "") {
-        const formattedText = comment.text
+        let normalizedText = comment.text.replace(/Recommended Follow-Up:/g, "Recommendation:");
+        if (comment.type === "limit" && !/^Limitation:/i.test(normalizedText)) {
+          const sentences = normalizedText.match(/[^.!?]+[.!?]+|[^.!?]+$/g)?.map(sentence => sentence.trim()).filter(Boolean) || [];
+          const limitation = sentences[0] || "The component or area could not be fully inspected.";
+          const effect = sentences[1] || "The concealed or untested portions could not be evaluated, and defects may be present that were not identified during this inspection.";
+          const recommendation = sentences.slice(2).join(" ") || "Correct or remove the limiting condition and have the component or area re-evaluated when safe access and normal operating conditions are available.";
+          normalizedText = `Limitation: ${limitation}\n\nEffect on Inspection: ${effect}\n\nRecommendation: ${recommendation}`;
+        }
+        const formattedText = normalizedText
           .replace(/\s+(Implication:)/g, "\n\n$1")
           .replace(/\s+(Effect on Inspection:)/g, "\n\n$1")
           .replace(/\s+(Recommendation:)/g, "\n\n$1")
@@ -3922,6 +4582,16 @@
         renderSopResults();
       }
 
+      function sizeCommentOutput() {
+        commentOutput.style.height = "";
+        commentOutput.style.overflowY = "auto";
+        if (window.innerWidth >= 861 || !commentOutput.value) return;
+        commentOutput.style.height = "330px";
+        const desiredHeight = Math.min(Math.max(commentOutput.scrollHeight + 2, 330), 720);
+        commentOutput.style.height = `${desiredHeight}px`;
+        commentOutput.style.overflowY = commentOutput.scrollHeight <= desiredHeight + 2 ? "hidden" : "auto";
+      }
+
       function setCommentType(type) {
         commentType = type;
         const limitation = type === "limit";
@@ -3953,6 +4623,7 @@
         commentOutput.value = "";
         commentOutput.scrollTop = 0;
         commentOutput.scrollLeft = 0;
+        sizeCommentOutput();
         copyCommentBtn.disabled = true;
         commentOutput.hidden = false;
         commentResultActions.hidden = false;
@@ -4034,6 +4705,7 @@
         commentOutput.value = "";
         commentOutput.scrollTop = 0;
         commentOutput.scrollLeft = 0;
+        sizeCommentOutput();
         copyCommentBtn.disabled = true;
         defectInput.focus();
       });
@@ -4052,11 +4724,14 @@
           return;
         }
         commentOutput.value = buildMpiComment(note, commentArea.value, commentType);
+        sizeCommentOutput();
         commentOutput.scrollTop = 0;
         commentOutput.scrollLeft = 0;
         copyCommentBtn.disabled = false;
         if (window.innerWidth < 861) commentOutput.closest(".comment-result-panel").scrollIntoView({ behavior: "smooth", block: "start" });
       });
+
+      window.addEventListener("resize", sizeCommentOutput);
 
       sopSearch.addEventListener("input", () => renderSopResults({ selectFirst: true }));
       sopChapter.addEventListener("change", () => renderSopResults({ selectFirst: true }));
