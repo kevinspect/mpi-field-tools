@@ -1,4 +1,4 @@
-const CACHE_NAME = "mpi-field-tools-shell-v2";
+const CACHE_NAME = "mpi-field-tools-shell-v3";
 const APP_SHELL = ["./", "./index.html", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", event => {
