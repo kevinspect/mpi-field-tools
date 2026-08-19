@@ -2974,6 +2974,11 @@
           if (/shower|bathtub|\btub\b/.test(lower)) return "Bathtub / Shower";
           return "Bathroom Plumbing";
         }
+        if (item === "Countertops and Cabinets") {
+          if (/\bcounter(?:top)?s?\b|worktop/.test(lower)) return "Countertop";
+          if (/\bcabinet(?:ry|s)?\b|cupboard|drawer/.test(lower)) return "Cabinets";
+          return "Countertops and Cabinets";
+        }
         if (item === "Lighting, Switches and Receptacles" && /receptacle|outlet|gfci|gfi\b/.test(lower)) return "Electrical Receptacle";
         if (item === "OPTIONAL - Fireplace (Wood-Burning or Gas)") return "Fireplace / Chimney";
         if (item === "OPTIONAL - Emergency Escape and Rescue Openings") return "Emergency Escape and Rescue Openings";
@@ -2995,6 +3000,8 @@
           [/refrigerator|\bfridge\b/i, "Refrigerator"],
           [/built[- ]?in microwave|microwave/i, "Built-in Microwave"],
           [/range|oven|cooktop/i, "Range/Oven/Cooktop"],
+          [/\bcounter(?:top)?s?\b|worktop/i, "Countertop"],
+          [/\bcabinet(?:ry|s)?\b|cupboard|drawer/i, "Cabinets"],
           [/water heater|hot water tank/i, "Water Heater"],
           [/garage door opener|overhead garage door|garage vehicle door/i, "Garage Door"],
           [/service panel|electrical panel|breaker panel|fuse panel/i, "Electrical Panel"],
@@ -3088,6 +3095,10 @@
         const runningToilet = /toilet/.test(lower) && /continuous(?:ly)? running|run(?:s|ning)? continuously|(?:would|will|does) not stop running|keeps? running/.test(lower);
 
         if (runningToilet) return "Bathroom Toilets - Continuous Running";
+        if (component === "Countertop" && /crack|split|fracture/.test(lower)) return "Countertops and Cabinets - Cracked Countertop";
+        if (component === "Countertop" && /chip|damag|broken|hole|impact/.test(lower)) return "Countertops and Cabinets - Damaged Countertop";
+        if (component === "Countertop" && /loose|separat|movement|not secure/.test(lower)) return "Countertops and Cabinets - Loose or Separating Countertop";
+        if (component === "Cabinets" && /damag|broken|crack|split|hole|impact/.test(lower)) return "Countertops and Cabinets - Damaged Cabinet";
         if (component === "Foundation" && /vertical\w*\s+crack|crack.*vertical/.test(lower)) return "Foundation - Vertical Crack in Basement Wall";
         if (component === "Foundation" && /horizontal\w*\s+crack|crack.*horizontal/.test(lower)) return "Foundation - Horizontal Foundation Wall Crack";
         if (component === "Foundation" && /step\w*\s+crack|stair[- ]step crack/.test(lower)) return "Foundation - Step Cracking";
@@ -3189,6 +3200,8 @@
           return statements.join(" ");
         }
         if (component === "Electrical Panel" && /overheat|excessive heat|hot spot/.test(text)) return "Evidence of overheating was observed at the electrical panel.";
+        if (component === "Countertop" && /^(?:cracked|split|fractured)\s+(?:kitchen\s+)?counter(?:top)?\.?$/i.test(base.trim())) return "A crack was observed in the kitchen countertop.";
+        if (component === "Countertop" && /^(?:the\s+)?(?:kitchen\s+)?counter(?:top)?\s+(?:is\s+|was\s+)?(?:cracked|split|fractured)\.?$/i.test(base.trim())) return "A crack was observed in the kitchen countertop.";
         if ((component === "Exterior Windows" || component === "Windows") && /^damaged\s+window\.?$/i.test(base)) return "Damage was observed at the window.";
         if ((component === "Exterior Windows" || component === "Windows") && /crack|broken/.test(text) && /glass|pane/.test(text)) return "Cracked or broken window glass was observed.";
         if ((component === "Exterior Windows" || component === "Windows") && /seal|weatherstrip/.test(text) && /damag|deteriorat|fail|loose|missing/.test(text)) {
@@ -3206,6 +3219,9 @@
         const text = `${component} ${note}`.toLowerCase();
         const nonOperating = /did not operate|does not operate|would not operate|inoperable|failed to operate|no response|no power/.test(text);
         if (/toilet/.test(text) && /continuous(?:ly)? running|run(?:s|ning)? continuously|(?:would|will|does) not stop running|keeps? running/.test(text)) return "A continuously running toilet can waste a substantial amount of water and increase utility costs. The condition commonly indicates a defective or improperly adjusted flapper, fill valve, float assembly, or flush mechanism and may cause premature wear if it remains uncorrected.";
+        if (/countertop/.test(text) && /crack|split|fracture|chip|damag|broken/.test(text)) return "A cracked or damaged countertop can continue to separate or chip during normal use, creating sharp edges and reducing the surface's durability. Liquids and debris can enter the damaged area and may affect the countertop substrate or supporting cabinetry, particularly where the defect is near a sink or seam.";
+        if (/countertop/.test(text) && /loose|separat|movement|not secure/.test(text)) return "Movement or separation can reduce countertop support and strain seams, fasteners, backsplashes, sinks, and adjoining cabinetry. Continued use may enlarge the separation and allow moisture or debris into areas that are difficult to clean or inspect.";
+        if (/cabinet/.test(text) && /damag|broken|crack|split|loose|missing/.test(text)) return "Damaged cabinet components can affect normal door or drawer operation, support, and long-term durability. Loose or deteriorated parts may worsen with continued use and can create sharp edges or allow a door, drawer, or stored item to shift unexpectedly.";
         if (/foundation/.test(text) && /vertical\w*\s+crack|crack.*vertical/.test(text)) return "Vertical foundation-wall cracks may be associated with concrete shrinkage or settlement. Changes in the crack's width, length, or displacement may indicate continued movement, and an open crack can provide a path for future moisture intrusion even when no moisture is visible at the time of inspection.";
         if (/foundation/.test(text) && /horizontal\w*\s+crack|crack.*horizontal|step\w*\s+crack|stair[- ]step crack/.test(text)) return "Horizontal or step cracking can be associated with foundation movement or lateral soil pressure. Continued movement may widen or displace the crack, affect connected materials, and reduce the wall's ability to perform as intended.";
         if (/\bpaint(?:ed|ing)?\b|\bcoating\b/.test(text) && /damag|dmage|peel|chip|flak|blister|wear|scuff|deteriorat/.test(text)) return "The damaged paint affects the finished appearance and can leave the underlying material with reduced protection from normal wear. Loose or deteriorated paint may continue to chip or peel; however, paint damage alone does not establish the cause or condition of the underlying material.";
@@ -3270,6 +3286,8 @@
         const text = `${component} ${note}`.toLowerCase();
         const nonOperating = /did not operate|does not operate|would not operate|inoperable|failed to operate|no response|no power/.test(text);
         if (/toilet/.test(text) && /continuous(?:ly)? running|run(?:s|ning)? continuously|(?:would|will|does) not stop running|keeps? running/.test(text)) return "Have a qualified plumbing contractor evaluate the toilet and repair or replace the defective tank or flush-control components as needed. After repair, confirm that the toilet flushes, refills, shuts off normally, and remains free of leakage.";
+        if (/countertop/.test(text) && /crack|split|fracture|chip|damag|broken|loose|separat|movement|not secure/.test(text)) return "Have a qualified countertop or cabinet contractor repair or replace the affected countertop using a method appropriate for the material and extent of damage. During the work, inspect the substrate and supporting cabinetry for related damage, then verify the finished surface is stable, smooth, and properly sealed.";
+        if (/cabinet/.test(text) && /damag|broken|crack|split|loose|missing/.test(text)) return "Have a qualified cabinet contractor repair or replace the affected door, drawer, hardware, or cabinet component as needed. After repair, verify the cabinetry is secure, properly supported, and operates smoothly without binding or unintended movement.";
         if (/foundation/.test(text) && /vertical\w*\s+crack|crack.*vertical/.test(text)) return "Monitor the crack for changes in width, length, displacement, or moisture intrusion and seal or repair it as appropriate. Have a qualified foundation contractor evaluate the condition if displacement is present or if the crack widens, lengthens, or shows signs of continued movement.";
         if (/foundation/.test(text) && /horizontal\w*\s+crack|crack.*horizontal|step\w*\s+crack|stair[- ]step crack/.test(text)) return "Have a qualified foundation contractor or structural engineer evaluate the cracking, determine whether movement is active, and specify any necessary repairs. Correct contributing drainage or soil-pressure conditions and monitor the repaired area for additional movement.";
         if (/\bpaint(?:ed|ing)?\b|\bcoating\b/.test(text) && /damag|dmage|peel|chip|flak|blister|wear|scuff|deteriorat/.test(text)) return "Have the affected surface properly prepared and refinished with compatible materials. Repair any loose or damaged substrate found during preparation, and correct a moisture source only if staining, dampness, or active leakage is separately confirmed.";
@@ -3399,6 +3417,7 @@
         if (component === "General") return true;
         if (type !== "defect") return false;
         const normalized = normalizeTemplateText(note);
+        if (component === "Countertop" && /\b(?:crack|split|fracture|chip|damage|damaged|broken|loose|separat\w*|movement)\b/.test(normalized)) return true;
         const mentionsPaint = /\bpaint(?:ed|ing)?\b|\bcoating\b/.test(normalized);
         if (!mentionsPaint) return false;
         const supportsSpecificPaintComment = /\bmoisture\b|\bwater\b|\bleak\b|\bstain\b|\bbump out\b|\bsoffit\b|\btrim\b|\bexposed wood\b|\brot\b|\bpainted shut\b/.test(normalized);
