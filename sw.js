@@ -1,10 +1,18 @@
-const CACHE_NAME = "mpi-field-tools-shell-v11";
+const CACHE_NAME = "mpi-field-tools-shell-v12";
 const APP_SHELL = ["./", "./index.html", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png"];
+
+async function fetchFresh(resource) {
+  return fetch(resource, { cache: "no-store" });
+}
 
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL))
+      .then(cache => Promise.all(APP_SHELL.map(async resource => {
+        const response = await fetchFresh(resource);
+        if (!response.ok) throw new Error(`Unable to cache ${resource}`);
+        await cache.put(resource, response);
+      })))
       .then(() => self.skipWaiting())
   );
 });
@@ -21,7 +29,7 @@ self.addEventListener("fetch", event => {
   if (event.request.method !== "GET" || event.request.mode !== "navigate") return;
 
   event.respondWith(
-    fetch(event.request)
+    fetchFresh(event.request)
       .then(response => {
         if (response.ok) {
           const copy = response.clone();
