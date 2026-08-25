@@ -1039,6 +1039,71 @@
       resize: vertical;
     }
 
+    .damage-form textarea.damage-action-input { min-height: 118px; }
+
+    .damage-choice-field {
+      min-width: 0;
+      margin: 0 0 18px;
+      padding: 0;
+      border: 0;
+    }
+
+    .damage-choice-field legend {
+      margin-bottom: 9px;
+      color: var(--forest);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .damage-choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .damage-choice-option {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 54px;
+      padding: 0 14px;
+      color: var(--forest);
+      background: #fff;
+      border: 1.5px solid #bfb8a9;
+      border-radius: 13px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 850;
+      transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+
+    .damage-choice-option:has(input:checked) {
+      background: #eef5fa;
+      border-color: var(--bright-blue);
+      box-shadow: 0 0 0 4px rgba(47, 117, 181, .12);
+    }
+
+    .damage-choice-option input {
+      width: 19px;
+      height: 19px;
+      margin: 0;
+      accent-color: var(--bright-blue);
+    }
+
+    .damage-action-help {
+      min-height: 17px;
+      margin: 7px 2px 0;
+      color: var(--ink-2);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .damage-action-help.attention {
+      color: #8b6513;
+      font-weight: 750;
+    }
+
     .damage-input:focus,
     .damage-form textarea:focus {
       border-color: var(--bright-blue);
@@ -2064,28 +2129,23 @@
           </div>
 
           <div class="damage-field-row">
-            <div class="field">
-              <label for="damagePriority">Priority *</label>
-              <div class="select-wrap">
-                <select id="damagePriority" name="Priority" required>
-                  <option value="">Choose a priority…</option>
-                  <option>Routine repair</option>
-                  <option>Needs prompt attention</option>
-                  <option>Safety concern — do not use</option>
-                </select>
+            <fieldset class="field damage-choice-field">
+              <legend>Realtor informed? *</legend>
+              <div class="damage-choice-grid">
+                <label class="damage-choice-option">
+                  <input id="damageRealtorYes" name="Realtor informed" type="radio" value="Yes" required>
+                  <span>Yes</span>
+                </label>
+                <label class="damage-choice-option">
+                  <input id="damageRealtorNo" name="Realtor informed" type="radio" value="No" required>
+                  <span>No</span>
+                </label>
               </div>
-            </div>
+            </fieldset>
             <div class="field">
-              <label for="damageAction">Action taken *</label>
-              <div class="select-wrap">
-                <select id="damageAction" name="Action taken" required>
-                  <option value="">Choose an action…</option>
-                  <option>Photographed and documented only</option>
-                  <option>Use stopped / area kept clear</option>
-                  <option>Item or opening temporarily secured</option>
-                  <option>Supervisor assistance requested</option>
-                </select>
-              </div>
+              <label id="damageActionLabel" for="damageAction">Action taken *</label>
+              <textarea class="damage-action-input" id="damageAction" name="Action taken" maxlength="600" placeholder="Describe what you did after finding the damage." required></textarea>
+              <p class="damage-action-help" id="damageActionHelp">Include any steps taken to protect the property or prevent further damage.</p>
             </div>
           </div>
 
@@ -2114,7 +2174,7 @@
         <aside class="panel damage-info-panel" aria-labelledby="damage-info-title">
           <span class="damage-online-badge">Online submission</span>
           <h3 id="damage-info-title">One notice. Everything attached.</h3>
-          <p>The administrative email includes the inspector, property, damaged item, location, description, priority, action taken, submission time, and uploaded photos.</p>
+          <p>The administrative email includes the inspector, property, damaged item, location, description, whether the realtor was informed, action taken, submission time, and uploaded photos.</p>
           <ul class="damage-checklist">
             <li>Use for damaged access hatches, ladders, tools, covers, panels, or other inspection-related items.</li>
             <li>Photograph the full item and the damaged area clearly.</li>
@@ -2732,6 +2792,10 @@
       const damageProperty = document.getElementById("damageProperty");
       const damageItem = document.getElementById("damageItem");
       const damageLocation = document.getElementById("damageLocation");
+      const damageRealtorOptions = [...document.querySelectorAll('input[name="Realtor informed"]')];
+      const damageAction = document.getElementById("damageAction");
+      const damageActionLabel = document.getElementById("damageActionLabel");
+      const damageActionHelp = document.getElementById("damageActionHelp");
       const damagePhoto1 = document.getElementById("damagePhoto1");
       const damagePhoto2 = document.getElementById("damagePhoto2");
       const damagePhotoCard1 = document.getElementById("damagePhotoCard1");
@@ -5181,6 +5245,21 @@
         }
       }
 
+      function updateDamageRealtorState() {
+        const selection = damageRealtorOptions.find(option => option.checked)?.value || "";
+        const notInformed = selection === "No";
+        damageActionLabel.textContent = notInformed
+          ? "Action taken / why realtor was not informed *"
+          : "Action taken *";
+        damageActionHelp.textContent = notInformed
+          ? "State what action was taken and why the realtor was not informed."
+          : "Include any steps taken to protect the property or prevent further damage.";
+        damageActionHelp.classList.toggle("attention", notInformed);
+        damageAction.placeholder = notInformed
+          ? "Describe what you did and why the realtor was not informed."
+          : "Describe what you did after finding the damage.";
+      }
+
       function validateDamageSubmission(event) {
         damageSubmitStatus.className = "damage-submit-status";
         damageSubmitStatus.textContent = "";
@@ -5647,6 +5726,7 @@
 
       damagePhoto1.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto1, damagePhotoPreview1, damagePhotoCard1));
       damagePhoto2.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto2, damagePhotoPreview2, damagePhotoCard2));
+      damageRealtorOptions.forEach(option => option.addEventListener("change", updateDamageRealtorState));
       damageForm.addEventListener("submit", validateDamageSubmission);
       window.addEventListener("pageshow", () => {
         damageSubmitBtn.disabled = false;
