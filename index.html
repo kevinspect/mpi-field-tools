@@ -1104,6 +1104,53 @@
       font-weight: 750;
     }
 
+    .damage-informed-group {
+      margin-top: 14px;
+      padding-top: 13px;
+      border-top: 1px solid #e2ddd3;
+    }
+
+    .damage-informed-title {
+      margin: 0 0 9px;
+      color: var(--forest);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .damage-informed-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .damage-informed-option {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 43px;
+      padding: 0 12px;
+      color: var(--forest);
+      background: #fff;
+      border: 1.5px solid #c8c1b4;
+      border-radius: 11px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+
+    .damage-informed-option:has(input:checked) {
+      background: #eef5fa;
+      border-color: var(--bright-blue);
+      box-shadow: 0 0 0 3px rgba(47, 117, 181, .1);
+    }
+
+    .damage-informed-option input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--bright-blue);
+    }
+
     .damage-input:focus,
     .damage-form textarea:focus {
       border-color: var(--bright-blue);
@@ -2146,6 +2193,26 @@
               <label id="damageActionLabel" for="damageAction">Action taken *</label>
               <textarea class="damage-action-input" id="damageAction" name="Action taken" maxlength="600" placeholder="Describe what you did after finding the damage." required></textarea>
               <p class="damage-action-help" id="damageActionHelp">Include any steps taken to protect the property or prevent further damage.</p>
+              <div class="damage-informed-group">
+                <p class="damage-informed-title">Additional people informed</p>
+                <div class="damage-informed-list">
+                  <label class="damage-informed-option">
+                    <input id="damageHomeownerInformed" type="checkbox">
+                    <span>Homeowner informed</span>
+                  </label>
+                  <label class="damage-informed-option">
+                    <input id="damageManagerInformed" type="checkbox">
+                    <span>Building manager informed</span>
+                  </label>
+                  <label class="damage-informed-option">
+                    <input id="damageTenantInformed" type="checkbox">
+                    <span>Tenant informed</span>
+                  </label>
+                </div>
+                <input id="damageHomeownerValue" type="hidden" name="Homeowner informed" value="No">
+                <input id="damageManagerValue" type="hidden" name="Building manager informed" value="No">
+                <input id="damageTenantValue" type="hidden" name="Tenant informed" value="No">
+              </div>
             </div>
           </div>
 
@@ -2158,12 +2225,14 @@
                 <span class="damage-photo-prompt">Photo 1 — Before</span>
               </div>
               <div class="damage-photo-card" id="damagePhotoCard2">
-                <input id="damagePhoto2" name="attachment_2" type="file" accept="image/*" capture="environment" aria-label="Take or choose optional Photo 2 after">
+                <input id="damagePhoto2" name="attachment_2" type="file" accept="image/*" capture="environment" required aria-label="Take or choose required Photo 2 after">
                 <img id="damagePhotoPreview2" alt="Photo 2 after preview" hidden>
                 <span class="damage-photo-prompt">Photo 2 — After</span>
               </div>
             </div>
-            <p class="damage-file-note">Photo 1 (Before) is required. Photo 2 (After) is optional. The combined attachment size must be under 10MB.</p>
+            <input type="hidden" name="Photo 1 label" value="Before — see the Photo-1-Before attachment">
+            <input type="hidden" name="Photo 2 label" value="After — see the Photo-2-After attachment">
+            <p class="damage-file-note">Both Before and After photos are required. They will be labeled in the email. The combined attachment size must be under 10MB.</p>
           </div>
 
           <button class="decode-btn" id="damageSubmitBtn" type="submit">Email damaged item notice</button>
@@ -2177,7 +2246,7 @@
           <p>The administrative email includes the inspector, property, damaged item, location, description, whether the realtor was informed, action taken, submission time, and uploaded photos.</p>
           <ul class="damage-checklist">
             <li>Use for damaged access hatches, ladders, tools, covers, panels, or other inspection-related items.</li>
-            <li>Photograph the full item and the damaged area clearly.</li>
+            <li>Take a clear Before photo and an After photo showing how the item was left.</li>
             <li>Stop using or accessing an item when the condition appears unsafe.</li>
             <li>Do not include client documents, identification, or unrelated personal information in the photo.</li>
           </ul>
@@ -2796,6 +2865,12 @@
       const damageAction = document.getElementById("damageAction");
       const damageActionLabel = document.getElementById("damageActionLabel");
       const damageActionHelp = document.getElementById("damageActionHelp");
+      const damageHomeownerInformed = document.getElementById("damageHomeownerInformed");
+      const damageManagerInformed = document.getElementById("damageManagerInformed");
+      const damageTenantInformed = document.getElementById("damageTenantInformed");
+      const damageHomeownerValue = document.getElementById("damageHomeownerValue");
+      const damageManagerValue = document.getElementById("damageManagerValue");
+      const damageTenantValue = document.getElementById("damageTenantValue");
       const damagePhoto1 = document.getElementById("damagePhoto1");
       const damagePhoto2 = document.getElementById("damagePhoto2");
       const damagePhotoCard1 = document.getElementById("damagePhotoCard1");
@@ -5260,13 +5335,44 @@
           : "Describe what you did after finding the damage.";
       }
 
+      function updateDamageInformedValues() {
+        damageHomeownerValue.value = damageHomeownerInformed.checked ? "Yes" : "No";
+        damageManagerValue.value = damageManagerInformed.checked ? "Yes" : "No";
+        damageTenantValue.value = damageTenantInformed.checked ? "Yes" : "No";
+      }
+
+      function labelDamagePhotoFile(input, label) {
+        const file = input.files?.[0];
+        if (!file || file.name.startsWith(label)) return;
+        try {
+          const nameExtension = file.name.match(/\.([a-z0-9]{2,5})$/i)?.[1]?.toLowerCase();
+          const mimeExtension = {
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "image/heic": "heic",
+            "image/heif": "heif",
+            "image/webp": "webp"
+          }[file.type];
+          const extension = nameExtension || mimeExtension || "jpg";
+          const renamedFile = new File([file], `${label}.${extension}`, {
+            type: file.type,
+            lastModified: file.lastModified
+          });
+          const transfer = new DataTransfer();
+          transfer.items.add(renamedFile);
+          input.files = transfer.files;
+        } catch (_) {
+          // The email still includes explicit Before/After label rows if an older browser cannot rename a file.
+        }
+      }
+
       function validateDamageSubmission(event) {
         damageSubmitStatus.className = "damage-submit-status";
         damageSubmitStatus.textContent = "";
         if (!damageForm.reportValidity()) {
           event.preventDefault();
           damageSubmitStatus.className = "damage-submit-status error";
-          damageSubmitStatus.textContent = "Complete the required fields and add a photo before submitting.";
+          damageSubmitStatus.textContent = "Complete the required fields and add both Before and After photos before submitting.";
           return;
         }
         if (!navigator.onLine) {
@@ -5276,6 +5382,9 @@
           showToast("Reconnect before sending the damage notice");
           return;
         }
+        updateDamageInformedValues();
+        labelDamagePhotoFile(damagePhoto1, "Photo-1-Before");
+        labelDamagePhotoFile(damagePhoto2, "Photo-2-After");
         const files = [damagePhoto1.files?.[0], damagePhoto2.files?.[0]].filter(Boolean);
         const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
         if (files.some(file => file.type && !file.type.startsWith("image/"))) {
@@ -5736,6 +5845,8 @@
       damagePhoto1.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto1, damagePhotoPreview1, damagePhotoCard1));
       damagePhoto2.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto2, damagePhotoPreview2, damagePhotoCard2));
       damageRealtorOptions.forEach(option => option.addEventListener("change", updateDamageRealtorState));
+      [damageHomeownerInformed, damageManagerInformed, damageTenantInformed]
+        .forEach(option => option.addEventListener("change", updateDamageInformedValues));
       damageForm.addEventListener("submit", validateDamageSubmission);
       window.addEventListener("pageshow", () => {
         damageSubmitBtn.disabled = false;
