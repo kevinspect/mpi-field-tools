@@ -1604,17 +1604,25 @@
               <option value="">Choose a manufacturer…</option>
               <optgroup label="HVAC & furnaces">
                 <option value="carrier">Carrier / Bryant / Payne — 1980+</option>
-                <option value="goodman">Goodman / Amana / Daikin</option>
+                <option value="icp">Heil / Tempstar / Comfortmaker / Arcoaire / Day & Night / Keeprite / Airquest / GrandAire — ICP</option>
+                <option value="goodman">Goodman / Amana / Janitrol / Daikin — common format</option>
                 <option value="lennox">Lennox — common 1974+ format</option>
-                <option value="ducane">Ducane / Allied Air — modern format</option>
+                <option value="ducane">Ducane / Armstrong Air / AirEase / Concord / Allied Air — common formats</option>
+                <option value="nortek">Nordyne / Nortek / Broan / Frigidaire / Gibson / Intertherm / Maytag / Miller / NuTone / Philco / Tappan / Westinghouse — newer</option>
                 <option value="rheem_hvac">Rheem / Ruud / WeatherKing</option>
-                <option value="trane">Trane / American Standard — 2002+</option>
-                <option value="york">York / Coleman / Luxaire — late 2004+</option>
+                <option value="trane">Trane / American Standard — 1980+</option>
+                <option value="york">York / Coleman / Luxaire / Champion / Evcon / Guardian / Fraser-Johnston — late 2004+</option>
               </optgroup>
               <optgroup label="Water heaters">
-                <option value="aosmith">A. O. Smith / State / American / Reliance — modern</option>
+                <option value="aosmith">A. O. Smith / State / American / Reliance / U.S. Craftmaster / A.O.-built Whirlpool or Kenmore — YYWW, 1960+</option>
                 <option value="bradford">Bradford White — tank type</option>
-                <option value="rheem_water">Rheem / Ruud / Richmond — common formats</option>
+                <option value="rheem_water">Rheem / Ruud / Richmond / Rheem-built GE — common formats, 1960+</option>
+                <option value="rinnai">Rinnai tankless / direct-vent — common formats</option>
+              </optgroup>
+              <optgroup label="Boilers, heat pumps & specialty equipment">
+                <option value="bosch">Bosch / Buderus — 2010+ 3-character date code</option>
+                <option value="weil_mclain">Weil-McLain boiler — official CP-number ranges, 1988+</option>
+                <option value="york_mapics">YORK commercial / chiller — Mapics 1971+ or SAP date code</option>
               </optgroup>
             </select>
           </div>
@@ -1784,18 +1792,18 @@
       <div class="coverage-grid">
         <article class="coverage-card">
           <span class="tag">Week + year</span>
-          <h3>Carrier, Rheem, Trane</h3>
-          <p>Converts production-week codes into an approximate calendar month.</p>
+          <h3>Carrier, ICP, Rheem, Trane, A. O. Smith</h3>
+          <p>Converts production-week codes into an approximate calendar month, including supported 1960+ numeric codes.</p>
         </article>
         <article class="coverage-card">
           <span class="tag">Month + year</span>
-          <h3>Goodman, Lennox/Ducane, York</h3>
+          <h3>Goodman, Allied Air, Nortek, York, Rinnai</h3>
           <p>Reads numeric or letter month codes directly from the serial.</p>
         </article>
         <article class="coverage-card">
-          <span class="tag">Cycle aware</span>
-          <h3>Bradford White</h3>
-          <p>Shows every plausible year when a 20-year letter code repeats.</p>
+          <span class="tag">Special codes</span>
+          <h3>Bradford White, Bosch, YORK commercial, Weil-McLain</h3>
+          <p>Handles repeating letter cycles, Bosch date tables, YORK factory codes, and Weil-McLain CP ranges.</p>
         </article>
       </div>
 
@@ -1803,13 +1811,20 @@
         <summary>Method, limitations, and reference notes</summary>
         <div class="reference-copy">
           <p>This is a field reference, not a warranty determination. Always compare the result with the printed manufacture date, model era, installation history, and manufacturer records—especially when a rating plate is damaged or a unit may be private-labeled.</p>
+          <p><strong>1960 coverage does not mean every brand can be decoded to 1960.</strong> It applies only when the selected equipment uses one of the supported numeric date layouts. Repeating letter codes show every valid era instead of silently choosing one.</p>
           <ul>
             <li><a href="https://www.rheem.com/air-conditioning/articles/what-to-know-before-meeting-with-an-hvac-contractor/" target="_blank" rel="noreferrer">Rheem HVAC week/year guidance</a></li>
             <li><a href="https://aosmithinternational.com/manufacturing-date-device/" target="_blank" rel="noreferrer">A. O. Smith year/week guidance</a></li>
             <li><a href="https://www.bradfordwhite.com/my-water-heater/" target="_blank" rel="noreferrer">Bradford White date-code chart</a></li>
             <li><a href="https://www.ducanehvac.com/owner-support/warranty-registration/" target="_blank" rel="noreferrer">Ducane model/serial verification</a></li>
-            <li><a href="https://www.building-center.org/carrier-hvac-age/" target="_blank" rel="noreferrer">Carrier serial-format reference</a></li>
-            <li><a href="https://www.building-center.org/york-hvac-age/" target="_blank" rel="noreferrer">York serial-format reference</a></li>
+            <li><a href="https://elibrary.tranetechnologies.com/public/residential-hvac/Literature/Product%20Catalog/22-8301-37_3Q_03122024.pdf" target="_blank" rel="noreferrer">Trane factory equipment-date table</a></li>
+            <li><a href="https://www.shareddocs.com/hvac/docs/1011/Public/03/ICP_51601260200_28400.pdf" target="_blank" rel="noreferrer">ICP factory year/week nomenclature example</a></li>
+            <li><a href="https://media.rinnai.us/salsify_asset/s-3406a2d0-e0f0-4876-9f26-95943260d2a1/200000014%20Direct%20Vent%20Service%20Manual.pdf" target="_blank" rel="noreferrer">Rinnai serial-number format table</a></li>
+            <li><a href="https://www.bosch-homecomfort.com/us/media/country_pool/documents/serial_number_reference_guide_06.2023.pdf" target="_blank" rel="noreferrer">Bosch/Buderus serial date-code table</a></li>
+            <li><a href="https://files.myrheem.com/webpartners/rheemcom/warranty/rheem_waterheater_faq.pdf" target="_blank" rel="noreferrer">Rheem factory water-heater serial guidance</a></li>
+            <li><a href="https://www.weil-mclain.com/wp-content/uploads/CP-Date-Ranges-2026.pdf" target="_blank" rel="noreferrer">Weil-McLain official CP date ranges</a></li>
+            <li><a href="https://docs.johnsoncontrols.com/chillers/api/khub/documents/vAw~Zwio7mZkX8CKwDT8qg/content" target="_blank" rel="noreferrer">YORK factory Mapics and SAP serial schemes</a></li>
+            <li><a href="https://dwt-front-prod.daikincomfort.com/docs/default-source/general/warranty-certificates/pwdfurnsntg.pdf" target="_blank" rel="noreferrer">Daikin factory YYMM serial guidance</a></li>
           </ul>
         </div>
       </details>
@@ -1831,6 +1846,38 @@
       const LENNOX_MONTHS = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, J: 8, K: 9, L: 10, M: 11 };
       const YORK_MONTHS = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, K: 8, L: 9, M: 10, N: 11 };
       const BRADFORD_YEAR_CODES = "ABCDEFGHJKLMNPSTWXYZ";
+      const TRANE_YEAR_CODES = {
+        O: 1980, A: 1980, T: 1981, U: 1982, W: 1983, X: 1984, Y: 1985,
+        S: 1986, B: 1987, C: 1988, D: 1989, E: 1990, F: 1991, G: 1992,
+        H: 1993, J: 1994, K: 1995, L: 1996, M: 1997, N: 1998, P: 1999,
+        R: 2000, Z: 2001, 2: 2002, 3: 2003, 4: 2004, 5: 2005, 6: 2006,
+        7: 2007, 8: 2008, 9: 2009
+      };
+      const RINNAI_YEAR_CODES = {
+        A: 2009, B: 2010, C: 2011, D: 2012, E: 2013, F: 2014, G: 2015,
+        H: 2016, J: 2017, K: 2018, L: 2019, M: 2020, N: 2021, P: 2022,
+        R: 2023, S: 2024, T: 2025, W: 2026, X: 2027, Y: 2028, Z: 2029
+      };
+      const YORK_MAPICS_YEAR_CODES = {
+        A: 1971, B: 1972, C: 1973, D: 1974, E: 1975, F: 1976, G: 1977,
+        H: 1978, J: 1979, K: 1980, L: 1981, M: 1982, N: 1983, P: 1984,
+        R: 1985, S: 1986, T: 1987, V: 1988, W: 1989, X: 1990, Y: 1991
+      };
+      const WEIL_MCLAIN_CP_RANGES = [
+        [1988, 1414001, 1681500], [1989, 1681501, 1871500], [1990, 1871501, 2050000],
+        [1991, 2056001, 2217399], [1992, 2217400, 2399999], [1993, 2400000, 2609500],
+        [1994, 2609501, 2815000], [1995, 2815001, 3003000], [1996, 3003001, 3213000],
+        [1997, 3213001, 3441400], [1998, 3441401, 3621000], [1999, 3621001, 3810000],
+        [2000, 3810001, 4055000], [2001, 4055001, 4311000], [2002, 4311001, 4586999],
+        [2003, 4587000, 4807000], [2004, 4807001, 5047000], [2005, 5047001, 5301000],
+        [2006, 5301001, 5454497], [2007, 5454498, 5731063], [2008, 5731064, 5957346],
+        [2009, 5957347, 6150483], [2010, 6150484, 6368018], [2011, 6368019, 6555277],
+        [2012, 6555278, 6779489], [2013, 6779490, 6998292], [2014, 6998293, 7209932],
+        [2015, 7209933, 7429423], [2016, 7429424, 7493025], [2017, 7493026, 7629669],
+        [2018, 7629670, 7729057], [2019, 7729058, 7782025], [2020, 7782026, 7886915],
+        [2021, 7886196, 7961367], [2022, 7961368, 7991517], [2023, 7991518, 8120013],
+        [2024, 8120014, 8199005], [2025, 8199006, 8278015], [2026, 8278016, Infinity]
+      ];
       const REPORT_TAXONOMY =
       [
         {
@@ -2585,8 +2632,15 @@
           example: "4006A17330",
           decoder: decodeCarrier
         },
+        icp: {
+          name: "ICP family: Heil / Tempstar / Comfortmaker / Arcoaire / Day & Night / Keeprite / Airquest / GrandAire",
+          hint: "Common format: plant character, then 2-digit year and 2-digit production week.",
+          format: "Expected: 10 characters beginning with a plant code and YYWW, such as E072514528.",
+          example: "E072514528",
+          decoder: decodeIcp
+        },
         goodman: {
-          name: "Goodman / Amana / Daikin",
+          name: "Goodman / Amana / Janitrol / Daikin",
           hint: "10-digit format: first 2 digits = year, next 2 = month.",
           format: "Expected: 10 digits, such as 1605123456.",
           example: "1605123456",
@@ -2600,11 +2654,18 @@
           decoder: decodeLennox
         },
         ducane: {
-          name: "Ducane / Allied Air",
-          hint: "Supported modern format: positions 3–4 = year; position 5 = month letter.",
-          format: "Expected: year digits in positions 3–4 and a month letter in position 5, such as 4609E12345. Older Ducane formats require verification.",
+          name: "Ducane / Armstrong Air / AirEase / Concord / Allied Air",
+          hint: "Modern Allied Air: positions 3–4 = year and position 5 = month. Pre-1996 Ducane oil furnaces may end in YYWW.",
+          format: "Examples: 4609E12345 = May 2009; HA1234569540 = week 40 of 1995 (older Ducane oil furnace).",
           example: "4609E12345",
           decoder: decodeDucane
+        },
+        nortek: {
+          name: "Nortek family: Nordyne / Broan / Frigidaire / Gibson / Intertherm / Maytag / Miller / NuTone / Philco / Tappan / Westinghouse",
+          hint: "Newer product identifier: model-prefix characters, plant letter, 2-digit year, then 2-digit month.",
+          format: "Expected: 2 prefix characters, plant letter, YYMM, then 6 sequence characters, such as MGF2308123456.",
+          example: "MGF2308123456",
+          decoder: decodeNortek
         },
         rheem_hvac: {
           name: "Rheem / Ruud / WeatherKing HVAC",
@@ -2615,22 +2676,22 @@
         },
         trane: {
           name: "Trane / American Standard",
-          hint: "2010+: YYWW at the start. 2002–2009: one year digit followed by WW.",
-          format: "Expected: 9 characters for 2002–2009 or a modern serial beginning YYWW, such as 11241KADBB.",
-          example: "11241KADBB",
+          hint: "1980–2009: first character is the factory year code; characters 2–3 are the week. Newer 10-character serials begin YYWW.",
+          format: "Examples: L264A1B2C = 1996, week 26; 11241KADBB = 2011, week 24.",
+          example: "L264A1B2C",
           decoder: decodeTrane
         },
         york: {
-          name: "York / Coleman / Luxaire",
+          name: "York residential family: Coleman / Luxaire / Champion / Evcon / Guardian / Fraser-Johnston",
           hint: "Late 2004+ format: positions 2 and 4 form the year; position 3 is month.",
           format: "Expected: letter, year digit, month letter, year digit, then 6 characters—such as W1L6029995.",
           example: "W1L6029995",
           decoder: decodeYork
         },
         aosmith: {
-          name: "A. O. Smith family — modern",
-          hint: "Modern format: ignore a leading letter; first 2 digits = year, next 2 = week.",
-          format: "Expected: a 2008+ serial beginning YYWW (after any leading letter), such as 2213A123456.",
+          name: "A. O. Smith family / A.O.-built private labels",
+          hint: "Supported 1960+ YYWW labels: ignore a leading letter; first 2 digits = year, next 2 = production week.",
+          format: "Expected: a serial beginning YYWW (after any leading letter), such as 6012A123456 or 2213A123456.",
           example: "2213A123456",
           decoder: decodeAoSmith
         },
@@ -2642,11 +2703,39 @@
           decoder: decodeBradford
         },
         rheem_water: {
-          name: "Rheem / Ruud / Richmond water heater",
-          hint: "Common older format uses MMYY; migrated modern format uses plant letter + WWYY.",
-          format: "Expected: a common Rheem-family tank serial such as RHNG0804P000036 or D1114A441408265A.",
+          name: "Rheem / Ruud / Richmond / Rheem-built GE water heater",
+          hint: "Supported older 1960+ format uses MMYY; migrated modern format uses plant letter + WWYY.",
+          format: "Expected: a common Rheem-family tank serial such as RHNG1260P000036, RHNG0804P000036, or D1114A441408265A.",
           example: "D1114A441408265A",
           decoder: decodeRheemWater
+        },
+        rinnai: {
+          name: "Rinnai tankless water heater / direct-vent furnace",
+          hint: "Older numeric format begins YYMM. Modern format uses year and month letters in the first 2 positions.",
+          format: "Examples: 03.06-001000 = June 2003; BH.AB-000123 = August 2010.",
+          example: "BH.AB-000123",
+          decoder: decodeRinnai
+        },
+        bosch: {
+          name: "Bosch / Buderus equipment with 3-character date code",
+          hint: "For supported products, characters 5–7 are the Bosch manufacture-date code.",
+          format: "Expected: a serial with a documented 3-character date block after the first 4 characters, such as 399A-720-000031-8733942691.",
+          example: "399A-720-000031-8733942691",
+          decoder: decodeBosch
+        },
+        weil_mclain: {
+          name: "Weil-McLain boiler",
+          hint: "Enter the CP serial number. The official CP range gives an approximate manufacture year.",
+          format: "Expected: CP followed by 7 digits, such as CP3003001.",
+          example: "CP3003001",
+          decoder: decodeWeilMclain
+        },
+        york_mapics: {
+          name: "YORK commercial / chiller",
+          hint: "Mapics serials begin plant + month + repeating year letter. SAP serials contain a 3-character date after the 4-digit plant.",
+          format: "Examples: GDRM567395 = April 1985 or 2006; S10010A41234567 = January 2004.",
+          example: "GDRM567395",
+          decoder: decodeYorkCommercial
         }
       };
 
@@ -2714,6 +2803,41 @@
         };
       }
 
+      function possibleMonthResult({ years, month, usedIndices, explanation, note, cycleLabel }) {
+        const labels = years.map(year => `${MONTHS[month]} ${year}`);
+        const joined = labels.length > 1 ? `${labels.slice(0, -1).join(", ")}, or ${labels.at(-1)}` : labels[0];
+        return {
+          confidence: years.length > 1 ? "caution" : "success",
+          kicker: years.length > 1 ? "Possible manufacture dates" : "Manufactured",
+          label: joined,
+          detail: years.length > 1 ? `${cycleLabel} — compare the equipment era` : "Month encoded directly",
+          age: years.length > 1 ? `${years.length} possibilities` : ageFrom(years[0], month),
+          ageCaption: years.length > 1 ? "Valid code matches" : "Approx. equipment age",
+          usedIndices,
+          explanation,
+          note,
+          copy: `${joined} — ${cycleLabel}; verify the correct era from the equipment.`
+        };
+      }
+
+      function possibleYearResult({ years, usedIndices, explanation, note, detail }) {
+        const labels = years.map(String);
+        const joined = labels.length > 1 ? `${labels.slice(0, -1).join(", ")} or ${labels.at(-1)}` : labels[0];
+        const now = new Date().getFullYear();
+        return {
+          confidence: "caution",
+          kicker: years.length > 1 ? "Possible manufacture years" : "Approximate manufacture year",
+          label: joined,
+          detail,
+          age: years.length > 1 ? `${years.length} possibilities` : `About ${Math.max(0, now - years[0])} years`,
+          ageCaption: years.length > 1 ? "Valid range matches" : "Approx. equipment age",
+          usedIndices,
+          explanation,
+          note,
+          copy: `${joined} — ${explanation}`
+        };
+      }
+
       function fail(message) {
         return { error: message };
       }
@@ -2731,16 +2855,29 @@
         });
       }
 
+      function decodeIcp(serial) {
+        const match = serial.match(/^[A-Z0-9](\d{2})(\d{2})[A-Z0-9]{5}$/);
+        if (!match) return fail("That does not match the common ICP-family plant + YYWW serial pattern.");
+        const year = resolveTwoDigitYear(match[1], 1990);
+        const week = Number(match[2]);
+        if (!year || week < 1 || week > 53) return fail("Characters 2–5 do not contain a valid year and production week.");
+        return weekResult({
+          year, week, usedIndices: [1,2,3,4], confidence: "caution",
+          explanation: `Characters 2–3 give year ${year}; characters 4–5 give week ${week}.`,
+          note: "Applies to the commonly encountered ICP-family plant + YYWW format. Verify older or specialty products from the full model and serial number."
+        });
+      }
+
       function decodeGoodman(serial) {
-        const match = serial.match(/^(\d{2})(\d{2})\d{6}$/);
-        if (!match) return fail("That does not match the common 10-digit Goodman-family serial pattern.");
+        const match = serial.match(/^(\d{2})(\d{2})[A-Z0-9]{6,}$/);
+        if (!match) return fail("That does not match the common Goodman/Amana/Janitrol or North American Daikin YYMM serial pattern.");
         const year = resolveTwoDigitYear(match[1], 1975);
         const month = Number(match[2]) - 1;
         if (!year || month < 0 || month > 11) return fail("The first four digits do not contain a valid year and month.");
         return monthResult({
           year, month, usedIndices: [0,1,2,3],
           explanation: `Characters 1–2 give year ${year}; characters 3–4 give month ${String(month + 1).padStart(2, "0")}.`,
-          note: "Applies to the common 10-digit Goodman/Amana/Daikin residential format."
+          note: "Applies to the common Goodman/Amana/Janitrol format and North American Daikin labels whose first four serial characters are YYMM."
         });
       }
 
@@ -2758,62 +2895,89 @@
       }
 
       function decodeDucane(serial) {
-        const match = serial.match(/^[A-Z0-9]{2}(\d{2})([A-HJ-M])[A-Z0-9]{5,7}$/);
-        if (!match) return fail("That does not match the supported modern Ducane / Allied Air format. Older Ducane serial formats require model and serial verification.");
-        const year = resolveTwoDigitYear(match[1], 1974);
-        const month = LENNOX_MONTHS[match[2]];
-        if (!year || month === undefined) return fail("The date positions do not contain a valid Ducane year and month code.");
+        let match = serial.match(/^[A-Z0-9]{2}(\d{2})([A-HJ-M])[A-Z0-9]{5,7}$/);
+        if (match) {
+          const year = resolveTwoDigitYear(match[1], 1974);
+          const month = LENNOX_MONTHS[match[2]];
+          if (!year || month === undefined) return fail("The date positions do not contain a valid Ducane year and month code.");
+          return monthResult({
+            year, month, usedIndices: [2,3,4], confidence: "caution",
+            explanation: `Characters 3–4 give year ${year}; character 5 (${match[2]}) means ${MONTHS[month]}.`,
+            note: "Applies to Ducane / Allied Air units using the modern Lennox-style date block. Other legacy product formats require model and serial verification."
+          });
+        }
+        match = serial.match(/^[A-Z]{2}[A-Z0-9]{6}(\d{2})(\d{2})$/);
+        if (match) {
+          const year = resolveTwoDigitYear(match[1], 1980);
+          const week = Number(match[2]);
+          if (year && year <= 1995 && week >= 1 && week <= 53) {
+            return weekResult({
+              year, week, usedIndices: [8,9,10,11], confidence: "caution",
+              explanation: `The final four digits give year ${year} and fiscal week ${week}.`,
+              note: "Applies specifically to the documented pre-January-1996 Ducane oil-furnace format. Do not apply this legacy pattern to other Ducane equipment without verification."
+            });
+          }
+        }
+        return fail("That does not match the supported Allied Air date block or the documented pre-1996 Ducane oil-furnace format. Other legacy serials require model and serial verification.");
+      }
+
+      function decodeNortek(serial) {
+        const match = serial.match(/^[A-Z0-9]{2}[ADEFG](\d{2})(\d{2})[A-Z0-9]{6}$/);
+        if (!match) return fail("That does not match the supported newer Nortek/Nordyne product-identifier format.");
+        const year = resolveTwoDigitYear(match[1], 2002);
+        const month = Number(match[2]) - 1;
+        if (!year || month < 0 || month > 11) return fail("Characters 4–7 do not contain a valid year and month.");
         return monthResult({
-          year, month, usedIndices: [2,3,4], confidence: "caution",
-          explanation: `Characters 3–4 give year ${year}; character 5 (${match[2]}) means ${MONTHS[month]}.`,
-          note: "Applies only to Ducane / Allied Air units using the modern Lennox-style date block. Older Ducane formats should be verified using the complete model and serial number."
+          year, month, usedIndices: [3,4,5,6], confidence: "caution",
+          explanation: `Characters 4–5 give year ${year}; characters 6–7 give month ${String(month + 1).padStart(2, "0")}.`,
+          note: "Applies to the newer Nortek/Nordyne product-identifier format documented for several residential product families. Older serial styles require manufacturer verification."
         });
       }
 
       function decodeRheemHvac(serial) {
         const candidates = [...serial.matchAll(/[A-Z](\d{2})(\d{2})/g)].filter(match => {
           const week = Number(match[1]);
-          const year = resolveTwoDigitYear(match[2], 1970);
+          const year = resolveTwoDigitYear(match[2], 1960);
           return week >= 1 && week <= 53 && year;
         });
         if (!candidates.length) return fail("No valid plant-letter + WWYY date block was found in that serial.");
         const match = candidates[candidates.length - 1];
         const start = match.index + 1;
         const week = Number(match[1]);
-        const year = resolveTwoDigitYear(match[2], 1970);
+        const year = resolveTwoDigitYear(match[2], 1960);
         return weekResult({
           year, week, usedIndices: [start, start + 1, start + 2, start + 3],
           explanation: `After plant code ${serial[match.index]}, the next digits give week ${week} and year ${year}.`,
-          note: "Rheem has several legacy styles; this reads the common plant-letter followed by WWYY format."
+          note: "Rheem has several legacy styles; this reads a plant-letter followed by a valid WWYY date block and accepts years back to 1960 only when that exact layout is present."
         });
       }
 
       function decodeTrane(serial) {
-        let match = serial.match(/^(\d{2})(\d{2})[A-Z0-9]{5,}$/);
+        let match = serial.match(/^(\d{2})(\d{2})([1-7])[A-Z0-9]{5}$/);
         if (match) {
-          const year = resolveTwoDigitYear(match[1], 2010);
+          const year = resolveTwoDigitYear(match[1], 2004);
           const week = Number(match[2]);
           if (year && week >= 1 && week <= 53) {
             return weekResult({
               year, week, usedIndices: [0,1,2,3],
               explanation: `Characters 1–2 give year ${year}; characters 3–4 give week ${week}.`,
-              note: "Applies to the Trane/American Standard format used from 2010 onward."
+              note: "Applies to the 10-character Trane/American Standard YYWW format introduced during the 2004 production transition. Character 5 is the day-of-week code."
             });
           }
         }
-        match = serial.match(/^([2-9])(\d{2})[A-Z0-9]{6}$/);
+        match = serial.match(/^([A-Z2-9])(\d{2})([1-7])[A-Z0-9]{5}$/);
         if (match) {
-          const year = 2000 + Number(match[1]);
+          const year = TRANE_YEAR_CODES[match[1]];
           const week = Number(match[2]);
-          if (week >= 1 && week <= 53) {
+          if (year && week >= 1 && week <= 53) {
             return weekResult({
               year, week, usedIndices: [0,1,2],
-              explanation: `Character 1 gives year ${year}; characters 2–3 give week ${week}.`,
-              note: "Applies to the 9-character Trane/American Standard format used from 2002 through 2009."
+              explanation: `Character 1 (${match[1]}) is Trane's factory year code for ${year}; characters 2–3 give week ${week}.`,
+              note: "Applies to the 9-character Trane/American Standard residential, light-commercial, and compressor format used from 1980 through the 2004 transition; the one-character year code continued on some products through 2009. Character 4 is the day-of-week code."
             });
           }
         }
-        return fail("That does not match either supported Trane format: 2002–2009 or 2010+.");
+        return fail("That does not match the documented 9-character Trane 1980–2009 code or the newer 10-character YYWW format.");
       }
 
       function decodeYork(serial) {
@@ -2832,15 +2996,15 @@
 
       function decodeAoSmith(serial) {
         const match = serial.match(/^[A-Z]*?(\d{2})(\d{2})[A-Z0-9]{4,}$/);
-        if (!match) return fail("That does not match the supported modern A. O. Smith-family format.");
+        if (!match) return fail("That does not match the supported A. O. Smith-family YYWW format.");
         const firstDigit = serial.search(/\d/);
-        const year = resolveTwoDigitYear(match[1], 2008);
+        const year = resolveTwoDigitYear(match[1], 1960);
         const week = Number(match[2]);
-        if (!year || week < 1 || week > 53) return fail("The first four numeric characters do not contain a valid 2008+ year and production week.");
+        if (!year || week < 1 || week > 53) return fail("The first four numeric characters do not contain a valid year and production week.");
         return weekResult({
           year, week, usedIndices: [firstDigit, firstDigit + 1, firstDigit + 2, firstDigit + 3],
           explanation: `The first numeric pair gives year ${year}; the next pair gives week ${week}.`,
-          note: "Intended for modern A. O. Smith and related-brand serials. Older and specialty formats require manufacturer verification."
+          note: "Applies to A. O. Smith, State, American, Reliance, U.S. Craftmaster, and A.O.-built private-label products only when the serial uses this leading YYWW layout. Years back to 1960 are accepted; specialty formats require manufacturer verification."
         });
       }
 
@@ -2881,7 +3045,7 @@
         if (!match) return fail("That does not match either supported common Rheem-family water-heater format.");
         const start = serial.search(/\d/);
         const first = Number(match[1]);
-        const year = resolveTwoDigitYear(match[2], 1970);
+        const year = resolveTwoDigitYear(match[2], 1960);
         if (!year) return fail("The four-character date block does not contain a plausible year.");
         const usedIndices = [start, start + 1, start + 2, start + 3];
         if (year >= 2012 && first >= 1 && first <= 53) {
@@ -2895,10 +3059,127 @@
           return monthResult({
             year, month: first - 1, usedIndices, confidence: "caution",
             explanation: `The first numeric pair gives month ${String(first).padStart(2, "0")}; the next pair gives year ${year}.`,
-            note: "This reads the common older MMYY tank format. Rheem has also used specialty and tankless formats."
+            note: "This reads the common older MMYY tank format and accepts years back to 1960 when that exact date block is present. Rheem has also used specialty and tankless formats."
           });
         }
         return fail("The date block is not valid for the supported older MMYY or modern WWYY Rheem-family tank formats.");
+      }
+
+      function decodeRinnai(serial) {
+        let match = serial.match(/^(\d{2})(\d{2})\d{6}$/);
+        if (match) {
+          const year = resolveTwoDigitYear(match[1], 1980);
+          const month = Number(match[2]) - 1;
+          if (!year || month < 0 || month > 11 || (year === 2010 && month > 4)) {
+            return fail("The leading numeric date does not form a valid pre-June-2010 Rinnai year and month.");
+          }
+          return monthResult({
+            year, month, usedIndices: [0,1,2,3],
+            explanation: `Characters 1–2 give year ${year}; characters 3–4 give month ${String(month + 1).padStart(2, "0")}.`,
+            note: "Applies to the older Rinnai water-heater and direct-vent-furnace numeric YYMM format used before June 1, 2010."
+          });
+        }
+
+        match = serial.match(/^([A-HJ-NPRSTW-Z])([A-HJ-M])[A-Z]{2}\d{6}$/);
+        if (match) {
+          const year = RINNAI_YEAR_CODES[match[1]];
+          const month = LENNOX_MONTHS[match[2]];
+          const now = new Date();
+          if (!year || month === undefined || year > now.getFullYear() || (year === 2010 && month < 5) || (year === now.getFullYear() && month > now.getMonth())) {
+            return fail("The first two letters do not form a valid Rinnai manufacture date for this format.");
+          }
+          return monthResult({
+            year, month, usedIndices: [0,1],
+            explanation: `Character 1 (${match[1]}) is Rinnai's year code for ${year}; character 2 (${match[2]}) means ${MONTHS[month]}.`,
+            note: "Applies to the four-letter Rinnai water-heater and direct-vent-furnace format used on and after June 1, 2010."
+          });
+        }
+        return fail("That does not match the supported older numeric or modern four-letter Rinnai serial format.");
+      }
+
+      function boschDateCodeMap() {
+        const map = new Map();
+        const currentYear = new Date().getFullYear();
+        for (let year = 2010; year <= Math.min(currentYear, 2029); year += 1) {
+          for (let month = 0; month < 12; month += 1) {
+            let suffix;
+            if (year <= 2013) suffix = month + 1;
+            else if (year <= 2019) suffix = month < 4 ? 17 + month : 53 + (month - 4);
+            else suffix = month < 4 ? 37 + month : 73 + (month - 4);
+            map.set(`${year % 10}${String(suffix).padStart(2, "0")}`, { year, month });
+          }
+        }
+        return map;
+      }
+
+      function decodeBosch(serial) {
+        if (serial.length < 8) return fail("That serial is too short to contain the supported Bosch date block.");
+        const code = serial.slice(4, 7);
+        const decoded = boschDateCodeMap().get(code);
+        if (!decoded) return fail("Characters 5–7 are not a recognized Bosch 2010–2029 manufacture-date code.");
+        return monthResult({
+          year: decoded.year, month: decoded.month, usedIndices: [4,5,6], confidence: "caution",
+          explanation: `Characters 5–7 contain Bosch date code ${code}, which maps to ${MONTHS[decoded.month]} ${decoded.year}.`,
+          note: "Applies only to Bosch/Buderus product families that use the documented three-character date block immediately after the first four serial characters."
+        });
+      }
+
+      function decodeWeilMclain(serial) {
+        const match = serial.match(/^(?:CP)?(\d{7})$/);
+        if (!match) return fail("That does not match a Weil-McLain CP number with 7 digits.");
+        const number = Number(match[1]);
+        const years = WEIL_MCLAIN_CP_RANGES
+          .filter(([, start, end]) => number >= start && number <= end)
+          .map(([year]) => year);
+        if (!years.length) return fail("That CP number is outside the official 1988–2026 range guide. Use Weil-McLain's online CP lookup or warranty department for an older or unlisted boiler.");
+        const start = serial.startsWith("CP") ? 2 : 0;
+        return possibleYearResult({
+          years,
+          usedIndices: Array.from({ length: 7 }, (_, index) => start + index),
+          explanation: `CP number ${match[1]} falls within Weil-McLain's published ${years.join("/")} production range.`,
+          note: "The manufacturer identifies this as an approximate manufacture year, not a warranty determination. AquaBalance CP numbers are not sequential, and EG/EGH boilers may not be available in the lookup.",
+          detail: "Official Weil-McLain CP-number range"
+        });
+      }
+
+      function decodeYorkCommercial(serial) {
+        let match = serial.match(/^([A-Z2-6])([A-HK-N])([A-HJ-NPRSTVWXY])([EMPCRONXS])[A-Z0-9]{6,}$/);
+        if (match) {
+          const month = YORK_MONTHS[match[2]];
+          const baseYear = YORK_MAPICS_YEAR_CODES[match[3]];
+          if (month === undefined || !baseYear) return fail("The Mapics month and year letters are not valid YORK factory codes.");
+          const now = new Date();
+          const years = [];
+          for (let year = baseYear; year <= now.getFullYear(); year += 21) {
+            if (year < now.getFullYear() || month <= now.getMonth()) years.push(year);
+          }
+          if (!years.length) return fail("The Mapics date code resolves only to a future manufacture date.");
+          return possibleMonthResult({
+            years,
+            month,
+            usedIndices: [1, 2],
+            explanation: `Character 2 (${match[2]}) means ${MONTHS[month]}; character 3 (${match[3]}) is YORK's repeating factory year code.`,
+            note: "This is the official YORK Mapics scheme for commercial and chiller equipment. The year code repeats every 21 years; use the model era, data-plate design, refrigerant, and service history to select the correct cycle.",
+            cycleLabel: "21-year YORK Mapics cycle"
+          });
+        }
+
+        match = serial.match(/^S?\d{4}(\d)([A-HK-N])(\d)\d{7}$/);
+        if (match) {
+          const year = resolveTwoDigitYear(`${match[1]}${match[3]}`, 2000);
+          const month = YORK_MONTHS[match[2]];
+          if (!year || month === undefined) return fail("The SAP date block does not contain a valid YORK year and month.");
+          const offset = serial.startsWith("S") ? 5 : 4;
+          return monthResult({
+            year,
+            month,
+            usedIndices: [offset, offset + 1, offset + 2],
+            explanation: `The 3-character SAP date code combines ${match[1]} and ${match[3]} for year ${year}; ${match[2]} means ${MONTHS[month]}.`,
+            note: "Applies to the official YORK SAP serial scheme with a 4-digit plant ID followed by the 3-character date code."
+          });
+        }
+
+        return fail("That does not match the official YORK commercial Mapics or SAP serial layouts. Use the residential YORK option for late-2004+ residential equipment.");
       }
 
       function ensureSentence(value) {
