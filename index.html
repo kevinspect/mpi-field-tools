@@ -6230,14 +6230,6 @@
         }
         try {
           const wasAlreadySaved = Boolean(navigator.serviceWorker.controller);
-          let refreshingForUpdate = false;
-          if (wasAlreadySaved) {
-            navigator.serviceWorker.addEventListener("controllerchange", () => {
-              if (refreshingForUpdate) return;
-              refreshingForUpdate = true;
-              location.reload();
-            }, { once: true });
-          }
           const registration = await navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" });
           await registration.update();
           await navigator.serviceWorker.ready;
