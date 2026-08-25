@@ -1104,6 +1104,8 @@
       font-weight: 750;
     }
 
+    .damage-choice-field > .damage-action-help { margin: -1px 0 10px; }
+
     .damage-informed-group {
       margin-top: 14px;
       padding-top: 13px;
@@ -1149,6 +1151,11 @@
       height: 18px;
       margin: 0;
       accent-color: var(--bright-blue);
+    }
+
+    .damage-informed-option.damage-none-option {
+      margin-top: 3px;
+      border-style: dashed;
     }
 
     .damage-input:focus,
@@ -2177,42 +2184,36 @@
 
           <div class="damage-field-row">
             <fieldset class="field damage-choice-field">
-              <legend>Realtor informed? *</legend>
-              <div class="damage-choice-grid">
-                <label class="damage-choice-option">
-                  <input id="damageRealtorYes" name="Realtor informed" type="radio" value="Yes" required>
-                  <span>Yes</span>
+              <legend>Who was informed? *</legend>
+              <p class="damage-action-help">Choose every person who was notified.</p>
+              <div class="damage-informed-list">
+                <label class="damage-informed-option">
+                  <input id="damageRealtorInformed" type="checkbox" data-damage-informed="Realtor">
+                  <span>Realtor</span>
                 </label>
-                <label class="damage-choice-option">
-                  <input id="damageRealtorNo" name="Realtor informed" type="radio" value="No" required>
-                  <span>No</span>
+                <label class="damage-informed-option">
+                  <input id="damageHomeownerInformed" type="checkbox" data-damage-informed="Homeowner">
+                  <span>Homeowner</span>
+                </label>
+                <label class="damage-informed-option">
+                  <input id="damageManagerInformed" type="checkbox" data-damage-informed="Building manager">
+                  <span>Building manager</span>
+                </label>
+                <label class="damage-informed-option">
+                  <input id="damageTenantInformed" type="checkbox" data-damage-informed="Tenant">
+                  <span>Tenant</span>
+                </label>
+                <label class="damage-informed-option damage-none-option">
+                  <input id="damageNoneInformed" type="checkbox" data-damage-informed="No one informed">
+                  <span>No one informed</span>
                 </label>
               </div>
+              <input id="damagePeopleInformed" type="hidden" name="People informed" value="">
             </fieldset>
             <div class="field">
               <label id="damageActionLabel" for="damageAction">Action taken *</label>
               <textarea class="damage-action-input" id="damageAction" name="Action taken" maxlength="600" placeholder="Describe what you did after finding the damage." required></textarea>
               <p class="damage-action-help" id="damageActionHelp">Include any steps taken to protect the property or prevent further damage.</p>
-              <div class="damage-informed-group">
-                <p class="damage-informed-title">Additional people informed</p>
-                <div class="damage-informed-list">
-                  <label class="damage-informed-option">
-                    <input id="damageHomeownerInformed" type="checkbox">
-                    <span>Homeowner informed</span>
-                  </label>
-                  <label class="damage-informed-option">
-                    <input id="damageManagerInformed" type="checkbox">
-                    <span>Building manager informed</span>
-                  </label>
-                  <label class="damage-informed-option">
-                    <input id="damageTenantInformed" type="checkbox">
-                    <span>Tenant informed</span>
-                  </label>
-                </div>
-                <input id="damageHomeownerValue" type="hidden" name="Homeowner informed" value="No">
-                <input id="damageManagerValue" type="hidden" name="Building manager informed" value="No">
-                <input id="damageTenantValue" type="hidden" name="Tenant informed" value="No">
-              </div>
             </div>
           </div>
 
@@ -2243,7 +2244,7 @@
         <aside class="panel damage-info-panel" aria-labelledby="damage-info-title">
           <span class="damage-online-badge">Online submission</span>
           <h3 id="damage-info-title">One notice. Everything attached.</h3>
-          <p>The administrative email includes the inspector, property, damaged item, location, description, whether the realtor was informed, action taken, submission time, and uploaded photos.</p>
+          <p>The administrative email includes the inspector, property, damaged item, location, description, everyone who was informed, action taken, submission time, and uploaded photos.</p>
           <ul class="damage-checklist">
             <li>Use for damaged access hatches, ladders, tools, covers, panels, or other inspection-related items.</li>
             <li>Take a clear Before photo and an After photo showing how the item was left.</li>
@@ -2861,16 +2862,12 @@
       const damageProperty = document.getElementById("damageProperty");
       const damageItem = document.getElementById("damageItem");
       const damageLocation = document.getElementById("damageLocation");
-      const damageRealtorOptions = [...document.querySelectorAll('input[name="Realtor informed"]')];
+      const damageInformedOptions = [...document.querySelectorAll("[data-damage-informed]")];
+      const damageNoneInformed = document.getElementById("damageNoneInformed");
+      const damagePeopleInformed = document.getElementById("damagePeopleInformed");
       const damageAction = document.getElementById("damageAction");
       const damageActionLabel = document.getElementById("damageActionLabel");
       const damageActionHelp = document.getElementById("damageActionHelp");
-      const damageHomeownerInformed = document.getElementById("damageHomeownerInformed");
-      const damageManagerInformed = document.getElementById("damageManagerInformed");
-      const damageTenantInformed = document.getElementById("damageTenantInformed");
-      const damageHomeownerValue = document.getElementById("damageHomeownerValue");
-      const damageManagerValue = document.getElementById("damageManagerValue");
-      const damageTenantValue = document.getElementById("damageTenantValue");
       const damagePhoto1 = document.getElementById("damagePhoto1");
       const damagePhoto2 = document.getElementById("damagePhoto2");
       const damagePhotoCard1 = document.getElementById("damagePhotoCard1");
@@ -5320,25 +5317,31 @@
         }
       }
 
-      function updateDamageRealtorState() {
-        const selection = damageRealtorOptions.find(option => option.checked)?.value || "";
-        const notInformed = selection === "No";
-        damageActionLabel.textContent = notInformed
-          ? "Action taken / why realtor was not informed *"
-          : "Action taken *";
-        damageActionHelp.textContent = notInformed
-          ? "State what action was taken and why the realtor was not informed."
-          : "Include any steps taken to protect the property or prevent further damage.";
-        damageActionHelp.classList.toggle("attention", notInformed);
-        damageAction.placeholder = notInformed
-          ? "Describe what you did and why the realtor was not informed."
-          : "Describe what you did after finding the damage.";
-      }
+      function updateDamageInformedSelection(changedOption = null) {
+        if (changedOption === damageNoneInformed && damageNoneInformed.checked) {
+          damageInformedOptions.forEach(option => {
+            if (option !== damageNoneInformed) option.checked = false;
+          });
+        } else if (changedOption?.checked) {
+          damageNoneInformed.checked = false;
+        }
 
-      function updateDamageInformedValues() {
-        damageHomeownerValue.value = damageHomeownerInformed.checked ? "Yes" : "No";
-        damageManagerValue.value = damageManagerInformed.checked ? "Yes" : "No";
-        damageTenantValue.value = damageTenantInformed.checked ? "Yes" : "No";
+        const selected = damageInformedOptions
+          .filter(option => option.checked)
+          .map(option => option.dataset.damageInformed);
+        damagePeopleInformed.value = selected.join(", ");
+
+        const noOneInformed = damageNoneInformed.checked;
+        damageActionLabel.textContent = noOneInformed
+          ? "Action taken / why no one was informed *"
+          : "Action taken *";
+        damageActionHelp.textContent = noOneInformed
+          ? "State what action was taken and why no one was informed."
+          : "Include any steps taken to protect the property or prevent further damage.";
+        damageActionHelp.classList.toggle("attention", noOneInformed);
+        damageAction.placeholder = noOneInformed
+          ? "Describe what you did and why no one was informed."
+          : "Describe what you did after finding the damage.";
       }
 
       function labelDamagePhotoFile(input, label) {
@@ -5382,7 +5385,14 @@
           showToast("Reconnect before sending the damage notice");
           return;
         }
-        updateDamageInformedValues();
+        updateDamageInformedSelection();
+        if (!damagePeopleInformed.value) {
+          event.preventDefault();
+          damageSubmitStatus.className = "damage-submit-status error";
+          damageSubmitStatus.textContent = "Choose everyone who was informed, or select No one informed.";
+          damageInformedOptions[0]?.focus();
+          return;
+        }
         labelDamagePhotoFile(damagePhoto1, "Photo-1-Before");
         labelDamagePhotoFile(damagePhoto2, "Photo-2-After");
         const files = [damagePhoto1.files?.[0], damagePhoto2.files?.[0]].filter(Boolean);
@@ -5844,9 +5854,7 @@
 
       damagePhoto1.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto1, damagePhotoPreview1, damagePhotoCard1));
       damagePhoto2.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto2, damagePhotoPreview2, damagePhotoCard2));
-      damageRealtorOptions.forEach(option => option.addEventListener("change", updateDamageRealtorState));
-      [damageHomeownerInformed, damageManagerInformed, damageTenantInformed]
-        .forEach(option => option.addEventListener("change", updateDamageInformedValues));
+      damageInformedOptions.forEach(option => option.addEventListener("change", event => updateDamageInformedSelection(event.currentTarget)));
       damageForm.addEventListener("submit", validateDamageSubmission);
       window.addEventListener("pageshow", () => {
         damageSubmitBtn.disabled = false;
