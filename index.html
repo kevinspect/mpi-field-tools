@@ -2153,17 +2153,17 @@
             <label>Photo evidence *</label>
             <div class="damage-photo-grid">
               <div class="damage-photo-card" id="damagePhotoCard1">
-                <input id="damagePhoto1" name="attachment" type="file" accept="image/*" capture="environment" required aria-label="Take or choose the required damaged item photo">
-                <img id="damagePhotoPreview1" alt="Selected damaged item photo preview" hidden>
-                <span class="damage-photo-prompt">Take required photo</span>
+                <input id="damagePhoto1" name="attachment" type="file" accept="image/*" capture="environment" required aria-label="Take or choose Photo 1 before">
+                <img id="damagePhotoPreview1" alt="Photo 1 before preview" hidden>
+                <span class="damage-photo-prompt">Photo 1 — Before</span>
               </div>
               <div class="damage-photo-card" id="damagePhotoCard2">
-                <input id="damagePhoto2" name="attachment_2" type="file" accept="image/*" capture="environment" aria-label="Take or choose an optional second damaged item photo">
-                <img id="damagePhotoPreview2" alt="Selected second damaged item photo preview" hidden>
-                <span class="damage-photo-prompt">Add second photo</span>
+                <input id="damagePhoto2" name="attachment_2" type="file" accept="image/*" capture="environment" aria-label="Take or choose optional Photo 2 after">
+                <img id="damagePhotoPreview2" alt="Photo 2 after preview" hidden>
+                <span class="damage-photo-prompt">Photo 2 — After</span>
               </div>
             </div>
-            <p class="damage-file-note">JPG, PNG, or phone-camera image. The combined attachment size must be under 10MB.</p>
+            <p class="damage-file-note">Photo 1 (Before) is required. Photo 2 (After) is optional. The combined attachment size must be under 10MB.</p>
           </div>
 
           <button class="decode-btn" id="damageSubmitBtn" type="submit">Email damaged item notice</button>
