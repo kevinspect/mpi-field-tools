@@ -972,6 +972,281 @@
 
     .copy-comment-btn:disabled { cursor: not-allowed; opacity: .45; }
 
+    .damage-report {
+      padding: 78px 0 8px;
+      scroll-margin-top: 18px;
+    }
+
+    .damage-heading {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 520px);
+      align-items: end;
+      gap: 30px;
+      margin-bottom: 22px;
+    }
+
+    .damage-heading .eyebrow { margin-bottom: 11px; color: var(--orange-dark); }
+
+    .damage-heading h2 {
+      margin: 0;
+      color: var(--forest);
+      font-size: clamp(31px, 4.5vw, 50px);
+      line-height: 1.02;
+      letter-spacing: -.045em;
+    }
+
+    .damage-heading > p {
+      margin: 0;
+      color: var(--ink-2);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .damage-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(320px, .88fr);
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .damage-form { padding: clamp(24px, 4vw, 36px); }
+
+    .damage-field-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .damage-input,
+    .damage-form textarea {
+      width: 100%;
+      color: var(--ink);
+      background: #fff;
+      border: 1.5px solid #bfb8a9;
+      border-radius: 13px;
+      outline: none;
+      font: inherit;
+      font-size: 15px;
+      transition: border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .damage-input { min-height: 54px; padding: 0 15px; }
+
+    .damage-form textarea {
+      min-height: 132px;
+      padding: 14px 15px;
+      line-height: 1.55;
+      resize: vertical;
+    }
+
+    .damage-input:focus,
+    .damage-form textarea:focus {
+      border-color: var(--bright-blue);
+      box-shadow: 0 0 0 4px rgba(47, 117, 181, .14);
+    }
+
+    .damage-photo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 9px;
+    }
+
+    .damage-photo-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 145px;
+      background: #eef5fa;
+      border: 1.5px dashed #9dbbd1;
+      border-radius: 13px;
+    }
+
+    .damage-photo-card input {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .damage-photo-prompt {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      gap: 8px;
+      padding: 18px;
+      color: var(--forest);
+      text-align: center;
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+
+    .damage-photo-prompt::before {
+      content: "＋";
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      margin: 0 auto;
+      color: #fff;
+      background: var(--bright-blue);
+      border-radius: 50%;
+      font-size: 21px;
+    }
+
+    .damage-photo-card img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .damage-photo-card.has-photo .damage-photo-prompt {
+      z-index: 1;
+      top: auto;
+      padding: 8px 10px;
+      color: #fff;
+      background: linear-gradient(transparent, rgba(0,0,0,.72));
+      font-size: 10px;
+    }
+
+    .damage-photo-card.has-photo .damage-photo-prompt::before { display: none; }
+
+    .damage-file-note {
+      margin: 8px 0 0;
+      color: var(--ink-2);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .damage-submit-status {
+      min-height: 22px;
+      margin: 12px 0 0;
+      color: var(--ink-2);
+      font-size: 12px;
+      font-weight: 750;
+      line-height: 1.45;
+    }
+
+    .damage-submit-status.error { color: #9d3b2f; }
+    .damage-submit-status.success { color: #28735b; }
+
+    .damage-info-panel {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(27px, 4vw, 38px);
+      color: #fff;
+      background: var(--forest-2);
+      border-color: rgba(255,255,255,.08);
+    }
+
+    .damage-info-panel::after {
+      content: "";
+      position: absolute;
+      right: -65px;
+      bottom: -65px;
+      width: 175px;
+      height: 175px;
+      border: 32px solid rgba(180,135,32,.1);
+      border-radius: 50%;
+    }
+
+    .damage-online-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 9px;
+      color: #fff;
+      background: rgba(47,117,181,.3);
+      border: 1px solid rgba(135,189,232,.35);
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .damage-online-badge::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      background: #87bde8;
+      border-radius: 50%;
+    }
+
+    .damage-info-panel h3 {
+      position: relative;
+      z-index: 1;
+      margin: 21px 0 10px;
+      font-size: clamp(25px, 3vw, 34px);
+      line-height: 1.05;
+      letter-spacing: -.035em;
+    }
+
+    .damage-info-panel > p {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: rgba(255,255,255,.68);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .damage-checklist {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 13px;
+      margin: 25px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .damage-checklist li {
+      position: relative;
+      min-height: 24px;
+      padding-left: 34px;
+      color: rgba(255,255,255,.82);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .damage-checklist li::before {
+      content: "✓";
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: grid;
+      place-items: center;
+      width: 23px;
+      height: 23px;
+      color: var(--forest);
+      background: var(--orange);
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .damage-success-box {
+      position: relative;
+      z-index: 2;
+      margin-top: 24px;
+      padding: 15px;
+      color: #dff8ee;
+      background: rgba(74,176,138,.18);
+      border: 1px solid rgba(126,218,184,.3);
+      border-radius: 11px;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .damage-success-box strong { display: block; margin-bottom: 3px; color: #fff; }
+
     .sop-guide {
       padding: 78px 0 8px;
       scroll-margin-top: 18px;
@@ -1505,6 +1780,8 @@
       .coverage-grid { grid-template-columns: 1fr 1fr; }
       .comment-heading { grid-template-columns: 1fr; gap: 12px; }
       .comment-grid { grid-template-columns: 1fr; }
+      .damage-heading { grid-template-columns: 1fr; gap: 12px; }
+      .damage-grid { grid-template-columns: 1fr; }
       .sop-heading { grid-template-columns: 1fr; gap: 10px; }
       .sop-shell { grid-template-columns: 1fr; }
       .sop-browser { position: static; }
@@ -1541,6 +1818,10 @@
       .comment-actions .secondary-btn { width: 100%; }
       .comment-result-actions { align-items: stretch; flex-direction: column; }
       .copy-comment-btn { width: 100%; }
+      .damage-report { padding-top: 54px; }
+      .damage-form, .damage-info-panel { padding: 22px 18px 24px; }
+      .damage-field-row, .damage-photo-grid { grid-template-columns: 1fr; }
+      .damage-photo-card { min-height: 190px; }
       .sop-guide { padding-top: 54px; }
       .sop-version-bar { align-items: flex-start; flex-direction: column; gap: 7px; }
       .sop-controls { padding: 16px; }
@@ -1565,6 +1846,7 @@
       <span class="brand-name"><strong>Michigan Property</strong><small>Inspections · FieldDate</small></span>
     </div>
     <div class="topbar-actions">
+      <a class="sop-jump" href="#damage-report">Damage form</a>
       <a class="sop-jump" href="#sop-guide">SOP guide</a>
       <div class="offline-badge" id="offlineStatus">Works offline after first visit</div>
     </div>
@@ -1723,6 +2005,127 @@
             <button class="copy-comment-btn" id="copyCommentBtn" type="button" disabled>Copy full comment</button>
           </div>
         </section>
+      </div>
+    </section>
+
+    <section class="damage-report" id="damage-report" aria-labelledby="damage-report-title">
+      <div class="damage-heading">
+        <div>
+          <p class="eyebrow">MPI equipment notice</p>
+          <h2 id="damage-report-title">Report a damaged item.</h2>
+        </div>
+        <p>Photograph damaged inspection equipment or access components, add the essential field details, and email the notice directly to the MPI administrative inbox.</p>
+      </div>
+
+      <div class="damage-grid">
+        <form class="panel damage-form" id="damageForm" action="https://formsubmit.co/admin@michiganpropertyinspections.com" method="POST" enctype="multipart/form-data" novalidate>
+          <input type="hidden" name="_subject" id="damageEmailSubject" value="MPI Damaged Item Notice">
+          <input type="hidden" name="_cc" value="kev@michiganpropertyinspections.com,adrienne@michiganpropertyinspections.com">
+          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_captcha" value="false">
+          <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?damage-sent=1#damage-report">
+          <input type="hidden" name="_url" value="https://kevinspect.github.io/mpi-field-tools/#damage-report">
+          <input type="hidden" name="Submitted at" id="damageSubmittedAt" value="">
+          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
+
+          <div class="panel-heading">
+            <div>
+              <h2>Damaged item notice</h2>
+              <p>Required fields are marked with an asterisk.</p>
+            </div>
+            <span class="step-count">Online only</span>
+          </div>
+
+          <div class="damage-field-row">
+            <div class="field">
+              <label for="damageInspector">Inspector name *</label>
+              <input class="damage-input" id="damageInspector" name="Inspector" type="text" autocomplete="name" maxlength="80" required>
+            </div>
+            <div class="field">
+              <label for="damageProperty">Property address *</label>
+              <input class="damage-input" id="damageProperty" name="Property address" type="text" autocomplete="street-address" maxlength="180" required>
+            </div>
+          </div>
+
+          <div class="damage-field-row">
+            <div class="field">
+              <label for="damageItem">Damaged item *</label>
+              <input class="damage-input" id="damageItem" name="Damaged item" type="text" maxlength="120" placeholder="Example: Attic access hatch" required>
+            </div>
+            <div class="field">
+              <label for="damageLocation">Location *</label>
+              <input class="damage-input" id="damageLocation" name="Location" type="text" maxlength="120" placeholder="Example: Second-floor hallway" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="damageDescription">What was damaged or observed? *</label>
+            <textarea id="damageDescription" name="Damage description" maxlength="900" placeholder="Example: The attic access hatch cover was cracked and could not be safely reinstalled after opening." required></textarea>
+          </div>
+
+          <div class="damage-field-row">
+            <div class="field">
+              <label for="damagePriority">Priority *</label>
+              <div class="select-wrap">
+                <select id="damagePriority" name="Priority" required>
+                  <option value="">Choose a priority…</option>
+                  <option>Routine repair</option>
+                  <option>Needs prompt attention</option>
+                  <option>Safety concern — do not use</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="damageAction">Action taken *</label>
+              <div class="select-wrap">
+                <select id="damageAction" name="Action taken" required>
+                  <option value="">Choose an action…</option>
+                  <option>Photographed and documented only</option>
+                  <option>Use stopped / area kept clear</option>
+                  <option>Item or opening temporarily secured</option>
+                  <option>Supervisor assistance requested</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Photo evidence *</label>
+            <div class="damage-photo-grid">
+              <div class="damage-photo-card" id="damagePhotoCard1">
+                <input id="damagePhoto1" name="attachment" type="file" accept="image/*" capture="environment" required aria-label="Take or choose the required damaged item photo">
+                <img id="damagePhotoPreview1" alt="Selected damaged item photo preview" hidden>
+                <span class="damage-photo-prompt">Take required photo</span>
+              </div>
+              <div class="damage-photo-card" id="damagePhotoCard2">
+                <input id="damagePhoto2" name="attachment_2" type="file" accept="image/*" capture="environment" aria-label="Take or choose an optional second damaged item photo">
+                <img id="damagePhotoPreview2" alt="Selected second damaged item photo preview" hidden>
+                <span class="damage-photo-prompt">Add second photo</span>
+              </div>
+            </div>
+            <p class="damage-file-note">JPG, PNG, or phone-camera image. The combined attachment size must be under 10MB.</p>
+          </div>
+
+          <button class="decode-btn" id="damageSubmitBtn" type="submit">Email damaged item notice</button>
+          <p class="damage-submit-status" id="damageSubmitStatus" role="status" aria-live="polite"></p>
+          <p class="privacy-note">This feature requires internet access. The information and photos are sent through FormSubmit to admin@michiganpropertyinspections.com, kev@michiganpropertyinspections.com, and adrienne@michiganpropertyinspections.com. They are not stored by this website.</p>
+        </form>
+
+        <aside class="panel damage-info-panel" aria-labelledby="damage-info-title">
+          <span class="damage-online-badge">Online submission</span>
+          <h3 id="damage-info-title">One notice. Everything attached.</h3>
+          <p>The administrative email includes the inspector, property, damaged item, location, description, priority, action taken, submission time, and uploaded photos.</p>
+          <ul class="damage-checklist">
+            <li>Use for damaged access hatches, ladders, tools, covers, panels, or other inspection-related items.</li>
+            <li>Photograph the full item and the damaged area clearly.</li>
+            <li>Stop using or accessing an item when the condition appears unsafe.</li>
+            <li>Do not include client documents, identification, or unrelated personal information in the photo.</li>
+          </ul>
+          <div class="damage-success-box" id="damageSuccessBox" hidden>
+            <strong>Damage notice submitted.</strong>
+            The form was sent to the MPI administrative inbox. If this is the first submission, an administrator must open the FormSubmit activation email once.
+          </div>
+        </aside>
       </div>
     </section>
 
@@ -2324,6 +2727,22 @@
       const clearCommentBtn = document.getElementById("clearCommentBtn");
       const copyCommentBtn = document.getElementById("copyCommentBtn");
       const commentResultActions = document.getElementById("commentResultActions");
+      const damageForm = document.getElementById("damageForm");
+      const damageInspector = document.getElementById("damageInspector");
+      const damageProperty = document.getElementById("damageProperty");
+      const damageItem = document.getElementById("damageItem");
+      const damageLocation = document.getElementById("damageLocation");
+      const damagePhoto1 = document.getElementById("damagePhoto1");
+      const damagePhoto2 = document.getElementById("damagePhoto2");
+      const damagePhotoCard1 = document.getElementById("damagePhotoCard1");
+      const damagePhotoCard2 = document.getElementById("damagePhotoCard2");
+      const damagePhotoPreview1 = document.getElementById("damagePhotoPreview1");
+      const damagePhotoPreview2 = document.getElementById("damagePhotoPreview2");
+      const damageEmailSubject = document.getElementById("damageEmailSubject");
+      const damageSubmittedAt = document.getElementById("damageSubmittedAt");
+      const damageSubmitBtn = document.getElementById("damageSubmitBtn");
+      const damageSubmitStatus = document.getElementById("damageSubmitStatus");
+      const damageSuccessBox = document.getElementById("damageSuccessBox");
       const sopSearch = document.getElementById("sopSearch");
       const sopClearSearch = document.getElementById("sopClearSearch");
       const sopChapter = document.getElementById("sopChapter");
@@ -4725,6 +5144,83 @@
         toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
       }
 
+      const damagePreviewUrls = new Map();
+
+      function updateDamagePhotoPreview(input, preview, card) {
+        const previousUrl = damagePreviewUrls.get(input.id);
+        if (previousUrl) URL.revokeObjectURL(previousUrl);
+        damagePreviewUrls.delete(input.id);
+        const file = input.files?.[0];
+        if (!file) {
+          preview.removeAttribute("src");
+          preview.hidden = true;
+          card.classList.remove("has-photo");
+          return;
+        }
+        const previewUrl = URL.createObjectURL(file);
+        damagePreviewUrls.set(input.id, previewUrl);
+        preview.src = previewUrl;
+        preview.hidden = false;
+        card.classList.add("has-photo");
+        damageSubmitStatus.className = "damage-submit-status";
+        damageSubmitStatus.textContent = `${file.name || "Photo selected"} · ${(file.size / 1024 / 1024).toFixed(1)}MB`;
+      }
+
+      function initializeDamageForm() {
+        try {
+          damageInspector.value = localStorage.getItem("mpiDamageInspector") || "";
+        } catch (_) {}
+        const params = new URLSearchParams(location.search);
+        if (params.get("damage-sent") === "1") {
+          damageSuccessBox.hidden = false;
+          damageSubmitStatus.className = "damage-submit-status success";
+          damageSubmitStatus.textContent = "Damage notice submitted to the MPI administrative inbox.";
+          params.delete("damage-sent");
+          const cleanQuery = params.toString();
+          history.replaceState(null, "", `${location.pathname}${cleanQuery ? `?${cleanQuery}` : ""}#damage-report`);
+        }
+      }
+
+      function validateDamageSubmission(event) {
+        damageSubmitStatus.className = "damage-submit-status";
+        damageSubmitStatus.textContent = "";
+        if (!damageForm.reportValidity()) {
+          event.preventDefault();
+          damageSubmitStatus.className = "damage-submit-status error";
+          damageSubmitStatus.textContent = "Complete the required fields and add a photo before submitting.";
+          return;
+        }
+        if (!navigator.onLine) {
+          event.preventDefault();
+          damageSubmitStatus.className = "damage-submit-status error";
+          damageSubmitStatus.textContent = "Internet access is required to email the notice. Reconnect and submit again.";
+          showToast("Reconnect before sending the damage notice");
+          return;
+        }
+        const files = [damagePhoto1.files?.[0], damagePhoto2.files?.[0]].filter(Boolean);
+        const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+        if (files.some(file => file.type && !file.type.startsWith("image/"))) {
+          event.preventDefault();
+          damageSubmitStatus.className = "damage-submit-status error";
+          damageSubmitStatus.textContent = "Only phone-camera or image files can be attached.";
+          return;
+        }
+        if (totalBytes >= 10 * 1024 * 1024) {
+          event.preventDefault();
+          damageSubmitStatus.className = "damage-submit-status error";
+          damageSubmitStatus.textContent = "The two photos total 10MB or more. Remove the second photo or choose smaller images.";
+          return;
+        }
+        const now = new Date();
+        const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || "local time";
+        damageSubmittedAt.value = `${now.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })} · ${zone}`;
+        damageEmailSubject.value = `MPI Damaged Item Notice — ${damageItem.value.trim()} — ${damageProperty.value.trim()}`.slice(0, 180);
+        try { localStorage.setItem("mpiDamageInspector", damageInspector.value.trim()); } catch (_) {}
+        damageSubmitBtn.disabled = true;
+        damageSubmitBtn.textContent = "Sending damage notice…";
+        damageSubmitStatus.textContent = "Uploading the form and photo. Keep this page open.";
+      }
+
       async function initializeOfflineAccess() {
         if (location.protocol === "file:") {
           offlineStatus.textContent = "Offline saving activates after publish";
@@ -5149,6 +5645,14 @@
         if (window.innerWidth < 861) commentOutput.closest(".comment-result-panel").scrollIntoView({ behavior: "smooth", block: "start" });
       });
 
+      damagePhoto1.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto1, damagePhotoPreview1, damagePhotoCard1));
+      damagePhoto2.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto2, damagePhotoPreview2, damagePhotoCard2));
+      damageForm.addEventListener("submit", validateDamageSubmission);
+      window.addEventListener("pageshow", () => {
+        damageSubmitBtn.disabled = false;
+        damageSubmitBtn.textContent = "Email damaged item notice";
+      });
+
       window.addEventListener("resize", sizeCommentOutput);
 
       sopSearch.addEventListener("input", () => renderSopResults({ selectFirst: true }));
@@ -5184,6 +5688,7 @@
 
       setCommentType("defect");
       populateReportItems();
+      initializeDamageForm();
       initializeSopGuide();
       initializeOfflineAccess();
       updateConfig();
