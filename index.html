@@ -2079,13 +2079,13 @@
           <p class="eyebrow">MPI equipment notice</p>
           <h2 id="damage-report-title">Report a damaged item.</h2>
         </div>
-        <p>Photograph damaged inspection equipment or access components, add the essential field details, and email the notice directly to the MPI administrative inbox.</p>
+        <p>Photograph damaged inspection equipment or access components, add the essential field details, and email the notice directly to Kevin and the MPI administrative inboxes.</p>
       </div>
 
       <div class="damage-grid">
-        <form class="panel damage-form" id="damageForm" action="https://formsubmit.co/admin@michiganpropertyinspections.com" method="POST" enctype="multipart/form-data" novalidate>
+        <form class="panel damage-form" id="damageForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" enctype="multipart/form-data" novalidate>
           <input type="hidden" name="_subject" id="damageEmailSubject" value="MPI Damaged Item Notice">
-          <input type="hidden" name="_cc" value="kev@michiganpropertyinspections.com,adrienne@michiganpropertyinspections.com">
+          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com,adrienne@michiganpropertyinspections.com">
           <input type="hidden" name="_template" value="table">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?damage-sent=1#damage-report">
@@ -2168,7 +2168,7 @@
 
           <button class="decode-btn" id="damageSubmitBtn" type="submit">Email damaged item notice</button>
           <p class="damage-submit-status" id="damageSubmitStatus" role="status" aria-live="polite"></p>
-          <p class="privacy-note">This feature requires internet access. The information and photos are sent through FormSubmit to admin@michiganpropertyinspections.com, kev@michiganpropertyinspections.com, and adrienne@michiganpropertyinspections.com. They are not stored by this website.</p>
+          <p class="privacy-note">This feature requires internet access. The information and photos are sent through FormSubmit to kev@michiganpropertyinspections.com, with admin@michiganpropertyinspections.com and adrienne@michiganpropertyinspections.com copied. They are not stored by this website.</p>
         </form>
 
         <aside class="panel damage-info-panel" aria-labelledby="damage-info-title">
@@ -2183,7 +2183,7 @@
           </ul>
           <div class="damage-success-box" id="damageSuccessBox" hidden>
             <strong>Damage notice submitted.</strong>
-            The form was sent to the MPI administrative inbox. If this is the first submission, an administrator must open the FormSubmit activation email once.
+            The form was sent to Kevin, with the MPI administrative inboxes copied. If this is the first submission, Kevin must open the FormSubmit activation email once.
           </div>
         </aside>
       </div>
@@ -5238,7 +5238,7 @@
         if (params.get("damage-sent") === "1") {
           damageSuccessBox.hidden = false;
           damageSubmitStatus.className = "damage-submit-status success";
-          damageSubmitStatus.textContent = "Damage notice submitted to the MPI administrative inbox.";
+          damageSubmitStatus.textContent = "Damage notice submitted to Kevin and the MPI administrative inboxes.";
           params.delete("damage-sent");
           const cleanQuery = params.toString();
           history.replaceState(null, "", `${location.pathname}${cleanQuery ? `?${cleanQuery}` : ""}#damage-report`);
