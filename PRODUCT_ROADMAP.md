@@ -6,6 +6,14 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 
 ## Build next with current or free systems
 
+### Completed foundations in this improvement cycle
+
+- Job Companion with reusable current-job details and staged closeout.
+- Company Tool Guides for all 21 inventory tools plus first-use commissioning.
+- Direct links between selected tool cards, controlled SOP prompts, support requests, and safety reporting.
+- Safety & Near-Miss initial notice.
+- 26 condensed field prompts traceable to the controlled MPI SOP.
+
 ### 1. Manager coaching and competency matrix
 
 - Keep InterNACHI credentials separate from MPI competency.

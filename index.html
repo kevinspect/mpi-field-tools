@@ -4375,6 +4375,10 @@
               <button class="sop-chip" type="button" data-sop-query="water test parameters">Water test parameters</button>
               <button class="sop-chip" type="button" data-sop-query="panel cover">Panel cover</button>
               <button class="sop-chip" type="button" data-sop-query="carbon monoxide">CO screening</button>
+              <button class="sop-chip" type="button" data-sop-query="forced air heating">Furnace heat</button>
+              <button class="sop-chip" type="button" data-sop-query="water heater">Water heater</button>
+              <button class="sop-chip" type="button" data-sop-query="sump pump">Sump pump</button>
+              <button class="sop-chip" type="button" data-sop-query="garage vehicle door">Garage door</button>
             </div>
             <div class="sop-boundary-notice" id="sopBoundaryNotice" hidden>
               <strong>Separate procedure and authorization required</strong>
@@ -5624,7 +5628,7 @@
           title: "Electrical tester kit",
           model: "Milwaukee 3203-20 voltage detector + 2224-20 GFCI receptacle tester",
           aliases: "outlet receptacle gfci voltage detector electrical tester",
-          sopQuery: "electrical panel cover",
+          sopQuery: "representative receptacle GFCI AFCI testing",
           purpose: "Screen accessible receptacles for indicated wiring conditions and perform the company-authorized GFCI functional check without dismantling the device.",
           steps: [
             "Inspect the tester bodies and battery indication. Prove the voltage detector on a known energized source before relying on it.",
@@ -6230,6 +6234,255 @@
           stop: [
             "Do not leave the property with an active leak, unsafe open cover, changed thermostat, operating appliance, sounding alarm, or unsecured access point."
           ]
+        },
+        {
+          id: "quick-exterior-faucet",
+          category: "Exterior & roof",
+          title: "Exterior faucet / hose-bibb test",
+          aliases: "outside faucet hose bibb spigot backflow freeze leak no flow",
+          source: "6.3 Exterior Faucets and Hose Bibbs",
+          purpose: "Verify visible condition, secure mounting, and basic function without causing freeze or leakage damage.",
+          steps: [
+            "Locate and photograph every visible exterior faucet or hose bibb.",
+            "Inspect the handle, body, mounting, supply penetration, surrounding cladding, and backflow device where present.",
+            "Confirm the fixture is secure and not visibly freeze-damaged before operation.",
+            "When weather and conditions permit, operate it with normal controls and observe flow.",
+            "Check the outlet, stem, body, wall penetration, and accessible corresponding interior area for leakage.",
+            "Turn the fixture fully off, confirm dripping stops, and leave hoses or accessories in place unless removal is authorized and necessary for safe testing."
+          ],
+          record: ["One location overview per faucet and a close view of mounting/backflow protection.", "Active leak, dripping, loose mounting, no flow, damage, hose/freeze concern, or the specific reason it was not tested."],
+          stop: ["Do not operate a frozen, winterized, isolated, visibly broken, or suspect fixture where testing could cause concealed leakage.", "Do not force a seized handle or operate an interior shutoff." ]
+        },
+        {
+          id: "quick-appliance-test",
+          category: "Rooms & reporting",
+          title: "Installed appliance primary-function test",
+          aliases: "appliance range cooktop oven refrigerator freezer dishwasher microwave disposal exhaust thermal",
+          source: "7.4 Appliance Operational and Thermal-Response Testing",
+          purpose: "Confirm an included appliance's observable primary response using normal controls without claiming calibration, full-cycle performance, or future reliability.",
+          steps: [
+            "Identify every appliance in scope and inspect visible installation, controls, connections, damage, mounting, doors/seals, clearance, and surroundings before operation.",
+            "Do not energize equipment that is tagged, disconnected, packaged, incomplete, wet, leaking, obstructed, unsafe, or excluded. Never restore a breaker, open a closed valve, light a pilot, move the appliance, or bypass a safety device.",
+            "Remain present for every test and use only normal controls. Stop immediately for smoke, gas or burning odor, sparks, abnormal flame, leakage, severe vibration, unusual noise, or unsafe response.",
+            "Test only the approved primary function for the appliance and capture the required visible or thermal response. Use a manufacturer-safe water load for a built-in microwave and never run it empty.",
+            "For a gas range or other safely operated fuel-fired appliance, complete the MPI ambient-CO procedure; do not use IR to measure flame temperature.",
+            "Turn every operated control off, leave refrigerator/freezer settings unchanged, close doors, and recheck for leakage or abnormal heat."
+          ],
+          record: ["Each appliance's tested primary function or exact reason it was not operated.", "Actual abnormal response, location, evidence, and property-specific recommendation or limitation.", "Controls off and refrigerator/freezer doors closed after testing."],
+          stop: ["Do not operate with belongings, packaging, standing water, damaged glass/controls, gas odor, unsafe connections, incomplete installation, no utility, owner exclusion, or likely property damage.", "The test does not determine calibration, concealed condition, complete cycles, food-safe temperature, efficiency, or future reliability." ]
+        },
+        {
+          id: "quick-water-heater",
+          category: "Plumbing",
+          title: "Water heater / hot-water source check",
+          aliases: "water heater hot water tpr valve discharge pan vent expansion tank recirculation",
+          source: "8.4 Water Heater and Hot-Water Source",
+          purpose: "Document visible installation, safety components, and basic hot-water response without operating safety valves.",
+          steps: [
+            "Photograph the complete unit and readable data plate; record fuel, approximate capacity, model/serial information, and location.",
+            "Inspect the tank/cabinet, supports, pan/drain, supply connections, shutoff, corrosion, leakage, and clearances.",
+            "For fuel-fired units, inspect visible combustion air, burner area, draft hood or vent connector, and venting relationships. Do not light a pilot.",
+            "For electric units, inspect the visible electrical connection/disconnect without removing sealed covers.",
+            "Inspect the TPR valve and discharge pipe for presence, material, termination, damage, and leakage. Do not operate the TPR valve.",
+            "Observe delivered hot-water response through the fixture procedure and inspect thermal-expansion or recirculation equipment where present.",
+            "During and after demand, compare accessible connections, piping, cabinet, pan, drain, and adjoining surfaces for heat or moisture patterns; corroborate suspected moisture.",
+            "Complete the ambient-CO screen when a fuel-fired unit is safely operated."
+          ],
+          record: ["Full installation and data plate.", "TPR discharge, venting/combustion area, pan/drain, expansion or recirculation equipment, and delivered hot-water response.", "Leakage, corrosion, unsafe conditions, CO result, or specific not-operated limitation."],
+          stop: ["Do not light pilots, open closed valves, remove sealed covers, or operate the TPR valve.", "Do not continue operation for gas odor, unsafe venting, leakage, electrical distress, combustion concern, or another unsafe condition." ]
+        },
+        {
+          id: "quick-sewage-ejector",
+          category: "Plumbing",
+          title: "Sewage ejector and floor-drain check",
+          aliases: "sewage ejector pump floor drain backup check valve sealed lid",
+          source: "8.6 Sewage Ejector and Floor Drainage",
+          purpose: "Identify visible collection/discharge equipment and basic response without creating a sewage release.",
+          steps: [
+            "Photograph the ejector or floor-drain area, lid, vent, discharge, check valve, electrical supply, and visible leakage/corrosion.",
+            "Operate an ejector only through normal contributing fixtures when the installation appears powered, complete, and safe.",
+            "Listen for pump response and observe for leakage, backup, abnormal noise, or failure to stop.",
+            "Inspect floor drains for visible condition and obvious backup evidence without performing a flooding test.",
+            "Leave sealed sewage lids closed and restore all contributing fixtures."
+          ],
+          record: ["Visible installation and power/discharge arrangement.", "Observed pump response, leakage, backup, abnormal noise, failure to stop, or exact limitation."],
+          stop: ["Stop immediately for sewage release, backup, leakage, or electrical risk.", "Do not open sealed sewage lids or flood-test a drain." ]
+        },
+        {
+          id: "quick-electrical-devices",
+          category: "Electrical",
+          title: "Representative receptacle, GFCI, and AFCI testing",
+          aliases: "electrical outlet receptacle device gfci afci open ground polarity neutral no power",
+          source: "9.2 Grounding, Bonding and Representative Device Testing",
+          purpose: "Observe visible fault-current paths and test representative accessible devices without altering the system.",
+          steps: [
+            "Inspect visible grounding electrode conductors, clamps/electrodes, service bonding, and accessible water/gas bonding.",
+            "Visually inspect a receptacle before inserting the company-approved tester; do not test a damaged, wet, scorched, loose, obstructed, or unsafe device.",
+            "Test representative accessible receptacles throughout the home, exterior, and garage areas.",
+            "Test accessible GFCI devices using normal controls or the approved tester, confirm de-energization, then reset and verify power is restored.",
+            "Use installed AFCI test controls only when company policy, access, and conditions permit. Do not reset a device that will not remain set or appears unsafe.",
+            "Record the displayed condition and exact device location."
+          ],
+          record: ["Representative test locations and tester indications.", "Open ground, reverse polarity, open neutral, no power, damage, missing protection, failed trip/reset, or inaccessible-device limitation.", "Any device left without power and who was notified."],
+          stop: ["Stop for heat, arcing, smoke, moisture, damaged components, unstable devices, or unexpected loss of power.", "Do not remove devices, probe conductors, repair wiring, or repeatedly reset a protective device." ]
+        },
+        {
+          id: "quick-generator-ev",
+          category: "Electrical",
+          title: "Generator, transfer equipment, and EV charging check",
+          aliases: "generator transfer switch interlock backfeed ev charger charging inlet",
+          source: "9.3 Generators, Transfer Equipment and EV Charging",
+          purpose: "Identify visible specialized electrical equipment and unsafe backfeed arrangements without performing load or transfer testing.",
+          steps: [
+            "Photograph the generator or EV equipment, labels, inlet, transfer switch/interlock, disconnects, and visible wiring.",
+            "Inspect for a listed transfer means or interlock, mechanical condition, missing covers, unsuitable cords/inlets, corrosion, and visible backfeed concerns.",
+            "Observe EV charging equipment for mounting, cord/connector damage, receptacle condition, disconnect/overcurrent indications, and obvious installation concerns.",
+            "Use a specific limitation for inaccessible, seller-operated, shut-down, or untested specialized equipment."
+          ],
+          record: ["Equipment type, location, labels, transfer/interlock arrangement, and visible condition.", "Any missing cover, damaged cord/connector, unsafe inlet/backfeed concern, or limitation."],
+          stop: ["Do not start a generator, connect a portable unit, simulate utility loss, operate an automatic transfer switch, energize an inlet, or load-test EV equipment under the base inspection.", "Do not operate visibly damaged, wet, corroded, incomplete, or unsafe equipment." ]
+        },
+        {
+          id: "quick-hvac-precheck",
+          category: "Heating & cooling",
+          title: "HVAC system identification and pre-operation check",
+          aliases: "hvac furnace air conditioner heat pump boiler pre check startup thermostat data plate",
+          source: "10.1 System Identification and Pre-Operation Check",
+          purpose: "Establish the system configuration and decide whether normal-control operation is safe.",
+          steps: [
+            "Assign a system number/location and photograph the thermostat before adjustment.",
+            "Photograph indoor/outdoor equipment and readable data plates; record energy source, distribution method, and apparent configuration.",
+            "Inspect visible cabinet, filter, disconnect, fuel/electrical supply, venting, combustion air, condensate, ducts/piping, and surroundings before operation.",
+            "For a fuel-fired system, plan the ambient-CO procedure during safe operation and select a specific limitation when it cannot be operated or screened.",
+            "Operate only with normal controls; do not light pilots, open fuel valves, reset breakers or safety controls, or rapidly switch modes.",
+            "Restore the thermostat and any normal access cover after the test."
+          ],
+          record: ["System number/location, equipment type, energy source, distribution method, and data plates.", "Thermostat before/after and any operate/not-operate limitation.", "Visible installation, thermal-screen context, and CO result when applicable."],
+          stop: ["Do not operate tagged, shut-down, disconnected, incomplete, visibly unsafe, wet, electrically distressed, gas-odor affected, or nonresponsive equipment.", "Stop for abnormal noise, odor, vibration, overheating, leakage, flame, or venting concern." ]
+        },
+        {
+          id: "quick-forced-air-heat",
+          category: "Heating & cooling",
+          title: "Forced-air heating functional check",
+          aliases: "furnace heat heating burner blower warm air combustion forced air",
+          source: "10.3 Forced-Air Heating",
+          purpose: "Verify basic heating response and visible installation using normal controls.",
+          steps: [
+            "Complete the HVAC identification and pre-operation check.",
+            "Inspect the filter, cabinet, fuel/electrical supply, accessible burner area, combustion air, vent connector, condensate where applicable, and distribution system.",
+            "Set the thermostat to HEAT and create a call without overriding controls. Observe the normal ignition or startup sequence from a safe position.",
+            "Confirm blower response and representative warm-air distribution; observe abnormal noise, odor, vibration, short cycling, flame, or spillage concerns.",
+            "For fuel-fired equipment, complete the MPI ambient-CO screen at the equipment area and a representative supply location.",
+            "Allow normal shutdown or restore the thermostat, reinstall access panels, and photograph the closeout."
+          ],
+          record: ["System/location, startup and blower response, representative warm-air response, and operating conditions.", "CO readings/limitations, abnormal response, and thermostat/access-panel restoration."],
+          stop: ["Do not light pilots, reset safety controls, open fuel valves, operate visibly unsafe equipment, or continue after a gas or combustion concern.", "Do not perform combustion analysis unless separately trained, equipped, and authorized; do not claim the heat exchanger is sound." ]
+        },
+        {
+          id: "quick-boiler-hydronic",
+          category: "Heating & cooling",
+          title: "Boiler and hydronic-system check",
+          aliases: "boiler hydronic radiator baseboard pump expansion tank relief valve zone",
+          source: "10.4 Boilers, Hydronic Systems and Radiators",
+          purpose: "Evaluate visible boiler/hydronic installation and basic response without operating safety devices or altering pressure.",
+          steps: [
+            "Photograph the boiler, data plate, controls, pumps, expansion tank, piping, zone valves, air separator, relief discharge, venting, and supplies.",
+            "Inspect for leakage, corrosion, unsupported piping, damaged insulation, pressure/temperature indications, and unsafe venting or combustion air.",
+            "Create a normal thermostat call and observe burner/pump response, zone operation, and representative radiator or baseboard warming where practical.",
+            "For fuel-fired equipment, complete the ambient-CO screen; use thermal imaging only for representative surface response, not hydraulic balance or concealed condition.",
+            "Inspect radiators/baseboards for leakage, damage, mounting, and obstruction.",
+            "Restore thermostats and any normal access cover and confirm stable condition."
+          ],
+          record: ["Visible installation, pressure/temperature indication, controls/pumps/zones, and representative heat response.", "Leakage, corrosion, venting or support concerns, CO result, and seasonal or access limitation."],
+          stop: ["Do not bleed radiators, operate relief valves, add water, adjust pressure/temperature, open drains, or override controls.", "Stop for gas odor, leakage, unsafe venting, electrical distress, abnormal pressure, or combustion concern." ]
+        },
+        {
+          id: "quick-sump-pump",
+          category: "Structure & access",
+          title: "Sump-pump functional check",
+          aliases: "sump pump pit float discharge check valve backup alarm basement",
+          source: "11.3 Sump Pump",
+          purpose: "Observe visible installation and basic pump response without flooding the pit or defeating a sealed radon system.",
+          steps: [
+            "Photograph the pit, lid, pump, power supply, discharge, check valve, backup/alarm, and surrounding moisture evidence.",
+            "Where safe and accessible, activate with the normal float or test method without overfilling the pit or adding excessive water.",
+            "Observe start/stop response, unusual noise, discharge leakage, check-valve behavior, and the exterior discharge location when visible.",
+            "Leave the pump, float, lid, power, and alarm as found after testing."
+          ],
+          record: ["Visible installation and power/discharge arrangement.", "Start/stop response, noise, leakage, check-valve/exterior discharge observation, and any backup/alarm feature.", "Specific limitation when sealed, inaccessible, dry, unpowered, or concealed."],
+          stop: ["Do not unseal a radon-system lid, reach into contaminated water, alter float settings, or operate a dry or damaged pump.", "Stop for electrical risk, overflow, backup, leakage, or unsafe access." ]
+        },
+        {
+          id: "quick-attic",
+          category: "Structure & access",
+          title: "Attic access and inspection sequence",
+          aliases: "attic insulation ventilation framing sheathing baffle exhaust access hatch",
+          source: "11.4 Attic, Insulation and Ventilation",
+          purpose: "Evaluate visible framing, roof sheathing, insulation, ventilation, and system penetrations using a safe access method.",
+          steps: [
+            "Assess the access ladder/opening, heat, electrical hazards, animals/contamination, framing visibility, and safe footing before entry.",
+            "Record the method: entered, viewed from the opening, or remote camera. Never step where structural support is not positively identified.",
+            "Photograph the structure in multiple directions and representative sheathing, framing connections, and alterations.",
+            "Identify insulation type and approximate visible depth; observe distribution, compression, gaps, access insulation/weatherstripping, and air bypasses.",
+            "Inspect soffit vents/baffles, ridge/gable/roof vents, and evidence of blocked airflow.",
+            "Inspect visible wiring, recessed-light clearances, HVAC/ducts, plumbing, and bath/laundry/kitchen exhaust terminations.",
+            "Investigate staining, frost, condensation, thermal anomalies, leakage evidence, and suspected biological growth without disturbing material.",
+            "Close and photograph the access."
+          ],
+          record: ["Access and inspection method plus views in each visible direction.", "Framing/sheathing, insulation depth/distribution, ventilation/baffles, exhaust terminations, visible systems, and moisture/frost evidence.", "Every area not entered or observed and the exact reason."],
+          stop: ["Do not step without positively identified support or enter for unsafe heat, access, electrical, animal, contamination, structural, or escape conditions.", "Do not disturb vermiculite, animal waste, suspected asbestos, or contaminated insulation." ]
+        },
+        {
+          id: "quick-garage-door",
+          category: "Garage & exterior structures",
+          title: "Garage vehicle door and operator check",
+          aliases: "garage door opener operator photo eye sensor reversal spring cable track",
+          source: "12.2 Garage Vehicle Door and Operator",
+          purpose: "Evaluate basic door/operator safety without placing a person or property in the door path.",
+          steps: [
+            "Inspect door panels, tracks, rollers, hinges, attachments, weather seal, manual release, and springs/cables from a safe distance.",
+            "Clear the travel path and operate the door from the wall control while maintaining a complete view.",
+            "Inspect the wall control location and condition.",
+            "Test photoelectric sensors with the company-approved non-contact method; never use a person's body.",
+            "Do not perform force-reversal testing unless company policy and the operator manufacturer's procedure specifically authorize it.",
+            "Return the door to its original position and confirm the area is secure."
+          ],
+          record: ["Door/operator location, visible components, normal movement, wall control, and photo-eye response.", "Damage, abnormal movement/noise, failed sensor, unsafe spring/cable condition, or limitation.", "Final door position."],
+          stop: ["Stop for loose or damaged components, unsupported tracks, abnormal movement/noise, failed sensors, or unsafe springs/cables.", "Do not touch or adjust springs/cables and never place a person or object in the travel path." ]
+        },
+        {
+          id: "quick-smoke-co-alarms",
+          category: "Safety",
+          title: "Smoke and carbon-monoxide alarm check",
+          aliases: "smoke detector carbon monoxide alarm co alarm test button sleeping area",
+          source: "13.2 Smoke and Carbon-Monoxide Alarms",
+          purpose: "Document visible alarm presence and basic accessible response within company scope.",
+          steps: [
+            "Observe the presence and general location of visible smoke and CO alarms on each level and near sleeping areas as applicable.",
+            "Test only accessible standalone units with the installed test button when company policy permits and the unit is not connected to a monitored system.",
+            "Record the basic circuit/alarm response without claiming sensor accuracy, interconnection, remaining life, or full system performance.",
+            "Leave the device as found and use a specific limitation for an inaccessible, monitored, disabled, absent, or untested unit."
+          ],
+          record: ["Visible presence/location by level and sleeping area.", "Devices tested and basic test-button response.", "Missing, disabled, inaccessible, monitored, or not-tested conditions."],
+          stop: ["Do not remove units, replace batteries, reach high devices unsafely, or activate a monitored system.", "This check does not replace the separate ambient-CO screening procedure at operated fuel-fired equipment." ]
+        },
+        {
+          id: "quick-fireplace",
+          category: "Heating & cooling",
+          title: "Fireplace inspection and gas-operation boundary",
+          aliases: "fireplace chimney hearth firebox damper gas log wood burning flue",
+          source: "13.3 Fireplace",
+          purpose: "Inspect accessible visible fireplace components without conducting a specialized chimney evaluation.",
+          steps: [
+            "Record the fireplace once in the room or area that best identifies its location and photograph the overall installation.",
+            "Identify wood-burning, gas, or other type and inspect visible firebox, hearth, surround, damper, doors/screens, accessible flue area, and clearances.",
+            "For gas equipment, inspect visible supply/control and venting without lighting an extinguished pilot or opening a fuel valve.",
+            "Operate a gas fireplace only with its normal control when it is already in service and appears safe.",
+            "When safely operated, complete the ambient-CO screen in the room and near the fireplace face/opening; keep the meter out of the firebox, vent, and direct exhaust.",
+            "Restore controls and doors/screens as found."
+          ],
+          record: ["Type, room/location, overall installation, and accessible visible components.", "Gas operation and CO result or specific not-operated limitation.", "Deposits, damage, prior-fire concern, unsafe operation, or recommendation for qualified chimney/fireplace evaluation."],
+          stop: ["Do not light an extinguished pilot, open a fuel valve, ignite solid fuel, smoke-test, or dismantle components.", "Do not represent the inspection as an NFPA Level II chimney inspection or claim concealed flue condition." ]
         }
       ];
       const SOP_RECORDS = buildSopRecords();

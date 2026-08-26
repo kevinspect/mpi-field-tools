@@ -155,7 +155,7 @@ Status: published August 26, 2026 as GitHub commit `bb54dcdb70beddd6d58a265671ca
 
 ### Build 4 — Purchased-tool onboarding and support routing
 
-Status: implemented locally; publication pending validation.
+Status: published August 26, 2026 as GitHub commit `38f470ed16c442eecbf43a6f31f7da84a54ce23d`.
 
 #### Additions
 
@@ -190,4 +190,65 @@ Status: implemented locally; publication pending validation.
 #### Rollback for this build
 
 - Restore GitHub `main` to `bb54dcdb70beddd6d58a265671ca8e97783d8b02` to keep Builds 1–3 but remove purchased-tool onboarding.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 5 — Expanded SOP field prompts
+
+Status: implemented locally; publication pending validation.
+
+#### Additions
+
+1. Expanded Field Procedures from 12 to 26 searchable quick prompts using the controlled MPI Residential Inspector Field Operations Handbook v1.3.
+   - Exterior faucet / hose-bibb test — SOP 6.3.
+   - Installed appliance primary-function test — SOP 7.4.
+   - Water heater / hot-water source check — SOP 8.4.
+   - Sewage ejector and floor-drain check — SOP 8.6.
+   - Representative receptacle, GFCI, and AFCI testing — SOP 9.2.
+   - Generator, transfer equipment, and EV charging check — SOP 9.3.
+   - HVAC system identification and pre-operation check — SOP 10.1.
+   - Forced-air heating functional check — SOP 10.3.
+   - Boiler and hydronic-system check — SOP 10.4.
+   - Sump-pump functional check — SOP 11.3.
+   - Attic access and inspection sequence — SOP 11.4.
+   - Garage vehicle door and operator check — SOP 12.2.
+   - Smoke and carbon-monoxide alarm check — SOP 13.2.
+   - Fireplace inspection and gas-operation boundary — SOP 13.3.
+
+2. Preserved the quick-reference format for every new prompt.
+   - Purpose.
+   - Short step-by-step sequence.
+   - Required report record.
+   - Stop conditions and limitations.
+   - Exact handbook section, handbook version, and effective date.
+
+3. Added four common-task shortcuts without creating another home-screen tool.
+   - Furnace heat.
+   - Water heater.
+   - Sump pump.
+   - Garage door.
+
+4. Updated the electrical tester-kit card to open the new representative receptacle/GFCI/AFCI procedure instead of the less-specific panel-cover procedure.
+
+5. Updated the offline cache identifier to Build 42.
+
+#### Source control
+
+- Source: Michigan Property Inspections Residential Inspector Field Operations Handbook, Version 1.3, effective August 17, 2026.
+- New prompts condense the controlled text for field use; they do not broaden the inspection scope or authorize a procedure.
+- No Internet source or generic inspection procedure was substituted for the MPI handbook.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Quick prompt count: 26.
+- Unique quick prompt IDs: 26.
+- Furnace shortcut: opened Forced-air heating functional check and displayed SOP 10.3 source information.
+- Water-heater shortcut: opened Water heater / hot-water source check.
+- Garage-door shortcut: opened Garage vehicle door and operator check.
+- Browser error log during these tests: 0 errors.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `38f470ed16c442eecbf43a6f31f7da84a54ce23d` to keep Builds 1–4 but remove the expanded SOP prompts.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
