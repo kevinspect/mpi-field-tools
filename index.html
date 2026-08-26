@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="69">
+  <meta name="app-build" content="70">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3813,10 +3813,15 @@
     .service-pack-copy { margin: 0; color: var(--ink-2); font-size: 11.5px; line-height: 1.5; }
     .service-pack-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
     .service-pack-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 12px 13px; background: #f7f9fc; border: 1px solid #dfe5ee; border-radius: 11px; }
+    .service-pack-item.is-checked { background: #edf7f4; border-color: #bfded4; }
+    .service-pack-check { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 10px; cursor: pointer; }
+    .service-pack-check input,
+    .service-pack-confirm input { width: 20px; height: 20px; margin: 0; accent-color: var(--bright-blue); }
     .service-pack-item strong { display: block; color: var(--forest); font-size: 12px; }
     .service-pack-item small { display: block; margin-top: 3px; color: var(--ink-2); font-size: 10px; line-height: 1.4; }
     .service-pack-item button { min-height: 42px; padding: 8px 11px; color: var(--bright-blue); background: #fff; border: 1px solid #c7d9e8; border-radius: 9px; font-size: 10px; font-weight: 900; }
     .service-pack-extras { margin: 0; padding: 12px 14px; color: #634a12; background: #fff9e9; border-left: 4px solid var(--orange); border-radius: 8px; font-size: 10.5px; line-height: 1.5; }
+    .service-pack-confirm { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 10px; min-height: 44px; padding: 10px 12px; color: var(--forest); background: #eef5fb; border: 1px solid #c7d9e8; border-radius: 10px; font-size: 10.5px; font-weight: 850; line-height: 1.35; cursor: pointer; }
     .tool-readiness-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 14px; align-items: center; padding: 14px; background: #fff; border: 1px solid var(--line); border-radius: 13px; }
     .tool-readiness-copy { min-width: 0; }
     .tool-readiness-copy strong { display: block; color: var(--forest); font-size: 14px; }
@@ -4073,7 +4078,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">69</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">70</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4845,7 +4850,7 @@
       <details class="panel escalation-guide" id="servicePackPanel">
         <summary>
           <span><strong>Special-service pack check</strong><small>Confirm the extra company equipment for the booked service.</small></span>
-          <span class="daily-readiness-status">Offline</span>
+          <span class="daily-readiness-status" id="servicePackStatus">Choose service</span>
         </summary>
         <div class="service-pack-body">
           <div class="field">
@@ -6587,6 +6592,7 @@
       const servicePackPanel = document.getElementById("servicePackPanel");
       const servicePackSelect = document.getElementById("servicePackSelect");
       const servicePackResult = document.getElementById("servicePackResult");
+      const servicePackStatus = document.getElementById("servicePackStatus");
       const toolReadinessPanel = document.getElementById("toolReadinessPanel");
       const toolReadinessStatus = document.getElementById("toolReadinessStatus");
       const toolReadinessForm = document.getElementById("toolReadinessForm");
@@ -13029,6 +13035,8 @@
         const pack = SERVICE_PACKS[servicePackSelect.value];
         servicePackResult.hidden = !pack;
         servicePackResult.replaceChildren();
+        servicePackStatus.textContent = pack ? `0 of ${pack.items.length + 1}` : "Choose service";
+        servicePackStatus.classList.remove("is-ready");
         if (!pack) return;
 
         const title = document.createElement("h3");
@@ -13042,17 +13050,23 @@
         pack.items.forEach(([id, itemTitle, note]) => {
           const item = document.createElement("li");
           item.className = "service-pack-item";
+          const checkLabel = document.createElement("label");
+          checkLabel.className = "service-pack-check";
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.dataset.servicePackCheck = id;
           const itemCopy = document.createElement("span");
           const strong = document.createElement("strong");
           strong.textContent = itemTitle;
           const small = document.createElement("small");
           small.textContent = note;
           itemCopy.append(strong, small);
+          checkLabel.append(checkbox, itemCopy);
           const button = document.createElement("button");
           button.type = "button";
           button.dataset.servicePackTool = id;
           button.textContent = "Open guide";
-          item.append(itemCopy, button);
+          item.append(checkLabel, button);
           list.appendChild(item);
         });
         const extras = document.createElement("p");
@@ -13060,7 +13074,24 @@
         const extrasLabel = document.createElement("strong");
         extrasLabel.textContent = "Also confirm: ";
         extras.append(extrasLabel, document.createTextNode(pack.extras));
-        servicePackResult.append(title, copy, list, extras);
+        const extrasConfirm = document.createElement("label");
+        extrasConfirm.className = "service-pack-confirm";
+        const extrasCheckbox = document.createElement("input");
+        extrasCheckbox.type = "checkbox";
+        extrasCheckbox.dataset.servicePackCheck = "extras";
+        const extrasCopy = document.createElement("span");
+        extrasCopy.textContent = "Applicable forms, consumables, PPE, power, storage, and assignment details are confirmed.";
+        extrasConfirm.append(extrasCheckbox, extrasCopy);
+        servicePackResult.append(title, copy, list, extras, extrasConfirm);
+      }
+
+      function updateServicePackProgress() {
+        const checks = [...servicePackResult.querySelectorAll("[data-service-pack-check]")];
+        if (!checks.length) return;
+        const complete = checks.filter(check => check.checked).length;
+        servicePackStatus.textContent = complete === checks.length ? "Pack checked" : `${complete} of ${checks.length}`;
+        servicePackStatus.classList.toggle("is-ready", complete === checks.length);
+        checks.forEach(check => check.closest(".service-pack-item")?.classList.toggle("is-checked", check.checked));
       }
 
       function openServicePackTool(id) {
@@ -13809,6 +13840,7 @@
 
       toolGuideSearch.addEventListener("input", () => renderToolGuideResults({ selectFirst: true }));
       servicePackSelect.addEventListener("change", renderServicePack);
+      servicePackResult.addEventListener("change", updateServicePackProgress);
       servicePackResult.addEventListener("click", event => {
         const button = event.target.closest("[data-service-pack-tool]");
         if (button) openServicePackTool(button.dataset.servicePackTool);
