@@ -548,7 +548,7 @@ Status: published August 26, 2026 as GitHub commit `6514beed53401864685374f457a5
 
 ### Build 13 — Home-screen active job resume
 
-Status: ready to publish as Build 50.
+Status: published August 26, 2026 as GitHub commit `fbe72654e02a184100ebf06968980b0171565710`.
 
 #### Additions
 
