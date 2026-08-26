@@ -1212,3 +1212,27 @@ Status: published August 26, 2026 as GitHub commit `9e9f87f8cfa3083a7c9ad5df02ef
 
 - Restore GitHub `main` to `df336fc8e2c842893da46e65a58305bd1b65443e` to keep Builds 1–29 but remove the HTP/Ariston expansion.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 31 — Complete copied equipment-age note
+
+Status: published August 26, 2026 as GitHub commit `769af264eb091814af0eb71da22eb7b1e3a153c7`.
+
+#### Additions
+
+1. Changed **Copy result** to **Copy age result**.
+   - The copied text now clearly labels the equipment family, exact entered serial, manufacture result, and the visible approximate age or valid-match count.
+   - The date-code explanation remains included so the inspector can see why the result was produced.
+   - Updated the visible build, version file, and offline cache identifier to Build 68.
+
+#### Validation record
+
+- The 1996 Trane test copied: equipment, serial, June 1996 / production week 26, the exact L/year explanation, and **Approx. equipment age: 30 yr 2 mo**.
+- Clipboard operation completed successfully.
+- 390-pixel phone layout: no horizontal overflow.
+- Duplicate HTML IDs: none detected.
+- Browser script errors: none detected.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `34cc94a3642a381c32dfa6e9bd7d7a973c9a86da` to keep Builds 1–30 but remove the expanded copied result.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
