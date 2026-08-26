@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="54">
+  <meta name="app-build" content="55">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3937,7 +3937,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">54</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">55</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4852,6 +4852,15 @@
           <p id="trainingProgressNote">Progress stays on this phone.</p>
         </aside>
       </div>
+
+      <aside class="job-next-action training-next-action" id="trainingNextAction" aria-live="polite">
+        <div>
+          <span>Next MPI refresher</span>
+          <strong id="trainingNextActionTitle">Start with Before/After photo records</strong>
+          <p id="trainingNextActionDetail">Open the first incomplete company lesson, answer its knowledge check, and continue in order.</p>
+        </div>
+        <button class="job-secondary-action" id="trainingNextActionBtn" type="button">Open lesson</button>
+      </aside>
 
       <aside class="external-training-card" aria-label="MPI assigned training profile">
         <div>
@@ -6251,6 +6260,10 @@
       const trainingProgressCount = document.getElementById("trainingProgressCount");
       const trainingProgressFill = document.getElementById("trainingProgressFill");
       const trainingProgressNote = document.getElementById("trainingProgressNote");
+      const trainingNextAction = document.getElementById("trainingNextAction");
+      const trainingNextActionTitle = document.getElementById("trainingNextActionTitle");
+      const trainingNextActionDetail = document.getElementById("trainingNextActionDetail");
+      const trainingNextActionBtn = document.getElementById("trainingNextActionBtn");
       const onboardingForm = document.getElementById("onboardingForm");
       const onboardingChecks = [...document.querySelectorAll("[data-onboarding-id]")];
       const onboardingStages = [...document.querySelectorAll("[data-onboarding-stage]")];
@@ -11341,6 +11354,34 @@
       let completedTraining = new Set();
       let completedOnboarding = new Set();
 
+      function updateTrainingNextAction() {
+        const nextModule = trainingModules.find(module => !completedTraining.has(module.dataset.trainingModule));
+        trainingNextAction.classList.toggle("is-complete", !nextModule);
+        trainingNextActionBtn.hidden = !nextModule;
+
+        if (!nextModule) {
+          trainingNextActionTitle.textContent = "All MPI refresher lessons complete";
+          trainingNextActionDetail.textContent = "All current company refresher modules are complete on this phone.";
+          trainingNextActionBtn.dataset.trainingTarget = "";
+          return;
+        }
+
+        const title = nextModule.querySelector(".training-summary-copy strong")?.textContent?.trim() || "Next company lesson";
+        const detail = nextModule.querySelector(".training-summary-copy small")?.textContent?.trim() || "Open the next incomplete company refresher.";
+        trainingNextActionTitle.textContent = title;
+        trainingNextActionDetail.textContent = `${detail}. Complete the knowledge check to advance.`;
+        trainingNextActionBtn.dataset.trainingTarget = nextModule.dataset.trainingModule;
+      }
+
+      function openNextTrainingModule() {
+        const target = trainingNextActionBtn.dataset.trainingTarget;
+        const module = trainingModules.find(item => item.dataset.trainingModule === target);
+        if (!module) return;
+        trainingModules.forEach(item => { if (item !== module) item.open = false; });
+        module.open = true;
+        module.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
       function updateTrainingProgress() {
         trainingModules.forEach(module => {
           const complete = completedTraining.has(module.dataset.trainingModule);
@@ -11354,6 +11395,7 @@
         trainingProgressNote.textContent = completeCount === trainingModules.length
           ? "All current refresher modules are complete on this phone."
           : "Progress stays on this phone and works offline.";
+        updateTrainingNextAction();
       }
 
       function initializeTraining() {
@@ -12453,6 +12495,7 @@
         const button = event.target.closest("[data-complete-training]");
         if (button) completeTrainingModule(button);
       });
+      trainingNextActionBtn.addEventListener("click", openNextTrainingModule);
       onboardingChecks.forEach(check => check.addEventListener("change", () => updateOnboardingMilestone(check)));
       onboardingForm.addEventListener("submit", validateOnboardingSubmission);
       messageAckForm.addEventListener("submit", validateMessageAcknowledgement);
