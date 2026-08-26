@@ -1369,3 +1369,37 @@ Status: published August 26, 2026 as GitHub commit `029b2d4cae12f288a6f7b757038d
 
 - Restore GitHub `main` to `e9511cc459a82492ccb3399010eb9aa1ca1f11d5` to keep Builds 1–34 but remove the end-of-day reset.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 36 — High-risk and specialist refresher lessons
+
+Status: published August 26, 2026 as GitHub commit `4670f78e50cc1ee3f0c957c03c745d2c127878f2` (app Build 73).
+
+#### Additions
+
+1. Expanded the Training Center from 10 to 16 short MPI refresher lessons.
+   - **Electrical panel cover boundary** covers authorization, the pre-touch hazard assessment, no-remove conditions, control of the cover/fasteners, and restored-condition evidence.
+   - **Ambient CO screening and response** covers instrument readiness, background and trend readings, emergency priority, exact records, and the non-diagnostic boundary.
+   - **Roof and ladder access decision** covers ladder inspection/setup, roof conditions, alternative inspection methods, and specific limitation records.
+   - **Water sampling and chain of custody** covers the ordered package, correct bottles and parameters, clean collection, sample identity, custody, temperature, and holding time.
+   - **Sewer scope operating boundary** covers authorized access, equipment readiness, controlled cable advance, stop conditions, contamination control, and restoration.
+   - **Mold / IAQ sampling control** covers the approved sampling plan, media identity, pump readiness, required flow/time, immediate labeling, custody, and deviations.
+
+2. Preserved the training boundary.
+   - Each lesson is an offline company refresher with one knowledge check.
+   - Completion stays on the inspector’s phone and does not create an InterNACHI credential, service authorization, or competency sign-off.
+   - Updated the visible build, version file, and offline cache identifier to Build 73.
+
+#### Validation record
+
+- All 16 training modules were detected by the progress system.
+- An incorrect panel-cover answer did not complete the lesson.
+- Correct completion of all six new lessons produced **6 of 16 complete**, changed each button to **Completed ✓**, and saved all six exact module IDs.
+- The 6-of-16 progress and completed states remained correct after a full reload.
+- 390-pixel phone layout: no horizontal overflow.
+- Duplicate HTML IDs: none detected.
+- Browser script errors: none detected.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `9a95c37e96abf9418bceaf405a3e9a1b86b213ff` to keep Builds 1–35 but return the Training Center to 10 refresher lessons.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
