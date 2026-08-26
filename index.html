@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="67">
+  <meta name="app-build" content="68">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4062,7 +4062,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">67</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">68</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -10691,12 +10691,12 @@
       }
 
       function renderResult(result, serial, config) {
-        copyPayload = `${config.name}\nSerial: ${serial}\n${result.copy}`;
+        copyPayload = `Equipment: ${config.name}\nSerial: ${serial}\nManufacture result: ${result.copy}\n${result.ageCaption}: ${result.age}`;
         const status = result.confidence === "caution" ? "Check the era" : "Pattern matched";
         resultContent.innerHTML = `
           <div class="result-topline">
             <span class="result-status ${result.confidence === "caution" ? "caution" : ""}">${status}</span>
-            <button class="copy-btn" id="copyBtn" type="button">Copy result</button>
+            <button class="copy-btn" id="copyBtn" type="button">Copy age result</button>
           </div>
           <p class="result-kicker">${escapeHtml(result.kicker)}</p>
           <h2 class="date-result">${escapeHtml(result.label)}</h2>
