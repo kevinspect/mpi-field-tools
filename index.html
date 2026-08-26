@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="64">
+  <meta name="app-build" content="65">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3668,7 +3668,7 @@
       transition: width .2s ease;
     }
 
-    .job-context-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .job-context-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
 
     .job-secondary-action {
       min-height: 44px;
@@ -4062,7 +4062,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">64</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">65</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4139,6 +4139,7 @@
 
           <div class="job-context-actions">
             <a class="job-secondary-action" id="activeJobMapLink" href="https://maps.apple.com/" target="_blank" rel="noopener">Open in Apple Maps</a>
+            <button class="job-secondary-action" id="copyActiveJobStatusBtn" type="button">Copy job status</button>
             <button class="job-secondary-action danger" id="clearActiveJobBtn" type="button">Clear finished job</button>
           </div>
 
@@ -6394,6 +6395,7 @@
       const activeJobProperty = document.getElementById("activeJobProperty");
       const activeJobStatus = document.getElementById("activeJobStatus");
       const activeJobMapLink = document.getElementById("activeJobMapLink");
+      const copyActiveJobStatusBtn = document.getElementById("copyActiveJobStatusBtn");
       const homeActiveJob = document.getElementById("homeActiveJob");
       const homeActiveJobProperty = document.getElementById("homeActiveJobProperty");
       const homeActiveJobProgress = document.getElementById("homeActiveJobProgress");
@@ -11444,6 +11446,39 @@
         copyText(lines.join("\n"), "Factual field readings copied");
       }
 
+      function copyActiveJobStatus() {
+        const job = loadActiveJob();
+        if (!job?.property) {
+          showToast("Start the current job first");
+          activeJobProperty.focus();
+          return;
+        }
+        const completedSteps = new Set(job.steps || []);
+        const completedQuality = new Set(job.quality || []);
+        const completedRooms = (job.rooms || []).filter(room => room.complete).length;
+        const nextStep = jobSteps.find(step => !completedSteps.has(step.dataset.jobStep));
+        const nextAction = nextStep
+          ? nextStep.closest("label")?.querySelector("span")?.textContent.trim() || "Continue the job closeout steps."
+          : completedQuality.size < reportQualityChecks.length
+            ? "Complete the 60-second report release check."
+            : "Job closeout checks complete.";
+        const started = job.startedAt
+          ? new Date(job.startedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })
+          : "Not recorded";
+        const lines = [
+          "MPI Job Status",
+          `Inspector: ${job.inspector || "Not entered"}`,
+          `Property: ${job.property}`,
+          `Started: ${started}`,
+          `Closeout steps: ${completedSteps.size} of ${jobSteps.length} complete`,
+          `Next action: ${nextAction}`,
+          `Room photo coverage: ${job.rooms.length ? `${completedRooms} of ${job.rooms.length} rooms confirmed` : "Not started"}`,
+          `Field readings: ${job.readings.length} saved`,
+          `Report release check: ${completedQuality.size} of ${reportQualityChecks.length} complete`
+        ];
+        copyText(lines.join("\n"), "Current job status copied");
+      }
+
       function syncActiveJobToForms(job, force = false) {
         if (!job) return;
         const inspectorInputs = [damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, onboardingInspector, messageAckInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector];
@@ -13416,6 +13451,7 @@
       });
 
       jobContextForm.addEventListener("submit", saveActiveJob);
+      copyActiveJobStatusBtn.addEventListener("click", copyActiveJobStatus);
       clearActiveJobBtn.addEventListener("click", clearActiveJob);
       jobNextActionBtn.addEventListener("click", openNextJobAction);
       dailyReadinessReadyBtn.addEventListener("click", confirmDailyReadiness);
