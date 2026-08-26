@@ -95,6 +95,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Company Messages now includes an offline inspector-facing rollout note for the new workday and training tools, and the complete app passed a structural routing, accessibility-name, link-safety, recipient, asset, and script audit. **Implemented in Build 74.**
 - Every Company Tool Guide now has a stable copyable URL that opens the exact card, enabling no-cost links in training assignments, messages, equipment records, or future QR labels. **Implemented in Build 75.**
 - Every Field Procedure now has a stable copyable URL that opens the exact prompt, enabling precise links from inspector training assignments, coaching notes, messages, and field guidance. **Implemented in Build 76.**
+- Every MPI refresher lesson now has a stable copyable URL that opens the exact module, completing a no-cost manager-guidance system across tool cards, field procedures, and training lessons. **Implemented in Build 77.**
 
 ## Low-cost improvements
 

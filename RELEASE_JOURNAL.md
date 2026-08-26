@@ -1498,3 +1498,34 @@ Status: published August 26, 2026 as GitHub commit `13d679b6fca4461cd5438eb53c89
 
 - Restore GitHub `main` to `ec73b771a12bf7e9603e808f17069dd642674a32` to keep Builds 1–38 but remove direct Field Procedure links.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 40 — Direct links for every MPI refresher lesson
+
+Status: published August 26, 2026 as GitHub commit `78dfecef93394233e980be952be8de5da41a01d3` (app Build 77).
+
+#### Additions
+
+1. Added **Copy direct link to this lesson** to all 16 MPI Training Center refreshers.
+   - A recognized link opens the app to Training Center with the exact requested lesson expanded.
+   - Kevin can now direct an individual inspector to one precise MPI lesson in the same way as a company tool guide or field procedure.
+   - Lesson progress still stays on that inspector’s phone and remains separate from InterNACHI-issued credentials.
+
+2. Added safe lesson-link handling.
+   - An invalid or retired lesson ID opens no module rather than showing unrelated training as if it were assigned.
+   - Updated the Training Center description and the visible build, version file, and offline cache identifier to Build 77.
+
+#### Validation record
+
+- All 16 modules received the direct-link action.
+- The Ambient CO lesson URL opened that exact module and the copied URL reopened it.
+- The copied-link action measured 44 pixels high.
+- Completing the linked lesson with its correct answer still worked.
+- An invalid lesson ID left all modules closed.
+- 390-pixel phone layout: no horizontal overflow.
+- Duplicate HTML IDs: none detected.
+- Browser script errors: none detected.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `8d495cf590e4769e9bab055176d730790f101121` to keep Builds 1–39 but remove direct MPI lesson links.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
