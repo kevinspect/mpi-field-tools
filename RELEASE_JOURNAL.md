@@ -727,3 +727,40 @@ Status: published August 26, 2026 as GitHub commit `da3d7b23bffbfb29e6eeb43e143e
 
 - Restore GitHub `main` to `380271577756339489a4129bd52d86c2d753c46f` to keep Builds 1–16 but restore the previous reference links.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 18 — Next MPI refresher
+
+Status: published August 26, 2026 as GitHub commit `113f424e3d11403bbacdf0c6f2cab5d36f6ab35e`.
+
+#### Additions
+
+1. Added one focused **Next MPI refresher** card to Training Center.
+   - It finds the first incomplete MPI lesson on the company phone.
+   - The card displays the lesson title and subject.
+   - One tap opens the correct lesson and closes the other lesson panels.
+
+2. Connected the recommendation to saved training progress.
+   - Completing a correct knowledge check immediately advances the card to the next incomplete lesson.
+   - Existing progress remains on the phone and works offline.
+   - When all 10 lessons are complete, the card confirms completion and removes its action button.
+
+3. Kept authority boundaries unchanged.
+   - The card guides company refresher order only.
+   - It does not issue a credential, approve an InterNACHI badge, replace supervised competency sign-off, or authorize new work.
+   - Updated the visible build, version file, and offline cache identifier to Build 55.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Empty-progress test: selected **Before/After photo records** as the first lesson.
+- One-complete test: advanced to **Cooling temperature differential**.
+- Open action test: expanded the exact recommended lesson.
+- All-complete test: displayed **All MPI refresher lessons complete** and hid the action button.
+- 390-pixel phone layout: no horizontal overflow.
+- No new email, network request, credential claim, or management approval was added.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `9214edb02bce3e4e76897b367ba479464ebe54f3` to keep Builds 1–17 but remove the next-refresher card.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
