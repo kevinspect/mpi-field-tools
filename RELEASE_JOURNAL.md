@@ -1336,3 +1336,36 @@ Status: published August 26, 2026 as GitHub commit `ef2192db0c6591ea7c9aeff1e0de
 
 - Restore GitHub `main` to `5f915992f5e9e572433ab49146b19667144d666a` to keep Builds 1–33 but remove job-linked service packs.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 35 — End-of-day field reset
+
+Status: published August 26, 2026 as GitHub commit `029b2d4cae12f288a6f7b757038d9c154ef5aeb4` (app Build 72).
+
+#### Additions
+
+1. Added a collapsed **End-of-day reset** to Job Companion.
+   - The short closeout covers report/photo synchronization, samples and chain-of-custody handling, charging, tool and ladder security, equipment holds, vehicle restocking, tomorrow’s schedule, and required notices.
+   - A normal confirmation records the local date and time on the company phone and stays quiet.
+   - The panel resets automatically on a later date.
+
+2. Added safe exception handling.
+   - **Something needs attention** opens the existing management-request form and pre-fills an end-of-day operational issue.
+   - If the current job still has incomplete closeout or report-release checks, the inspector receives a clear warning before the shift reset can be recorded.
+   - Dismissing that warning records nothing.
+   - Updated the visible build, version file, and offline cache identifier to Build 72.
+
+#### Validation record
+
+- The initial state displayed **Not completed today**.
+- A normal completion stored the local date/time and displayed the same completion time after a full page reload.
+- The issue action opened Requests & Feedback and pre-filled **Scheduling or operational support**, **End-of-day reset issue**, and a factual prompt.
+- An incomplete active job produced the warning; dismissing it left no reset record.
+- 390-pixel phone layout: no horizontal overflow.
+- Duplicate HTML IDs: none detected.
+- Browser script errors: none detected.
+- No email or management notification was sent during testing.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `e9511cc459a82492ccb3399010eb9aa1ca1f11d5` to keep Builds 1–34 but remove the end-of-day reset.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

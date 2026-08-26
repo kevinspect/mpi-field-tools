@@ -90,6 +90,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Company Tool Guides now includes a collapsed, service-specific packing check with direct links to the exact tool cards for standard, sewer, mold/IAQ, well/septic/water, drone, and crawlspace-robot work. **Implemented in Build 69.**
 - Every service pack now functions as a focused checklist with individual equipment checks, one supporting-items confirmation, and a clear completion state that resets when the service changes. **Implemented in Build 70.**
 - Current Job now saves booked specialist equipment packs with the active property, includes them in copied job status, and opens the exact service checklist in one tap. **Implemented in Build 71.**
+- Job Companion now includes a quiet, device-only end-of-day reset for reports, samples, charging, equipment security, restocking, tomorrow’s schedule, and any exception that requires management attention. **Implemented in Build 72.**
 
 ## Low-cost improvements
 
