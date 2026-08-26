@@ -1466,3 +1466,35 @@ Status: published August 26, 2026 as GitHub commit `6daa53bed72b71b31843b945c501
 
 - Restore GitHub `main` to `3e8ae320c516dc9b98ef6e786de64775b1d3c970` to keep Builds 1–37 but remove direct tool-guide links.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 39 — Direct links for every field procedure
+
+Status: published August 26, 2026 as GitHub commit `13d679b6fca4461cd5438eb53c89d0818b8fb43a` (app Build 76).
+
+#### Additions
+
+1. Added **Copy direct link to this procedure** to all 26 Field Procedures.
+   - A copied URL opens the app directly to that exact step-by-step prompt.
+   - Kevin can use the link to direct an individual inspector to a procedure from a training assignment, coaching note, company message, or field answer without asking the inspector to search.
+   - The linked prompt remains part of the offline app after the normal first online visit.
+
+2. Added safe procedure-link handling.
+   - A recognized procedure ID selects and displays only the intended prompt.
+   - An invalid or retired procedure ID falls back to the normal Cooling temperature differential starting prompt.
+   - Updated the Field Procedures release description and the visible build, version file, and offline cache identifier to Build 76.
+
+#### Validation record
+
+- The Water Test Parameters / COC URL opened that exact prompt as the single selected result.
+- The copied URL reopened the exact same prompt.
+- The existing **Copy COC list** action still returned **Basic Water Test: Coliform, Nitrate, Arsenic**.
+- An invalid procedure ID fell back to **Cooling temperature differential**, with all 26 prompts still available.
+- The copy action measured 44 pixels high.
+- 390-pixel phone layout: no horizontal overflow.
+- Duplicate HTML IDs: none detected.
+- Browser script errors: none detected.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `ec73b771a12bf7e9603e808f17069dd642674a32` to keep Builds 1–38 but remove direct Field Procedure links.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
