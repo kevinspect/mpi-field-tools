@@ -1638,3 +1638,31 @@ Status: published August 26, 2026 as GitHub commit `255474f1fc6fae19851569c50114
 
 - Restore GitHub `main` to `b72695619366901186945585cbd127d6f5fd7b68` to keep Builds 1–41 but remove MPI refresher progress sharing.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 43 — Copy an Equipment Age Finder no-match handoff
+
+Status: published August 26, 2026 as GitHub commit `8a84cd11ae70c2922329d5b74dca587f33a1b725` (app Build 80).
+
+#### Additions
+
+1. Added **Copy details for verification** whenever a serial has no reliable supported match.
+   - The copied field handoff includes the selected equipment family, cleaned serial, explicit no-reliable-match status, the exact decoder reason, and the supported-format guidance shown in the app.
+   - The handoff does not add a guessed year, month, or equipment age.
+   - Inspectors can paste the details into a field question, office verification note, or manufacturer lookup without retyping the data plate.
+
+2. Kept the normal matched-result workflow unchanged.
+   - A supported serial still shows and copies the manufacture result and approximate age.
+   - Updated the visible build, version file, and offline cache identifier to Build 80.
+
+#### Validation record
+
+- Entered an unsupported Trane serial and confirmed the no-match action appeared.
+- Confirmed the copied text contained **Trane / American Standard**, cleaned serial `NOTATRANESERIAL`, **No reliable match**, the exact decoder reason, and all three supported Trane example layouts.
+- Confirmed the phone action measured 44 pixels high.
+- Entered `L264A1B2C` immediately afterward and confirmed it still decoded to week 26 of 1996 with the normal matched-result action.
+- Browser script errors: none detected.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `04ba76323471f8c71e447d0ce53a67f254e8bbd1` to keep Builds 1–42 but remove copied no-match handoffs.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

@@ -98,6 +98,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Every MPI refresher lesson now has a stable copyable URL that opens the exact module, completing a no-cost manager-guidance system across tool cards, field procedures, and training lessons. **Implemented in Build 77.**
 - Job Companion now retains one recoverable copy of the last cleared job on the company phone and warns explicitly before clearing incomplete work, preventing accidental loss without adding a permanent archive or another account. **Implemented in Build 78.**
 - Training Center now lets an inspector deliberately email Kevin one exact snapshot of the 16 phone-local MPI refreshers completed and remaining; nothing is sent in the background and credentials/authorization remain separate. **Implemented in Build 79.**
+- Equipment Age Finder no-match results now copy the exact equipment family, serial, reason, and supported-format guidance for office or manufacturer verification without guessing an age. **Implemented in Build 80.**
 
 ## Low-cost improvements
 
