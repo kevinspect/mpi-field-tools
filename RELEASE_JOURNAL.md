@@ -20,6 +20,33 @@
 
 ## Change log
 
+### Build 60 — Simplified inspector workflow V2 (App Build 98)
+
+Status: staged August 26, 2026 for owner review and publication.
+
+#### Changes
+
+1. Replaced the multi-item Morning Readiness checklist with one short readiness summary and one `READY FOR WORK` confirmation.
+2. Replaced preset ETA durations with an exact minute-level clock-time picker and updated both client message templates to use the selected arrival time.
+3. Changed `START INSPECTION` to record the start timestamp and launch the installed Spectora V10 app at its dashboard using the app URL scheme; it does not open a Spectora webpage.
+4. Replaced the per-job equipment checklist with one `ALL USED TOOLS AND EQUIPMENT ARE BACK ON THE TRUCK` confirmation.
+5. Moved detailed high-value equipment accountability to a single end-of-day checklist followed by `SIGN OFF FOR DAY`.
+6. Removed the owner activity dashboard from the inspector-facing interface while retaining hidden on-device operational records for the future secure management connection.
+7. Removed the duplicate End-of-Job Tool Check card from the home screen.
+
+#### Validation
+
+- Confirmed profile setup leads to a single Morning Ready action.
+- Confirmed exact-time ETA message output, including a 3:13 PM test and the dynamic inspector first name.
+- Confirmed inspection start state is recorded before the app handoff.
+- Confirmed the per-job closeout requires only one confirmation.
+- Confirmed end-of-day sign-off remains disabled until all ten high-value equipment items are checked and locks after sign-off.
+- Parsed the complete inline JavaScript successfully after the changes.
+
+#### Rollback
+
+- Restore the public repository to App Build 97 to return to the prior detailed morning and per-job equipment checklists.
+
 ### Build 59 — Daily inspector workflow controller (App Build 97)
 
 Status: staged August 26, 2026 for owner review and publication.

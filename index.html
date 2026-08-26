@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="97">
+  <meta name="app-build" content="98">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4156,7 +4156,7 @@
       *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
     }
 
-    /* Build 97: daily inspector workflow controller */
+    /* Build 98: simplified inspector workflow V2 */
     .workflow-shell {
       display: grid;
       gap: 18px;
@@ -4231,6 +4231,19 @@
     .workflow-check input { width: 22px; height: 22px; margin: 0; accent-color: var(--bright-blue); }
     .workflow-check:has(input:checked) { background: #eef8f4; border-color: #b9dfd2; }
     .workflow-checklist + .workflow-button { width: 100%; margin-top: 17px; }
+    .workflow-readiness-summary {
+      margin: 0 0 18px;
+      padding: 18px;
+      color: var(--forest);
+      background: #f7f9fc;
+      border: 1px solid #e0e5ef;
+      border-radius: 14px;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .workflow-readiness-summary ul { margin: 10px 0 0; padding-left: 20px; }
+    .workflow-readiness-summary li + li { margin-top: 7px; }
+    .workflow-readiness-summary + .workflow-button { width: 100%; }
 
     .workflow-progress { display: flex; align-items: center; gap: 5px; margin: 0 0 20px; }
     .workflow-progress span { flex: 1; height: 6px; background: #e5e9f0; border-radius: 99px; }
@@ -4287,14 +4300,20 @@
     .workflow-eta-options button.selected { color: #fff; background: var(--forest); border-color: var(--forest); }
     .workflow-message-preview { min-height: 100px; padding: 14px; color: var(--forest); background: #f7f9fc; border: 1px solid #e0e5ef; border-radius: 12px; font-size: 12px; line-height: 1.55; }
     .workflow-dialog-actions { display: grid; grid-template-columns: 1fr 1.5fr; gap: 9px; margin-top: 14px; }
+    .workflow-time-field { display: grid; gap: 8px; margin: 16px 0; color: var(--forest); font-size: 12px; }
+    .workflow-time-field input { width: 100%; min-height: 54px; padding: 0 14px; color: var(--forest); background: #fff; border: 1px solid #bfc8d7; border-radius: 12px; font: inherit; font-size: 18px; font-weight: 850; }
 
     .workflow-equipment-specialty { display: grid; gap: 9px; margin: 14px 0 0; }
     .workflow-equipment-specialty:empty { display: none; }
     .workflow-equipment-specialty .workflow-check { border-left: 4px solid var(--orange); }
     .workflow-equipment-summary { margin: 0 0 16px; padding: 14px; color: var(--forest); background: #eef4fa; border-radius: 12px; font-size: 12px; line-height: 1.5; }
+    .workflow-equipment-confirmation { margin: 0 0 18px; padding: 22px 16px; color: var(--forest); background: #eef4fa; border: 1px solid #cbdff1; border-radius: 14px; font-size: 15px; font-weight: 950; line-height: 1.4; text-align: center; }
+    .workflow-equipment-confirmation + [hidden] + [hidden] + .workflow-button { width: 100%; }
 
-    .workflow-day-complete { text-align: center; }
+    .workflow-day-complete { text-align: left; }
+    .workflow-day-complete .workflow-card-header { text-align: center; }
     .workflow-day-complete-mark { display: grid; width: 74px; height: 74px; margin: 0 auto 14px; place-items: center; color: #fff; background: #2f846b; border-radius: 50%; font-size: 34px; font-weight: 950; }
+    .workflow-eod-checklist + .workflow-button { width: 100%; }
 
     .workflow-admin { max-width: 820px; margin: 18px auto 0; background: #fff; border: 1px solid #dce3ee; border-radius: 17px; box-shadow: 0 10px 24px rgba(17,24,106,.07); }
     .workflow-admin > summary { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 66px; padding: 0 20px; color: var(--forest); font-size: 13px; font-weight: 950; cursor: pointer; }
@@ -4419,11 +4438,6 @@
             <span class="home-tool-copy"><strong>Equipment Photo Record</strong><small>Document thermostat settings and furnace access before and after inspection.</small></span>
             <span class="home-tool-arrow" aria-hidden="true">→</span>
           </a>
-          <a class="home-tool-card" href="#tool-check">
-            <span class="home-tool-icon icon-tool-check" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>End-of-Job Tool Check</strong><small>Confirm inspection tools are accounted for and secured before leaving.</small></span>
-            <span class="home-tool-arrow" aria-hidden="true">→</span>
-          </a>
         </div>
       </section>
       <section class="home-tool-group" aria-labelledby="home-group-reference">
@@ -4472,7 +4486,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">97</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">98</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4523,21 +4537,19 @@
           <div class="workflow-card-header">
             <span class="workflow-profile-badge" id="workflowReadinessInspector">Inspector</span>
             <h3 id="workflow-readiness-title">Morning readiness</h3>
-            <p>Complete once before the first inspection. Every acknowledgement and the exact completion time are recorded on this phone.</p>
+            <p>Complete once before the first inspection. The exact confirmation time is recorded automatically for management.</p>
           </div>
-          <div class="workflow-checklist" id="workflowReadinessChecklist">
-            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="vehicle-checked"><span>Vehicle checked.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="roadworthy"><span>Vehicle appears roadworthy.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="fuel"><span>Correct and sufficient fuel for today’s work.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="route"><span>Today’s route and job locations reviewed.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="equipment"><span>Required inspection equipment is onboard.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="specialty"><span>Required specialty equipment for today’s jobs is onboard.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="batteries"><span>Inspection equipment batteries are charged.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="phone"><span>Company phone or tablet is charged.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="chargers"><span>Chargers and spare batteries are onboard.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="ladders"><span>Required ladders and tools are onboard.</span></label>
+          <div class="workflow-readiness-summary" id="workflowReadinessChecklist">
+            <strong>Confirm that:</strong>
+            <ul>
+              <li>The vehicle has been checked and is ready.</li>
+              <li>Sufficient fuel is available for today’s work.</li>
+              <li>Today’s route and jobs have been reviewed.</li>
+              <li>Equipment required for today’s inspections is onboard.</li>
+              <li>Required batteries and devices are charged.</li>
+            </ul>
           </div>
-          <button class="workflow-button" id="workflowReadyBtn" type="button" disabled>READY FOR WORK</button>
+          <button class="workflow-button" id="workflowReadyBtn" type="button">READY FOR WORK</button>
         </section>
 
         <section class="workflow-card" id="workflowTodayCard" aria-labelledby="workflow-today-title" hidden>
@@ -4577,45 +4589,46 @@
             <button class="workflow-action primary full" id="workflowStartInspectionBtn" type="button">START INSPECTION</button>
             <button class="workflow-action primary full" id="workflowJobCompleteBtn" type="button">JOB COMPLETE</button>
           </div>
-          <p class="workflow-integration-note" id="workflowSpectoraNote"><strong>Spectora V10:</strong> Start time is recorded here. A direct inspection launch will be enabled when MPI has a supported Spectora V10 app link for the job; until then the inspector opens the matching inspection in V10 from the company phone.</p>
+          <p class="workflow-integration-note" id="workflowSpectoraNote"><strong>Spectora V10:</strong> Start Inspection records the exact time, then opens the installed Spectora app at its dashboard.</p>
           <button class="workflow-job-back" id="workflowBackToJobs" type="button">← Back to today’s jobs</button>
         </section>
 
         <section class="workflow-card" id="workflowEquipmentCard" aria-labelledby="workflow-equipment-title" hidden>
           <div class="workflow-card-header">
             <p class="eyebrow">Before leaving</p>
-            <h3 id="workflow-equipment-title">Equipment accounted for</h3>
-            <p id="workflowEquipmentJob">Confirm only the equipment relevant to this inspection.</p>
+            <h3 id="workflow-equipment-title">Used tools back on the truck</h3>
+            <p id="workflowEquipmentJob">Confirm the equipment used at this inspection has been recovered.</p>
           </div>
-          <p class="workflow-equipment-summary">Job Complete has been selected. This job closes only after the accountability check is complete.</p>
-          <div class="workflow-checklist" id="workflowEquipmentChecklist">
-            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="inspection-tools"><span>Inspection tools accounted for.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="thermal-camera"><span>Thermal camera accounted for.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="moisture-meters"><span>Moisture meters accounted for.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="electrical-testing"><span>Electrical testing equipment accounted for.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="ladders"><span>Ladders returned to the vehicle.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="devices"><span>Cameras, tablets, and phones accounted for.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="power"><span>Chargers and batteries accounted for.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="nothing-left"><span>No tools were left inside or around the property.</span></label>
-            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="secured"><span>Property secured and keys returned where applicable.</span></label>
-          </div>
-          <div class="workflow-equipment-specialty" id="workflowSpecialtyEquipment"></div>
-          <button class="workflow-button" id="workflowEquipmentCompleteBtn" type="button" disabled>ALL EQUIPMENT ACCOUNTED FOR</button>
+          <p class="workflow-equipment-confirmation">ALL USED TOOLS AND EQUIPMENT ARE BACK ON THE TRUCK</p>
+          <div id="workflowEquipmentChecklist" hidden></div>
+          <div id="workflowSpecialtyEquipment" hidden></div>
+          <button class="workflow-button" id="workflowEquipmentCompleteBtn" type="button">CONFIRM</button>
         </section>
 
         <section class="workflow-card workflow-day-complete" id="workflowDayCompleteCard" aria-labelledby="workflow-day-complete-title" hidden>
           <div class="workflow-day-complete-mark">✓</div>
           <div class="workflow-card-header">
-            <h3 id="workflow-day-complete-title">Day complete</h3>
-            <p>All scheduled inspections have been closed with their equipment checks.</p>
+            <h3 id="workflow-day-complete-title">End-of-day equipment check</h3>
+            <p>Physically confirm the company’s major equipment before signing off.</p>
           </div>
-          <button class="workflow-button" id="workflowDayCompleteBtn" type="button">CONFIRM DAY COMPLETE</button>
-          <p class="workflow-integration-note" id="workflowDayCompleteStatus">The exact time will be added to today’s activity log.</p>
+          <div class="workflow-checklist workflow-eod-checklist" id="workflowEndOfDayChecklist">
+            <label class="workflow-check"><input type="checkbox" data-workflow-eod-equipment="thermal-camera"><span>Thermal camera</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-eod-equipment="moisture-meters"><span>Moisture meters</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-eod-equipment="sewer-camera"><span>Sewer scope / camera system</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-eod-equipment="radon"><span>Radon equipment</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-eod-equipment="well"><span>Well inspection / testing equipment</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-eod-equipment="septic"><span>Septic inspection equipment</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-eod-equipment="ladders"><span>Main ladders</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-eod-equipment="devices"><span>Tablets, cameras, and company phones</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-eod-equipment="specialty-meters"><span>Specialty meters and testers</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-eod-equipment="power"><span>Battery packs and chargers</span></label>
+          </div>
+          <button class="workflow-button" id="workflowDayCompleteBtn" type="button" disabled>SIGN OFF FOR DAY</button>
+          <p class="workflow-integration-note" id="workflowDayCompleteStatus">Confirm every listed item to sign off.</p>
         </section>
       </div>
 
-      <details class="workflow-admin" id="workflowAdminPanel">
-        <summary>Owner activity dashboard</summary>
+      <section class="workflow-admin" id="workflowAdminPanel" hidden aria-hidden="true">
         <div class="workflow-admin-body">
           <p class="workflow-admin-note"><strong>Current foundation:</strong> this dashboard is private to this company phone. Shared multi-inspector history and automatic owner summaries require the secure management connection planned for the next integration phase.</p>
           <div class="workflow-admin-filters" id="workflowAdminFilters">
@@ -4635,23 +4648,17 @@
             <button class="workflow-secondary" id="workflowExportLog" type="button">Copy full activity log</button>
           </div>
         </div>
-      </details>
+      </section>
 
       <dialog class="workflow-message-dialog" id="workflowMessageDialog">
         <div class="workflow-message-dialog-inner">
           <h3>Message client</h3>
-          <p>Select the message and ETA. The iPhone Messages composer opens with the client number and wording filled in; the inspector still presses Send.</p>
+          <p>Select the message and exact arrival time. The iPhone Messages composer opens with the client number and wording filled in; the inspector still presses Send.</p>
           <div class="workflow-template-options" id="workflowMessageTemplates">
             <button type="button" data-workflow-template="on-my-way">ON MY WAY</button>
             <button type="button" data-workflow-template="running-behind">RUNNING BEHIND</button>
           </div>
-          <p><strong>Select ETA</strong></p>
-          <div class="workflow-eta-options" id="workflowEtaOptions">
-            <button type="button" data-workflow-eta="5">5 minutes</button><button type="button" data-workflow-eta="10">10 minutes</button>
-            <button type="button" data-workflow-eta="15">15 minutes</button><button type="button" data-workflow-eta="20">20 minutes</button>
-            <button type="button" data-workflow-eta="25">25 minutes</button><button type="button" data-workflow-eta="30">30 minutes</button>
-            <button type="button" data-workflow-eta="45">45 minutes</button><button type="button" data-workflow-eta="60">60 minutes</button>
-          </div>
+          <label class="workflow-time-field" for="workflowEtaTime"><strong>Expected arrival time</strong><input id="workflowEtaTime" type="time" step="60"></label>
           <div class="workflow-message-preview" id="workflowMessagePreview">Select a message and ETA.</div>
           <div class="workflow-dialog-actions">
             <button class="workflow-secondary" id="workflowCancelMessage" type="button">Cancel</button>
@@ -4660,7 +4667,7 @@
         </div>
       </dialog>
 
-      <p class="workflow-integration-note"><strong>Connection roadmap:</strong> Google Calendar currently supplies the working schedule and offline cache. Secure Spectora job retrieval, shared owner logs, account authentication, and automatic summaries require a protected server connection; no API key will be placed in this public GitHub Pages file.</p>
+      <p class="workflow-integration-note"><strong>Current connection:</strong> the company schedule supplies today’s jobs and stays available offline after loading. Secure Spectora job retrieval and the separate owner dashboard require the protected management connection; no private key is stored in this public app.</p>
 
       <section class="panel today-jobs-panel" aria-label="Legacy schedule compatibility" hidden aria-hidden="true">
         <div class="today-jobs-toolbar">
@@ -6795,7 +6802,6 @@
         "age-finder": "Equipment Age Finder",
         "damage-report": "Damaged Item Notice",
         "equipment-record": "Equipment Photo Record",
-        "tool-check": "End-of-Job Tool Check",
         "tool-guides": "Company Tool Guides",
         "sop-guide": "Field Procedures",
         "training-center": "Training Center",
@@ -7391,6 +7397,8 @@
       const workflowSpecialtyEquipment = document.getElementById("workflowSpecialtyEquipment");
       const workflowEquipmentCompleteBtn = document.getElementById("workflowEquipmentCompleteBtn");
       const workflowDayCompleteCard = document.getElementById("workflowDayCompleteCard");
+      const workflowEndOfDayChecklist = document.getElementById("workflowEndOfDayChecklist");
+      const workflowEndOfDayChecks = [...document.querySelectorAll("[data-workflow-eod-equipment]")];
       const workflowDayCompleteBtn = document.getElementById("workflowDayCompleteBtn");
       const workflowDayCompleteStatus = document.getElementById("workflowDayCompleteStatus");
       const workflowAdminPanel = document.getElementById("workflowAdminPanel");
@@ -7403,7 +7411,7 @@
       const workflowExportLog = document.getElementById("workflowExportLog");
       const workflowMessageDialog = document.getElementById("workflowMessageDialog");
       const workflowMessageTemplates = document.getElementById("workflowMessageTemplates");
-      const workflowEtaOptions = document.getElementById("workflowEtaOptions");
+      const workflowEtaTime = document.getElementById("workflowEtaTime");
       const workflowMessagePreview = document.getElementById("workflowMessagePreview");
       const workflowCancelMessage = document.getElementById("workflowCancelMessage");
       const workflowOpenMessages = document.getElementById("workflowOpenMessages");
@@ -12568,7 +12576,7 @@
         "on-my-way": "On My Way",
         arrived: "Arrived",
         "in-progress": "Inspection In Progress",
-        equipment: "Equipment Check",
+        equipment: "Tools Back on Truck",
         completed: "Complete"
       };
       let workflowCurrentJobs = [];
@@ -12764,16 +12772,15 @@
       }
 
       function updateWorkflowReadinessButton() {
-        const complete = workflowReadinessChecks.length > 0 && workflowReadinessChecks.every(check => check.checked);
-        workflowReadyBtn.disabled = !complete;
-        workflowReadyBtn.textContent = complete ? "READY FOR WORK" : `READY FOR WORK · ${workflowReadinessChecks.filter(check => check.checked).length}/${workflowReadinessChecks.length}`;
+        workflowReadyBtn.disabled = false;
+        workflowReadyBtn.textContent = "READY FOR WORK";
       }
 
       function completeWorkflowReadiness() {
         const profile = loadWorkflowProfile();
-        if (!profile || !workflowReadinessChecks.every(check => check.checked)) return;
+        if (!profile) return;
         const completedAt = new Date().toISOString();
-        const items = workflowReadinessChecks.map(check => check.dataset.workflowReadiness);
+        const items = ["vehicle-ready", "fuel-ready", "route-reviewed", "required-equipment-onboard", "devices-charged"];
         const record = { date: localDateKey(), inspector: profile.name, inspectorId: profile.id, completedAt, items };
         try { localStorage.setItem(DAILY_READINESS_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
         appendWorkflowEvent("Morning readiness completed", { checklist: items, completedAt });
@@ -12955,9 +12962,7 @@
         workflowMessageClientBtn.hidden = !["scheduled", "on-my-way"].includes(status);
         workflowOnMyWayBtn.textContent = "ON MY WAY";
         workflowSpectoraNote.hidden = status !== "arrived";
-        workflowSpectoraNote.innerHTML = job.spectoraLink && /^(?:spectora:|https:\/\/(?:link\.)?spectora\.app|https:\/\/spectora\.app\.link)/i.test(job.spectoraLink)
-          ? "<strong>Spectora V10 link detected:</strong> Start Inspection will record the time and open the supported job link supplied with this appointment."
-          : "<strong>Spectora V10:</strong> Start time is recorded here. A direct inspection launch will be enabled when MPI has a supported Spectora V10 app link for the job; until then the inspector opens the matching inspection in V10 from the company phone.";
+        workflowSpectoraNote.innerHTML = "<strong>Spectora V10:</strong> Start Inspection records the exact time, then opens the installed Spectora app at its dashboard.";
         homeActiveJob.hidden = false;
         homeActiveJobProperty.textContent = job.property;
         homeActiveJobProgress.textContent = WORKFLOW_STAGE_LABELS[status];
@@ -12988,13 +12993,9 @@
         let job = loadActiveJob();
         if (!job?.property) return;
         job = updateWorkflowStage(job, "in-progress", "Inspection started", { spectoraJobId: job.spectoraJobId || "" });
-        const supportedLink = job?.spectoraLink && /^(?:spectora:|https:\/\/(?:link\.)?spectora\.app|https:\/\/spectora\.app\.link)/i.test(job.spectoraLink) ? job.spectoraLink : "";
-        if (supportedLink) {
-          appendWorkflowEvent("Spectora V10 job link opened", { linkType: supportedLink.split(":")[0] }, job);
-          window.location.href = supportedLink;
-        } else {
-          showToast("Inspection start saved — open the matching job in Spectora V10");
-        }
+        appendWorkflowEvent("Spectora V10 dashboard launch requested", { appLink: "spectora://" }, job);
+        showToast("Inspection start saved — opening Spectora V10");
+        window.location.href = "spectora://";
       }
 
       function selectWorkflowJobComplete() {
@@ -13025,43 +13026,41 @@
         workflowEquipmentCard.hidden = false;
         workflowDayCompleteCard.hidden = true;
         workflowEquipmentJob.textContent = `${job?.property || "Current job"} · ${workflowServiceLabel(job)}`;
-        workflowEquipmentChecks.forEach(check => { check.checked = false; });
-        workflowSpecialtyEquipment.replaceChildren();
-        specialtyEquipmentForJob(job).forEach(([key, label]) => {
-          const option = document.createElement("label");
-          option.className = "workflow-check";
-          option.innerHTML = `<input type="checkbox" data-workflow-specialty-equipment="${escapeHtml(key)}"><span>${escapeHtml(label)}</span>`;
-          workflowSpecialtyEquipment.appendChild(option);
-        });
         updateWorkflowEquipmentButton();
       }
 
       function workflowAllEquipmentChecks() {
-        return [...workflowEquipmentChecks, ...workflowSpecialtyEquipment.querySelectorAll("input[type=checkbox]")];
+        return [];
       }
 
       function updateWorkflowEquipmentButton() {
-        const checks = workflowAllEquipmentChecks();
-        const complete = checks.length > 0 && checks.every(check => check.checked);
-        workflowEquipmentCompleteBtn.disabled = !complete;
-        workflowEquipmentCompleteBtn.textContent = complete ? "ALL EQUIPMENT ACCOUNTED FOR" : `ACCOUNT FOR EQUIPMENT · ${checks.filter(check => check.checked).length}/${checks.length}`;
+        workflowEquipmentCompleteBtn.disabled = false;
+        workflowEquipmentCompleteBtn.textContent = "CONFIRM";
       }
 
       function completeWorkflowEquipment() {
         const job = loadActiveJob();
-        const checks = workflowAllEquipmentChecks();
-        if (!job?.property || !checks.every(check => check.checked)) return;
-        const acknowledgements = checks.map(check => check.dataset.workflowEquipment || check.dataset.workflowSpecialtyEquipment || "equipment");
-        const completed = updateWorkflowStage(job, "completed", "Equipment check completed", { acknowledgements });
+        if (!job?.property) return;
+        const confirmedAt = new Date().toISOString();
+        const completed = updateWorkflowStage(job, "completed", "Used tools back on truck confirmed", { confirmedAt });
         if (!completed) return;
-        appendWorkflowEvent("Final job completion", { equipmentCheckCompletedAt: new Date().toISOString() }, completed);
+        appendWorkflowEvent("Final job completion", { usedToolsConfirmedAt: confirmedAt }, completed);
         storeWorkflowHistory(completed);
         try { localStorage.setItem(LAST_CLEARED_JOB_STORAGE_KEY, JSON.stringify({ job: completed, clearedAt: new Date().toISOString() })); } catch (_) {}
         try { localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY); } catch (_) {}
         renderActiveJob(null);
         renderWorkflowTodayJobs();
         renderWorkflowApp();
-        showToast("Job closed and equipment check recorded");
+        showToast("Job closed — used tools confirmed back on the truck");
+      }
+
+      function updateWorkflowDayCompleteButton() {
+        const record = workflowDayCompleteRecord();
+        const checked = workflowEndOfDayChecks.filter(check => check.checked).length;
+        const allConfirmed = workflowEndOfDayChecks.length > 0 && checked === workflowEndOfDayChecks.length;
+        workflowEndOfDayChecks.forEach(check => { check.disabled = Boolean(record); });
+        workflowDayCompleteBtn.disabled = Boolean(record) || !allConfirmed;
+        workflowDayCompleteBtn.textContent = record ? "SIGNED OFF FOR DAY" : allConfirmed ? "SIGN OFF FOR DAY" : `CONFIRM EQUIPMENT · ${checked}/${workflowEndOfDayChecks.length}`;
       }
 
       function renderWorkflowDayComplete() {
@@ -13071,21 +13070,26 @@
         const ready = jobs.length > 0 && jobs.every(job => complete.has(job.id)) && !active?.property;
         const record = workflowDayCompleteRecord();
         workflowDayCompleteCard.hidden = !ready;
-        workflowDayCompleteBtn.disabled = Boolean(record);
-        workflowDayCompleteBtn.textContent = record ? "DAY COMPLETE RECORDED" : "CONFIRM DAY COMPLETE";
+        if (record?.equipment?.length) {
+          workflowEndOfDayChecks.forEach(check => { check.checked = record.equipment.includes(check.dataset.workflowEodEquipment); });
+        }
+        updateWorkflowDayCompleteButton();
         workflowDayCompleteStatus.textContent = record?.completedAt
-          ? `Recorded at ${new Date(record.completedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}.`
-          : "The exact time will be added to today’s activity log.";
+          ? `Signed off at ${new Date(record.completedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}.`
+          : "Confirm every listed item to sign off.";
       }
 
       function completeWorkflowDay() {
+        if (!workflowEndOfDayChecks.length || !workflowEndOfDayChecks.every(check => check.checked)) return;
         const profile = loadWorkflowProfile();
         const completedAt = new Date().toISOString();
-        const record = { date: localDateKey(), inspector: profile?.name || "Unknown inspector", completedAt };
+        const equipment = workflowEndOfDayChecks.map(check => check.dataset.workflowEodEquipment);
+        const record = { date: localDateKey(), inspector: profile?.name || "Unknown inspector", inspectorId: profile?.id || "", completedAt, equipment };
         try { localStorage.setItem(WORKFLOW_DAY_COMPLETE_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
-        appendWorkflowEvent("Day Complete", { completedAt });
+        appendWorkflowEvent("End-of-day equipment check completed", { equipment, completedAt });
+        appendWorkflowEvent("Signed off for day", { completedAt });
         renderWorkflowDayComplete();
-        showToast("Working day completion recorded");
+        showToast("End-of-day sign-off recorded");
       }
 
       function openWorkflowMessageDialog(template = "") {
@@ -13097,7 +13101,7 @@
         workflowMessageTemplate = template;
         workflowMessageEta = "";
         workflowMessageTemplates.querySelectorAll("button").forEach(button => button.classList.toggle("selected", button.dataset.workflowTemplate === template));
-        workflowEtaOptions.querySelectorAll("button").forEach(button => button.classList.remove("selected"));
+        workflowEtaTime.value = "";
         updateWorkflowMessagePreview();
         if (typeof workflowMessageDialog.showModal === "function") workflowMessageDialog.showModal();
         else workflowMessageDialog.setAttribute("open", "");
@@ -13107,10 +13111,20 @@
         const profile = loadWorkflowProfile();
         const name = profile?.name?.split(/\s+/)[0] || "your inspector";
         if (!workflowMessageTemplate || !workflowMessageEta) return "";
+        const eta = workflowEtaDisplay(workflowMessageEta);
+        if (!eta) return "";
         if (workflowMessageTemplate === "running-behind") {
-          return `Hey, this is ${name} from Michigan Property Inspections. Just letting you know I am running slightly behind schedule. My updated ETA is approximately ${workflowMessageEta} minutes. Sorry for the delay and I’ll see you shortly.`;
+          return `Hey, this is ${name} from Michigan Property Inspections. Just letting you know I am running slightly behind schedule. My updated ETA is approximately ${eta}. Sorry for the delay and I’ll see you shortly.`;
         }
-        return `Hey, this is ${name} from Michigan Property Inspections. I am currently on my way to your property. My ETA is approximately ${workflowMessageEta} minutes. See you soon.`;
+        return `Hey, this is ${name} from Michigan Property Inspections. I am currently on my way to your property. My ETA is approximately ${eta}. See you soon.`;
+      }
+
+      function workflowEtaDisplay(value) {
+        const match = String(value || "").match(/^(\d{2}):(\d{2})$/);
+        if (!match) return "";
+        const date = new Date();
+        date.setHours(Number(match[1]), Number(match[2]), 0, 0);
+        return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
       }
 
       function updateWorkflowMessagePreview() {
@@ -13127,11 +13141,8 @@
         updateWorkflowMessagePreview();
       }
 
-      function selectWorkflowEta(event) {
-        const button = event.target.closest("[data-workflow-eta]");
-        if (!button) return;
-        workflowMessageEta = button.dataset.workflowEta;
-        workflowEtaOptions.querySelectorAll("button").forEach(item => item.classList.toggle("selected", item === button));
+      function selectWorkflowEta() {
+        workflowMessageEta = workflowEtaTime.value;
         updateWorkflowMessagePreview();
       }
 
@@ -13142,17 +13153,18 @@
         const templateLabel = workflowMessageTemplate === "running-behind" ? "Running Behind" : "On My Way";
         appendWorkflowEvent("Client message composer opened", {
           template: templateLabel,
-          etaMinutes: Number(workflowMessageEta),
+          etaTime: workflowMessageEta,
+          etaDisplay: workflowEtaDisplay(workflowMessageEta),
           contact: job.clientName || "Client",
           status: "Composer opened — send result not available to this web app"
         }, job);
-        if (workflowMessageTemplate === "running-behind") appendWorkflowEvent("Running Behind selected", { etaMinutes: Number(workflowMessageEta) }, job);
+        if (workflowMessageTemplate === "running-behind") appendWorkflowEvent("Running Behind selected", { etaTime: workflowMessageEta, etaDisplay: workflowEtaDisplay(workflowMessageEta) }, job);
         workflowMessageDialog.close?.();
         window.location.href = `sms:${job.clientPhone}&body=${encodeURIComponent(text)}`;
       }
 
       function cancelWorkflowMessage() {
-        if (workflowMessageTemplate || workflowMessageEta) appendWorkflowEvent("Client message cancelled", { template: workflowMessageTemplate || "Not selected", etaMinutes: workflowMessageEta || "Not selected" });
+        if (workflowMessageTemplate || workflowMessageEta) appendWorkflowEvent("Client message cancelled", { template: workflowMessageTemplate || "Not selected", etaTime: workflowMessageEta || "Not selected" });
         workflowMessageDialog.close?.();
       }
 
@@ -13358,12 +13370,11 @@
           workflowTodayCard.hidden = false;
           renderWorkflowTodayJobs();
         });
-        workflowEquipmentChecklist.addEventListener("change", updateWorkflowEquipmentButton);
-        workflowSpecialtyEquipment.addEventListener("change", updateWorkflowEquipmentButton);
         workflowEquipmentCompleteBtn.addEventListener("click", completeWorkflowEquipment);
+        workflowEndOfDayChecklist.addEventListener("change", updateWorkflowDayCompleteButton);
         workflowDayCompleteBtn.addEventListener("click", completeWorkflowDay);
         workflowMessageTemplates.addEventListener("click", selectWorkflowMessageTemplate);
-        workflowEtaOptions.addEventListener("click", selectWorkflowEta);
+        workflowEtaTime.addEventListener("input", selectWorkflowEta);
         workflowCancelMessage.addEventListener("click", cancelWorkflowMessage);
         workflowOpenMessages.addEventListener("click", openWorkflowMessagesComposer);
         workflowAdminFilters.addEventListener("click", event => {
@@ -14954,11 +14965,10 @@
 
       function getHomeSearchEntries() {
         const screens = [
-          { title: "Today’s Jobs", detail: "Company schedule, automatic job address, Apple Maps, and four-stage closeout", route: "#job-companion", aliases: "calendar job companion property closeout current inspection address route navigation maps" },
+          { title: "Today’s Workflow", detail: "Morning Ready, today’s jobs, client contact, Spectora handoff, and equipment accountability", route: "#job-companion", aliases: "calendar job companion property closeout current inspection address route navigation maps" },
           { title: "Equipment Age Finder", detail: "HVAC, furnace, boiler, and water-heater serial numbers", route: "#age-finder", aliases: "serial date manufacturer manufacture age trane ducane" },
           { title: "Damaged Item Notice", detail: "Property damage, photographs, action, and people informed", route: "#damage-report", aliases: "broken damage incident attic hatch" },
           { title: "Equipment Photo Record", detail: "Thermostat and furnace Before/After documentation", route: "#equipment-record", aliases: "before after restored cover photo" },
-          { title: "End-of-Job Tool Check", detail: "Account for and secure assigned field equipment", route: "#tool-check", aliases: "truck tools missing ladder closeout" },
           { title: "Company Tool Guides", detail: "Operating, safety, care, and readiness instructions", route: "#tool-guides", aliases: "manual equipment purchased tool how to use" },
           { title: "Field Procedures", detail: "Short step-by-step prompts from the MPI handbook", route: "#sop-guide", aliases: "sop procedure test steps well septic water hvac" },
           { title: "Training Center", detail: "MPI refreshers, field pathway, and assigned training", route: "#training-center", aliases: "course internachi progress onboarding lesson" },
