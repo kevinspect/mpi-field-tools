@@ -77,6 +77,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Unsent text and selections in the four principal field-support forms now survive a reload or signal interruption on the company phone and clear after successful submission; photographs are never stored. **Implemented in Build 56.**
 - Field Procedures now includes an offline cooling-temperature-difference and furnace-rise calculator with factual copy output and MPI’s non-diagnostic reporting boundaries. **Implemented in Build 57.**
 - Job Companion now includes an optional property-specific room tracker for confirming the four required overview photographs in every actual room; the list and progress stay with the active job on the company phone. **Implemented in Build 58.**
+- Company Tool Guides now includes a device-only exception-first readiness list for equipment that is overdue, due soon, or held out of service; dates remain controlled by manufacturer instructions and the MPI schedule. **Implemented in Build 59.**
 
 ## Low-cost improvements
 

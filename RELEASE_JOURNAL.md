@@ -880,3 +880,41 @@ Status: published August 26, 2026 as GitHub commit `4ed70ce6e4b18fd1e459b5ea786f
 
 - Restore GitHub `main` to `b0e6dc56f9def791eb51bd4f1c0bc4362e79cc86` to keep Builds 1–20 but remove the room photo coverage tracker.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 22 — Device-only equipment readiness tracker
+
+Status: published August 26, 2026 as GitHub commit `e2f4c33213bcb7ec4f884c12f85a049d71b8b02c`.
+
+#### Additions
+
+1. Added a collapsed **Equipment readiness** panel to Company Tool Guides.
+   - Records a tool and identifying number, its next required check or service date, current Ready/Hold state, and a concise check, restriction, or storage note.
+   - Supports updating and removing each item without creating duplicate records.
+   - Keeps the list on the company phone and works offline.
+
+2. Added clear exception-first status.
+   - Held and overdue equipment sorts to the top and is counted as needing attention.
+   - Checks due within 30 days receive a distinct due-soon label.
+   - Future-dated and non-scheduled ready equipment remains visually quiet.
+
+3. Preserved equipment-control boundaries.
+   - The inspector must enter dates from the current manufacturer instruction or MPI schedule; the app does not invent service or calibration intervals.
+   - The list does not replace a calibration certificate, ladder inspection, manufacturer instruction, asset record, or management hold.
+   - No normal readiness item is emailed; the existing Requests & Feedback form remains the route for an equipment problem.
+   - Updated the visible build, version file, and offline cache identifier to Build 59.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Status test correctly sorted and labeled an overdue meter, held camera, due-soon item, and ready item.
+- The initial status counted **2 need attention**; updating the overdue date changed it to **1 need attention**.
+- All items and their details persisted after reload.
+- Removing one item updated the rendered list from four to three.
+- 390-pixel phone layout: no horizontal overflow; Update and Remove controls remained 44 pixels high.
+- No email, network submission, location collection, or background monitoring was added.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `655949a11ea61a710ec8716e1bd0580fbf64548d` to keep Builds 1–21 but remove the equipment readiness tracker.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
