@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="59">
+  <meta name="app-build" content="60">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -470,6 +470,25 @@
       font-size: 10px;
     }
     .home-version-row button { min-height: 42px; padding: 9px 12px; color: var(--bright-blue); background: #f4f7fb; border: 1px solid #ceddea; border-radius: 9px; font-size: 10.5px; font-weight: 900; }
+
+    .home-search {
+      position: relative;
+      z-index: 2;
+      max-width: 720px;
+      margin: 24px auto 0;
+    }
+
+    .home-search label { display: block; margin: 0 0 7px; color: #fff; font-size: 12px; font-weight: 850; text-align: center; }
+    .home-search-wrap { position: relative; }
+    .home-search-input { width: 100%; min-height: 52px; padding: 12px 46px 12px 16px; color: var(--forest); background: #fff; border: 2px solid rgba(180,135,32,.55); border-radius: 14px; outline: 0; font: inherit; font-size: 15px; box-shadow: 0 12px 26px rgba(5,9,58,.18); }
+    .home-search-input:focus { border-color: var(--orange); box-shadow: 0 0 0 4px rgba(180,135,32,.18), 0 12px 26px rgba(5,9,58,.18); }
+    .home-search-clear { position: absolute; top: 50%; right: 7px; width: 38px; height: 38px; color: var(--bright-blue); background: #edf5fc; border: 0; border-radius: 10px; font-size: 21px; font-weight: 800; transform: translateY(-50%); cursor: pointer; }
+    .home-search-results { display: grid; gap: 1px; overflow: hidden; margin-top: 7px; background: #dfe4ef; border: 1px solid rgba(180,135,32,.38); border-radius: 14px; box-shadow: 0 18px 38px rgba(5,9,58,.26); }
+    .home-search-result { display: grid; gap: 3px; min-height: 58px; padding: 11px 14px; color: var(--forest); background: #fff; border: 0; text-align: left; cursor: pointer; }
+    .home-search-result:hover, .home-search-result:focus-visible { background: #f2f7fc; outline: 0; }
+    .home-search-result strong { font-size: 13px; }
+    .home-search-result span { color: var(--ink-2); font-size: 10.5px; line-height: 1.35; }
+    .home-search-empty { margin: 0; padding: 15px; color: var(--ink-2); background: #fff; font-size: 12px; text-align: center; }
 
     .app-update-notice {
       position: fixed;
@@ -3912,6 +3931,14 @@
         <a id="homeActiveJobMap" href="https://maps.apple.com/" target="_blank" rel="noopener">Directions</a>
       </div>
     </aside>
+    <div class="home-search" id="homeSearch">
+      <label for="homeSearchInput">Find a field tool or procedure</label>
+      <div class="home-search-wrap">
+        <input class="home-search-input" id="homeSearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Example: water pressure, moisture meter, damage">
+        <button class="home-search-clear" id="homeSearchClear" type="button" aria-label="Clear app search" hidden>×</button>
+      </div>
+      <div class="home-search-results" id="homeSearchResults" role="listbox" aria-label="Matching MPI tools and procedures" hidden></div>
+    </div>
     <p class="home-section-label">What do you need?</p>
     <nav class="home-tools" aria-label="MPI field tools">
       <section class="home-tool-group" aria-labelledby="home-group-work">
@@ -3995,7 +4022,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">59</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">60</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -6271,6 +6298,9 @@
       const homeActiveJobProperty = document.getElementById("homeActiveJobProperty");
       const homeActiveJobProgress = document.getElementById("homeActiveJobProgress");
       const homeActiveJobMap = document.getElementById("homeActiveJobMap");
+      const homeSearchInput = document.getElementById("homeSearchInput");
+      const homeSearchClear = document.getElementById("homeSearchClear");
+      const homeSearchResults = document.getElementById("homeSearchResults");
       const clearActiveJobBtn = document.getElementById("clearActiveJobBtn");
       const jobSteps = [...document.querySelectorAll("[data-job-step]")];
       const jobProgressFill = document.getElementById("jobProgressFill");
@@ -12209,6 +12239,103 @@
           .trim();
       }
 
+      function getHomeSearchEntries() {
+        const screens = [
+          { title: "Job Companion", detail: "Current inspection, closeout, room photos, and report release", route: "#job-companion", aliases: "job property closeout current inspection report review" },
+          { title: "Today’s Jobs", detail: "Company schedule and Apple Maps directions", route: "#today-jobs", aliases: "calendar address route navigation maps" },
+          { title: "Equipment Age Finder", detail: "HVAC, furnace, boiler, and water-heater serial numbers", route: "#age-finder", aliases: "serial date manufacturer manufacture age trane ducane" },
+          { title: "Damaged Item Notice", detail: "Property damage, photographs, action, and people informed", route: "#damage-report", aliases: "broken damage incident attic hatch" },
+          { title: "Equipment Photo Record", detail: "Thermostat and furnace Before/After documentation", route: "#equipment-record", aliases: "before after restored cover photo" },
+          { title: "End-of-Job Tool Check", detail: "Account for and secure assigned field equipment", route: "#tool-check", aliases: "truck tools missing ladder closeout" },
+          { title: "Company Tool Guides", detail: "Operating, safety, care, and readiness instructions", route: "#tool-guides", aliases: "manual equipment purchased tool how to use" },
+          { title: "Field Procedures", detail: "Short step-by-step prompts from the MPI handbook", route: "#sop-guide", aliases: "sop procedure test steps well septic water hvac" },
+          { title: "Training Center", detail: "MPI refreshers, field pathway, and assigned training", route: "#training-center", aliases: "course internachi progress onboarding lesson" },
+          { title: "Safety & Near-Miss Notice", detail: "Safety event, equipment failure, or close call", route: "#safety-notice", aliases: "hazard injury unsafe stop work" },
+          { title: "Team Messages", detail: "Company updates, acknowledgements, and field questions", route: "#team-messages", aliases: "ask management notification update help" },
+          { title: "Requests & Feedback", detail: "Tools, uniforms, supplies, training, and suggestions", route: "#requests-feedback", aliases: "order request uniform equipment feedback" }
+        ].map(entry => ({ ...entry, kind: "screen", searchText: normalizeSopText(`${entry.title} ${entry.detail} ${entry.aliases}`) }));
+        const procedures = QUICK_SOP_PROCEDURES.map(procedure => ({
+          title: procedure.title,
+          detail: `Field procedure · ${procedure.category}`,
+          route: "#sop-guide",
+          kind: "sop",
+          query: procedure.title,
+          searchText: normalizeSopText(`${procedure.title} ${procedure.category} ${procedure.aliases || ""} ${procedure.purpose || ""}`)
+        }));
+        const guides = TOOL_GUIDES.map(guide => ({
+          title: guide.title,
+          detail: `Tool guide · ${guide.model}`,
+          route: "#tool-guides",
+          kind: "tool",
+          query: guide.title,
+          searchText: toolGuideSearchText(guide)
+        }));
+        return [...screens, ...procedures, ...guides];
+      }
+
+      function renderHomeSearchResults() {
+        const query = normalizeSopText(homeSearchInput.value);
+        homeSearchClear.hidden = !query;
+        homeSearchResults.replaceChildren();
+        if (!query) {
+          homeSearchResults.hidden = true;
+          return;
+        }
+        const tokens = query.split(" ").filter(Boolean);
+        const matches = getHomeSearchEntries().map((entry, order) => {
+          if (!tokens.every(token => entry.searchText.includes(token))) return { entry, order, score: -1 };
+          const title = normalizeSopText(entry.title);
+          let score = entry.kind === "screen" ? 20 : 0;
+          if (title === query) score += 1000;
+          if (title.startsWith(query)) score += 500;
+          if (title.includes(query)) score += 250;
+          tokens.forEach(token => { if (title.includes(token)) score += 60; });
+          return { entry, order, score };
+        }).filter(item => item.score >= 0).sort((a, b) => b.score - a.score || a.order - b.order).slice(0, 8);
+
+        if (!matches.length) {
+          const empty = document.createElement("p");
+          empty.className = "home-search-empty";
+          empty.textContent = "No MPI tool or quick procedure matched that search.";
+          homeSearchResults.append(empty);
+        } else {
+          matches.forEach(({ entry }) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "home-search-result";
+            button.dataset.homeSearchRoute = entry.route;
+            button.dataset.homeSearchKind = entry.kind;
+            button.dataset.homeSearchQuery = entry.query || "";
+            button.setAttribute("role", "option");
+            const title = document.createElement("strong");
+            title.textContent = entry.title;
+            const detail = document.createElement("span");
+            detail.textContent = entry.detail;
+            button.append(title, detail);
+            homeSearchResults.append(button);
+          });
+        }
+        homeSearchResults.hidden = false;
+      }
+
+      function openHomeSearchResult(event) {
+        const button = event.target.closest("[data-home-search-route]");
+        if (!button) return;
+        const query = button.dataset.homeSearchQuery;
+        if (button.dataset.homeSearchKind === "sop") {
+          sopChapter.value = "";
+          sopSearch.value = query;
+          renderSopResults({ selectFirst: true });
+        } else if (button.dataset.homeSearchKind === "tool") {
+          toolGuideCategory.value = "";
+          toolGuideSearch.value = query;
+          renderToolGuideResults({ selectFirst: true });
+        }
+        homeSearchInput.value = "";
+        renderHomeSearchResults();
+        window.location.hash = button.dataset.homeSearchRoute;
+      }
+
       function toolGuideSearchText(guide) {
         return normalizeSopText([
           guide.category,
@@ -12948,6 +13075,26 @@
         const value = commentOutput.value.trim();
         if (value) copyText(value, "MPI comment copied");
       });
+
+      homeSearchInput.addEventListener("input", renderHomeSearchResults);
+      homeSearchInput.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          homeSearchInput.value = "";
+          renderHomeSearchResults();
+        } else if (event.key === "Enter") {
+          const first = homeSearchResults.querySelector("[data-home-search-route]");
+          if (first) {
+            event.preventDefault();
+            first.click();
+          }
+        }
+      });
+      homeSearchClear.addEventListener("click", () => {
+        homeSearchInput.value = "";
+        renderHomeSearchResults();
+        homeSearchInput.focus();
+      });
+      homeSearchResults.addEventListener("click", openHomeSearchResult);
 
       commentForm.addEventListener("submit", event => {
         event.preventDefault();
