@@ -9,8 +9,17 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
   <link rel="manifest" href="./site.webmanifest">
-  <meta name="description" content="Michigan Property Inspections' standalone field tool for equipment ages, MPI report comments, and searchable inspector SOP procedures.">
-  <title>MPI Field Tools — Equipment Age, Comments & SOP</title>
+  <meta name="description" content="Michigan Property Inspections field app for equipment ages, photo records, damaged-item notices, SOP prompts, training, team messages, and inspector requests.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="MPI Field Tools">
+  <meta property="og:description" content="Field tools. Company standards. Team support. One MPI app.">
+  <meta property="og:url" content="https://kevinspect.github.io/mpi-field-tools/">
+  <meta property="og:image" content="https://kevinspect.github.io/mpi-field-tools/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="MPI Field Tools">
+  <meta name="twitter:description" content="Field tools. Company standards. Team support. One MPI app.">
+  <meta name="twitter:image" content="https://kevinspect.github.io/mpi-field-tools/og.png">
+  <title>MPI Field Tools — Inspector App</title>
   <style>
     :root {
       --ink: #11186A;
@@ -156,6 +165,127 @@
     }
 
     .sop-jump:hover, .sop-jump:focus-visible { border-color: var(--orange); outline: none; }
+
+    .app-home {
+      position: relative;
+      overflow: hidden;
+      padding: 58px max(20px, calc((100vw - 1180px) / 2)) 68px;
+      color: #fff;
+      background:
+        linear-gradient(145deg, rgba(7, 10, 48, .96), rgba(17, 24, 106, .94)),
+        radial-gradient(circle at 85% 10%, rgba(180, 135, 32, .28), transparent 34%);
+    }
+
+    .app-home::after {
+      content: "";
+      position: absolute;
+      right: -120px;
+      bottom: -210px;
+      width: 460px;
+      height: 460px;
+      border: 78px solid rgba(180, 135, 32, .12);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .home-intro, .home-tools { position: relative; z-index: 1; }
+
+    .home-intro {
+      display: grid;
+      grid-template-columns: 96px minmax(0, 1fr);
+      align-items: center;
+      gap: 24px;
+      max-width: 900px;
+    }
+
+    .home-logo {
+      width: 96px;
+      aspect-ratio: 1;
+      background: #000 var(--mpi-logo) center / contain no-repeat;
+      border: 1px solid rgba(180, 135, 32, .48);
+      border-radius: 50%;
+      box-shadow: 0 18px 44px rgba(0,0,0,.28);
+    }
+
+    .home-kicker {
+      margin: 0 0 8px;
+      color: #d8b85e;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .home-title {
+      margin: 0;
+      font-size: clamp(36px, 6vw, 64px);
+      line-height: 1;
+      letter-spacing: -.05em;
+    }
+
+    .home-tagline {
+      max-width: 690px;
+      margin: 16px 0 0;
+      color: rgba(255,255,255,.72);
+      font-size: clamp(15px, 2vw, 18px);
+      line-height: 1.55;
+    }
+
+    .home-section-label {
+      margin: 44px 0 14px;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 850;
+    }
+
+    .home-tools {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      max-width: 900px;
+    }
+
+    .home-tool-card {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 13px;
+      min-height: 76px;
+      padding: 13px 14px;
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 14px;
+      box-shadow: 0 12px 26px rgba(0,0,0,.16);
+      text-decoration: none;
+      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+    }
+
+    .home-tool-card:hover, .home-tool-card:focus-visible {
+      border-color: var(--orange);
+      box-shadow: 0 16px 32px rgba(0,0,0,.22);
+      outline: none;
+      transform: translateY(-2px);
+    }
+
+    .home-tool-icon {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      color: var(--ink);
+      background: #eaf2f8;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .03em;
+    }
+
+    .home-tool-copy strong { display: block; font-size: 14px; }
+    .home-tool-copy small { display: block; margin-top: 4px; color: var(--ink-2); font-size: 11px; line-height: 1.35; }
+    .home-tool-arrow { color: var(--orange); font-size: 21px; font-weight: 900; }
+    .home-tool-card.phase-two { opacity: .76; }
+    .home-tool-card.phase-two .home-tool-arrow { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; }
 
     .hero {
       position: relative;
@@ -1366,6 +1496,250 @@
 
     .damage-success-box strong { display: block; margin-bottom: 3px; color: #fff; }
 
+    .field-app-section {
+      padding: 78px 0 8px;
+      scroll-margin-top: 18px;
+    }
+
+    .field-section-heading {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 500px);
+      align-items: end;
+      gap: 30px;
+      margin-bottom: 22px;
+    }
+
+    .field-section-heading .eyebrow { margin-bottom: 11px; color: var(--orange-dark); }
+
+    .field-section-heading h2 {
+      margin: 0;
+      color: var(--forest);
+      font-size: clamp(31px, 4.5vw, 50px);
+      line-height: 1.02;
+      letter-spacing: -.045em;
+    }
+
+    .field-section-heading > p {
+      margin: 0;
+      color: var(--ink-2);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(320px, .88fr);
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .form-success-box {
+      position: relative;
+      z-index: 2;
+      margin-top: 24px;
+      padding: 15px;
+      color: #dff8ee;
+      background: rgba(74,176,138,.18);
+      border: 1px solid rgba(126,218,184,.3);
+      border-radius: 11px;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .form-success-box strong { display: block; margin-bottom: 3px; color: #fff; }
+
+    .training-overview {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .training-intro-card, .training-progress-card { padding: 24px; }
+    .training-intro-card h3, .training-progress-card h3 { margin: 0; color: var(--forest); font-size: 21px; }
+    .training-intro-card p, .training-progress-card p { margin: 9px 0 0; color: var(--ink-2); font-size: 13px; line-height: 1.6; }
+
+    .training-progress-count {
+      display: block;
+      margin-top: 17px;
+      color: var(--forest);
+      font-size: 28px;
+      font-weight: 950;
+      letter-spacing: -.04em;
+    }
+
+    .training-progress-track {
+      overflow: hidden;
+      height: 10px;
+      margin-top: 10px;
+      background: #e2e7ee;
+      border-radius: 999px;
+    }
+
+    .training-progress-fill {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--bright-blue), var(--orange));
+      border-radius: inherit;
+      transition: width .25s ease;
+    }
+
+    .training-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .training-module {
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid rgba(17,24,106,.12);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(17,24,106,.09);
+    }
+
+    .training-module summary {
+      position: relative;
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 13px;
+      min-height: 92px;
+      padding: 16px 18px;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .training-module summary::-webkit-details-marker { display: none; }
+
+    .training-module summary::after {
+      content: "+";
+      color: var(--orange-dark);
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .training-module[open] summary::after { content: "−"; }
+
+    .training-number {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      color: var(--bright-blue);
+      background: #eaf2f8;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .training-summary-copy strong { display: block; color: var(--forest); font-size: 14px; }
+    .training-summary-copy small { display: block; margin-top: 4px; color: var(--ink-2); font-size: 11px; line-height: 1.4; }
+
+    .training-complete-mark {
+      display: none;
+      padding: 5px 7px;
+      color: #276a55;
+      background: #e1f2eb;
+      border-radius: 7px;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .training-module.is-complete .training-complete-mark { display: inline-flex; }
+    .training-module.is-complete .training-number { color: #fff; background: #2f8067; }
+
+    .training-module-body {
+      padding: 0 20px 22px;
+      border-top: 1px solid #e6e7ef;
+    }
+
+    .training-module-body h4 { margin: 19px 0 8px; color: var(--forest); font-size: 13px; }
+    .training-module-body p, .training-module-body li { color: var(--ink-2); font-size: 12px; line-height: 1.58; }
+    .training-module-body ol, .training-module-body ul { margin: 8px 0 0; padding-left: 20px; }
+    .training-module-body li + li { margin-top: 6px; }
+
+    .knowledge-check {
+      margin-top: 17px;
+      padding: 14px;
+      background: #f3f6f9;
+      border: 1px solid #dce4eb;
+      border-radius: 11px;
+    }
+
+    .knowledge-check legend { color: var(--forest); font-size: 12px; font-weight: 850; }
+    .knowledge-option { display: flex; align-items: flex-start; gap: 8px; margin-top: 9px; color: var(--ink-2); font-size: 11.5px; line-height: 1.4; }
+    .knowledge-option input { flex: none; width: 17px; height: 17px; margin: 0; accent-color: var(--bright-blue); }
+
+    .module-complete-btn {
+      width: 100%;
+      min-height: 46px;
+      margin-top: 15px;
+      color: #fff;
+      background: var(--forest);
+      border: 0;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .module-complete-btn:hover { background: var(--forest-2); }
+    .training-module.is-complete .module-complete-btn { color: #276a55; background: #e1f2eb; }
+
+    .message-board {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+      gap: 22px;
+    }
+
+    .announcement-panel, .support-panel { padding: clamp(24px, 4vw, 36px); }
+    .announcement-list { display: grid; gap: 11px; margin-top: 20px; }
+
+    .announcement-card {
+      padding: 15px 16px;
+      background: #f4f6f9;
+      border-left: 4px solid var(--bright-blue);
+      border-radius: 0 11px 11px 0;
+    }
+
+    .announcement-card.required { background: #fbf7ec; border-left-color: var(--orange); }
+    .announcement-card span { color: var(--orange-dark); font-size: 9px; font-weight: 950; letter-spacing: .1em; text-transform: uppercase; }
+    .announcement-card h4 { margin: 5px 0 0; color: var(--forest); font-size: 14px; }
+    .announcement-card p { margin: 7px 0 0; color: var(--ink-2); font-size: 11.5px; line-height: 1.5; }
+
+    .free-tool-note {
+      margin: 14px 0 0;
+      padding: 12px 14px;
+      color: var(--ink-2);
+      background: #eef5fa;
+      border: 1px solid #d1e0eb;
+      border-radius: 10px;
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    .request-type-help {
+      margin: 8px 0 0;
+      color: var(--ink-2);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .back-to-tools {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 18px;
+      color: var(--bright-blue);
+      font-size: 11px;
+      font-weight: 850;
+      text-decoration: none;
+    }
+
+    .back-to-tools:hover { color: var(--orange-dark); }
+
     .sop-guide {
       padding: 78px 0 8px;
       scroll-margin-top: 18px;
@@ -1901,6 +2275,10 @@
       .comment-grid { grid-template-columns: 1fr; }
       .damage-heading { grid-template-columns: 1fr; gap: 12px; }
       .damage-grid { grid-template-columns: 1fr; }
+      .field-section-heading { grid-template-columns: 1fr; gap: 12px; }
+      .workflow-grid { grid-template-columns: 1fr; }
+      .training-overview { grid-template-columns: 1fr; }
+      .message-board { grid-template-columns: 1fr; }
       .sop-heading { grid-template-columns: 1fr; gap: 10px; }
       .sop-shell { grid-template-columns: 1fr; }
       .sop-browser { position: static; }
@@ -1917,6 +2295,12 @@
       .offline-badge { font-size: 0; }
       .topbar-actions { gap: 10px; }
       .sop-jump { font-size: 10px; }
+      .topbar-actions .sop-jump:not(:first-child) { display: none; }
+      .app-home { padding-top: 40px; padding-bottom: 52px; }
+      .home-intro { grid-template-columns: 70px minmax(0, 1fr); gap: 16px; }
+      .home-logo { width: 70px; }
+      .home-tools { grid-template-columns: 1fr; }
+      .home-section-label { margin-top: 34px; }
       .hero { padding-top: 38px; padding-bottom: 108px; }
       .hero-inner { grid-template-columns: 1fr; }
       .hero-logo-panel { display: none; }
@@ -1941,6 +2325,11 @@
       .damage-form, .damage-info-panel { padding: 22px 18px 24px; }
       .damage-field-row, .damage-photo-grid { grid-template-columns: 1fr; }
       .damage-photo-card { min-height: 190px; }
+      .field-app-section { padding-top: 54px; }
+      .training-grid { grid-template-columns: 1fr; }
+      .training-module summary { grid-template-columns: 38px minmax(0, 1fr) auto; padding-inline: 14px; }
+      .training-number { width: 38px; height: 38px; }
+      .announcement-panel, .support-panel { padding: 22px 18px 24px; }
       .sop-guide { padding-top: 54px; }
       .sop-version-bar { align-items: flex-start; flex-direction: column; gap: 7px; }
       .sop-controls { padding: 16px; }
@@ -1962,16 +2351,71 @@
   <header class="topbar">
     <div class="brand">
       <span class="brand-mark" aria-hidden="true"></span>
-      <span class="brand-name"><strong>Michigan Property</strong><small>Inspections · FieldDate</small></span>
+      <span class="brand-name"><strong>Michigan Property</strong><small>Inspections · Field Tools</small></span>
     </div>
     <div class="topbar-actions">
+      <a class="sop-jump" href="#home">All tools</a>
       <a class="sop-jump" href="#damage-report">Damage form</a>
       <a class="sop-jump" href="#sop-guide">SOP guide</a>
       <div class="offline-badge" id="offlineStatus">Works offline after first visit</div>
     </div>
   </header>
 
-  <section class="hero">
+  <section class="app-home" id="home" aria-labelledby="home-title">
+    <div class="home-intro">
+      <div class="home-logo" role="img" aria-label="Michigan Property Inspections logo"></div>
+      <div>
+        <p class="home-kicker">Inspector field app</p>
+        <h1 class="home-title" id="home-title">MPI Field Tools</h1>
+        <p class="home-tagline">Field tools. Company standards. Team support. One MPI app.</p>
+      </div>
+    </div>
+    <p class="home-section-label">Choose a field tool</p>
+    <nav class="home-tools" aria-label="MPI field tools">
+      <a class="home-tool-card" href="#age-finder">
+        <span class="home-tool-icon">AGE</span>
+        <span class="home-tool-copy"><strong>Equipment Age Finder</strong><small>Decode supported HVAC, furnace and water-heater serial numbers.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="home-tool-card" href="#damage-report">
+        <span class="home-tool-icon">DMG</span>
+        <span class="home-tool-copy"><strong>Damaged Item Notice</strong><small>Record the item, photos, action taken and people informed.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="home-tool-card" href="#equipment-record">
+        <span class="home-tool-icon">B/A</span>
+        <span class="home-tool-copy"><strong>Equipment Photo Record</strong><small>Save labeled Before and After proof for thermostats, furnaces and access covers.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="home-tool-card" href="#sop-guide">
+        <span class="home-tool-icon">SOP</span>
+        <span class="home-tool-copy"><strong>Field Procedures</strong><small>Open short, step-by-step prompts from the MPI handbook.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="home-tool-card" href="#training-center">
+        <span class="home-tool-icon">TRN</span>
+        <span class="home-tool-copy"><strong>Training Center</strong><small>Complete short MPI lessons and save progress on this device.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="home-tool-card" href="#team-messages">
+        <span class="home-tool-icon">MSG</span>
+        <span class="home-tool-copy"><strong>Team Messages</strong><small>Read company updates and email a field question to management.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="home-tool-card" href="#requests-feedback">
+        <span class="home-tool-icon">REQ</span>
+        <span class="home-tool-copy"><strong>Requests &amp; Feedback</strong><small>Request tools, uniforms, supplies or training and share feedback.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
+      <div class="home-tool-card phase-two" role="note" aria-label="AI Comment Builder is planned for phase two">
+        <span class="home-tool-icon">AI</span>
+        <span class="home-tool-copy"><strong>AI Comment Builder</strong><small>Online MPI commentary will be added after the free tools are complete.</small></span>
+        <span class="home-tool-arrow">Phase 2</span>
+      </div>
+    </nav>
+  </section>
+
+  <section class="hero" id="age-finder">
     <div class="hero-inner">
       <div class="hero-message">
         <p class="eyebrow">Michigan Property Inspections</p>
@@ -2058,9 +2502,9 @@
       </aside>
     </section>
 
-    <p class="offline-setup-note"><strong>Offline setup:</strong> Open this site once while connected and wait for “Offline access is now ready.” For easier field access, use the phone browser’s Add to Home Screen option. After setup, the decoder, comment builder, and SOP guide can reopen without cell service.</p>
+    <p class="offline-setup-note"><strong>Offline setup:</strong> Open this site once while connected and wait for “Offline access is now ready.” Then add it to the phone’s Home Screen. The age finder, SOP prompts, training, and published company messages will reopen without cell service. Email forms wait until the phone is online.</p>
 
-    <section class="comment-builder" id="comment-builder" aria-labelledby="comment-builder-title">
+    <section class="comment-builder" id="comment-builder" aria-labelledby="comment-builder-title" hidden>
       <div class="comment-heading">
         <div>
           <p class="eyebrow">MPI report-writing tool</p>
@@ -2145,6 +2589,7 @@
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?damage-sent=1#damage-report">
           <input type="hidden" name="_url" value="https://kevinspect.github.io/mpi-field-tools/#damage-report">
           <input type="hidden" name="Submitted at" id="damageSubmittedAt" value="">
+          <input id="damageAttachment" name="attachment" type="file" accept="image/jpeg" hidden>
           <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
 
           <div class="panel-heading">
@@ -2221,19 +2666,18 @@
             <label>Photo evidence *</label>
             <div class="damage-photo-grid">
               <div class="damage-photo-card" id="damagePhotoCard1">
-                <input id="damagePhoto1" name="attachment" type="file" accept="image/*" capture="environment" required aria-label="Take or choose Photo 1 before">
+                <input id="damagePhoto1" type="file" accept="image/*" capture="environment" required aria-label="Take or choose Photo 1 before">
                 <img id="damagePhotoPreview1" alt="Photo 1 before preview" hidden>
                 <span class="damage-photo-prompt">Photo 1 — Before</span>
               </div>
               <div class="damage-photo-card" id="damagePhotoCard2">
-                <input id="damagePhoto2" name="attachment_2" type="file" accept="image/*" capture="environment" required aria-label="Take or choose required Photo 2 after">
+                <input id="damagePhoto2" type="file" accept="image/*" capture="environment" required aria-label="Take or choose required Photo 2 after">
                 <img id="damagePhotoPreview2" alt="Photo 2 after preview" hidden>
                 <span class="damage-photo-prompt">Photo 2 — After</span>
               </div>
             </div>
-            <input type="hidden" name="Photo 1 label" value="Before — see the Photo-1-Before attachment">
-            <input type="hidden" name="Photo 2 label" value="After — see the Photo-2-After attachment">
-            <p class="damage-file-note">Both Before and After photos are required. They will be labeled in the email. The combined attachment size must be under 10MB.</p>
+            <input type="hidden" name="Photo record" value="One labeled Before/After photo sheet is attached">
+            <p class="damage-file-note">Both photos are required. The app combines them into one attachment labeled BEFORE and AFTER so both arrive together.</p>
           </div>
 
           <button class="decode-btn" id="damageSubmitBtn" type="submit">Email damaged item notice</button>
@@ -2257,6 +2701,191 @@
           </div>
         </aside>
       </div>
+    </section>
+
+    <section class="field-app-section" id="equipment-record" aria-labelledby="equipment-record-title">
+      <div class="field-section-heading">
+        <div>
+          <p class="eyebrow">MPI property-protection record</p>
+          <h2 id="equipment-record-title">Document Before and After.</h2>
+        </div>
+        <p>Record how a thermostat, furnace, access cover, appliance, or other component was found and how it was left. The two photos are combined into one clearly labeled email attachment.</p>
+      </div>
+
+      <div class="workflow-grid">
+        <form class="panel damage-form" id="equipmentForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" enctype="multipart/form-data" novalidate>
+          <input type="hidden" name="_subject" id="equipmentEmailSubject" value="MPI Equipment Condition Record">
+          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com,adrienne@michiganpropertyinspections.com">
+          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_captcha" value="false">
+          <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?equipment-sent=1#equipment-record">
+          <input type="hidden" name="_url" value="https://kevinspect.github.io/mpi-field-tools/#equipment-record">
+          <input type="hidden" name="Submitted at" id="equipmentSubmittedAt" value="">
+          <input id="equipmentAttachment" name="attachment" type="file" accept="image/jpeg" hidden>
+          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
+
+          <div class="panel-heading">
+            <div>
+              <h2>Equipment condition record</h2>
+              <p>Required fields are marked with an asterisk.</p>
+            </div>
+            <span class="step-count">Online only</span>
+          </div>
+
+          <div class="damage-field-row">
+            <div class="field">
+              <label for="equipmentInspector">Inspector name *</label>
+              <input class="damage-input" id="equipmentInspector" name="Inspector" type="text" autocomplete="name" maxlength="80" required>
+            </div>
+            <div class="field">
+              <label for="equipmentProperty">Property address *</label>
+              <input class="damage-input" id="equipmentProperty" name="Property address" type="text" autocomplete="street-address" maxlength="180" required>
+            </div>
+          </div>
+
+          <div class="damage-field-row">
+            <div class="field">
+              <label for="equipmentType">Component recorded *</label>
+              <div class="select-wrap">
+                <select class="damage-input" id="equipmentType" name="Component recorded" required>
+                  <option value="">Choose the component…</option>
+                  <optgroup label="Heating, cooling and ventilation">
+                    <option>Thermostat or HVAC control</option>
+                    <option>Furnace</option>
+                    <option>Boiler or hydronic heating equipment</option>
+                    <option>Air handler or fan coil</option>
+                    <option>Air conditioner</option>
+                    <option>Heat pump</option>
+                    <option>Humidifier or dehumidifier</option>
+                    <option>ERV, HRV, or ventilation equipment</option>
+                  </optgroup>
+                  <optgroup label="Electrical and energy equipment">
+                    <option>Electrical panel or dead-front cover</option>
+                    <option>Electrical service disconnect or equipment cover</option>
+                    <option>GFCI or AFCI device</option>
+                    <option>Generator or transfer equipment</option>
+                    <option>EV charging equipment</option>
+                  </optgroup>
+                  <optgroup label="Plumbing and water equipment">
+                    <option>Water heater</option>
+                    <option>Plumbing fixture, faucet, or shower control</option>
+                    <option>Sump pump or sewage ejector</option>
+                    <option>Private well equipment</option>
+                    <option>Water treatment equipment</option>
+                  </optgroup>
+                  <optgroup label="Appliances and fuel-fired equipment">
+                    <option>Kitchen appliance</option>
+                    <option>Laundry appliance</option>
+                    <option>Other installed appliance</option>
+                    <option>Fireplace, stove, or fuel-fired equipment</option>
+                  </optgroup>
+                  <optgroup label="Access and building components">
+                    <option>Attic access hatch, stairs, or ladder</option>
+                    <option>Crawlspace access hatch or door</option>
+                    <option>Equipment access panel or service door</option>
+                    <option>Garage door or operator</option>
+                    <option>Interior or exterior door</option>
+                    <option>Window, lock, or latch</option>
+                    <option>Light, switch, or ceiling fan</option>
+                  </optgroup>
+                  <option>Other component or control</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="equipmentLocation">Component location *</label>
+              <input class="damage-input" id="equipmentLocation" name="Component location" type="text" maxlength="120" placeholder="Example: Basement mechanical room" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="equipmentReason">Reason for the record *</label>
+            <div class="select-wrap">
+              <select class="damage-input" id="equipmentReason" name="Reason for record" required>
+                <option value="">Choose the reason…</option>
+                <optgroup label="Before and after documentation">
+                  <option>General condition before and after inspection</option>
+                  <option>Pre-existing condition documented before operation or access</option>
+                  <option>Component operated and returned to the condition found</option>
+                  <option>Final departure condition documented</option>
+                </optgroup>
+                <optgroup label="Controls and equipment restored">
+                  <option>Thermostat mode and setting restored</option>
+                  <option>HVAC or equipment access panel restored</option>
+                  <option>Electrical panel or dead-front cover restored</option>
+                  <option>Disconnect, breaker, GFCI, or control restored</option>
+                  <option>Fireplace control or damper restored</option>
+                </optgroup>
+                <optgroup label="Access and building components restored">
+                  <option>Attic access hatch, stairs, or ladder restored</option>
+                  <option>Crawlspace access hatch or door restored</option>
+                  <option>Door, window, lock, or latch restored</option>
+                  <option>Garage door or operator restored</option>
+                  <option>Light, switch, or ceiling fan restored</option>
+                </optgroup>
+                <optgroup label="Appliances and plumbing restored">
+                  <option>Appliance cycle completed and controls turned off</option>
+                  <option>Refrigerator or freezer doors closed and settings unchanged</option>
+                  <option>Faucet, shower, or fixture turned off and area rechecked</option>
+                  <option>Sump pump, ejector, or well equipment test completed</option>
+                </optgroup>
+                <option>Component could not be fully restored — condition documented</option>
+                <option>Other property-protection record</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="damage-field-row">
+            <div class="field">
+              <label for="equipmentBeforeNote">Before condition *</label>
+              <textarea id="equipmentBeforeNote" name="Before condition" maxlength="700" placeholder="Describe how the component was found before operation or access." required></textarea>
+            </div>
+            <div class="field">
+              <label for="equipmentAfterNote">After condition / action taken *</label>
+              <textarea id="equipmentAfterNote" name="After condition and action taken" maxlength="700" placeholder="Describe how the component was restored and left." required></textarea>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Photo record *</label>
+            <div class="damage-photo-grid">
+              <div class="damage-photo-card" id="equipmentPhotoCard1">
+                <input id="equipmentPhoto1" type="file" accept="image/*" capture="environment" required aria-label="Take or choose Before photo">
+                <img id="equipmentPhotoPreview1" alt="Equipment Before photo preview" hidden>
+                <span class="damage-photo-prompt">Photo 1 — Before</span>
+              </div>
+              <div class="damage-photo-card" id="equipmentPhotoCard2">
+                <input id="equipmentPhoto2" type="file" accept="image/*" capture="environment" required aria-label="Take or choose After photo">
+                <img id="equipmentPhotoPreview2" alt="Equipment After photo preview" hidden>
+                <span class="damage-photo-prompt">Photo 2 — After</span>
+              </div>
+            </div>
+            <input type="hidden" name="Photo record" value="One labeled Before/After photo sheet is attached">
+            <p class="damage-file-note">The app creates one attachment labeled BEFORE and AFTER so both photos arrive together.</p>
+          </div>
+
+          <button class="decode-btn" id="equipmentSubmitBtn" type="submit">Email equipment record</button>
+          <p class="damage-submit-status" id="equipmentSubmitStatus" role="status" aria-live="polite"></p>
+          <p class="privacy-note">This online form emails the record to Kevin and copies the MPI administrative inboxes. The website does not keep a photo database.</p>
+        </form>
+
+        <aside class="panel damage-info-panel" aria-labelledby="equipment-info-title">
+          <span class="damage-online-badge">Online submission</span>
+          <h3 id="equipment-info-title">Proof of how the component was left.</h3>
+          <p>Use this record whenever an inspection requires changing a control, opening a cover, operating equipment, or handling an access component that should be restored before departure.</p>
+          <ul class="damage-checklist">
+            <li>Take the Before photo before changing the thermostat, control, cover, or access component.</li>
+            <li>Return the component to its original safe condition unless a safety concern requires otherwise.</li>
+            <li>Take the After photo from an angle that clearly shows the restored setting or condition.</li>
+            <li>If restoration is not possible, stop, protect the area, notify a responsible party, and use the damaged-item notice.</li>
+          </ul>
+          <div class="form-success-box" id="equipmentSuccessBox" hidden>
+            <strong>Equipment record submitted.</strong>
+            The field record and labeled Before/After photo sheet were emailed to management.
+          </div>
+        </aside>
+      </div>
+      <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
     </section>
 
     <section class="sop-guide" id="sop-guide" aria-labelledby="sop-guide-title">
@@ -2315,6 +2944,314 @@
           </div>
         </article>
       </div>
+      <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
+    </section>
+
+    <section class="field-app-section" id="training-center" aria-labelledby="training-center-title">
+      <div class="field-section-heading">
+        <div>
+          <p class="eyebrow">MPI training center</p>
+          <h2 id="training-center-title">Learn it. Practice it. Use it.</h2>
+        </div>
+        <p>Short company lessons turn the handbook into repeatable field habits. Progress is stored only on the inspector’s device and remains available offline.</p>
+      </div>
+
+      <div class="training-overview">
+        <article class="panel training-intro-card">
+          <h3>Field-focused learning</h3>
+          <p>Open a lesson, review the company standard, answer the knowledge check, and mark the module complete. These refreshers support training; they do not replace supervised competency sign-off.</p>
+        </article>
+        <aside class="panel training-progress-card" aria-live="polite">
+          <h3>Your progress</h3>
+          <span class="training-progress-count" id="trainingProgressCount">0 of 5 complete</span>
+          <div class="training-progress-track" aria-hidden="true"><div class="training-progress-fill" id="trainingProgressFill"></div></div>
+          <p id="trainingProgressNote">Progress stays on this phone.</p>
+        </aside>
+      </div>
+
+      <div class="training-grid" id="trainingGrid">
+        <details class="training-module" data-training-module="photo-records">
+          <summary>
+            <span class="training-number">01</span>
+            <span class="training-summary-copy"><strong>Before/After photo records</strong><small>Property protection · 6-minute refresher</small></span>
+            <span class="training-complete-mark">Complete</span>
+          </summary>
+          <div class="training-module-body">
+            <h4>Company standard</h4>
+            <ol>
+              <li>Take the Before photo before changing a thermostat, operating control, removing a cover, or opening an access component.</li>
+              <li>Complete only authorized inspection procedures and stop when continued work could cause damage or create an unsafe condition.</li>
+              <li>Restore the component to its original safe condition unless a safety concern requires a different action.</li>
+              <li>Take the After photo from an angle that clearly shows the restored setting, cover, control, or access component.</li>
+              <li>Use the damaged-item notice when the item cannot be safely restored or damage is found.</li>
+            </ol>
+            <fieldset class="knowledge-check">
+              <legend>When should the Before photo be taken?</legend>
+              <label class="knowledge-option"><input type="radio" name="quiz-photo-records" value="correct">Before changing, operating, opening, or removing the component.</label>
+              <label class="knowledge-option"><input type="radio" name="quiz-photo-records" value="incorrect">Only after the entire inspection is finished.</label>
+            </fieldset>
+            <button class="module-complete-btn" type="button" data-complete-training="photo-records">Check answer and complete</button>
+          </div>
+        </details>
+
+        <details class="training-module" data-training-module="cooling-differential">
+          <summary>
+            <span class="training-number">02</span>
+            <span class="training-summary-copy"><strong>Cooling temperature differential</strong><small>HVAC field screening · 8-minute refresher</small></span>
+            <span class="training-complete-mark">Complete</span>
+          </summary>
+          <div class="training-module-body">
+            <h4>Key sequence</h4>
+            <ol>
+              <li>Confirm outdoor conditions and manufacturer limits allow operation.</li>
+              <li>Photograph the thermostat before changing it and inspect the visible equipment for unsafe conditions.</li>
+              <li>Operate with normal controls and allow at least 15 minutes of run time when practical.</li>
+              <li>Use the same verified thermometer at a representative central return and nearby supply.</li>
+              <li>Record both readings, calculate return minus supply, report the actual result, and restore the thermostat.</li>
+            </ol>
+            <p><strong>Field screen:</strong> Approximately 14–22°F is the usual range under typical conditions. Do not diagnose refrigerant charge or system capacity from the differential alone.</p>
+            <fieldset class="knowledge-check">
+              <legend>What should an out-of-range result produce?</legend>
+              <label class="knowledge-option"><input type="radio" name="quiz-cooling-differential" value="incorrect">A definite refrigerant diagnosis.</label>
+              <label class="knowledge-option"><input type="radio" name="quiz-cooling-differential" value="correct">The actual readings, test conditions, and an HVAC evaluation recommendation.</label>
+            </fieldset>
+            <button class="module-complete-btn" type="button" data-complete-training="cooling-differential">Check answer and complete</button>
+          </div>
+        </details>
+
+        <details class="training-module" data-training-module="report-writing">
+          <summary>
+            <span class="training-number">03</span>
+            <span class="training-summary-copy"><strong>MPI report-writing standard</strong><small>Observation · Implication · Recommendation</small></span>
+            <span class="training-complete-mark">Complete</span>
+          </summary>
+          <div class="training-module-body">
+            <h4>Build each defect in three parts</h4>
+            <ol>
+              <li><strong>Observation:</strong> State the component, exact visible condition, location, extent, and test result supported by the inspection evidence.</li>
+              <li><strong>Implication:</strong> Explain the likely consequence of that specific condition without claiming a concealed cause or unsupported diagnosis.</li>
+              <li><strong>Recommendation:</strong> State who should act, what they should evaluate or correct, and when action is appropriate.</li>
+              <li>Use a condition-specific title such as “Toilet – Runs Continuously,” not a generic title such as “Damaged.”</li>
+              <li>Never write “as described in field notes,” and never add facts that were not observed.</li>
+            </ol>
+            <fieldset class="knowledge-check">
+              <legend>Which title follows the MPI standard?</legend>
+              <label class="knowledge-option"><input type="radio" name="quiz-report-writing" value="incorrect">Bathroom – Damaged</label>
+              <label class="knowledge-option"><input type="radio" name="quiz-report-writing" value="correct">Toilet – Runs Continuously</label>
+            </fieldset>
+            <button class="module-complete-btn" type="button" data-complete-training="report-writing">Check answer and complete</button>
+          </div>
+        </details>
+
+        <details class="training-module" data-training-module="safe-stop">
+          <summary>
+            <span class="training-number">04</span>
+            <span class="training-summary-copy"><strong>Safe-stop and authorization</strong><small>Safety boundary · 5-minute refresher</small></span>
+            <span class="training-complete-mark">Complete</span>
+          </summary>
+          <div class="training-module-body">
+            <h4>Stop the affected procedure when:</h4>
+            <ul>
+              <li>Continued work could injure a person, damage property, or worsen a hazardous condition.</li>
+              <li>The task is outside the inspector’s documented training or authorization.</li>
+              <li>Equipment is shut down, tagged, disconnected, winterized, visibly damaged, or does not respond to normal controls.</li>
+              <li>Access, weather, animals, contamination, electrical conditions, or structural instability create unreasonable risk.</li>
+            </ul>
+            <p>Move to a safe position, photograph from a safe distance when practical, notify the responsible party when warranted, and write a specific defect or limitation.</p>
+            <fieldset class="knowledge-check">
+              <legend>What overrides the safe-stop rule?</legend>
+              <label class="knowledge-option"><input type="radio" name="quiz-safe-stop" value="correct">Nothing—production pressure and schedule concerns do not override safety.</label>
+              <label class="knowledge-option"><input type="radio" name="quiz-safe-stop" value="incorrect">A client request to continue.</label>
+            </fieldset>
+            <button class="module-complete-btn" type="button" data-complete-training="safe-stop">Check answer and complete</button>
+          </div>
+        </details>
+
+        <details class="training-module" data-training-module="departure-check">
+          <summary>
+            <span class="training-number">05</span>
+            <span class="training-summary-copy"><strong>Final departure check</strong><small>Closeout routine · 7-minute refresher</small></span>
+            <span class="training-complete-mark">Complete</span>
+          </summary>
+          <div class="training-module-body">
+            <h4>Before leaving the property</h4>
+            <ol>
+              <li>Restore and photograph thermostats, HVAC covers, electrical covers, appliances, fireplace controls, and access panels.</li>
+              <li>Confirm faucets and showers are off, refrigerator/freezer doors are closed, and wet areas were rechecked for leakage.</li>
+              <li>Reset tested GFCIs and leave breakers, disconnects, and shutoffs as found.</li>
+              <li>Close windows, doors, garage doors, attic/crawlspace accesses, and turn lights off as appropriate.</li>
+              <li>Secure keys and lockbox; account for every tool, ladder, meter, cover screw, and piece of PPE.</li>
+              <li>Communicate urgent hazards and confirm the inspection report is synchronized.</li>
+            </ol>
+            <fieldset class="knowledge-check">
+              <legend>What should happen if an access cover cannot be restored?</legend>
+              <label class="knowledge-option"><input type="radio" name="quiz-departure-check" value="incorrect">Leave quietly and mention it later.</label>
+              <label class="knowledge-option"><input type="radio" name="quiz-departure-check" value="correct">Protect the area, notify a responsible party, and create a damaged-item record.</label>
+            </fieldset>
+            <button class="module-complete-btn" type="button" data-complete-training="departure-check">Check answer and complete</button>
+          </div>
+        </details>
+      </div>
+      <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
+    </section>
+
+    <section class="field-app-section" id="team-messages" aria-labelledby="team-messages-title">
+      <div class="field-section-heading">
+        <div>
+          <p class="eyebrow">MPI team connection</p>
+          <h2 id="team-messages-title">Keep the whole team aligned.</h2>
+        </div>
+        <p>Read company reminders offline, then email a field question or support request when connected. Questions go to management without creating a paid messaging system.</p>
+      </div>
+
+      <div class="message-board">
+        <section class="panel announcement-panel" aria-labelledby="announcement-title">
+          <div class="panel-heading">
+            <div><h2 id="announcement-title">Company messages</h2><p>Current notices included with this app release.</p></div>
+            <span class="step-count">Offline</span>
+          </div>
+          <div class="announcement-list">
+            <article class="announcement-card required">
+              <span>Required reminder · August 25, 2026</span>
+              <h4>Use Before and After photos</h4>
+              <p>Photograph thermostats, access hatches, equipment covers, appliance controls, and similar components before handling them and again after they are restored.</p>
+            </article>
+            <article class="announcement-card">
+              <span>Field tools update · August 25, 2026</span>
+              <h4>New free inspector tools</h4>
+              <p>Equipment records, damaged-item notices, training progress, field questions, and employee requests are now available from the home screen.</p>
+            </article>
+            <article class="announcement-card">
+              <span>Scope reminder · August 17, 2026</span>
+              <h4>Ancillary services require separate authorization</h4>
+              <p>Septic evaluation, well-yield testing, and water-quality sampling require an approved procedure, contracted scope, training, and authorization.</p>
+            </article>
+          </div>
+          <p class="free-tool-note">Management messages are published with app updates. They remain on the phone after the latest version has been opened online once.</p>
+        </section>
+
+        <form class="panel damage-form support-panel" id="teamQuestionForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+          <input type="hidden" name="_subject" id="teamQuestionSubject" value="MPI Inspector Field Question">
+          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com,adrienne@michiganpropertyinspections.com">
+          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_captcha" value="false">
+          <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?question-sent=1#team-messages">
+          <input type="hidden" name="Submitted at" id="teamQuestionSubmittedAt" value="">
+          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
+          <div class="panel-heading">
+            <div><h2>Ask management</h2><p>Use for field questions that do not require emergency services.</p></div>
+            <span class="step-count">Online only</span>
+          </div>
+          <div class="damage-field-row">
+            <div class="field"><label for="teamQuestionInspector">Inspector name *</label><input class="damage-input" id="teamQuestionInspector" name="Inspector" type="text" autocomplete="name" maxlength="80" required></div>
+            <div class="field"><label for="teamQuestionProperty">Property address</label><input class="damage-input" id="teamQuestionProperty" name="Property address" type="text" autocomplete="street-address" maxlength="180"></div>
+          </div>
+          <div class="field">
+            <label for="teamQuestionTiming">Response needed *</label>
+            <div class="select-wrap">
+              <select class="damage-input" id="teamQuestionTiming" name="Response needed" required>
+                <option value="">Choose timing…</option>
+                <option>Stop-work or safety guidance needed now</option>
+                <option>During this inspection</option>
+                <option>Before leaving the property</option>
+                <option>Before the report is released</option>
+                <option>By the end of the business day</option>
+                <option>Routine follow-up</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label for="teamQuestionText">Question or support needed *</label><textarea id="teamQuestionText" name="Question or support needed" maxlength="1200" placeholder="Include the system, visible condition, what you have already checked, and the decision you need help with." required></textarea></div>
+          <button class="decode-btn" id="teamQuestionSubmitBtn" type="submit">Email question to management</button>
+          <p class="damage-submit-status" id="teamQuestionStatus" role="status" aria-live="polite"></p>
+          <div class="form-success-box" id="teamQuestionSuccess" hidden><strong>Question sent.</strong>Management received the field question by email.</div>
+        </form>
+      </div>
+      <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
+    </section>
+
+    <section class="field-app-section" id="requests-feedback" aria-labelledby="requests-feedback-title">
+      <div class="field-section-heading">
+        <div>
+          <p class="eyebrow">MPI inspector request form</p>
+          <h2 id="requests-feedback-title">Tell us what you need.</h2>
+        </div>
+        <p>Request tools, uniforms, supplies, training, or another type of support. Each request arrives as a structured management email rather than getting lost in a text chain.</p>
+      </div>
+
+      <div class="workflow-grid">
+        <form class="panel damage-form" id="requestForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+          <input type="hidden" name="_subject" id="requestEmailSubject" value="MPI Inspector Request">
+          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com,adrienne@michiganpropertyinspections.com">
+          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_captcha" value="false">
+          <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?request-sent=1#requests-feedback">
+          <input type="hidden" name="Submitted at" id="requestSubmittedAt" value="">
+          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
+          <div class="panel-heading">
+            <div><h2>Inspector request</h2><p>Required fields are marked with an asterisk.</p></div>
+            <span class="step-count">Online only</span>
+          </div>
+          <div class="damage-field-row">
+            <div class="field"><label for="requestInspector">Inspector name *</label><input class="damage-input" id="requestInspector" name="Inspector" type="text" autocomplete="name" maxlength="80" required></div>
+            <div class="field">
+              <label for="requestType">Request type *</label>
+              <div class="select-wrap">
+                <select class="damage-input" id="requestType" name="Request type" required>
+                  <option value="">Choose a request…</option>
+                  <optgroup label="Tools, equipment, and supplies">
+                    <option>New tool or equipment purchase</option>
+                    <option>Tool or equipment repair</option>
+                    <option>Tool or equipment replacement</option>
+                    <option>Inspection supplies or consumables</option>
+                    <option>PPE or safety equipment</option>
+                  </optgroup>
+                  <optgroup label="Uniforms and field support">
+                    <option>New uniform or clothing item</option>
+                    <option>Uniform size exchange or replacement</option>
+                    <option>Vehicle or field-logistics support</option>
+                  </optgroup>
+                  <optgroup label="Training and operations">
+                    <option>Training or coaching request</option>
+                    <option>SOP or field-procedure question</option>
+                    <option>Scheduling or operational support</option>
+                    <option>Software, account, or app access</option>
+                  </optgroup>
+                  <optgroup label="Improvements and feedback">
+                    <option>Field app improvement</option>
+                    <option>Report template or comment request</option>
+                    <option>New equipment manufacturer for Age Finder</option>
+                    <option>General feedback or suggestion</option>
+                  </optgroup>
+                  <option>Other management request</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="damage-field-row">
+            <div class="field"><label for="requestItem">Item or request *</label><input class="damage-input" id="requestItem" name="Item or request" type="text" maxlength="180" placeholder="Example: Replacement moisture meter" required></div>
+            <div class="field"><label for="requestNeededBy">Needed by</label><input class="damage-input" id="requestNeededBy" name="Needed by" type="date"></div>
+          </div>
+          <div class="field"><label for="requestDetails">Details / reason *</label><textarea id="requestDetails" name="Details and reason" maxlength="1200" placeholder="Explain the size, quantity, current problem, training topic, or reason for the request." required></textarea></div>
+          <div class="field"><label for="requestSuggestion">Suggested solution or supplier</label><textarea class="damage-action-input" id="requestSuggestion" name="Suggested solution or supplier" maxlength="700" placeholder="Optional: Add a link, product name, supplier, or idea that may help."></textarea></div>
+          <button class="decode-btn" id="requestSubmitBtn" type="submit">Email request to management</button>
+          <p class="damage-submit-status" id="requestSubmitStatus" role="status" aria-live="polite"></p>
+          <p class="privacy-note">The request is emailed to management. This free version does not create an employee database or order history.</p>
+        </form>
+
+        <aside class="panel damage-info-panel" aria-labelledby="request-info-title">
+          <span class="damage-online-badge">Online submission</span>
+          <h3 id="request-info-title">A clear request is easier to approve.</h3>
+          <p>Use the correct request type and explain what is needed, why it is needed, and when it is needed. Management receives the same organized format every time.</p>
+          <ul class="damage-checklist">
+            <li>Tools and equipment: identify the item and what is wrong with the current tool.</li>
+            <li>Uniforms: include the garment, size, quantity, and replacement reason.</li>
+            <li>Training: name the system, procedure, or report-writing skill you want covered.</li>
+            <li>Feedback: explain the current friction and the improvement you recommend.</li>
+          </ul>
+          <div class="form-success-box" id="requestSuccessBox" hidden><strong>Request submitted.</strong>Management received the structured request by email.</div>
+        </aside>
+      </div>
+      <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
     </section>
 
     <section class="coverage" aria-labelledby="coverage-title">
@@ -2880,6 +3817,48 @@
       const damageSubmitBtn = document.getElementById("damageSubmitBtn");
       const damageSubmitStatus = document.getElementById("damageSubmitStatus");
       const damageSuccessBox = document.getElementById("damageSuccessBox");
+      const damageAttachment = document.getElementById("damageAttachment");
+      const equipmentForm = document.getElementById("equipmentForm");
+      const equipmentInspector = document.getElementById("equipmentInspector");
+      const equipmentProperty = document.getElementById("equipmentProperty");
+      const equipmentType = document.getElementById("equipmentType");
+      const equipmentLocation = document.getElementById("equipmentLocation");
+      const equipmentReason = document.getElementById("equipmentReason");
+      const equipmentPhoto1 = document.getElementById("equipmentPhoto1");
+      const equipmentPhoto2 = document.getElementById("equipmentPhoto2");
+      const equipmentPhotoCard1 = document.getElementById("equipmentPhotoCard1");
+      const equipmentPhotoCard2 = document.getElementById("equipmentPhotoCard2");
+      const equipmentPhotoPreview1 = document.getElementById("equipmentPhotoPreview1");
+      const equipmentPhotoPreview2 = document.getElementById("equipmentPhotoPreview2");
+      const equipmentAttachment = document.getElementById("equipmentAttachment");
+      const equipmentEmailSubject = document.getElementById("equipmentEmailSubject");
+      const equipmentSubmittedAt = document.getElementById("equipmentSubmittedAt");
+      const equipmentSubmitBtn = document.getElementById("equipmentSubmitBtn");
+      const equipmentSubmitStatus = document.getElementById("equipmentSubmitStatus");
+      const equipmentSuccessBox = document.getElementById("equipmentSuccessBox");
+      const trainingModules = [...document.querySelectorAll("[data-training-module]")];
+      const trainingProgressCount = document.getElementById("trainingProgressCount");
+      const trainingProgressFill = document.getElementById("trainingProgressFill");
+      const trainingProgressNote = document.getElementById("trainingProgressNote");
+      const teamQuestionForm = document.getElementById("teamQuestionForm");
+      const teamQuestionInspector = document.getElementById("teamQuestionInspector");
+      const teamQuestionProperty = document.getElementById("teamQuestionProperty");
+      const teamQuestionTiming = document.getElementById("teamQuestionTiming");
+      const teamQuestionText = document.getElementById("teamQuestionText");
+      const teamQuestionSubject = document.getElementById("teamQuestionSubject");
+      const teamQuestionSubmittedAt = document.getElementById("teamQuestionSubmittedAt");
+      const teamQuestionSubmitBtn = document.getElementById("teamQuestionSubmitBtn");
+      const teamQuestionStatus = document.getElementById("teamQuestionStatus");
+      const teamQuestionSuccess = document.getElementById("teamQuestionSuccess");
+      const requestForm = document.getElementById("requestForm");
+      const requestInspector = document.getElementById("requestInspector");
+      const requestType = document.getElementById("requestType");
+      const requestItem = document.getElementById("requestItem");
+      const requestEmailSubject = document.getElementById("requestEmailSubject");
+      const requestSubmittedAt = document.getElementById("requestSubmittedAt");
+      const requestSubmitBtn = document.getElementById("requestSubmitBtn");
+      const requestSubmitStatus = document.getElementById("requestSubmitStatus");
+      const requestSuccessBox = document.getElementById("requestSuccessBox");
       const sopSearch = document.getElementById("sopSearch");
       const sopClearSearch = document.getElementById("sopClearSearch");
       const sopChapter = document.getElementById("sopChapter");
@@ -6080,12 +7059,12 @@
         toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
       }
 
-      const damagePreviewUrls = new Map();
+      const photoPreviewUrls = new Map();
 
-      function updateDamagePhotoPreview(input, preview, card) {
-        const previousUrl = damagePreviewUrls.get(input.id);
+      function updateDamagePhotoPreview(input, preview, card, status = damageSubmitStatus) {
+        const previousUrl = photoPreviewUrls.get(input.id);
         if (previousUrl) URL.revokeObjectURL(previousUrl);
-        damagePreviewUrls.delete(input.id);
+        photoPreviewUrls.delete(input.id);
         const file = input.files?.[0];
         if (!file) {
           preview.removeAttribute("src");
@@ -6094,27 +7073,77 @@
           return;
         }
         const previewUrl = URL.createObjectURL(file);
-        damagePreviewUrls.set(input.id, previewUrl);
+        photoPreviewUrls.set(input.id, previewUrl);
         preview.src = previewUrl;
         preview.hidden = false;
         card.classList.add("has-photo");
-        damageSubmitStatus.className = "damage-submit-status";
-        damageSubmitStatus.textContent = `${file.name || "Photo selected"} · ${(file.size / 1024 / 1024).toFixed(1)}MB`;
+        if (status) {
+          status.className = "damage-submit-status";
+          status.textContent = `${file.name || "Photo selected"} · ${(file.size / 1024 / 1024).toFixed(1)}MB`;
+        }
       }
 
-      function initializeDamageForm() {
+      function getSubmissionTimestamp() {
+        const now = new Date();
+        const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || "local time";
+        return `${now.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })} · ${zone}`;
+      }
+
+      function saveInspectorName(value) {
+        const name = String(value || "").trim();
+        if (!name) return;
         try {
-          damageInspector.value = localStorage.getItem("mpiDamageInspector") || "";
+          localStorage.setItem("mpiInspectorName", name);
+          localStorage.setItem("mpiDamageInspector", name);
         } catch (_) {}
+      }
+
+      function loadRememberedInspector() {
+        try {
+          return localStorage.getItem("mpiInspectorName") || localStorage.getItem("mpiDamageInspector") || "";
+        } catch (_) {
+          return "";
+        }
+      }
+
+      function initializeFieldForms() {
+        const rememberedInspector = loadRememberedInspector();
+        [damageInspector, equipmentInspector, teamQuestionInspector, requestInspector].forEach(input => {
+          if (input && !input.value) input.value = rememberedInspector;
+        });
+
         const params = new URLSearchParams(location.search);
+        let targetHash = location.hash || "#home";
         if (params.get("damage-sent") === "1") {
           damageSuccessBox.hidden = false;
           damageSubmitStatus.className = "damage-submit-status success";
           damageSubmitStatus.textContent = "Damage notice submitted to Kevin and the MPI administrative inboxes.";
           params.delete("damage-sent");
-          const cleanQuery = params.toString();
-          history.replaceState(null, "", `${location.pathname}${cleanQuery ? `?${cleanQuery}` : ""}#damage-report`);
+          targetHash = "#damage-report";
         }
+        if (params.get("equipment-sent") === "1") {
+          equipmentSuccessBox.hidden = false;
+          equipmentSubmitStatus.className = "damage-submit-status success";
+          equipmentSubmitStatus.textContent = "Equipment record submitted with the labeled Before/After photo sheet.";
+          params.delete("equipment-sent");
+          targetHash = "#equipment-record";
+        }
+        if (params.get("question-sent") === "1") {
+          teamQuestionSuccess.hidden = false;
+          teamQuestionStatus.className = "damage-submit-status success";
+          teamQuestionStatus.textContent = "Field question emailed to management.";
+          params.delete("question-sent");
+          targetHash = "#team-messages";
+        }
+        if (params.get("request-sent") === "1") {
+          requestSuccessBox.hidden = false;
+          requestSubmitStatus.className = "damage-submit-status success";
+          requestSubmitStatus.textContent = "Inspector request emailed to management.";
+          params.delete("request-sent");
+          targetHash = "#requests-feedback";
+        }
+        const cleanQuery = params.toString();
+        history.replaceState(null, "", `${location.pathname}${cleanQuery ? `?${cleanQuery}` : ""}${targetHash}`);
       }
 
       function updateDamageInformedSelection(changedOption = null) {
@@ -6144,42 +7173,89 @@
           : "Describe what you did after finding the damage.";
       }
 
-      function labelDamagePhotoFile(input, label) {
-        const file = input.files?.[0];
-        if (!file || file.name.startsWith(label)) return;
-        try {
-          const nameExtension = file.name.match(/\.([a-z0-9]{2,5})$/i)?.[1]?.toLowerCase();
-          const mimeExtension = {
-            "image/jpeg": "jpg",
-            "image/png": "png",
-            "image/heic": "heic",
-            "image/heif": "heif",
-            "image/webp": "webp"
-          }[file.type];
-          const extension = nameExtension || mimeExtension || "jpg";
-          const renamedFile = new File([file], `${label}.${extension}`, {
-            type: file.type,
-            lastModified: file.lastModified
-          });
-          const transfer = new DataTransfer();
-          transfer.items.add(renamedFile);
-          input.files = transfer.files;
-        } catch (_) {
-          // The email still includes explicit Before/After label rows if an older browser cannot rename a file.
-        }
+      function loadImageFile(file) {
+        return new Promise((resolve, reject) => {
+          const url = URL.createObjectURL(file);
+          const image = new Image();
+          image.onload = () => {
+            URL.revokeObjectURL(url);
+            resolve(image);
+          };
+          image.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error("The phone could not prepare one of the selected photos."));
+          };
+          image.src = url;
+        });
       }
 
-      function validateDamageSubmission(event) {
+      function drawContainedImage(context, image, x, y, width, height) {
+        const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
+        const drawWidth = image.naturalWidth * scale;
+        const drawHeight = image.naturalHeight * scale;
+        context.fillStyle = "#EAF2F8";
+        context.fillRect(x, y, width, height);
+        context.drawImage(image, x + (width - drawWidth) / 2, y + (height - drawHeight) / 2, drawWidth, drawHeight);
+      }
+
+      async function createLabeledPhotoSheet(beforeFile, afterFile, title) {
+        const [beforeImage, afterImage] = await Promise.all([loadImageFile(beforeFile), loadImageFile(afterFile)]);
+        const canvas = document.createElement("canvas");
+        canvas.width = 1200;
+        canvas.height = 1900;
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#FFFFFF";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "#11186A";
+        context.fillRect(0, 0, canvas.width, 120);
+        context.fillStyle = "#FFFFFF";
+        context.font = "700 38px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillText(title.slice(0, 56), canvas.width / 2, 60);
+
+        const panels = [
+          { label: "PHOTO 1 — BEFORE", image: beforeImage, top: 160 },
+          { label: "PHOTO 2 — AFTER", image: afterImage, top: 1030 }
+        ];
+        panels.forEach(panel => {
+          context.fillStyle = "#B48720";
+          context.fillRect(40, panel.top, 1120, 74);
+          context.fillStyle = "#FFFFFF";
+          context.font = "800 32px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+          context.textAlign = "left";
+          context.fillText(panel.label, 72, panel.top + 37);
+          drawContainedImage(context, panel.image, 40, panel.top + 74, 1120, 740);
+        });
+
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", .82));
+        if (!blob) throw new Error("The labeled photo sheet could not be created on this phone.");
+        return new File([blob], "MPI-Before-After-Photo-Record.jpg", { type: "image/jpeg", lastModified: Date.now() });
+      }
+
+      function setGeneratedAttachment(input, file) {
+        const transfer = new DataTransfer();
+        transfer.items.add(file);
+        input.files = transfer.files;
+      }
+
+      function selectedFilesAreImages(inputs) {
+        return inputs.every(input => {
+          const file = input.files?.[0];
+          return file && (!file.type || file.type.startsWith("image/"));
+        });
+      }
+
+      async function validateDamageSubmission(event) {
+        event.preventDefault();
         damageSubmitStatus.className = "damage-submit-status";
         damageSubmitStatus.textContent = "";
         if (!damageForm.reportValidity()) {
-          event.preventDefault();
           damageSubmitStatus.className = "damage-submit-status error";
           damageSubmitStatus.textContent = "Complete the required fields and add both Before and After photos before submitting.";
           return;
         }
         if (!navigator.onLine) {
-          event.preventDefault();
           damageSubmitStatus.className = "damage-submit-status error";
           damageSubmitStatus.textContent = "Internet access is required to email the notice. Reconnect and submit again.";
           showToast("Reconnect before sending the damage notice");
@@ -6187,36 +7263,174 @@
         }
         updateDamageInformedSelection();
         if (!damagePeopleInformed.value) {
-          event.preventDefault();
           damageSubmitStatus.className = "damage-submit-status error";
           damageSubmitStatus.textContent = "Choose everyone who was informed, or select No one informed.";
           damageInformedOptions[0]?.focus();
           return;
         }
-        labelDamagePhotoFile(damagePhoto1, "Photo-1-Before");
-        labelDamagePhotoFile(damagePhoto2, "Photo-2-After");
-        const files = [damagePhoto1.files?.[0], damagePhoto2.files?.[0]].filter(Boolean);
-        const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
-        if (files.some(file => file.type && !file.type.startsWith("image/"))) {
-          event.preventDefault();
+        if (!selectedFilesAreImages([damagePhoto1, damagePhoto2])) {
           damageSubmitStatus.className = "damage-submit-status error";
           damageSubmitStatus.textContent = "Only phone-camera or image files can be attached.";
           return;
         }
-        if (totalBytes >= 10 * 1024 * 1024) {
-          event.preventDefault();
+        damageSubmitBtn.disabled = true;
+        damageSubmitBtn.textContent = "Preparing labeled photos…";
+        damageSubmitStatus.textContent = "Combining the Before and After photos into one labeled attachment.";
+        try {
+          const sheet = await createLabeledPhotoSheet(damagePhoto1.files[0], damagePhoto2.files[0], "MPI DAMAGED ITEM NOTICE");
+          setGeneratedAttachment(damageAttachment, sheet);
+          damageSubmittedAt.value = getSubmissionTimestamp();
+          damageEmailSubject.value = `MPI Damaged Item Notice — ${damageItem.value.trim()} — ${damageProperty.value.trim()}`.slice(0, 180);
+          saveInspectorName(damageInspector.value);
+          damageSubmitBtn.textContent = "Sending damage notice…";
+          damageSubmitStatus.textContent = "Uploading the form and labeled photo sheet. Keep this page open.";
+          HTMLFormElement.prototype.submit.call(damageForm);
+        } catch (error) {
+          damageSubmitBtn.disabled = false;
+          damageSubmitBtn.textContent = "Email damaged item notice";
           damageSubmitStatus.className = "damage-submit-status error";
-          damageSubmitStatus.textContent = "The two photos total 10MB or more. Remove the second photo or choose smaller images.";
+          damageSubmitStatus.textContent = error.message || "The photo sheet could not be prepared. Choose the photos again and retry.";
+        }
+      }
+
+      async function validateEquipmentSubmission(event) {
+        event.preventDefault();
+        equipmentSubmitStatus.className = "damage-submit-status";
+        equipmentSubmitStatus.textContent = "";
+        if (!equipmentForm.reportValidity()) {
+          equipmentSubmitStatus.className = "damage-submit-status error";
+          equipmentSubmitStatus.textContent = "Complete the required fields and add both Before and After photos.";
           return;
         }
-        const now = new Date();
-        const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || "local time";
-        damageSubmittedAt.value = `${now.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })} · ${zone}`;
-        damageEmailSubject.value = `MPI Damaged Item Notice — ${damageItem.value.trim()} — ${damageProperty.value.trim()}`.slice(0, 180);
-        try { localStorage.setItem("mpiDamageInspector", damageInspector.value.trim()); } catch (_) {}
-        damageSubmitBtn.disabled = true;
-        damageSubmitBtn.textContent = "Sending damage notice…";
-        damageSubmitStatus.textContent = "Uploading the form and photo. Keep this page open.";
+        if (!navigator.onLine) {
+          equipmentSubmitStatus.className = "damage-submit-status error";
+          equipmentSubmitStatus.textContent = "Reconnect to the internet before emailing this record.";
+          showToast("Reconnect before sending the equipment record");
+          return;
+        }
+        if (!selectedFilesAreImages([equipmentPhoto1, equipmentPhoto2])) {
+          equipmentSubmitStatus.className = "damage-submit-status error";
+          equipmentSubmitStatus.textContent = "Only phone-camera or image files can be attached.";
+          return;
+        }
+        equipmentSubmitBtn.disabled = true;
+        equipmentSubmitBtn.textContent = "Preparing labeled photos…";
+        equipmentSubmitStatus.textContent = "Combining the Before and After photos into one labeled attachment.";
+        try {
+          const sheet = await createLabeledPhotoSheet(equipmentPhoto1.files[0], equipmentPhoto2.files[0], "MPI EQUIPMENT CONDITION RECORD");
+          setGeneratedAttachment(equipmentAttachment, sheet);
+          equipmentSubmittedAt.value = getSubmissionTimestamp();
+          equipmentEmailSubject.value = `MPI Equipment Record — ${equipmentType.value} — ${equipmentProperty.value.trim()}`.slice(0, 180);
+          saveInspectorName(equipmentInspector.value);
+          equipmentSubmitBtn.textContent = "Sending equipment record…";
+          equipmentSubmitStatus.textContent = "Uploading the form and labeled photo sheet. Keep this page open.";
+          HTMLFormElement.prototype.submit.call(equipmentForm);
+        } catch (error) {
+          equipmentSubmitBtn.disabled = false;
+          equipmentSubmitBtn.textContent = "Email equipment record";
+          equipmentSubmitStatus.className = "damage-submit-status error";
+          equipmentSubmitStatus.textContent = error.message || "The photo sheet could not be prepared. Choose the photos again and retry.";
+        }
+      }
+
+      const TRAINING_STORAGE_KEY = "mpiTrainingProgressV1";
+      let completedTraining = new Set();
+
+      function updateTrainingProgress() {
+        trainingModules.forEach(module => {
+          const complete = completedTraining.has(module.dataset.trainingModule);
+          module.classList.toggle("is-complete", complete);
+          const button = module.querySelector("[data-complete-training]");
+          if (button) button.textContent = complete ? "Completed ✓" : "Check answer and complete";
+        });
+        const completeCount = completedTraining.size;
+        trainingProgressCount.textContent = `${completeCount} of ${trainingModules.length} complete`;
+        trainingProgressFill.style.width = `${trainingModules.length ? (completeCount / trainingModules.length) * 100 : 0}%`;
+        trainingProgressNote.textContent = completeCount === trainingModules.length
+          ? "All current refresher modules are complete on this phone."
+          : "Progress stays on this phone and works offline.";
+      }
+
+      function initializeTraining() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(TRAINING_STORAGE_KEY) || "[]");
+          completedTraining = new Set(Array.isArray(saved) ? saved : []);
+        } catch (_) {
+          completedTraining = new Set();
+        }
+        updateTrainingProgress();
+      }
+
+      function completeTrainingModule(button) {
+        const module = button.closest("[data-training-module]");
+        if (!module) return;
+        if (completedTraining.has(module.dataset.trainingModule)) {
+          showToast("This module is already complete");
+          return;
+        }
+        const selected = module.querySelector(".knowledge-check input:checked");
+        if (!selected) {
+          showToast("Answer the knowledge check first");
+          return;
+        }
+        if (selected.value !== "correct") {
+          showToast("Review the lesson and try the knowledge check again");
+          return;
+        }
+        completedTraining.add(module.dataset.trainingModule);
+        try { localStorage.setItem(TRAINING_STORAGE_KEY, JSON.stringify([...completedTraining])); } catch (_) {}
+        updateTrainingProgress();
+        showToast("Training module completed");
+      }
+
+      function validateSimpleEmailForm(event, config) {
+        config.status.className = "damage-submit-status";
+        config.status.textContent = "";
+        if (!config.form.reportValidity()) {
+          event.preventDefault();
+          config.status.className = "damage-submit-status error";
+          config.status.textContent = "Complete the required fields before submitting.";
+          return;
+        }
+        if (!navigator.onLine) {
+          event.preventDefault();
+          config.status.className = "damage-submit-status error";
+          config.status.textContent = "Reconnect to the internet before sending this form.";
+          showToast("Reconnect before sending");
+          return;
+        }
+        config.submittedAt.value = getSubmissionTimestamp();
+        config.subject.value = config.subjectText();
+        saveInspectorName(config.inspector.value);
+        config.submitButton.disabled = true;
+        config.submitButton.textContent = config.pendingText;
+        config.status.textContent = "Sending the form to management. Keep this page open.";
+      }
+
+      function validateTeamQuestionSubmission(event) {
+        validateSimpleEmailForm(event, {
+          form: teamQuestionForm,
+          status: teamQuestionStatus,
+          submittedAt: teamQuestionSubmittedAt,
+          subject: teamQuestionSubject,
+          inspector: teamQuestionInspector,
+          submitButton: teamQuestionSubmitBtn,
+          pendingText: "Sending field question…",
+          subjectText: () => `MPI Field Question — ${teamQuestionTiming.value} — ${teamQuestionInspector.value.trim()}`.slice(0, 180)
+        });
+      }
+
+      function validateRequestSubmission(event) {
+        validateSimpleEmailForm(event, {
+          form: requestForm,
+          status: requestSubmitStatus,
+          submittedAt: requestSubmittedAt,
+          subject: requestEmailSubject,
+          inspector: requestInspector,
+          submitButton: requestSubmitBtn,
+          pendingText: "Sending inspector request…",
+          subjectText: () => `MPI Inspector Request — ${requestType.value} — ${requestItem.value.trim()}`.slice(0, 180)
+        });
       }
 
       async function initializeOfflineAccess() {
@@ -6648,9 +7862,24 @@
       damagePhoto2.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto2, damagePhotoPreview2, damagePhotoCard2));
       damageInformedOptions.forEach(option => option.addEventListener("change", event => updateDamageInformedSelection(event.currentTarget)));
       damageForm.addEventListener("submit", validateDamageSubmission);
+      equipmentPhoto1.addEventListener("change", () => updateDamagePhotoPreview(equipmentPhoto1, equipmentPhotoPreview1, equipmentPhotoCard1, equipmentSubmitStatus));
+      equipmentPhoto2.addEventListener("change", () => updateDamagePhotoPreview(equipmentPhoto2, equipmentPhotoPreview2, equipmentPhotoCard2, equipmentSubmitStatus));
+      equipmentForm.addEventListener("submit", validateEquipmentSubmission);
+      document.getElementById("trainingGrid").addEventListener("click", event => {
+        const button = event.target.closest("[data-complete-training]");
+        if (button) completeTrainingModule(button);
+      });
+      teamQuestionForm.addEventListener("submit", validateTeamQuestionSubmission);
+      requestForm.addEventListener("submit", validateRequestSubmission);
       window.addEventListener("pageshow", () => {
         damageSubmitBtn.disabled = false;
         damageSubmitBtn.textContent = "Email damaged item notice";
+        equipmentSubmitBtn.disabled = false;
+        equipmentSubmitBtn.textContent = "Email equipment record";
+        teamQuestionSubmitBtn.disabled = false;
+        teamQuestionSubmitBtn.textContent = "Email question to management";
+        requestSubmitBtn.disabled = false;
+        requestSubmitBtn.textContent = "Email request to management";
       });
 
       window.addEventListener("resize", sizeCommentOutput);
@@ -6688,7 +7917,8 @@
 
       setCommentType("defect");
       populateReportItems();
-      initializeDamageForm();
+      initializeFieldForms();
+      initializeTraining();
       initializeSopGuide();
       initializeOfflineAccess();
       updateConfig();

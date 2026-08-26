@@ -1,12 +1,39 @@
 {
   "name": "Michigan Property Inspections Field Tools",
   "short_name": "MPI Field Tools",
-  "start_url": "./",
+  "start_url": "./#home",
   "scope": "./",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#11186A",
-  "description": "Offline equipment date decoder, MPI comment builder, and inspector SOP guide.",
+  "description": "MPI inspector field tools, photo records, SOP prompts, training, company messages, and employee requests.",
+  "categories": ["business", "productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Equipment Age Finder",
+      "short_name": "Age Finder",
+      "url": "./#age-finder",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Damaged Item Notice",
+      "short_name": "Damage Notice",
+      "url": "./#damage-report",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Equipment Photo Record",
+      "short_name": "Photo Record",
+      "url": "./#equipment-record",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Field Procedures",
+      "short_name": "SOP Prompts",
+      "url": "./#sop-guide",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
   "icons": [
     {
       "src": "./icon-192.png",
