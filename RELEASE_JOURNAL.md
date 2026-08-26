@@ -842,3 +842,41 @@ Status: published August 26, 2026 as GitHub commit `2cab17486ab20e28a11b21f2e902
 
 - Restore GitHub `main` to `b19f9e7604027f34d5c08bf4720f24ecc057caa9` to keep Builds 1–19 but remove the temperature calculator.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 21 — Room photo coverage tracker
+
+Status: published August 26, 2026 as GitHub commit `4ed70ce6e4b18fd1e459b5ea786f25cab3897398`.
+
+#### Additions
+
+1. Added an optional, collapsed **Room photo coverage** tracker inside Job Companion.
+   - Inspectors add only the rooms and areas that actually exist at the property.
+   - Quick-add buttons cover common rooms; repeated room types automatically become Bedroom 2, Bathroom 2, and so on.
+   - Custom room names support areas such as Office, Sunroom, or Workshop.
+
+2. Added a job-specific completion record on the company phone.
+   - Each room is checked only after its four required landscape overview photographs are present.
+   - The live count changes from incomplete to complete and survives a reload with the active job.
+   - Starting a different job begins a clean room list, while updating the same job preserves its list.
+
+3. Kept the safeguard simple and within policy.
+   - The tracker is optional and does not block report release.
+   - It expressly states that doorway, panoramic, thermal, and defect images do not replace the four required overview images.
+   - No room data is emailed or uploaded; it remains with the active job on that phone and works offline.
+   - Updated the visible build, version file, and offline cache identifier to Build 58.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- No-job state displayed **Start job** and prevented room entry.
+- Repeated-preset test produced Bedroom and Bedroom 2; Kitchen and a custom Office were also added correctly.
+- Completion persisted after reload, changed from **1 of 4** to **4 of 4**, and displayed the completed state.
+- Removing a completed room updated the count to **3 of 3**.
+- 390-pixel phone layout: no horizontal overflow; the Remove control remained 44 pixels high.
+- No email, network submission, location collection, or background activity was added.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `b0e6dc56f9def791eb51bd4f1c0bc4362e79cc86` to keep Builds 1–20 but remove the room photo coverage tracker.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

@@ -76,6 +76,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Training Center now identifies and opens the exact next incomplete MPI refresher lesson. **Implemented in Build 55.** Management-selected InterNACHI course links continue through each inspector’s existing MPI training plan.
 - Unsent text and selections in the four principal field-support forms now survive a reload or signal interruption on the company phone and clear after successful submission; photographs are never stored. **Implemented in Build 56.**
 - Field Procedures now includes an offline cooling-temperature-difference and furnace-rise calculator with factual copy output and MPI’s non-diagnostic reporting boundaries. **Implemented in Build 57.**
+- Job Companion now includes an optional property-specific room tracker for confirming the four required overview photographs in every actual room; the list and progress stay with the active job on the company phone. **Implemented in Build 58.**
 
 ## Low-cost improvements
 
