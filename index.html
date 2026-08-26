@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="87">
+  <meta name="app-build" content="88">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -49,7 +49,7 @@
 
     ::selection { color: #fff; background: var(--bright-blue); }
 
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: auto; }
 
     body {
       margin: 0;
@@ -4104,7 +4104,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">87</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">88</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -6214,6 +6214,29 @@
 
       window.addEventListener("hashchange", renderAppScreen);
       renderAppScreen();
+
+      function settleInitialAppPosition() {
+        const params = new URLSearchParams(location.search);
+        const activeScreen = location.hash.slice(1);
+        let exactTarget = null;
+        if (activeScreen === "tool-guides" && params.get("tool")) exactTarget = toolGuideDetail;
+        if (activeScreen === "sop-guide" && params.get("procedure")) exactTarget = sopDetail;
+        if (activeScreen === "training-center" && params.get("lesson")) {
+          exactTarget = trainingModules.find(module => module.dataset.trainingModule === params.get("lesson")) || null;
+        }
+        const rootStyle = document.documentElement.style;
+        const previousBehavior = rootStyle.getPropertyValue("scroll-behavior");
+        const previousPriority = rootStyle.getPropertyPriority("scroll-behavior");
+        rootStyle.setProperty("scroll-behavior", "auto", "important");
+        if (exactTarget) exactTarget.scrollIntoView({ block: "start" });
+        else window.scrollTo({ top: 0, left: 0 });
+        requestAnimationFrame(() => {
+          if (previousBehavior) rootStyle.setProperty("scroll-behavior", previousBehavior, previousPriority);
+          else rootStyle.removeProperty("scroll-behavior");
+        });
+      }
+
+      window.addEventListener("load", () => setTimeout(settleInitialAppPosition, 160), { once: true });
 
       const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
       const LENNOX_MONTHS = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, J: 8, K: 9, L: 10, M: 11 };
