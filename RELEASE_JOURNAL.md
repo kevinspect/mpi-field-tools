@@ -618,7 +618,7 @@ Status: published August 26, 2026 as GitHub commit `75a8b04d76f21ff968397ddc0d45
 
 ### Build 15 — Required company-message acknowledgement
 
-Status: ready to publish as Build 52.
+Status: published August 26, 2026 as GitHub commit `bc004847b809a459683388154c4d2bbf7283e315`.
 
 #### Additions
 
