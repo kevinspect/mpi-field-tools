@@ -75,9 +75,10 @@
       justify-content: space-between;
       min-height: 68px;
       padding: 0 max(22px, env(safe-area-inset-right)) 0 max(22px, env(safe-area-inset-left));
-      color: #fff;
-      background: var(--forest);
-      border-bottom: 1px solid rgba(255,255,255,.12);
+      color: var(--ink);
+      background: #fff;
+      border-bottom: 1px solid #e8e9ee;
+      box-shadow: 0 2px 14px rgba(17,24,106,.05);
     }
 
     .brand {
@@ -122,7 +123,7 @@
 
     .brand-name small {
       margin-top: 4px;
-      color: rgba(255,255,255,.58);
+      color: var(--ink-2);
       font-size: 9px;
       font-weight: 750;
       letter-spacing: .13em;
@@ -132,7 +133,7 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      color: rgba(255,255,255,.78);
+      color: var(--ink-2);
       font-size: 12px;
       font-weight: 700;
       letter-spacing: .04em;
@@ -155,8 +156,8 @@
 
     .sop-jump {
       padding: 8px 11px;
-      color: #fff;
-      border: 1px solid rgba(255,255,255,.2);
+      color: var(--ink);
+      border: 1px solid #dfe3e9;
       border-radius: 8px;
       font-size: 11px;
       font-weight: 850;
@@ -167,49 +168,32 @@
     .sop-jump:hover, .sop-jump:focus-visible { border-color: var(--orange); outline: none; }
 
     .app-home {
-      position: relative;
-      overflow: hidden;
-      padding: 58px max(20px, calc((100vw - 1180px) / 2)) 68px;
-      color: #fff;
-      background:
-        linear-gradient(145deg, rgba(7, 10, 48, .96), rgba(17, 24, 106, .94)),
-        radial-gradient(circle at 85% 10%, rgba(180, 135, 32, .28), transparent 34%);
+      padding: 46px max(22px, calc((100vw - 760px) / 2)) 58px;
+      color: var(--ink);
+      background: #fff;
+      border-bottom: 1px solid #eceef2;
     }
-
-    .app-home::after {
-      content: "";
-      position: absolute;
-      right: -120px;
-      bottom: -210px;
-      width: 460px;
-      height: 460px;
-      border: 78px solid rgba(180, 135, 32, .12);
-      border-radius: 50%;
-      pointer-events: none;
-    }
-
-    .home-intro, .home-tools { position: relative; z-index: 1; }
 
     .home-intro {
       display: grid;
-      grid-template-columns: 96px minmax(0, 1fr);
+      grid-template-columns: 76px minmax(0, 1fr);
       align-items: center;
-      gap: 24px;
-      max-width: 900px;
+      gap: 18px;
+      max-width: 690px;
     }
 
     .home-logo {
-      width: 96px;
+      width: 76px;
       aspect-ratio: 1;
       background: #000 var(--mpi-logo) center / contain no-repeat;
       border: 1px solid rgba(180, 135, 32, .48);
       border-radius: 50%;
-      box-shadow: 0 18px 44px rgba(0,0,0,.28);
+      box-shadow: 0 10px 26px rgba(17,24,106,.12);
     }
 
     .home-kicker {
       margin: 0 0 8px;
-      color: #d8b85e;
+      color: var(--orange);
       font-size: 11px;
       font-weight: 900;
       letter-spacing: .16em;
@@ -218,7 +202,7 @@
 
     .home-title {
       margin: 0;
-      font-size: clamp(36px, 6vw, 64px);
+      font-size: clamp(30px, 5vw, 45px);
       line-height: 1;
       letter-spacing: -.05em;
     }
@@ -226,66 +210,76 @@
     .home-tagline {
       max-width: 690px;
       margin: 16px 0 0;
-      color: rgba(255,255,255,.72);
-      font-size: clamp(15px, 2vw, 18px);
+      color: var(--ink-2);
+      font-size: clamp(14px, 2vw, 16px);
       line-height: 1.55;
     }
 
     .home-section-label {
-      margin: 44px 0 14px;
-      color: #fff;
-      font-size: 17px;
+      margin: 40px 0 10px;
+      color: var(--ink);
+      font-size: 18px;
       font-weight: 850;
     }
 
     .home-tools {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      max-width: 900px;
+      display: block;
+      max-width: 690px;
+      border-top: 1px solid #eceef2;
     }
 
     .home-tool-card {
       display: grid;
-      grid-template-columns: 42px minmax(0, 1fr) auto;
+      grid-template-columns: 66px minmax(0, 1fr) 24px;
       align-items: center;
-      gap: 13px;
-      min-height: 76px;
-      padding: 13px 14px;
+      gap: 18px;
+      min-height: 98px;
+      padding: 14px 4px;
       color: var(--ink);
       background: #fff;
-      border: 1px solid rgba(255,255,255,.2);
-      border-radius: 14px;
-      box-shadow: 0 12px 26px rgba(0,0,0,.16);
+      border: 0;
+      border-bottom: 1px solid #eceef2;
+      border-radius: 0;
+      box-shadow: none;
       text-decoration: none;
-      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+      transition: color .16s ease, background-color .16s ease;
     }
 
     .home-tool-card:hover, .home-tool-card:focus-visible {
-      border-color: var(--orange);
-      box-shadow: 0 16px 32px rgba(0,0,0,.22);
+      color: var(--bright-blue);
+      background: #f8fafc;
       outline: none;
-      transform: translateY(-2px);
     }
 
     .home-tool-icon {
-      display: grid;
-      width: 42px;
-      height: 42px;
-      place-items: center;
-      color: var(--ink);
-      background: #eaf2f8;
+      display: block;
+      width: 66px;
+      height: 66px;
+      background-image: url("./tool-thumbnails.png");
+      background-size: 400% 200%;
+      background-repeat: no-repeat;
+      background-color: #eaf2f8;
       border-radius: 50%;
-      font-size: 12px;
-      font-weight: 950;
-      letter-spacing: .03em;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px #dfe3e9, 0 5px 13px rgba(17,24,106,.12);
     }
 
-    .home-tool-copy strong { display: block; font-size: 14px; }
-    .home-tool-copy small { display: block; margin-top: 4px; color: var(--ink-2); font-size: 11px; line-height: 1.35; }
-    .home-tool-arrow { color: var(--orange); font-size: 21px; font-weight: 900; }
-    .home-tool-card.phase-two { opacity: .76; }
-    .home-tool-card.phase-two .home-tool-arrow { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; }
+    .home-tool-icon.icon-age { background-position: 0% 0%; }
+    .home-tool-icon.icon-damage { background-position: 33.333% 0%; }
+    .home-tool-icon.icon-record { background-position: 66.667% 0%; }
+    .home-tool-icon.icon-sop { background-position: 100% 0%; }
+    .home-tool-icon.icon-training { background-position: 0% 100%; }
+    .home-tool-icon.icon-messages { background-position: 33.333% 100%; }
+    .home-tool-icon.icon-requests { background-position: 66.667% 100%; }
+    .home-tool-icon.icon-ai { background-position: 100% 100%; }
+
+    .home-tool-copy strong { display: block; font-size: 17px; line-height: 1.25; }
+    .home-tool-copy small { display: block; margin-top: 4px; color: var(--ink-2); font-size: 12px; line-height: 1.35; }
+    .home-tool-arrow { color: var(--orange); font-size: 28px; font-weight: 700; line-height: 1; }
+    .home-tool-card:not(.phase-two) { grid-template-columns: 66px minmax(0, 1fr); }
+    .home-tool-card:not(.phase-two) .home-tool-arrow { display: none; }
+    .home-tool-card.phase-two { opacity: .58; }
+    .home-tool-card.phase-two .home-tool-arrow { font-size: 8px; letter-spacing: .05em; line-height: 1.25; text-align: right; text-transform: uppercase; }
 
     .hero {
       position: relative;
@@ -2296,11 +2290,18 @@
       .topbar-actions { gap: 10px; }
       .sop-jump { font-size: 10px; }
       .topbar-actions .sop-jump:not(:first-child) { display: none; }
-      .app-home { padding-top: 40px; padding-bottom: 52px; }
-      .home-intro { grid-template-columns: 70px minmax(0, 1fr); gap: 16px; }
-      .home-logo { width: 70px; }
-      .home-tools { grid-template-columns: 1fr; }
-      .home-section-label { margin-top: 34px; }
+      .app-home { padding: 30px 22px 42px; }
+      .home-intro { grid-template-columns: 58px minmax(0, 1fr); gap: 14px; }
+      .home-logo { width: 58px; }
+      .home-title { font-size: 30px; }
+      .home-tagline { margin-top: 9px; font-size: 13px; line-height: 1.45; }
+      .home-section-label { margin-top: 30px; font-size: 17px; }
+      .home-tool-card { min-height: 82px; padding: 10px 2px; gap: 15px; }
+      .home-tool-card:not(.phase-two) { grid-template-columns: 58px minmax(0, 1fr); }
+      .home-tool-card.phase-two { grid-template-columns: 58px minmax(0, 1fr) 38px; }
+      .home-tool-icon { width: 58px; height: 58px; }
+      .home-tool-copy strong { font-size: 16px; }
+      .home-tool-copy small { display: none; }
       .hero { padding-top: 38px; padding-bottom: 108px; }
       .hero-inner { grid-template-columns: 1fr; }
       .hero-logo-panel { display: none; }
@@ -2373,42 +2374,42 @@
     <p class="home-section-label">Choose a field tool</p>
     <nav class="home-tools" aria-label="MPI field tools">
       <a class="home-tool-card" href="#age-finder">
-        <span class="home-tool-icon">AGE</span>
+        <span class="home-tool-icon icon-age" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>Equipment Age Finder</strong><small>Decode supported HVAC, furnace and water-heater serial numbers.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
       <a class="home-tool-card" href="#damage-report">
-        <span class="home-tool-icon">DMG</span>
+        <span class="home-tool-icon icon-damage" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>Damaged Item Notice</strong><small>Record the item, photos, action taken and people informed.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
       <a class="home-tool-card" href="#equipment-record">
-        <span class="home-tool-icon">B/A</span>
+        <span class="home-tool-icon icon-record" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>Equipment Photo Record</strong><small>Save labeled Before and After proof for thermostats, furnaces and access covers.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
       <a class="home-tool-card" href="#sop-guide">
-        <span class="home-tool-icon">SOP</span>
+        <span class="home-tool-icon icon-sop" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>Field Procedures</strong><small>Open short, step-by-step prompts from the MPI handbook.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
       <a class="home-tool-card" href="#training-center">
-        <span class="home-tool-icon">TRN</span>
+        <span class="home-tool-icon icon-training" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>Training Center</strong><small>Complete short MPI lessons and save progress on this device.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
       <a class="home-tool-card" href="#team-messages">
-        <span class="home-tool-icon">MSG</span>
+        <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>Team Messages</strong><small>Read company updates and email a field question to management.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
       <a class="home-tool-card" href="#requests-feedback">
-        <span class="home-tool-icon">REQ</span>
+        <span class="home-tool-icon icon-requests" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>Requests &amp; Feedback</strong><small>Request tools, uniforms, supplies or training and share feedback.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
       <div class="home-tool-card phase-two" role="note" aria-label="AI Comment Builder is planned for phase two">
-        <span class="home-tool-icon">AI</span>
+        <span class="home-tool-icon icon-ai" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>AI Comment Builder</strong><small>Online MPI commentary will be added after the free tools are complete.</small></span>
         <span class="home-tool-arrow">Phase 2</span>
       </div>
