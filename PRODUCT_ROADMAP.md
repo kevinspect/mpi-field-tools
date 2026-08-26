@@ -15,6 +15,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - 26 condensed field prompts traceable to the controlled MPI SOP.
 - 10 short offline knowledge checks that reinforce the MPI field sequence and safety boundaries.
 - A one-tap, phone-local start-of-day readiness check with exception-only support routing.
+- A 60-second, active-job report release check for coverage, evidence, limitations, wording, communication, and synchronization.
 
 ### 1. Manager coaching and competency matrix
 
@@ -36,6 +37,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - After report review, Kevin records no more than three coaching points: missed item, wording issue, or evidence issue.
 - Inspector acknowledges the coaching and is directed to the matching SOP prompt or short lesson.
 - Repeated patterns become a training assignment instead of a punitive score.
+- **Build 45 adds the inspector’s pre-release quality check; manager coaching and pattern review remain future work.**
 
 ### 4. Incident and near-miss record
 

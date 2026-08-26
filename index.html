@@ -3419,6 +3419,31 @@
     .daily-readiness-actions .decode-btn { margin: 0; min-height: 46px; }
     .daily-readiness-note { margin: 11px 0 0; color: var(--ink-2); font-size: 10px; line-height: 1.45; }
 
+    .report-quality-card {
+      margin-top: 18px;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .report-quality-card summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 18px 20px;
+      color: var(--forest);
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .report-quality-card summary::-webkit-details-marker { display: none; }
+    .report-quality-card summary strong { display: block; font-size: 15px; }
+    .report-quality-card summary small { display: block; margin-top: 4px; color: var(--ink-2); font-size: 11px; line-height: 1.4; }
+    .report-quality-body { padding: 0 20px 20px; border-top: 1px solid var(--line); }
+    .report-quality-progress { margin: 16px 0 12px; }
+    .report-quality-list { display: grid; gap: 8px; }
+    .report-quality-note { margin: 13px 0 0; color: var(--ink-2); font-size: 10px; line-height: 1.5; }
+
     .job-context-card {
       display: grid;
       gap: 16px;
@@ -3840,6 +3865,27 @@
           </div>
         </section>
       </div>
+
+      <details class="panel report-quality-card" id="reportQualityCard">
+        <summary>
+          <span><strong>60-second report release check</strong><small>Complete this after the field report is finished.</small></span>
+          <span class="daily-readiness-status" id="reportQualityStatus">0 of 6</span>
+        </summary>
+        <div class="report-quality-body">
+          <div class="report-quality-progress">
+            <div class="job-progress-track" aria-hidden="true"><div class="job-progress-fill" id="reportQualityProgressFill"></div></div>
+          </div>
+          <div class="report-quality-list" id="reportQualityList">
+            <label class="job-phase-item"><input type="checkbox" data-report-quality="sections"><span>Every applicable report section and item is addressed; optional items are unused only when they do not apply.</span></label>
+            <label class="job-phase-item"><input type="checkbox" data-report-quality="overview-photos"><span>Required room and General/Overview photographs are present and properly oriented.</span></label>
+            <label class="job-phase-item"><input type="checkbox" data-report-quality="finding-evidence"><span>Significant findings have a specific location, supporting photograph, and recorded test or instrument result when applicable.</span></label>
+            <label class="job-phase-item"><input type="checkbox" data-report-quality="limitations"><span>Each limitation names the affected component or area, the reason, the method used, and the effect on the inspection.</span></label>
+            <label class="job-phase-item"><input type="checkbox" data-report-quality="wording"><span>Titles are condition specific, and comments contain only supported observations, implications, and recommendations.</span></label>
+            <label class="job-phase-item"><input type="checkbox" data-report-quality="release"><span>Urgent hazards were communicated, the summary is complete, and the report and photographs are synchronized.</span></label>
+          </div>
+          <p class="report-quality-note">This check stays with the active job on this phone. It follows the MPI report-completion and quality-control standards; it does not replace management review.</p>
+        </div>
+      </details>
       <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
     </section>
 
@@ -5621,6 +5667,10 @@
       const dailyReadinessStatus = document.getElementById("dailyReadinessStatus");
       const dailyReadinessReadyBtn = document.getElementById("dailyReadinessReadyBtn");
       const dailyReadinessIssueBtn = document.getElementById("dailyReadinessIssueBtn");
+      const reportQualityCard = document.getElementById("reportQualityCard");
+      const reportQualityChecks = [...document.querySelectorAll("[data-report-quality]")];
+      const reportQualityStatus = document.getElementById("reportQualityStatus");
+      const reportQualityProgressFill = document.getElementById("reportQualityProgressFill");
       const manufacturer = document.getElementById("manufacturer");
       const serialInput = document.getElementById("serial");
       const resultContent = document.getElementById("resultContent");
@@ -10023,7 +10073,8 @@
             inspector: String(saved.inspector || "").trim(),
             property: String(saved.property || "").trim(),
             startedAt: String(saved.startedAt || ""),
-            steps: Array.isArray(saved.steps) ? saved.steps.map(String) : []
+            steps: Array.isArray(saved.steps) ? saved.steps.map(String) : [],
+            quality: Array.isArray(saved.quality) ? saved.quality.map(String) : []
           };
         } catch (_) {
           return null;
@@ -10056,6 +10107,18 @@
           const phaseSteps = [...phase.querySelectorAll("[data-job-step]")];
           phase.classList.toggle("is-complete", phaseSteps.length > 0 && phaseSteps.every(step => step.checked));
         });
+        updateReportQualityProgress(job);
+      }
+
+      function updateReportQualityProgress(job = loadActiveJob()) {
+        const completed = new Set(job?.quality || []);
+        reportQualityChecks.forEach(check => { check.checked = completed.has(check.dataset.reportQuality); });
+        const count = reportQualityChecks.filter(check => check.checked).length;
+        const complete = reportQualityChecks.length > 0 && count === reportQualityChecks.length;
+        reportQualityProgressFill.style.width = `${reportQualityChecks.length ? (count / reportQualityChecks.length) * 100 : 0}%`;
+        reportQualityStatus.textContent = complete ? "Release check complete" : `${count} of ${reportQualityChecks.length}`;
+        reportQualityStatus.classList.toggle("is-ready", complete);
+        reportQualityCard.classList.toggle("is-complete", complete);
       }
 
       function renderActiveJob(job = loadActiveJob()) {
@@ -10094,7 +10157,8 @@
           inspector,
           property,
           startedAt: sameJob && existing.startedAt ? existing.startedAt : new Date().toISOString(),
-          steps: sameJob ? existing.steps : []
+          steps: sameJob ? existing.steps : [],
+          quality: sameJob ? existing.quality : []
         };
         storeActiveJob(job);
         saveInspectorName(inspector);
@@ -10117,6 +10181,23 @@
         job.steps = [...completed];
         storeActiveJob(job);
         updateJobProgress(job);
+      }
+
+      function updateReportQualityCheck(check) {
+        const job = loadActiveJob();
+        if (!job?.property) {
+          check.checked = false;
+          showToast("Start the current job first");
+          activeJobProperty.focus();
+          return;
+        }
+        const completed = new Set(job.quality || []);
+        if (check.checked) completed.add(check.dataset.reportQuality);
+        else completed.delete(check.dataset.reportQuality);
+        job.quality = [...completed];
+        storeActiveJob(job);
+        updateReportQualityProgress(job);
+        if (job.quality.length === reportQualityChecks.length) showToast("Report release check complete");
       }
 
       function clearActiveJob() {
@@ -11369,6 +11450,7 @@
       dailyReadinessReadyBtn.addEventListener("click", confirmDailyReadiness);
       dailyReadinessIssueBtn.addEventListener("click", openReadinessIssueRequest);
       jobSteps.forEach(step => step.addEventListener("change", () => updateActiveJobStep(step)));
+      reportQualityChecks.forEach(check => check.addEventListener("change", () => updateReportQualityCheck(check)));
       damagePhoto1.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto1, damagePhotoPreview1, damagePhotoCard1));
       damagePhoto2.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto2, damagePhotoPreview2, damagePhotoCard2));
       damageInformedOptions.forEach(option => option.addEventListener("change", event => updateDamageInformedSelection(event.currentTarget)));

@@ -332,3 +332,52 @@ Status: published August 26, 2026 as GitHub commit `23f4732b1bc59235cd98ba0500ca
 
 - Restore GitHub `main` to `39cb091424372bc761ebb335639f56af14f5e31d` to keep Builds 1–6 but remove Start-of-day readiness.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 8 — Report release quality check
+
+Status: implemented locally; publication pending validation.
+
+#### Additions
+
+1. Added a collapsed **60-second report release check** inside Job Companion.
+   - Confirms every applicable report section and item is addressed.
+   - Confirms required room and General/Overview photographs are present and properly oriented.
+   - Confirms significant findings include a specific location, supporting photograph, and recorded test result when applicable.
+   - Confirms limitations state the affected area, reason, method used, and effect on the inspection.
+   - Confirms condition-specific titles and supported Observation / Implication / Recommendation wording.
+   - Confirms urgent hazards were communicated and the report, summary, and photographs are synchronized.
+
+2. Connected the check to the active job.
+   - Progress is stored with that property on the company phone.
+   - The status changes from 0 of 6 to Release check complete only after all six confirmations.
+   - Starting a different property creates a fresh check; clearing the finished job removes the saved check.
+   - Nothing is emailed and no central employee score is created.
+
+3. Updated the offline cache identifier to Build 45.
+
+#### Source control
+
+- Source: MPI Residential Inspector Field Operations Handbook v1.3, including the Eight Non-Negotiable Company Standards and the report-completion and quality-control requirements.
+- The check is a final inspector prompt and does not replace management report review.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Report-release controls: 6 unique checks.
+- Active-job test: all six selections persisted and changed the status to Release check complete.
+- 390-pixel phone layout: card width and status remained inside the viewport with no horizontal overflow.
+- Browser error log during the interaction test: 0 errors.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `53c47b3ceb222e436d0e92f35946099f1e7709c5` to keep Builds 1–7 but remove the report release check.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+## Cross-build phone and offline validation
+
+- Tested at a true 390 × 844 CSS-pixel phone viewport.
+- Home, Job Companion, Today’s Jobs, Equipment Age Finder, Damaged Item Notice, Equipment Photo Record, Field Procedures, End-of-Job Tool Check, Company Tool Guides, Training Center, Team Messages, Requests & Feedback, and Safety & Near-Miss Notice all remained within the phone viewport.
+- Horizontal overflow: none detected on all 13 screens.
+- With the test browser’s network disabled after the first visit, the cached app opened Job Companion and displayed Start-of-day readiness successfully.
+- Online-only forms and live company services still require a connection by design.
