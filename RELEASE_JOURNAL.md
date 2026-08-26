@@ -194,7 +194,7 @@ Status: published August 26, 2026 as GitHub commit `38f470ed16c442eecbf43a6f31f7
 
 ### Build 5 — Expanded SOP field prompts
 
-Status: implemented locally; publication pending validation.
+Status: published August 26, 2026 as GitHub commit `11f11585eced2c7837f28b638910c6e37139a548`.
 
 #### Additions
 
@@ -251,4 +251,45 @@ Status: implemented locally; publication pending validation.
 #### Rollback for this build
 
 - Restore GitHub `main` to `38f470ed16c442eecbf43a6f31f7da84a54ce23d` to keep Builds 1–4 but remove the expanded SOP prompts.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 6 — SOP knowledge checks
+
+Status: implemented locally; publication pending validation.
+
+#### Additions
+
+1. Expanded the Training Center from five to ten short, device-local knowledge checks.
+   - Electrical device testing and power restoration — SOP 9.2.
+   - Water-heater identification and safety boundaries — SOP 8.4.
+   - Installed-appliance primary-function testing and closeout — SOP 7.4.
+   - Attic access, viewing method, contamination, and restoration — SOP 11.4.
+   - Garage-door operator safety, non-contact testing, and restoration — SOP 12.2.
+
+2. Kept the training experience short and field focused.
+   - Each lesson presents the approved sequence, stop boundary, required record, and one knowledge check.
+   - Each lesson cites the exact controlled MPI SOP section.
+   - Completion progress stays on the company phone and remains available offline.
+   - The new lessons use the existing Training Center and do not add another home-screen button.
+
+3. Updated the offline cache identifier to Build 43.
+
+#### Source control
+
+- Source: Michigan Property Inspections Residential Inspector Field Operations Handbook, Version 1.3, effective August 17, 2026.
+- The lessons are condensed refreshers and do not replace supervised competency sign-off or authorize work outside company policy.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Training modules: 10 unique modules.
+- Completion controls: 10 matching buttons.
+- Knowledge checks: 10 quiz groups, each with one correct and one incorrect answer.
+- Garage-door lesson: opened successfully and displayed the SOP 12.2 source.
+- Browser error log during the lesson test: 0 errors.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `11f11585eced2c7837f28b638910c6e37139a548` to keep Builds 1–5 but remove the five new lessons.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

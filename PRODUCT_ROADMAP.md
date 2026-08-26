@@ -13,6 +13,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Direct links between selected tool cards, controlled SOP prompts, support requests, and safety reporting.
 - Safety & Near-Miss initial notice.
 - 26 condensed field prompts traceable to the controlled MPI SOP.
+- 10 short offline knowledge checks that reinforce the MPI field sequence and safety boundaries.
 
 ### 1. Manager coaching and competency matrix
 
