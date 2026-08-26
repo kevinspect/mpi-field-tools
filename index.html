@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
   <link rel="manifest" href="./site.webmanifest">
-  <meta name="description" content="Michigan Property Inspections field app for equipment ages, photo records, damaged-item notices, SOP prompts, training, team messages, and inspector requests.">
+  <meta name="description" content="Michigan Property Inspections field app for guided job closeout, company tool instructions, equipment ages, photo records, SOP prompts, training, and team support.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="MPI Field Tools">
   <meta property="og:description" content="Field tools. Company standards. Team support. One MPI app.">
@@ -363,6 +363,36 @@
       letter-spacing: .06em;
       box-shadow: 0 4px 10px rgba(0,0,0,.18);
     }
+
+    .home-tool-icon.icon-job,
+    .home-tool-icon.icon-tool-guides {
+      position: relative;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background-image: none;
+      background: linear-gradient(145deg, #11186A, #2F75B5);
+      border-color: #fff;
+    }
+
+    .home-tool-icon.icon-job::before,
+    .home-tool-icon.icon-tool-guides::before {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      color: #11186A;
+      background: #fff;
+      border: 3px solid rgba(180, 135, 32, .68);
+      border-radius: 50%;
+      font-size: 8px;
+      font-weight: 950;
+      letter-spacing: .06em;
+      box-shadow: 0 4px 10px rgba(0,0,0,.18);
+    }
+
+    .home-tool-icon.icon-job::before { content: "MY DAY"; }
+    .home-tool-icon.icon-tool-guides::before { content: "HOW TO"; }
 
     .home-tool-copy strong { display: block; font-size: 17px; line-height: 1.25; }
     .home-tool-copy small { display: block; margin-top: 4px; color: var(--ink-2); font-size: 12px; line-height: 1.35; }
@@ -3298,6 +3328,153 @@
       overflow: hidden;
     }
 
+    .job-context-card {
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .job-context-status {
+      padding: 14px;
+      color: var(--forest);
+      background: #eef4fa;
+      border: 1px solid #d7e3ef;
+      border-radius: 13px;
+    }
+
+    .job-context-status strong { display: block; font-size: 14px; }
+    .job-context-status span { display: block; margin-top: 4px; color: var(--ink-2); font-size: 11px; line-height: 1.45; }
+
+    .job-progress-track {
+      height: 9px;
+      overflow: hidden;
+      background: #d8e1eb;
+      border-radius: 999px;
+    }
+
+    .job-progress-fill {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--bright-blue), var(--orange));
+      border-radius: inherit;
+      transition: width .2s ease;
+    }
+
+    .job-context-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+
+    .job-secondary-action {
+      min-height: 44px;
+      padding: 10px 12px;
+      color: var(--bright-blue);
+      background: #eef4fa;
+      border: 1px solid #cbddec;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 900;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    button.job-secondary-action { width: 100%; }
+    .job-secondary-action:hover, .job-secondary-action:focus-visible { color: #fff; background: var(--bright-blue); outline: none; }
+    .job-secondary-action.danger { color: #8b2c26; background: #fff4f2; border-color: #e7c0bc; }
+
+    .job-phases { display: grid; gap: 12px; }
+
+    .job-phase {
+      overflow: hidden;
+      color: var(--ink-2);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+    }
+
+    .job-phase summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px;
+      color: var(--forest);
+      font-size: 13px;
+      font-weight: 900;
+      list-style: none;
+    }
+
+    .job-phase summary::-webkit-details-marker { display: none; }
+    .job-phase summary::after { content: "+"; color: var(--orange-dark); font-size: 20px; }
+    .job-phase[open] summary::after { content: "−"; }
+    .job-phase.is-complete summary { background: #edf7f4; }
+
+    .job-phase-list {
+      display: grid;
+      gap: 8px;
+      padding: 0 14px 14px;
+    }
+
+    .job-phase-item {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 10px 9px;
+      color: var(--ink-2);
+      background: #f8fafc;
+      border-radius: 9px;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .job-phase-item input { width: 18px; height: 18px; margin: 0; accent-color: var(--bright-blue); }
+    .job-phase-item:has(input:checked) { color: #44536b; background: #edf7f4; }
+
+    .job-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+    .job-shortcuts a { display: grid; min-height: 54px; place-items: center; padding: 10px; }
+
+    .tool-guide-detail-block { margin-top: 22px; }
+    .tool-guide-detail-block h4 { margin: 0 0 10px; color: var(--forest); font-size: 13px; }
+    .tool-guide-detail-block ol,
+    .tool-guide-detail-block ul { margin: 0; padding-left: 21px; color: var(--ink-2); font-size: 12px; line-height: 1.62; }
+    .tool-guide-detail-block li + li { margin-top: 6px; }
+
+    .tool-guide-model {
+      display: inline-flex;
+      margin-top: 12px;
+      padding: 6px 9px;
+      color: #fff;
+      background: rgba(255,255,255,.13);
+      border: 1px solid rgba(255,255,255,.24);
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 850;
+      letter-spacing: .04em;
+    }
+
+    .tool-manual-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 22px;
+      padding: 11px 13px;
+      color: #fff;
+      background: var(--bright-blue);
+      border-radius: 9px;
+      font-size: 11px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .tool-manual-link::after { content: "↗"; }
+
+    .tool-guide-source-note {
+      margin: 22px 0 0;
+      padding-top: 15px;
+      color: #767b93;
+      border-top: 1px solid var(--line);
+      font-size: 10px;
+      line-height: 1.55;
+    }
+
     @media (max-width: 560px) {
       .today-jobs-toolbar { align-items: stretch; flex-direction: column; }
       .calendar-action { width: 100%; }
@@ -3308,6 +3485,8 @@
       .secure-schedule-frame { min-height: 680px; }
       .external-training-card { grid-template-columns: 1fr; }
       .external-training-actions { min-width: 0; }
+      .job-context-actions,
+      .job-shortcuts { grid-template-columns: 1fr; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -3345,6 +3524,11 @@
     </div>
     <p class="home-section-label">Choose a field tool</p>
     <nav class="home-tools" aria-label="MPI field tools">
+      <a class="home-tool-card" href="#job-companion">
+        <span class="home-tool-icon icon-job" aria-hidden="true"></span>
+        <span class="home-tool-copy"><strong>Job Companion</strong><small>Enter the job once, follow the four closeout stages, and open the forms already filled in.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
       <a class="home-tool-card" href="#today-jobs">
         <span class="home-tool-icon icon-calendar" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>Today’s Jobs</strong><small>Open today’s company schedule and start Apple Maps directions.</small></span>
@@ -3368,6 +3552,11 @@
       <a class="home-tool-card" href="#tool-check">
         <span class="home-tool-icon icon-tool-check" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>End-of-Job Tool Check</strong><small>Confirm inspection tools are accounted for and secured before leaving.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="home-tool-card" href="#tool-guides">
+        <span class="home-tool-icon icon-tool-guides" aria-hidden="true"></span>
+        <span class="home-tool-copy"><strong>Company Tool Guides</strong><small>Open concise operating, safety, care, and documentation steps for every MPI tool.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
       <a class="home-tool-card" href="#sop-guide">
@@ -3415,6 +3604,97 @@
   </section>
 
   <main>
+    <section class="field-app-section app-screen-view" id="job-companion" data-app-screen="job-companion" aria-labelledby="job-companion-title">
+      <div class="field-section-heading">
+        <div>
+          <p class="eyebrow">MPI job companion</p>
+          <h2 id="job-companion-title">One job. One guided closeout.</h2>
+        </div>
+        <p>Enter the property once. MPI Field Tools remembers it on this phone, fills the field forms, and keeps the job closeout steps together.</p>
+      </div>
+
+      <div class="workflow-grid">
+        <form class="panel job-context-card" id="jobContextForm" novalidate>
+          <div class="panel-heading">
+            <div><h2>Current job</h2><p>This information stays on the company phone until the job is cleared.</p></div>
+            <span class="step-count">Device only</span>
+          </div>
+
+          <div class="field">
+            <label for="activeJobInspector">Inspector name *</label>
+            <input class="damage-input" id="activeJobInspector" type="text" autocomplete="name" maxlength="80" required>
+          </div>
+          <div class="field">
+            <label for="activeJobProperty">Property address *</label>
+            <input class="damage-input" id="activeJobProperty" type="text" autocomplete="street-address" maxlength="180" placeholder="Street, city, state" required>
+          </div>
+
+          <button class="decode-btn" id="saveActiveJobBtn" type="submit">Start or update this job</button>
+
+          <div class="job-context-status" id="activeJobStatus" aria-live="polite">
+            <strong>No active job on this phone</strong>
+            <span>Enter the inspector and property to begin.</span>
+          </div>
+          <div class="job-progress-track" aria-hidden="true"><div class="job-progress-fill" id="jobProgressFill"></div></div>
+          <p class="privacy-note" id="jobProgressText">0 of 12 closeout steps complete.</p>
+
+          <div class="job-context-actions">
+            <a class="job-secondary-action" id="activeJobMapLink" href="https://maps.apple.com/" target="_blank" rel="noopener">Open in Apple Maps</a>
+            <button class="job-secondary-action danger" id="clearActiveJobBtn" type="button">Clear finished job</button>
+          </div>
+
+          <div class="job-shortcuts" aria-label="Current job shortcuts">
+            <a class="job-secondary-action" href="#equipment-record">Before/After photos</a>
+            <a class="job-secondary-action" href="#damage-report">Damage notice</a>
+            <a class="job-secondary-action" href="#sop-guide">Field procedure</a>
+            <a class="job-secondary-action" href="#tool-check">Tool closeout</a>
+          </div>
+        </form>
+
+        <section class="panel" aria-labelledby="job-stages-title">
+          <div class="panel-heading">
+            <div><h2 id="job-stages-title">Four-stage job check</h2><p>Use the prompts as a final safety net, not a substitute for the MPI SOP.</p></div>
+            <span class="step-count">Offline</span>
+          </div>
+          <div class="job-phases" id="jobPhases">
+            <details class="job-phase" open>
+              <summary>1. Before travel</summary>
+              <div class="job-phase-list">
+                <label class="job-phase-item"><input type="checkbox" data-job-step="scope"><span>Confirm the address, inspection scope, ancillary services, and special access notes.</span></label>
+                <label class="job-phase-item"><input type="checkbox" data-job-step="schedule"><span>Review timing, weather, roof conditions, and the route to the property.</span></label>
+                <label class="job-phase-item"><input type="checkbox" data-job-step="equipment"><span>Confirm phone, meters, cameras, ladders, PPE, batteries, and required forms are ready.</span></label>
+              </div>
+            </details>
+            <details class="job-phase">
+              <summary>2. On arrival</summary>
+              <div class="job-phase-list">
+                <label class="job-phase-item"><input type="checkbox" data-job-step="property"><span>Verify the property and report template before beginning.</span></label>
+                <label class="job-phase-item"><input type="checkbox" data-job-step="conditions"><span>Record weather, occupancy, utilities, and visible access or safety limitations.</span></label>
+                <label class="job-phase-item"><input type="checkbox" data-job-step="before-photos"><span>Take required Before photographs before changing controls or opening equipment.</span></label>
+              </div>
+            </details>
+            <details class="job-phase">
+              <summary>3. Before leaving</summary>
+              <div class="job-phase-list">
+                <label class="job-phase-item"><input type="checkbox" data-job-step="restore"><span>Restore thermostats, covers, appliances, fixtures, windows, doors, and access panels.</span></label>
+                <label class="job-phase-item"><input type="checkbox" data-job-step="wet-check"><span>Recheck wet areas, confirm water is off, reset tested GFCIs, and verify no inspection-created leakage remains.</span></label>
+                <label class="job-phase-item"><input type="checkbox" data-job-step="after-photos"><span>Take required After photographs and report any item that could not be restored.</span></label>
+              </div>
+            </details>
+            <details class="job-phase">
+              <summary>4. Closeout</summary>
+              <div class="job-phase-list">
+                <label class="job-phase-item"><input type="checkbox" data-job-step="tools"><span>Account for every assigned or used tool, ladder, meter, screw, and item of PPE.</span></label>
+                <label class="job-phase-item"><input type="checkbox" data-job-step="communicate"><span>Communicate urgent hazards or property concerns and document who was informed.</span></label>
+                <label class="job-phase-item"><input type="checkbox" data-job-step="report"><span>Synchronize the report and confirm no applicable section, limitation, photograph, or summary item was left incomplete.</span></label>
+              </div>
+            </details>
+          </div>
+        </section>
+      </div>
+      <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
+    </section>
+
     <section class="field-app-section app-screen-view" id="today-jobs" data-app-screen="today-jobs" aria-labelledby="today-jobs-title">
       <div class="field-section-heading">
         <div>
@@ -3939,6 +4219,59 @@
       <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
     </section>
 
+    <section class="sop-guide app-screen-view" id="tool-guides" data-app-screen="tool-guides" aria-labelledby="tool-guides-title">
+      <div class="sop-heading">
+        <div>
+          <p class="eyebrow">MPI company equipment</p>
+          <h2 id="tool-guides-title">Use the right tool. The right way.</h2>
+        </div>
+        <p class="sop-heading-copy">Search every item on the MPI tool list for a short operating sequence, the required field record, care steps, and the condition that means stop.</p>
+      </div>
+
+      <div class="sop-version-bar">
+        <span><strong>21 company tool cards</strong> · Model-specific links are included where exact controls matter.</span>
+        <span class="sop-offline-badge">Cards work offline</span>
+      </div>
+
+      <div class="sop-shell tool-guide-shell">
+        <aside class="sop-browser" aria-label="Company tool guide browser">
+          <div class="sop-controls">
+            <label for="toolGuideSearch">Which tool do you need?</label>
+            <div class="sop-search-wrap">
+              <input class="sop-search" id="toolGuideSearch" type="search" autocomplete="off" spellcheck="false" placeholder="Example: moisture meter or ladder">
+              <button class="sop-clear-search" id="toolGuideClear" type="button" aria-label="Clear tool-guide search" hidden>×</button>
+            </div>
+            <select class="sop-select" id="toolGuideCategory" aria-label="Filter company tool guides by category">
+              <option value="">All tool categories</option>
+            </select>
+            <p class="sop-quick-label">Common operating cards</p>
+            <div class="sop-quick-chips" id="toolGuideQuickChips">
+              <button class="sop-chip" type="button" data-tool-query="moisture meter">Moisture meter</button>
+              <button class="sop-chip" type="button" data-tool-query="carbon monoxide">CO detector</button>
+              <button class="sop-chip" type="button" data-tool-query="combustible gas">Gas detector</button>
+              <button class="sop-chip" type="button" data-tool-query="ladder">Ladder</button>
+              <button class="sop-chip" type="button" data-tool-query="sewer scope">Sewer scope</button>
+              <button class="sop-chip" type="button" data-tool-query="drone">Drone</button>
+            </div>
+          </div>
+          <div class="sop-result-count" id="toolGuideResultCount" role="status"><span>Loading company tools…</span></div>
+          <div class="sop-results" id="toolGuideResults" role="listbox" aria-label="Company tool-guide results"></div>
+        </aside>
+
+        <article class="sop-detail-panel" id="toolGuideDetail" aria-live="polite">
+          <div class="sop-detail-head">
+            <span class="sop-detail-chapter">MPI company tool</span>
+            <h3>Select a tool</h3>
+          </div>
+          <div class="sop-detail-content">
+            <div class="sop-safety-strip">Use only equipment covered by your MPI training and authorization. The current manufacturer manual and MPI SOP control when they are more restrictive.</div>
+            <p class="sop-entry">Choose a company tool to open its field operating card.</p>
+          </div>
+        </article>
+      </div>
+      <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
+    </section>
+
     <section class="sop-guide app-screen-view" id="sop-guide" data-app-screen="sop-guide" aria-labelledby="sop-guide-title">
       <div class="sop-heading">
         <div>
@@ -4394,11 +4727,13 @@
 
       const APP_SCREEN_TITLES = {
         "home": "MPI Field Tools",
+        "job-companion": "Job Companion",
         "today-jobs": "Today’s Jobs",
         "age-finder": "Equipment Age Finder",
         "damage-report": "Damaged Item Notice",
         "equipment-record": "Equipment Photo Record",
         "tool-check": "End-of-Job Tool Check",
+        "tool-guides": "Company Tool Guides",
         "sop-guide": "Field Procedures",
         "training-center": "Training Center",
         "team-messages": "Team Messages",
@@ -4880,6 +5215,16 @@
       const TEMPLATE_COMMENT_INDEX = TEMPLATE_COMMENTS.map(indexTemplateComment);
 
       const form = document.getElementById("decoderForm");
+      const jobContextForm = document.getElementById("jobContextForm");
+      const activeJobInspector = document.getElementById("activeJobInspector");
+      const activeJobProperty = document.getElementById("activeJobProperty");
+      const activeJobStatus = document.getElementById("activeJobStatus");
+      const activeJobMapLink = document.getElementById("activeJobMapLink");
+      const clearActiveJobBtn = document.getElementById("clearActiveJobBtn");
+      const jobSteps = [...document.querySelectorAll("[data-job-step]")];
+      const jobProgressFill = document.getElementById("jobProgressFill");
+      const jobProgressText = document.getElementById("jobProgressText");
+      const jobPhases = [...document.querySelectorAll(".job-phase")];
       const manufacturer = document.getElementById("manufacturer");
       const serialInput = document.getElementById("serial");
       const resultContent = document.getElementById("resultContent");
@@ -4971,6 +5316,13 @@
       const toolCheckSubmitBtn = document.getElementById("toolCheckSubmitBtn");
       const toolCheckSubmitStatus = document.getElementById("toolCheckSubmitStatus");
       const toolCheckSuccessBox = document.getElementById("toolCheckSuccessBox");
+      const toolGuideSearch = document.getElementById("toolGuideSearch");
+      const toolGuideClear = document.getElementById("toolGuideClear");
+      const toolGuideCategory = document.getElementById("toolGuideCategory");
+      const toolGuideQuickChips = document.getElementById("toolGuideQuickChips");
+      const toolGuideResultCount = document.getElementById("toolGuideResultCount");
+      const toolGuideResults = document.getElementById("toolGuideResults");
+      const toolGuideDetail = document.getElementById("toolGuideDetail");
       const trainingModules = [...document.querySelectorAll("[data-training-module]")];
       const trainingProgressCount = document.getElementById("trainingProgressCount");
       const trainingProgressFill = document.getElementById("trainingProgressFill");
@@ -5030,7 +5382,306 @@
       let copyPayload = "";
       let toastTimer;
       let activeSopId = "";
+      let activeToolGuideId = "";
       let availableScheduleCalendars = [];
+
+      const TOOL_GUIDES = [
+        {
+          id: "electrical-tester-kit",
+          category: "Electrical & diagnostic",
+          title: "Electrical tester kit",
+          model: "Milwaukee 3203-20 voltage detector + 2224-20 GFCI receptacle tester",
+          aliases: "outlet receptacle gfci voltage detector electrical tester",
+          purpose: "Screen accessible receptacles for indicated wiring conditions and perform the company-authorized GFCI functional check without dismantling the device.",
+          steps: [
+            "Inspect the tester bodies and battery indication. Prove the voltage detector on a known energized source before relying on it.",
+            "Visually inspect the receptacle first. Do not insert the tester into a damaged, wet, scorched, loose, obstructed, or visibly unsafe device.",
+            "Insert the receptacle tester fully, read the indicated condition, and photograph or record the result when a defect is reported.",
+            "Use the GFCI test function only where the company procedure permits. Confirm the device trips, then reset it and verify power is restored.",
+            "Re-prove the non-contact voltage detector on the known source after use."
+          ],
+          record: ["Device/location and displayed wiring condition.", "GFCI trip/reset response when tested.", "Any limitation, unsafe condition, or device left without power."],
+          care: ["Wipe clean and dry; do not use solvents.", "Replace weak batteries and remove a damaged tester from service."],
+          stop: ["A non-contact indication never proves a conductor is de-energized.", "Stop for heat, arcing, smoke, moisture, damaged components, or an unexpected loss of power."],
+          links: [
+            { label: "Milwaukee 3203-20 product instructions", url: "https://www.milwaukeetool.com/products/details/dual-range-voltage-detector-w-led/3203-20" },
+            { label: "Milwaukee 2224-20 product instructions", url: "https://www.milwaukeetool.com/products/details/digital-gfci-receptacle-tester/2224-20" }
+          ]
+        },
+        {
+          id: "ir-thermometer",
+          category: "Electrical & diagnostic",
+          title: "IR thermometer / secondary voltage detector",
+          model: "Milwaukee 2225-20",
+          aliases: "infrared thermometer laser temperature non contact voltage hvac",
+          purpose: "Compare surface temperatures and screen for the presence of AC voltage within the manufacturer-rated range.",
+          steps: [
+            "Inspect the lens, housing, battery indication, and voltage-detector readiness. Prove voltage detection on a known energized source before use.",
+            "For temperature, aim squarely at the target and keep the measured spot smaller than the surface being checked. The 4:1 distance-to-spot ratio means distance increases the area averaged.",
+            "Allow shiny, reflective, moving-air, and distant surfaces to stabilize the technique; compare like surfaces from similar distances.",
+            "Record the actual reading, location, operating condition, and comparison reading when used as inspection evidence.",
+            "Re-prove voltage detection after use and switch the tool off."
+          ],
+          record: ["Target/location and displayed temperature.", "Comparison reading and operating conditions.", "Whether the result was an IR surface screen rather than an air or internal temperature."],
+          care: ["Keep the lens clean and dry; store in the tool pouch.", "Never aim the laser toward a person or reflective path."],
+          stop: ["Do not use an IR reading alone to diagnose concealed defects.", "The voltage detector does not prove absence of voltage."],
+          links: [{ label: "Milwaukee 2225-20 instructions", url: "https://www.milwaukeetool.com/products/details/non-contact-voltage-detector-w-laser-infrared-thermometer/2225-20" }]
+        },
+        {
+          id: "main-screwdriver",
+          category: "Hand tools",
+          title: "Main multi-bit screwdriver",
+          model: "Milwaukee 48-22-2761",
+          aliases: "screwdriver panel cover bit",
+          purpose: "Remove and reinstall authorized covers and fasteners while maintaining control of every screw and protecting finished surfaces.",
+          steps: ["Choose the exact bit that fully seats in the fastener.", "Photograph the component before removal and place every screw in a controlled container.", "Support the cover or component while loosening the final fastener; never allow it to fall or contact concealed parts.", "Reinstall the correct fasteners without cross-threading or over-tightening, then take the required restored photo."],
+          record: ["Before and After photographs when a cover or access component is opened.", "Any missing, damaged, unsuitable, or non-restorable fastener."],
+          care: ["Return every bit to the handle and check for worn or damaged tips.", "Keep the tool clean and dry."],
+          stop: ["Do not use around energized parts unless the task, tool, PPE, and inspector are specifically authorized.", "Stop if a fastener or cover cannot be controlled without damage."],
+          links: []
+        },
+        {
+          id: "compact-screwdriver",
+          category: "Hand tools",
+          title: "Compact ratcheting screwdriver",
+          model: "Milwaukee 48-22-2913",
+          aliases: "small ratchet screwdriver tight space bit",
+          purpose: "Handle accessible low-torque fasteners in confined locations without forcing the surrounding component.",
+          steps: ["Select and fully seat the correct bit.", "Set the ratchet direction before applying pressure.", "Keep the shaft aligned with the fastener and use only the force necessary.", "Return the fastener and tool bits to their original storage locations."],
+          record: ["Document any fastener that is stripped, missing, unsafe, or cannot be restored."],
+          care: ["Check the ratchet and bit retention before each job.", "Remove a rounded or damaged bit from service."],
+          stop: ["Do not use as a pry tool or apply extension leverage.", "Stop before a seized fastener or fragile cover is damaged."],
+          links: []
+        },
+        {
+          id: "headlamp",
+          category: "Lighting & access",
+          title: "Rechargeable headlamp",
+          model: "Milwaukee 2012R",
+          aliases: "light head lamp attic crawlspace",
+          purpose: "Provide hands-free task lighting while preserving a separate backup light and safe egress route.",
+          steps: ["Confirm a full charge, secure strap, clean lens, and working brightness controls before entry.", "Select enough light to see footing, framing, conductors, animals, and overhead hazards without blinding others.", "Keep the backup light reachable; do not rely on the phone as the only backup.", "Switch off, inspect for contamination or damage, and recharge after the job."],
+          record: ["Use a specific limitation when lighting remains insufficient for a safe or complete inspection."],
+          care: ["Clean and dry after attic or crawlspace use.", "Inspect the charge cable and battery housing."],
+          stop: ["Do not enter when the only light is failing or when visibility remains unsafe."],
+          links: []
+        },
+        {
+          id: "pocket-flood-light",
+          category: "Lighting & access",
+          title: "Rechargeable pocket flood light",
+          model: "Milwaukee 2112-21",
+          aliases: "backup light flood rechargeable magnetic",
+          purpose: "Provide wide-area backup or task lighting without replacing the required primary light and safe access decision.",
+          steps: ["Confirm charge, lens condition, and all operating modes.", "Place or attach the light only where it cannot fall, contact energized parts, or obstruct the work area.", "Aim away from occupants and reflective surfaces.", "Recover the light before departure and recharge it."],
+          record: ["Document any area that remained inadequately illuminated or inaccessible."],
+          care: ["Wipe clean and dry; inspect charging connections.", "Store where the switch cannot be activated accidentally."],
+          stop: ["Do not attach the light to questionable equipment or use it where heat, water, or combustible vapors create risk."],
+          links: [{ label: "Milwaukee 2112-21 product information", url: "https://cdn.milwaukeetool.com/products/details/redlithium-usb-rover-pocket-flood-light/2112-21" }]
+        },
+        {
+          id: "tool-pouch",
+          category: "Hand tools",
+          title: "Tool pouch",
+          model: "Milwaukee 48-22-8118",
+          aliases: "pouch belt storage screws bits",
+          purpose: "Keep frequently used tools and removed fasteners controlled so nothing is lost in the property or left inside equipment.",
+          steps: ["Load only the tools needed for the assigned task and keep sharp points covered.", "Use a dedicated pocket or magnetic container for every removed fastener.", "Keep the pouch clear of electrical equipment, finishes, and moving machinery.", "Complete a pocket-by-pocket check before leaving the property."],
+          record: ["Report missing tools, bits, fasteners, or property contact damage immediately."],
+          care: ["Empty debris, dry contamination, and inspect seams and attachment points."],
+          stop: ["Do not climb with a load that interferes with balance or three points of control."],
+          links: []
+        },
+        {
+          id: "moisture-meter",
+          category: "Electrical & diagnostic",
+          title: "Moisture meter",
+          model: "General Tools MM19",
+          aliases: "pin pinless moisture drywall wood wet wall scan",
+          purpose: "Corroborate a visible or thermal moisture concern by comparing the suspect area with a nearby reference material.",
+          steps: ["Inspect the meter, pin cover, pad, battery, display, and selected material/mode.", "Start with the pinless pad on a clean, flat surface. Establish a nearby dry reference on the same material and construction.", "Scan the suspect area in a repeatable pattern and compare relative readings; keep the hand and metal away from the sensing area.", "Use pins only when authorized and when small punctures will not damage a finished surface. Never puncture an unknown wall or suspected energized area.", "Photograph the meter display with enough context to identify the exact test location."
+          ],
+          record: ["Exact material and location.", "Reference and suspect readings with the selected mode.", "Visible and thermal evidence that led to the check."],
+          care: ["Clean the sensing pad; cover pins immediately after use.", "Replace bent pins and store the meter dry."],
+          stop: ["A reading is supporting evidence, not proof of concealed leakage, mold, or material damage.", "Stop where pins could contact wiring, plumbing, waterproofing, or a finished surface without permission."],
+          links: [{ label: "General Tools MM19 instructions", url: "https://generaltools.com/2-in-1-moisture-meter" }]
+        },
+        {
+          id: "clamp-meter",
+          category: "Electrical & diagnostic",
+          title: "Amp clamp / HVAC electrical meter",
+          model: "Milwaukee 2236-20",
+          aliases: "clamp meter amp current thermocouple hvac electrical",
+          purpose: "Perform only the electrical or contact-temperature measurements specifically allowed by the inspector’s documented MPI authorization.",
+          steps: ["Inspect the meter, jaw, leads, thermocouple, selector, batteries, and category/range markings before use.", "Select the correct function before approaching the component. Use only intact, correctly rated accessories.", "For clamp current, remove test leads, clamp around one conductor only, close the jaw fully, and keep hands behind barriers.", "For contact temperature, connect the correct thermocouple, allow stabilization, and record the measurement location and operating condition.", "Turn the selector off, disconnect accessories, and store the meter after completing the required record."],
+          record: ["Function, location, operating condition, and displayed value.", "Accessory used and any limitation or unstable result."],
+          care: ["Keep the meter dry and clean; inspect leads before every job.", "Follow the manufacturer calibration/service interval and remove questionable equipment from service."],
+          stop: ["Do not open energized equipment, contact conductors, or take measurements beyond MPI authorization.", "Stop for damaged leads, incorrect ratings, moisture, arcing, heat, buzzing, or unstable footing."],
+          links: [{ label: "Milwaukee 2236-20 manual and specifications", url: "https://www.milwaukeetool.com/products/details/clamp-meter-for-hvac-r/2236-20" }]
+        },
+        {
+          id: "combustible-gas-detector",
+          category: "Gas & air screening",
+          title: "Combustible gas detector",
+          model: "TOPTES PT210S",
+          aliases: "gas leak methane propane natural combustible sniffer",
+          purpose: "Screen for a change in combustible-gas concentration and help locate a suspected source without declaring a system leak-free.",
+          steps: ["Power on and complete the manufacturer warm-up/zero procedure in outdoor or other air known to be free of combustible gas.", "Confirm battery and sensor response using the company-approved readiness check; never test with an uncontrolled flame.", "Approach the area from clean air, move the probe slowly around accessible joints and controls, and use lower sensitivity to narrow a response.", "If the response increases, stop disturbing the area, move to clean air, follow the MPI gas-odor response, and document from a safe position.", "Return to clean air, allow the reading to clear, power off, and protect the sensor head."],
+          record: ["Equipment/location, detector mode, response pattern, and any odor.", "Person notified, time, and action taken for a concerning response."],
+          care: ["Keep the sensor clean and dry; do not expose it to solvents or silicone vapors.", "Replace batteries in a safe area and follow the manufacturer sensor/service guidance."],
+          stop: ["Do not continue searching when gas odor is strong, readings rise, occupants have symptoms, or an explosive atmosphere may exist.", "The instrument does not replace emergency response, utility testing, or a licensed gas evaluation."],
+          links: [{ label: "TOPTES PT210S manufacturer manuals", url: "https://www.toptestools.com/it/pages/manuals" }]
+        },
+        {
+          id: "co-detector",
+          category: "Gas & air screening",
+          title: "Carbon monoxide detector",
+          model: "TOPTES CT-580",
+          aliases: "co carbon monoxide meter ambient combustion",
+          purpose: "Complete the MPI ambient carbon-monoxide screen at safely operated fuel-fired equipment and document current and peak readings.",
+          steps: ["Confirm charge, sensor/service status, alarm settings, date/time, and manufacturer self-test before the job.", "Power on and complete zero calibration only in clean outdoor air known to be free of carbon monoxide.", "Establish and record an initial background reading, then allow the manufacturer response interval at the MPI measurement location while the appliance operates normally.", "Watch the current and peak readings. Follow the MPI escalation procedure immediately for a concerning or rising result, alarm, odor, or symptoms.", "Take the final indoor background reading, save the required evidence, and recharge after the job."],
+          record: ["Meter identification, location, appliance state, current reading, peak reading, and time.", "Notifications and emergency actions when applicable."],
+          care: ["Protect sensor openings from dust, water, solvents, and vehicle exhaust.", "Maintain charging and manufacturer calibration/service records."],
+          stop: ["Never remain in a hazardous atmosphere to obtain another reading.", "A spot reading does not prove that a building or appliance is CO-safe."],
+          links: [{ label: "TOPTES CT-580 manufacturer manuals", url: "https://www.toptestools.com/it/pages/manuals" }]
+        },
+        {
+          id: "dead-blow-hammer",
+          category: "Exterior & site tools",
+          title: "Dead blow hammer",
+          model: "Milwaukee 48-22-9151",
+          aliases: "hammer tap sound masonry structure",
+          purpose: "Apply controlled non-marring impact only where an authorized inspection procedure calls for it.",
+          steps: ["Inspect the head and handle for cracks, looseness, contamination, or damage.", "Confirm the surface can be contacted without damage and clear people and fragile items from the swing path.", "Use short, controlled strikes and stop when the observation is obtained.", "Wipe the contacted area and confirm no inspection-created damage remains."],
+          record: ["Component/location and the observed response when it supports a reported condition."],
+          care: ["Clean and dry; remove from service if the head or handle is damaged."],
+          stop: ["Do not strike glass, finished surfaces, energized equipment, pressurized components, or questionable brittle materials."],
+          links: []
+        },
+        {
+          id: "digging-shovel",
+          category: "Exterior & site tools",
+          title: "Digging shovel",
+          model: "Husky 77416-944",
+          aliases: "shovel soil septic excavation dig",
+          purpose: "Perform only shallow, authorized surface work where utilities, landscaping, and property finishes are protected.",
+          steps: ["Inspect the handle, grip, and blade; identify the exact authorized area and purpose.", "Confirm utility, irrigation, cable, lighting, septic, and landscaping risks before disturbing soil.", "Use controlled footing and body position; keep others outside the work area.", "Restore displaced material and leave the area safe and clean."],
+          record: ["Location, purpose, limitation, and any property condition affected by the work."],
+          care: ["Clean and dry the blade; inspect handle attachment."],
+          stop: ["Do not excavate, probe unknown utilities, or perform work outside the contracted and authorized procedure."],
+          links: []
+        },
+        {
+          id: "pry-bar",
+          category: "Hand tools",
+          title: "Pry bar",
+          model: "PITTSBURGH 39700",
+          aliases: "pry bar lift access cover leverage",
+          purpose: "Provide limited controlled leverage only on an authorized component designed to be opened without damage.",
+          steps: ["Inspect the bar and contact surfaces; protect adjacent finishes.", "Confirm the component is not fastened, sealed, energized, pressurized, or likely to break.", "Apply the least force necessary while controlling the component and the tool.", "Restore the component and check for marks or damage."],
+          record: ["Document any cover that could not be safely opened or restored."],
+          care: ["Clean, dry, and inspect for bends, cracks, or sharp burrs."],
+          stop: ["Do not force a sealed, adhered, fragile, or unknown component.", "Stop at the first sign of cracking, deformation, movement of connected materials, or property damage."],
+          links: []
+        },
+        {
+          id: "soil-probe",
+          category: "Exterior & site tools",
+          title: "Soil probe",
+          model: "Bully Tools 99203",
+          aliases: "probe ground soil septic tank locate",
+          purpose: "Perform shallow authorized probing where underground utilities and property damage risks have been addressed.",
+          steps: ["Inspect the shaft, tip, handle, and work area.", "Identify visible utilities, irrigation, lighting, drainage, and other buried-system indicators before probing.", "Use straight, gradual hand pressure without impact or body weight.", "Clean the probe and restore the surface after use."],
+          record: ["Location, purpose, depth limitation, and any resistance or inaccessible area relevant to the authorized procedure."],
+          care: ["Clean and disinfect as required; dry before storage."],
+          stop: ["Never probe where buried electrical, gas, water, septic, irrigation, or communication lines may be present without the required locating procedure.", "Do not use the probe as a diagnostic conclusion by itself."],
+          links: []
+        },
+        {
+          id: "mattock",
+          category: "Exterior & site tools",
+          title: "Pick axe / mattock",
+          model: "CENTRAL FORGE 94797",
+          aliases: "pick axe mattock digging soil excavation",
+          purpose: "Complete only company-authorized surface work after underground and property hazards are controlled.",
+          steps: ["Inspect the head, handle, wedge, and work area.", "Confirm required authorization and identify utilities, irrigation, landscaping, structures, and people within the swing zone.", "Use stable footing, two-handed control, eye protection, and a clear swing path.", "Restore the area and account for the tool before departure."],
+          record: ["Location, authorized purpose, property restoration, and any limitation."],
+          care: ["Clean and dry; remove from service for a loose head or damaged handle."],
+          stop: ["Do not use for routine home-inspection probing or unapproved excavation.", "Stop when utilities, hard unknown objects, unstable footing, or bystanders create risk."],
+          links: []
+        },
+        {
+          id: "mold-pump",
+          category: "Specialist equipment",
+          title: "Mold / IAQ sampling pump",
+          model: "Environmental Express Bio-Pump IAQ Lite Pro",
+          aliases: "mold iaq air sampling air o cell pump cassette coc",
+          purpose: "Collect an authorized air sample using the current laboratory plan, cassette, flow requirement, and chain-of-custody procedure.",
+          steps: ["Confirm the service is ordered, the inspector is authorized, the pump is charged, and the current lab COC and sampling media are present and unexpired.", "Record unique sample IDs before opening media. Position the pump and tripod at the required sample location and prevent disturbance during collection.", "Use the current media and laboratory-required flow/time. Verify pump operation with the approved airflow indicator; never guess a sampling duration.", "Cap and label the sample immediately, complete collection time/location/conditions, and maintain the required custody and transport conditions.", "Clean the pump exterior and pack samples separately from used PPE or contaminated equipment."],
+          record: ["Sample ID, property/location, collection date/time, media, flow/time, conditions, and collector.", "Outdoor/control sample and limitations required by the sampling plan.", "Complete laboratory chain of custody."],
+          care: ["Charge and function-check before each job; keep air pathways clean and dry.", "Follow manufacturer battery and calibration/service instructions."],
+          stop: ["Do not sample without the ordered scope, correct media, current lab instructions, or inspector authorization.", "Stop for unsafe contamination, asbestos/lead disturbance risk, or conditions outside the sampling plan."],
+          links: [{ label: "Bio-Pump IAQ Lite operating manual", url: "https://www.eurofins-estore.com.au/assets/brochures/BIOPUMP_Lite.pdf" }]
+        },
+        {
+          id: "telescoping-ladder",
+          category: "Lighting & access",
+          title: "Telescoping ladder",
+          model: "Xtend+Climb PSE155+/300",
+          aliases: "ladder attic roof telescopic access",
+          purpose: "Provide authorized access only after the inspector confirms the ladder, setup area, opening, and task can be used safely.",
+          steps: ["Inspect rails, rungs, feet, locks, strap, labels, and cleanliness before the first use of the shift. Tag and remove a damaged ladder from service.", "Set on firm, level footing away from doors, vehicles, conductors, pets, and traffic; secure or barricade where displacement is possible.", "Extend and lock each required rung exactly as the manufacturer instructs. Confirm every lock visually and physically before climbing.", "Face the ladder, maintain three points of control, keep the body between the rails, and raise bulky equipment separately.", "Descend, collapse with hands clear of pinch points, clean the feet/rungs, secure the strap, and store the ladder in the vehicle."],
+          record: ["Use a specific limitation when safe access or correct setup is not available.", "Report and tag any damaged or unreliable locking component."],
+          care: ["Keep locks, rails, rungs, and feet clean and dry; never lubricate unless the manufacturer instructs it.", "Secure the collapsed ladder during transport."],
+          stop: ["Do not use on unstable/slippery footing, beyond the rated load, near electrical conductors, or when any lock is uncertain.", "Do not move, shift, or extend the ladder while occupied."],
+          links: [
+            { label: "Xtend+Climb product support", url: "https://xtendandclimb.com/shop/" },
+            { label: "OSHA portable-ladder requirements", url: "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.23" }
+          ]
+        },
+        {
+          id: "sewer-scope",
+          category: "Specialist equipment",
+          title: "Sewer scope",
+          model: "Inspector Cameras Scout 3-Pro Plus Red AHD",
+          aliases: "sewer camera drain scope push cable sonde",
+          purpose: "Record an authorized visual inspection of the accessible lateral while protecting the camera head, push cable, cleanout, and property.",
+          steps: ["Confirm the service is ordered and the inspector is authorized. Inspect the camera head, spring, O-ring, skid, cable, reel, monitor, storage, battery, and cleanout area.", "Use the correct protective skid, confirm recording and distance counter, and create a clear opening/location record before insertion.", "Advance the cable with controlled hand pressure. Keep the cable aligned, avoid tight traps and forced bends, and record continuously with clear spoken/location notes.", "Stop at the agreed endpoint or first condition that cannot be safely passed; withdraw steadily without dragging contamination across the property.", "Clean and disinfect the waterproof components as authorized, keep the open control box dry, verify the recording saved, and restore the cleanout."],
+          record: ["Access point, direction, inspected distance, endpoint, material transitions, observations, and limitations.", "Continuous video and representative still images.", "Cleanout restored and area left clean."],
+          care: ["Always use a protective skid and avoid kinking the push cable.", "Dry components before storage; inspect the lens, spring, connector, and O-ring."],
+          stop: ["Do not operate in explosive atmospheres, near high-voltage equipment, or with an open control box exposed to water/rain.", "Never force the camera through resistance or a bend likely to trap or damage it."],
+          links: [{ label: "Scout 3-Pro Plus operating manual", url: "https://inspectorcameras.com/wp-content/uploads/2023/04/Manual-Scout-3-Pro-Plus.pdf" }]
+        },
+        {
+          id: "crawlspace-robot",
+          category: "Specialist equipment",
+          title: "Crawlspace inspection robot",
+          model: "UplinkRobotics Wombat",
+          aliases: "crawler robot crawlspace wombat camera remote",
+          purpose: "Obtain visual evidence from a dry or damp hard-to-reach area without treating the robot as authorization to enter an unsafe space.",
+          steps: ["Review the access and space from outside. Confirm no standing water, hazardous atmosphere, collapse risk, entanglement, extreme temperature, or contamination that could damage equipment or require a separate safety procedure.", "Inspect the crawler, wheels, camera, lights, battery, controller, storage, and retrieval plan. Center both joysticks and power the controller on before the crawler.", "Wait for a stable connection, confirm date/time and recording settings, then capture a clear entry/location image.", "Drive slowly with continuous orientation, keep a return path, use the camera tilt and lighting to document framing, plumbing, vapor barrier, insulation, and observed conditions.", "Return before the signal/battery becomes marginal, save the media, power down, clean without introducing water, and inspect for damage."],
+          record: ["Access point, method, areas viewed, route/coverage, representative stills/video, and limitations.", "Any area the crawler could not reach or conditions that prevented deployment."],
+          care: ["The Wombat is not water resistant; keep it out of standing water.", "Inspect wheels for wrapped debris and follow the manufacturer battery and cleaning guidance."],
+          stop: ["Do not deploy where retrieval is doubtful, water is present, temperature is outside manufacturer limits, or the space may contain a hazardous atmosphere.", "Do not use a crawler image to claim concealed or inaccessible areas were fully inspected."],
+          links: [{ label: "UplinkRobotics Wombat user manual", url: "https://uplinkrobotics.com/wp-content/uploads/2026/01/Wombat-Handbook.pdf" }]
+        },
+        {
+          id: "roof-drone",
+          category: "Specialist equipment",
+          title: "Roof inspection drone",
+          model: "DJI Mini 4 Pro",
+          aliases: "drone uas roof aerial dji part 107",
+          purpose: "Collect authorized alternate roof views when the pilot, aircraft, airspace, weather, property, and operation meet company and FAA requirements.",
+          steps: ["Confirm the pilot’s current Part 107 authority, aircraft registration/Remote ID as applicable, airspace authorization, property permission, and company assignment before travel.", "Complete the manufacturer preflight: aircraft, propellers, battery, controller, firmware, storage, compass/GNSS status, return-to-home settings, control link, and home point.", "Assess wind, precipitation, visibility, temperature, sun, trees, wires, people, vehicles, animals, and emergency landing areas. Maintain visual line of sight and required separation.", "Fly a deliberate perimeter and roof-elevation pattern without operating over uninvolved people. Capture orientation views before close details.", "Land with reserve, inspect the aircraft, confirm media saved, log any abnormal event, and secure batteries for transport/charging."],
+          record: ["Pilot, aircraft, date/time, property, airspace/authorization, weather, launch area, and inspection method.", "Representative roof images and every area not visible.", "Any incident, abnormal flight, damage, or required FAA report."],
+          care: ["Follow DJI battery, propeller, firmware, storage, and maintenance instructions.", "Remove damaged propellers or batteries from service."],
+          stop: ["Do not fly without current authorization, required airspace approval, visual line of sight, safe weather, or a controlled launch/recovery area.", "Do not use the drone to exceed the inspector’s training or make claims about surfaces not clearly visible."],
+          links: [
+            { label: "DJI Mini 4 Pro manuals", url: "https://www.dji.com/mini-4-pro/downloads" },
+            { label: "FAA Part 107 operating requirements", url: "https://www.faa.gov/newsroom/small-unmanned-aircraft-systems-uas-regulations-part-107" }
+          ]
+        }
+      ];
 
       const QUICK_SOP_PROCEDURES = [
         {
@@ -8619,11 +9270,127 @@
         }
       }
 
+      const ACTIVE_JOB_STORAGE_KEY = "mpiActiveJobV1";
+
+      function loadActiveJob() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(ACTIVE_JOB_STORAGE_KEY) || "null");
+          if (!saved || typeof saved !== "object") return null;
+          return {
+            inspector: String(saved.inspector || "").trim(),
+            property: String(saved.property || "").trim(),
+            startedAt: String(saved.startedAt || ""),
+            steps: Array.isArray(saved.steps) ? saved.steps.map(String) : []
+          };
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function storeActiveJob(job) {
+        try { localStorage.setItem(ACTIVE_JOB_STORAGE_KEY, JSON.stringify(job)); } catch (_) {}
+      }
+
+      function syncActiveJobToForms(job, force = false) {
+        if (!job) return;
+        const inspectorInputs = [damageInspector, equipmentInspector, toolCheckInspector, teamQuestionInspector, requestInspector];
+        const propertyInputs = [damageProperty, equipmentProperty, toolCheckProperty, teamQuestionProperty];
+        inspectorInputs.forEach(input => {
+          if (input && (force || !input.value)) input.value = job.inspector;
+        });
+        propertyInputs.forEach(input => {
+          if (input && (force || !input.value)) input.value = job.property;
+        });
+      }
+
+      function updateJobProgress(job = loadActiveJob()) {
+        const completed = new Set(job?.steps || []);
+        jobSteps.forEach(step => { step.checked = completed.has(step.dataset.jobStep); });
+        const count = jobSteps.filter(step => step.checked).length;
+        jobProgressFill.style.width = `${jobSteps.length ? (count / jobSteps.length) * 100 : 0}%`;
+        jobProgressText.textContent = `${count} of ${jobSteps.length} closeout steps complete${count === jobSteps.length ? " — ready to finish the job." : "."}`;
+        jobPhases.forEach(phase => {
+          const phaseSteps = [...phase.querySelectorAll("[data-job-step]")];
+          phase.classList.toggle("is-complete", phaseSteps.length > 0 && phaseSteps.every(step => step.checked));
+        });
+      }
+
+      function renderActiveJob(job = loadActiveJob()) {
+        const title = activeJobStatus.querySelector("strong");
+        const detail = activeJobStatus.querySelector("span");
+        if (!job?.property) {
+          activeJobInspector.value = loadRememberedInspector();
+          activeJobProperty.value = "";
+          title.textContent = "No active job on this phone";
+          detail.textContent = "Enter the inspector and property to begin.";
+          activeJobMapLink.href = "https://maps.apple.com/";
+          activeJobMapLink.setAttribute("aria-disabled", "true");
+          updateJobProgress(null);
+          return;
+        }
+        activeJobInspector.value = job.inspector;
+        activeJobProperty.value = job.property;
+        title.textContent = job.property;
+        detail.textContent = job.startedAt
+          ? `Started ${new Date(job.startedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })} · Information stays on this phone.`
+          : "Current job information stays on this phone.";
+        activeJobMapLink.href = `https://maps.apple.com/?q=${encodeURIComponent(job.property)}`;
+        activeJobMapLink.removeAttribute("aria-disabled");
+        updateJobProgress(job);
+        syncActiveJobToForms(job);
+      }
+
+      function saveActiveJob(event) {
+        event.preventDefault();
+        if (!jobContextForm.reportValidity()) return;
+        const inspector = activeJobInspector.value.trim();
+        const property = activeJobProperty.value.trim();
+        const existing = loadActiveJob();
+        const sameJob = existing?.property?.toLowerCase() === property.toLowerCase();
+        const job = {
+          inspector,
+          property,
+          startedAt: sameJob && existing.startedAt ? existing.startedAt : new Date().toISOString(),
+          steps: sameJob ? existing.steps : []
+        };
+        storeActiveJob(job);
+        saveInspectorName(inspector);
+        renderActiveJob(job);
+        syncActiveJobToForms(job, true);
+        showToast(sameJob ? "Current job updated" : "Job companion started");
+      }
+
+      function updateActiveJobStep(step) {
+        const job = loadActiveJob();
+        if (!job?.property) {
+          step.checked = false;
+          showToast("Start the current job first");
+          activeJobProperty.focus();
+          return;
+        }
+        const completed = new Set(job.steps || []);
+        if (step.checked) completed.add(step.dataset.jobStep);
+        else completed.delete(step.dataset.jobStep);
+        job.steps = [...completed];
+        storeActiveJob(job);
+        updateJobProgress(job);
+      }
+
+      function clearActiveJob() {
+        const job = loadActiveJob();
+        if (job?.property && !window.confirm(`Clear the finished job at ${job.property} from this phone?`)) return;
+        try { localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY); } catch (_) {}
+        [damageProperty, equipmentProperty, toolCheckProperty, teamQuestionProperty].forEach(input => { if (input) input.value = ""; });
+        renderActiveJob(null);
+        showToast("Finished job cleared");
+      }
+
       function initializeFieldForms() {
         const rememberedInspector = loadRememberedInspector();
-        [damageInspector, equipmentInspector, toolCheckInspector, teamQuestionInspector, requestInspector].forEach(input => {
+        [activeJobInspector, damageInspector, equipmentInspector, toolCheckInspector, teamQuestionInspector, requestInspector].forEach(input => {
           if (input && !input.value) input.value = rememberedInspector;
         });
+        syncActiveJobToForms(loadActiveJob());
 
         const params = new URLSearchParams(location.search);
         let targetHash = location.hash || "#home";
@@ -9187,6 +9954,163 @@
           .trim();
       }
 
+      function toolGuideSearchText(guide) {
+        return normalizeSopText([
+          guide.category,
+          guide.title,
+          guide.model,
+          guide.aliases,
+          guide.purpose,
+          ...(guide.steps || []),
+          ...(guide.record || []),
+          ...(guide.care || []),
+          ...(guide.stop || [])
+        ].join(" "));
+      }
+
+      function populateToolGuideCategories() {
+        [...new Set(TOOL_GUIDES.map(guide => guide.category))].forEach(category => {
+          const option = document.createElement("option");
+          option.value = category;
+          option.textContent = category;
+          toolGuideCategory.appendChild(option);
+        });
+      }
+
+      function getFilteredToolGuides() {
+        const query = normalizeSopText(toolGuideSearch.value);
+        const tokens = query.split(" ").filter(Boolean);
+        return TOOL_GUIDES
+          .filter(guide => !toolGuideCategory.value || guide.category === toolGuideCategory.value)
+          .map((guide, order) => {
+            const searchText = toolGuideSearchText(guide);
+            if (!tokens.every(token => searchText.includes(token))) return { guide, order, score: -1 };
+            const title = normalizeSopText(guide.title);
+            const model = normalizeSopText(guide.model);
+            let score = 0;
+            if (title === query) score += 1000;
+            if (title.includes(query)) score += 500;
+            for (const token of tokens) {
+              if (title.includes(token)) score += 80;
+              if (model.includes(token)) score += 50;
+            }
+            return { guide, order, score };
+          })
+          .filter(item => item.score >= 0)
+          .sort((a, b) => b.score - a.score || a.order - b.order)
+          .map(item => item.guide);
+      }
+
+      function appendToolGuideBlock(parent, headingText, items, ordered = false) {
+        if (!items?.length) return;
+        const block = document.createElement("section");
+        block.className = "tool-guide-detail-block";
+        const heading = document.createElement("h4");
+        heading.textContent = headingText;
+        const list = document.createElement(ordered ? "ol" : "ul");
+        items.forEach(item => {
+          const listItem = document.createElement("li");
+          listItem.textContent = item;
+          list.appendChild(listItem);
+        });
+        block.append(heading, list);
+        parent.appendChild(block);
+      }
+
+      function renderToolGuideDetail(guide) {
+        activeToolGuideId = guide.id;
+        toolGuideDetail.replaceChildren();
+
+        const head = document.createElement("div");
+        head.className = "sop-detail-head";
+        const chapter = document.createElement("span");
+        chapter.className = "sop-detail-chapter";
+        chapter.textContent = guide.category;
+        const title = document.createElement("h3");
+        title.textContent = guide.title;
+        const model = document.createElement("span");
+        model.className = "tool-guide-model";
+        model.textContent = guide.model;
+        head.append(chapter, title, model);
+
+        const content = document.createElement("div");
+        content.className = "sop-detail-content";
+        const safety = document.createElement("div");
+        safety.className = "sop-safety-strip";
+        safety.textContent = "MPI quick operating card — use only within your documented training and authorization. The current manufacturer manual and company SOP control when more restrictive.";
+        const purpose = document.createElement("p");
+        purpose.className = "sop-entry";
+        purpose.textContent = guide.purpose;
+        content.append(safety, purpose);
+        appendToolGuideBlock(content, "Field sequence", guide.steps, true);
+        appendToolGuideBlock(content, "Record before moving on", guide.record);
+        appendToolGuideBlock(content, "Care and return", guide.care);
+        appendToolGuideBlock(content, "Stop and get direction", guide.stop);
+
+        (guide.links || []).forEach(link => {
+          const anchor = document.createElement("a");
+          anchor.className = "tool-manual-link";
+          anchor.href = link.url;
+          anchor.target = "_blank";
+          anchor.rel = "noopener";
+          anchor.textContent = link.label;
+          content.appendChild(anchor);
+        });
+        const sourceNote = document.createElement("p");
+        sourceNote.className = "tool-guide-source-note";
+        sourceNote.textContent = "Quick card prepared from the MPI field SOP, company tool master list, and available manufacturer instructions. Confirm the model label and current manual before first use or whenever controls, accessories, or procedures change.";
+        content.appendChild(sourceNote);
+        toolGuideDetail.append(head, content);
+      }
+
+      function renderToolGuideResults({ selectFirst = false } = {}) {
+        const guides = getFilteredToolGuides();
+        const query = normalizeSopText(toolGuideSearch.value);
+        toolGuideClear.hidden = !query;
+        toolGuideResultCount.replaceChildren();
+        const count = document.createElement("span");
+        count.textContent = `${guides.length} ${guides.length === 1 ? "tool card" : "tool cards"}`;
+        const scope = document.createElement("span");
+        scope.textContent = query ? "Best match first" : "Company inventory";
+        toolGuideResultCount.append(count, scope);
+        toolGuideResults.replaceChildren();
+
+        if (!guides.length) {
+          const empty = document.createElement("p");
+          empty.className = "sop-empty-results";
+          empty.textContent = "No company tool matched that search. Try the tool type, brand, or model number.";
+          toolGuideResults.appendChild(empty);
+          return;
+        }
+        if (selectFirst || !guides.some(guide => guide.id === activeToolGuideId)) renderToolGuideDetail(guides[0]);
+
+        guides.forEach(guide => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "sop-result-btn";
+          button.dataset.toolGuideId = guide.id;
+          button.setAttribute("role", "option");
+          button.setAttribute("aria-selected", String(guide.id === activeToolGuideId));
+          button.setAttribute("aria-current", String(guide.id === activeToolGuideId));
+          const category = document.createElement("span");
+          category.className = "sop-result-chapter";
+          category.textContent = guide.category;
+          const title = document.createElement("span");
+          title.className = "sop-result-title";
+          title.textContent = guide.title;
+          button.append(category, title);
+          toolGuideResults.appendChild(button);
+        });
+      }
+
+      function initializeToolGuides() {
+        populateToolGuideCategories();
+        const defaultGuide = TOOL_GUIDES.find(guide => guide.id === "moisture-meter") || TOOL_GUIDES[0];
+        activeToolGuideId = defaultGuide?.id || "";
+        if (defaultGuide) renderToolGuideDetail(defaultGuide);
+        renderToolGuideResults();
+      }
+
       function sopEntryText(entry) {
         if (entry.text) return entry.text;
         return (entry.rows || []).flat().join(" ");
@@ -9618,6 +10542,9 @@
         if (window.innerWidth < 861) commentOutput.closest(".comment-result-panel").scrollIntoView({ behavior: "smooth", block: "start" });
       });
 
+      jobContextForm.addEventListener("submit", saveActiveJob);
+      clearActiveJobBtn.addEventListener("click", clearActiveJob);
+      jobSteps.forEach(step => step.addEventListener("change", () => updateActiveJobStep(step)));
       damagePhoto1.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto1, damagePhotoPreview1, damagePhotoCard1));
       damagePhoto2.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto2, damagePhotoPreview2, damagePhotoCard2));
       damageInformedOptions.forEach(option => option.addEventListener("change", event => updateDamageInformedSelection(event.currentTarget)));
@@ -9658,6 +10585,34 @@
 
       window.addEventListener("resize", sizeCommentOutput);
 
+      toolGuideSearch.addEventListener("input", () => renderToolGuideResults({ selectFirst: true }));
+      toolGuideCategory.addEventListener("change", () => renderToolGuideResults({ selectFirst: true }));
+      toolGuideClear.addEventListener("click", () => {
+        toolGuideSearch.value = "";
+        renderToolGuideResults({ selectFirst: true });
+        toolGuideSearch.focus();
+      });
+      toolGuideQuickChips.addEventListener("click", event => {
+        const button = event.target.closest("[data-tool-query]");
+        if (!button) return;
+        toolGuideSearch.value = button.dataset.toolQuery;
+        toolGuideCategory.value = "";
+        renderToolGuideResults({ selectFirst: true });
+      });
+      toolGuideResults.addEventListener("click", event => {
+        const button = event.target.closest("[data-tool-guide-id]");
+        if (!button) return;
+        const guide = TOOL_GUIDES.find(item => item.id === button.dataset.toolGuideId);
+        if (!guide) return;
+        renderToolGuideDetail(guide);
+        for (const option of toolGuideResults.querySelectorAll("[data-tool-guide-id]")) {
+          const selected = option.dataset.toolGuideId === guide.id;
+          option.setAttribute("aria-selected", String(selected));
+          option.setAttribute("aria-current", String(selected));
+        }
+        if (window.innerWidth < 861) toolGuideDetail.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
       sopSearch.addEventListener("input", () => renderSopResults({ selectFirst: true }));
       sopChapter.addEventListener("change", () => renderSopResults({ selectFirst: true }));
 
@@ -9692,9 +10647,11 @@
       setCommentType("defect");
       populateReportItems();
       initializeFieldForms();
+      renderActiveJob();
       updateToolCheckProgress();
       updateToolCheckResult();
       initializeTraining();
+      initializeToolGuides();
       initializeSopGuide();
       initializePushStatus();
       initializeOfflineAccess();

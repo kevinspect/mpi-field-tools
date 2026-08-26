@@ -1,0 +1,100 @@
+# MPI Field Tools — Product Roadmap
+
+## Product rule
+
+MPI Field Tools should feel like a calm field companion, not office software squeezed onto a phone. The inspector should usually make one decision per screen, see only the next useful action, and never have to re-enter information the app already knows.
+
+## Build next with current or free systems
+
+### 1. Manager coaching and competency matrix
+
+- Keep InterNACHI credentials separate from MPI competency.
+- Let Kevin assign a field skill to an individual inspector: Observe, Supervised, or Independent.
+- Add a due date, trainer, evidence note, and manager sign-off.
+- Inspector sees only their plan; Kevin sees the team view.
+- Use the existing secure Google Apps Script training profile rather than adding a paid platform.
+
+### 2. Equipment readiness board
+
+- Track high-risk equipment readiness: charged, function checked, calibration/service due, damaged, or removed from service.
+- Show the inspector only their assigned equipment.
+- Email Kevin only when an item needs attention or misses a due date, not after every normal check.
+
+### 3. Inspection quality coaching
+
+- After report review, Kevin records no more than three coaching points: missed item, wording issue, or evidence issue.
+- Inspector acknowledges the coaching and is directed to the matching SOP prompt or short lesson.
+- Repeated patterns become a training assignment instead of a punitive score.
+
+### 4. Incident and near-miss record
+
+- Short form for injury, near miss, property concern, equipment failure, or unsafe access.
+- Capture immediate action and who was informed.
+- Keep it separate from the damaged-item notice so safety trends can be reviewed.
+
+### 5. Daily readiness check
+
+- A 30-second start-of-day screen for phone charge, meters, ladders, PPE, assignments, and weather.
+- Only exceptions are sent to management.
+- The normal state should take one tap, not a full checklist.
+
+### 6. Company updates with acknowledgement
+
+- Kevin publishes a short update to everyone or a selected inspector.
+- Urgent policy updates require a simple “Read and understood” acknowledgement.
+- Training assignments remain separate from general messages.
+
+### 7. Smart links between the existing tools
+
+- Tool guides link directly to the matching SOP test.
+- SOP stop conditions link to Damage Notice, Incident/Near Miss, or Team Question.
+- Job Companion shows only the forms still needed for the current job.
+- Training coaching links to the exact lesson or InterNACHI course.
+
+## Low-cost improvements
+
+### 1. MPI Comment Builder
+
+- Online only and used only when the template has no suitable comment.
+- Use a small, locked server function so no API key is exposed in the app.
+- Provide the report category, inspector’s exact observation, MPI writing rules, and approved examples.
+- Set a hard monthly spending limit and log usage by inspector.
+- Return a read-only title, Observation, Implication, and Recommendation.
+
+### 2. Scheduled management digest
+
+- One concise email to Kevin each evening containing only exceptions: damaged items, missing tools, overdue training, unanswered questions, and equipment removed from service.
+- Avoid sending a separate notification for every normal action.
+
+### 3. Spectora-assisted job handoff
+
+- Prefer a supported Spectora API or calendar feed if available.
+- Until then, keep the read-only company calendar connection and avoid fragile screen scraping.
+
+## Later integrations
+
+- Role-based sign-in and device enrollment for company phones.
+- Central, auditable inspector activity and training records.
+- Spectora job/report status connection.
+- Automated quality-control checks against the report before release.
+- Company analytics for repeat defects, missed components, report revision rates, training needs, equipment loss, and response time.
+
+## Management dashboard design
+
+Kevin’s view should lead with exceptions, not raw activity:
+
+1. Needs attention today.
+2. Inspector training due soon.
+3. Equipment or tool problems.
+4. Unanswered field questions.
+5. Repeated quality-coaching topics.
+6. Recognition and completed milestones.
+
+## Privacy and employment-policy guardrails
+
+- Do not collect continuous or background location.
+- If arrival/departure location is ever added, require an obvious inspector action, a written company policy, a clear business purpose, limited retention, and access restricted to management.
+- Keep employee training and coaching data behind company sign-in.
+- Show inspectors what is recorded and how it is used.
+- Do not mix safety reporting with performance discipline.
+
