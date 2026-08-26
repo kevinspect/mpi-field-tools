@@ -2040,3 +2040,40 @@ Status: published August 26, 2026 as GitHub commit `1ca376b3a726b3960ef1cb623cad
 
 - Restore GitHub `main` to `a2a421d19cf4b951f283537eae17466cb58b74f7` to keep Builds 1–53 and remove only the accessible focus treatment.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Protected-form recovery checkpoint
+
+Status: passed August 26, 2026 against app Build 91.
+
+#### Validation record
+
+- Completed a save/reload/restore cycle for all seven protected field forms: Damaged Item Notice, End-of-Job Tool Check, new-tool commissioning, new-inspector coaching review, Ask Management, Safety & Near-Miss Notice, and Requests & Feedback.
+- Confirmed exact restoration of representative inspector/property text, selections, checklist and release states, explanatory notes, and both conditional Other-person fields.
+- Confirmed the Damaged Item Notice restores its text but specifically tells the inspector to reselect both photographs, preserving the app’s rule that property photos are never stored in browser storage.
+- No form restoration failed, no app-owned browser error occurred, and no submission or email was sent during the test.
+
+### Build 55 — Reject impossible future manufacture dates
+
+Status: published August 26, 2026 as GitHub commit `5ac905aa0f7298b32c84b21c41727ce92ac6e59b` (app Build 92).
+
+#### Additions
+
+1. Added one shared future-date guard to the Equipment Age Finder.
+   - Month-based results now stop when a serial resolves to a month later than the current month.
+   - Week-based results now stop when a serial resolves beyond the current production-week boundary.
+   - Repeating-cycle results discard future possibilities and stop if no past or current match remains.
+   - The inspector receives a direct recheck instruction instead of a plausible-looking zero-month age.
+
+2. Updated the visible build, version file, and offline cache identifier to Build 92.
+
+#### Validation record
+
+- Re-ran the built-in example for all 21 displayed manufacturer/equipment families with no failed decode.
+- Re-ran the Trane 1996, A. O. Smith 1960, and Rheem-family 1960 historical checks with no regression.
+- Tested six deliberately impossible 2026 serials across Goodman, Carrier, A. O. Smith, Trane, York, and Nortek month/week formats; all six were rejected and none displayed an equipment age.
+- The 390-pixel Age Finder remained free of horizontal overflow and inline JavaScript syntax passed.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `8739604ebedbcc1a775890bb927f1a41ede4a500` to keep Builds 1–54 and remove only the future-date guard.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

@@ -110,6 +110,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Compact filters, training answers, guide links, escalation actions, and other field controls now meet the app’s phone tap-target standard across every screen. **Implemented in Build 89.**
 - The InterNACHI-issued achievement marquee now has a clear, correctly bounded profile route when the signed-in account has no achievement data to display. **Implemented in Build 90.**
 - Every app-owned field control now has a consistent high-contrast keyboard and switch-control focus indicator, with the complete 13-screen path validated without changing the normal touch layout. **Implemented in Build 91.**
+- The Equipment Age Finder now rejects serials that resolve to a future manufacture month or production week instead of showing a plausible zero-month age. **Implemented in Build 92.**
 
 ## Low-cost improvements
 
