@@ -2668,7 +2668,7 @@
       </a>
       <a class="home-tool-card" href="#equipment-record">
         <span class="home-tool-icon icon-record" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Equipment Photo Record</strong><small>Save labeled Before and After proof for thermostats, furnaces and access covers.</small></span>
+        <span class="home-tool-copy"><strong>Equipment Photo Record</strong><small>Document thermostat settings and furnace access before and after inspection.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
       <a class="home-tool-card" href="#sop-guide">
@@ -2861,7 +2861,7 @@
           <p class="eyebrow">MPI equipment notice</p>
           <h2 id="damage-report-title">Report a damaged item.</h2>
         </div>
-        <p>Photograph damaged inspection equipment or access components, add the essential field details, and email the notice directly to Kevin and the MPI administrative inboxes.</p>
+        <p>Photograph damaged inspection equipment or access components, add the essential field details, and email the notice directly to Kevin.</p>
       </div>
 
       <div class="damage-grid">
@@ -2992,12 +2992,12 @@
           <p class="eyebrow">MPI property-protection record</p>
           <h2 id="equipment-record-title">Document Before and After.</h2>
         </div>
-        <p>Record how a thermostat, furnace, access cover, appliance, or other component was found and how it was left. The two photos are combined into one clearly labeled email attachment.</p>
+        <p>Document the thermostat setting and furnace cabinet before inspection, then show the thermostat restored and furnace closed when the inspection is complete.</p>
       </div>
 
       <div class="workflow-grid">
         <form class="panel damage-form" id="equipmentForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" enctype="multipart/form-data" novalidate>
-          <input type="hidden" name="_subject" id="equipmentEmailSubject" value="MPI Equipment Condition Record">
+          <input type="hidden" name="_subject" id="equipmentEmailSubject" value="MPI Thermostat &amp; Furnace Photo Record">
           <input type="hidden" name="_template" value="table">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?equipment-sent=1#equipment-record">
@@ -3008,7 +3008,7 @@
 
           <div class="panel-heading">
             <div>
-              <h2>Equipment condition record</h2>
+              <h2>Thermostat &amp; furnace photo record</h2>
               <p>Required fields are marked with an asterisk.</p>
             </div>
             <span class="step-count">Online only</span>
@@ -3025,145 +3025,59 @@
             </div>
           </div>
 
-          <div class="damage-field-row">
-            <div class="field">
-              <label for="equipmentType">Component recorded *</label>
-              <div class="select-wrap">
-                <select class="damage-input" id="equipmentType" name="Component recorded" required>
-                  <option value="">Choose the component…</option>
-                  <optgroup label="Heating, cooling and ventilation">
-                    <option>Thermostat or HVAC control</option>
-                    <option>Furnace</option>
-                    <option>Boiler or hydronic heating equipment</option>
-                    <option>Air handler or fan coil</option>
-                    <option>Air conditioner</option>
-                    <option>Heat pump</option>
-                    <option>Humidifier or dehumidifier</option>
-                    <option>ERV, HRV, or ventilation equipment</option>
-                  </optgroup>
-                  <optgroup label="Electrical and energy equipment">
-                    <option>Electrical panel or dead-front cover</option>
-                    <option>Electrical service disconnect or equipment cover</option>
-                    <option>GFCI or AFCI device</option>
-                    <option>Generator or transfer equipment</option>
-                    <option>EV charging equipment</option>
-                  </optgroup>
-                  <optgroup label="Plumbing and water equipment">
-                    <option>Water heater</option>
-                    <option>Plumbing fixture, faucet, or shower control</option>
-                    <option>Sump pump or sewage ejector</option>
-                    <option>Private well equipment</option>
-                    <option>Water treatment equipment</option>
-                  </optgroup>
-                  <optgroup label="Appliances and fuel-fired equipment">
-                    <option>Kitchen appliance</option>
-                    <option>Laundry appliance</option>
-                    <option>Other installed appliance</option>
-                    <option>Fireplace, stove, or fuel-fired equipment</option>
-                  </optgroup>
-                  <optgroup label="Access and building components">
-                    <option>Attic access hatch, stairs, or ladder</option>
-                    <option>Crawlspace access hatch or door</option>
-                    <option>Equipment access panel or service door</option>
-                    <option>Garage door or operator</option>
-                    <option>Interior or exterior door</option>
-                    <option>Window, lock, or latch</option>
-                    <option>Light, switch, or ceiling fan</option>
-                  </optgroup>
-                  <option>Other component or control</option>
-                </select>
-              </div>
-            </div>
-            <div class="field">
-              <label for="equipmentLocation">Component location *</label>
-              <input class="damage-input" id="equipmentLocation" name="Component location" type="text" maxlength="120" placeholder="Example: Basement mechanical room" required>
-            </div>
-          </div>
-
           <div class="field">
-            <label for="equipmentReason">Reason for the record *</label>
-            <div class="select-wrap">
-              <select class="damage-input" id="equipmentReason" name="Reason for record" required>
-                <option value="">Choose the reason…</option>
-                <optgroup label="Before and after documentation">
-                  <option>General condition before and after inspection</option>
-                  <option>Pre-existing condition documented before operation or access</option>
-                  <option>Component operated and returned to the condition found</option>
-                  <option>Final departure condition documented</option>
-                </optgroup>
-                <optgroup label="Controls and equipment restored">
-                  <option>Thermostat mode and setting restored</option>
-                  <option>HVAC or equipment access panel restored</option>
-                  <option>Electrical panel or dead-front cover restored</option>
-                  <option>Disconnect, breaker, GFCI, or control restored</option>
-                  <option>Fireplace control or damper restored</option>
-                </optgroup>
-                <optgroup label="Access and building components restored">
-                  <option>Attic access hatch, stairs, or ladder restored</option>
-                  <option>Crawlspace access hatch or door restored</option>
-                  <option>Door, window, lock, or latch restored</option>
-                  <option>Garage door or operator restored</option>
-                  <option>Light, switch, or ceiling fan restored</option>
-                </optgroup>
-                <optgroup label="Appliances and plumbing restored">
-                  <option>Appliance cycle completed and controls turned off</option>
-                  <option>Refrigerator or freezer doors closed and settings unchanged</option>
-                  <option>Faucet, shower, or fixture turned off and area rechecked</option>
-                  <option>Sump pump, ejector, or well equipment test completed</option>
-                </optgroup>
-                <option>Component could not be fully restored — condition documented</option>
-                <option>Other property-protection record</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="damage-field-row">
-            <div class="field">
-              <label for="equipmentBeforeNote">Before condition *</label>
-              <textarea id="equipmentBeforeNote" name="Before condition" maxlength="700" placeholder="Describe how the component was found before operation or access." required></textarea>
-            </div>
-            <div class="field">
-              <label for="equipmentAfterNote">After condition / action taken *</label>
-              <textarea id="equipmentAfterNote" name="After condition and action taken" maxlength="700" placeholder="Describe how the component was restored and left." required></textarea>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Photo record *</label>
+            <label>Thermostat photos *</label>
             <div class="damage-photo-grid">
               <div class="damage-photo-card" id="equipmentPhotoCard1">
-                <input id="equipmentPhoto1" type="file" accept="image/*" capture="environment" required aria-label="Take or choose Before photo">
-                <img id="equipmentPhotoPreview1" alt="Equipment Before photo preview" hidden>
-                <span class="damage-photo-prompt">Photo 1 — Before</span>
+                <input id="equipmentPhoto1" type="file" accept="image/*" required aria-label="Choose thermostat Before photo from camera or photo library">
+                <img id="equipmentPhotoPreview1" alt="Thermostat Before photo preview" hidden>
+                <span class="damage-photo-prompt">Thermostat — Before</span>
               </div>
               <div class="damage-photo-card" id="equipmentPhotoCard2">
-                <input id="equipmentPhoto2" type="file" accept="image/*" capture="environment" required aria-label="Take or choose After photo">
-                <img id="equipmentPhotoPreview2" alt="Equipment After photo preview" hidden>
-                <span class="damage-photo-prompt">Photo 2 — After</span>
+                <input id="equipmentPhoto2" type="file" accept="image/*" required aria-label="Choose thermostat After photo from camera or photo library">
+                <img id="equipmentPhotoPreview2" alt="Thermostat After photo preview" hidden>
+                <span class="damage-photo-prompt">Thermostat — After / Restored</span>
               </div>
             </div>
-            <input type="hidden" name="Photo record" value="One labeled Before/After photo sheet is attached">
-            <p class="damage-file-note">The app creates one attachment labeled BEFORE and AFTER so both photos arrive together.</p>
+            <p class="damage-file-note">Tap either box to take a new photo or choose one from the phone's Photo Library.</p>
           </div>
 
-          <button class="decode-btn" id="equipmentSubmitBtn" type="submit">Email equipment record</button>
+          <div class="field">
+            <label>Furnace photos *</label>
+            <div class="damage-photo-grid">
+              <div class="damage-photo-card" id="equipmentPhotoCard3">
+                <input id="equipmentPhoto3" type="file" accept="image/*" required aria-label="Choose furnace Before opening photo from camera or photo library">
+                <img id="equipmentPhotoPreview3" alt="Furnace Before opening photo preview" hidden>
+                <span class="damage-photo-prompt">Furnace — Before Opening</span>
+              </div>
+              <div class="damage-photo-card" id="equipmentPhotoCard4">
+                <input id="equipmentPhoto4" type="file" accept="image/*" required aria-label="Choose furnace After closing and system restored photo from camera or photo library">
+                <img id="equipmentPhotoPreview4" alt="Furnace After closing and system restored photo preview" hidden>
+                <span class="damage-photo-prompt">Furnace — After Closing / System Restored</span>
+              </div>
+            </div>
+            <input type="hidden" name="Photo record" value="Thermostat Before/After and furnace Before Opening/After Closing — System Restored photo sheet attached">
+            <p class="damage-file-note">All four photos are combined into one attachment with permanent labels so the record is clear in the email.</p>
+          </div>
+
+          <button class="decode-btn" id="equipmentSubmitBtn" type="submit">Email photo record</button>
           <p class="damage-submit-status" id="equipmentSubmitStatus" role="status" aria-live="polite"></p>
-          <p class="privacy-note">This online form emails the record to Kevin and copies the MPI administrative inboxes. The website does not keep a photo database.</p>
+          <p class="privacy-note">This online form emails the record only to Kevin. The website does not keep a photo database.</p>
         </form>
 
         <aside class="panel damage-info-panel" aria-labelledby="equipment-info-title">
           <span class="damage-online-badge">Online submission</span>
-          <h3 id="equipment-info-title">Proof of how the component was left.</h3>
-          <p>Use this record whenever an inspection requires changing a control, opening a cover, operating equipment, or handling an access component that should be restored before departure.</p>
+          <h3 id="equipment-info-title">Four photos. One clear record.</h3>
+          <p>Use this record to document the thermostat setting and furnace cabinet before the inspection, then confirm both were restored afterward.</p>
           <ul class="damage-checklist">
-            <li>Take the Before photo before changing the thermostat, control, cover, or access component.</li>
-            <li>Return the component to its original safe condition unless a safety concern requires otherwise.</li>
-            <li>Take the After photo from an angle that clearly shows the restored setting or condition.</li>
-            <li>If restoration is not possible, stop, protect the area, notify a responsible party, and use the damaged-item notice.</li>
+            <li>Photograph the thermostat before changing its mode or temperature setting.</li>
+            <li>Photograph the furnace cabinet before opening or removing the access panel.</li>
+            <li>When finished, close and secure the furnace panel and restore the system.</li>
+            <li>Take the final photos so the restored thermostat setting and closed furnace cabinet are easy to see.</li>
           </ul>
           <div class="form-success-box" id="equipmentSuccessBox" hidden>
             <strong>Equipment record submitted.</strong>
-            The field record and labeled Before/After photo sheet were emailed to management.
+            The labeled thermostat and furnace photo record was emailed only to Kevin.
           </div>
         </aside>
       </div>
@@ -4148,15 +4062,18 @@
       const equipmentForm = document.getElementById("equipmentForm");
       const equipmentInspector = document.getElementById("equipmentInspector");
       const equipmentProperty = document.getElementById("equipmentProperty");
-      const equipmentType = document.getElementById("equipmentType");
-      const equipmentLocation = document.getElementById("equipmentLocation");
-      const equipmentReason = document.getElementById("equipmentReason");
       const equipmentPhoto1 = document.getElementById("equipmentPhoto1");
       const equipmentPhoto2 = document.getElementById("equipmentPhoto2");
+      const equipmentPhoto3 = document.getElementById("equipmentPhoto3");
+      const equipmentPhoto4 = document.getElementById("equipmentPhoto4");
       const equipmentPhotoCard1 = document.getElementById("equipmentPhotoCard1");
       const equipmentPhotoCard2 = document.getElementById("equipmentPhotoCard2");
+      const equipmentPhotoCard3 = document.getElementById("equipmentPhotoCard3");
+      const equipmentPhotoCard4 = document.getElementById("equipmentPhotoCard4");
       const equipmentPhotoPreview1 = document.getElementById("equipmentPhotoPreview1");
       const equipmentPhotoPreview2 = document.getElementById("equipmentPhotoPreview2");
+      const equipmentPhotoPreview3 = document.getElementById("equipmentPhotoPreview3");
+      const equipmentPhotoPreview4 = document.getElementById("equipmentPhotoPreview4");
       const equipmentAttachment = document.getElementById("equipmentAttachment");
       const equipmentEmailSubject = document.getElementById("equipmentEmailSubject");
       const equipmentSubmittedAt = document.getElementById("equipmentSubmittedAt");
@@ -7450,14 +7367,14 @@
         if (params.get("damage-sent") === "1") {
           damageSuccessBox.hidden = false;
           damageSubmitStatus.className = "damage-submit-status success";
-          damageSubmitStatus.textContent = "Damage notice submitted to Kevin and the MPI administrative inboxes.";
+          damageSubmitStatus.textContent = "Damage notice submitted only to Kevin.";
           params.delete("damage-sent");
           targetHash = "#damage-report";
         }
         if (params.get("equipment-sent") === "1") {
           equipmentSuccessBox.hidden = false;
           equipmentSubmitStatus.className = "damage-submit-status success";
-          equipmentSubmitStatus.textContent = "Equipment record submitted with the labeled Before/After photo sheet.";
+          equipmentSubmitStatus.textContent = "Thermostat and furnace photo record submitted only to Kevin.";
           params.delete("equipment-sent");
           targetHash = "#equipment-record";
         }
@@ -7566,6 +7483,45 @@
         return new File([blob], "MPI-Before-After-Photo-Record.jpg", { type: "image/jpeg", lastModified: Date.now() });
       }
 
+      async function createEquipmentPhotoSheet(files) {
+        const canvas = document.createElement("canvas");
+        canvas.width = 1200;
+        canvas.height = 3510;
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#FFFFFF";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "#11186A";
+        context.fillRect(0, 0, canvas.width, 120);
+        context.fillStyle = "#FFFFFF";
+        context.font = "700 36px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillText("MPI THERMOSTAT & FURNACE PHOTO RECORD", canvas.width / 2, 60);
+
+        const panels = [
+          { label: "THERMOSTAT — BEFORE", file: files[0], top: 160 },
+          { label: "THERMOSTAT — AFTER / RESTORED", file: files[1], top: 990 },
+          { label: "FURNACE — BEFORE OPENING", file: files[2], top: 1820 },
+          { label: "FURNACE — AFTER CLOSING / SYSTEM RESTORED", file: files[3], top: 2650 }
+        ];
+
+        for (const panel of panels) {
+          context.fillStyle = "#B48720";
+          context.fillRect(40, panel.top, 1120, 70);
+          context.fillStyle = "#FFFFFF";
+          context.font = "800 29px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+          context.textAlign = "left";
+          context.fillText(panel.label, 70, panel.top + 35);
+          const image = await loadImageFile(panel.file);
+          drawContainedImage(context, image, 40, panel.top + 70, 1120, 720);
+          image.src = "";
+        }
+
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", .78));
+        if (!blob) throw new Error("The labeled thermostat and furnace photo sheet could not be created on this phone.");
+        return new File([blob], "MPI-Thermostat-Furnace-Photo-Record.jpg", { type: "image/jpeg", lastModified: Date.now() });
+      }
+
       function setGeneratedAttachment(input, file) {
         const transfer = new DataTransfer();
         transfer.items.add(file);
@@ -7632,7 +7588,7 @@
         equipmentSubmitStatus.textContent = "";
         if (!equipmentForm.reportValidity()) {
           equipmentSubmitStatus.className = "damage-submit-status error";
-          equipmentSubmitStatus.textContent = "Complete the required fields and add both Before and After photos.";
+          equipmentSubmitStatus.textContent = "Enter the inspector and property, then add all four required photos.";
           return;
         }
         if (!navigator.onLine) {
@@ -7641,28 +7597,33 @@
           showToast("Reconnect before sending the equipment record");
           return;
         }
-        if (!selectedFilesAreImages([equipmentPhoto1, equipmentPhoto2])) {
+        if (!selectedFilesAreImages([equipmentPhoto1, equipmentPhoto2, equipmentPhoto3, equipmentPhoto4])) {
           equipmentSubmitStatus.className = "damage-submit-status error";
           equipmentSubmitStatus.textContent = "Only phone-camera or image files can be attached.";
           return;
         }
         equipmentSubmitBtn.disabled = true;
-        equipmentSubmitBtn.textContent = "Preparing labeled photos…";
-        equipmentSubmitStatus.textContent = "Combining the Before and After photos into one labeled attachment.";
+        equipmentSubmitBtn.textContent = "Preparing four photos…";
+        equipmentSubmitStatus.textContent = "Combining the thermostat and furnace photos into one labeled attachment.";
         try {
-          const sheet = await createLabeledPhotoSheet(equipmentPhoto1.files[0], equipmentPhoto2.files[0], "MPI EQUIPMENT CONDITION RECORD");
+          const sheet = await createEquipmentPhotoSheet([
+            equipmentPhoto1.files[0],
+            equipmentPhoto2.files[0],
+            equipmentPhoto3.files[0],
+            equipmentPhoto4.files[0]
+          ]);
           setGeneratedAttachment(equipmentAttachment, sheet);
           equipmentSubmittedAt.value = getSubmissionTimestamp();
-          equipmentEmailSubject.value = `MPI Equipment Record — ${equipmentType.value} — ${equipmentProperty.value.trim()}`.slice(0, 180);
+          equipmentEmailSubject.value = `MPI Thermostat & Furnace Photo Record — ${equipmentProperty.value.trim()}`.slice(0, 180);
           saveInspectorName(equipmentInspector.value);
-          equipmentSubmitBtn.textContent = "Sending equipment record…";
-          equipmentSubmitStatus.textContent = "Uploading the form and labeled photo sheet. Keep this page open.";
+          equipmentSubmitBtn.textContent = "Sending photo record…";
+          equipmentSubmitStatus.textContent = "Uploading the form and four-photo sheet. Keep this page open.";
           HTMLFormElement.prototype.submit.call(equipmentForm);
         } catch (error) {
           equipmentSubmitBtn.disabled = false;
-          equipmentSubmitBtn.textContent = "Email equipment record";
+          equipmentSubmitBtn.textContent = "Email photo record";
           equipmentSubmitStatus.className = "damage-submit-status error";
-          equipmentSubmitStatus.textContent = error.message || "The photo sheet could not be prepared. Choose the photos again and retry.";
+          equipmentSubmitStatus.textContent = error.message || "The four-photo sheet could not be prepared. Choose the photos again and retry.";
         }
       }
 
@@ -8304,6 +8265,8 @@
       damageForm.addEventListener("submit", validateDamageSubmission);
       equipmentPhoto1.addEventListener("change", () => updateDamagePhotoPreview(equipmentPhoto1, equipmentPhotoPreview1, equipmentPhotoCard1, equipmentSubmitStatus));
       equipmentPhoto2.addEventListener("change", () => updateDamagePhotoPreview(equipmentPhoto2, equipmentPhotoPreview2, equipmentPhotoCard2, equipmentSubmitStatus));
+      equipmentPhoto3.addEventListener("change", () => updateDamagePhotoPreview(equipmentPhoto3, equipmentPhotoPreview3, equipmentPhotoCard3, equipmentSubmitStatus));
+      equipmentPhoto4.addEventListener("change", () => updateDamagePhotoPreview(equipmentPhoto4, equipmentPhotoPreview4, equipmentPhotoCard4, equipmentSubmitStatus));
       equipmentForm.addEventListener("submit", validateEquipmentSubmission);
       document.getElementById("trainingGrid").addEventListener("click", event => {
         const button = event.target.closest("[data-complete-training]");
@@ -8320,7 +8283,7 @@
         damageSubmitBtn.disabled = false;
         damageSubmitBtn.textContent = "Email damaged item notice";
         equipmentSubmitBtn.disabled = false;
-        equipmentSubmitBtn.textContent = "Email equipment record";
+        equipmentSubmitBtn.textContent = "Email photo record";
         teamQuestionSubmitBtn.disabled = false;
         teamQuestionSubmitBtn.textContent = "Email question to management";
         requestSubmitBtn.disabled = false;
