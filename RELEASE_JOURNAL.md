@@ -992,3 +992,42 @@ Status: published August 26, 2026 as GitHub commit `3b785e496cb2eb59ccc8bc0e0ce3
 
 - Restore GitHub `main` to `b9b1248b08e620021085ca53199f8555d0500f86` to keep Builds 1–23 but remove the company phone setup check.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 25 — Home equipment exception banner and master-list audit
+
+Status: published August 26, 2026 as GitHub commit `3a50c6aefb348ebca6f17224abde755b49daf4b4`.
+
+#### Additions
+
+1. Added one exception-only equipment banner to the home screen.
+   - The banner appears only when the phone’s Equipment readiness list contains an item held out of service or past its entered required date.
+   - It shows the total needing attention and separates the held and overdue counts.
+   - One tap opens Company Tool Guides and the Equipment readiness panel.
+
+2. Kept normal operation visually quiet.
+   - No banner appears for an empty list, normal ready equipment, or an item that is merely due soon.
+   - Correcting or removing the final exception removes the home banner automatically.
+   - No email or management alert is created by a normal readiness-list change.
+
+3. Completed a source-workbook coverage audit.
+   - Compared the app against `Michigan_Property_Inspections_Inspector_Tool_Master_List.xlsx`.
+   - All 21 master-list tools have a matching operating card in the app; the separate first-use commissioning card brings the app total to 22.
+   - Every card contains a category, exact tool/model identity, aliases, purpose, field sequence, required record, care/return steps, stop conditions, and a link collection.
+   - No duplicate cards were added during the audit.
+   - Updated the visible build, version file, and offline cache identifier to Build 62.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Empty and due-soon readiness lists kept the home banner hidden.
+- A held camera and overdue meter produced **2 equipment items need attention**, **1 held out of service · 1 overdue**.
+- The banner opened Company Tool Guides correctly.
+- 390-pixel phone layout: no horizontal overflow; Review equipment remained 44 pixels high.
+- Workbook comparison: 21 of 21 master-list items matched; all 22 app cards contained every required content block.
+- No email, network submission, location collection, or background monitoring was added.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `492a6995dd573f85d1e6a3a3a2ce1c525926b39a` to keep Builds 1–24 but remove the home equipment exception banner.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
