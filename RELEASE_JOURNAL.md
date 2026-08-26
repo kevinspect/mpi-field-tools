@@ -466,7 +466,7 @@ Status: published August 26, 2026 as GitHub commit `050c0c8532a59254b1911f28c904
 
 ### Build 11 — New-tool commissioning record
 
-Status: ready to publish as Build 48.
+Status: published August 26, 2026 as GitHub commit `acc80637103ac0aa0112f002c7765f58e055c123`.
 
 #### Additions
 
