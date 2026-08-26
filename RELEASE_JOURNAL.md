@@ -420,7 +420,7 @@ Status: published August 26, 2026 as GitHub commit `e9ff0a0a9df54249361e8fabfd62
 
 ### Build 10 — Factory-documented Age Finder expansion
 
-Status: ready to publish as Build 47.
+Status: published August 26, 2026 as GitHub commit `050c0c8532a59254b1911f28c9045b16b57f4b8f`.
 
 #### Additions
 
