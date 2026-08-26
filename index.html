@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="62">
+  <meta name="app-build" content="63">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -2756,6 +2756,9 @@
       line-height: 1.2;
     }
 
+    .water-package-copy { width: 100%; min-height: 44px; margin-top: 12px; padding: 8px 10px; color: #fff; background: var(--bright-blue); border: 0; border-radius: 9px; font: inherit; font-size: 10.5px; font-weight: 900; cursor: pointer; }
+    .water-package-copy:hover, .water-package-copy:focus-visible { background: var(--forest); outline: 3px solid rgba(47,117,181,.2); }
+
     .coverage { padding: 74px 0 26px; }
 
     .section-heading {
@@ -4044,7 +4047,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">62</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">63</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -13043,6 +13046,12 @@
             parameters.appendChild(chip);
           }
           card.appendChild(parameters);
+          const copyButton = document.createElement("button");
+          copyButton.type = "button";
+          copyButton.className = "water-package-copy";
+          copyButton.dataset.waterPackageCopy = `${packageItem.name}: ${(packageItem.parameters || []).join(", ")}`;
+          copyButton.textContent = "Copy COC list";
+          card.appendChild(copyButton);
           grid.appendChild(card);
         }
         group.append(heading, grid);
@@ -13401,6 +13410,10 @@
           option.setAttribute("aria-current", String(selected));
         }
         if (window.innerWidth < 861) sopDetail.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      sopDetail.addEventListener("click", event => {
+        const copyButton = event.target.closest("[data-water-package-copy]");
+        if (copyButton) copyText(copyButton.dataset.waterPackageCopy || "", "COC parameter list copied");
       });
 
       setCommentType("defect");
