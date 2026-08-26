@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="60">
+  <meta name="app-build" content="61">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -1957,6 +1957,18 @@
       border-radius: inherit;
       transition: width .25s ease;
     }
+
+    .phone-setup-body { padding: 18px 20px 20px; }
+    .phone-setup-list { display: grid; gap: 8px; }
+    .phone-setup-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; min-height: 54px; padding: 10px 12px; background: #f7f9fc; border: 1px solid var(--line); border-radius: 12px; }
+    .phone-setup-item strong { display: block; color: var(--forest); font-size: 12px; }
+    .phone-setup-item small { display: block; margin-top: 3px; color: var(--ink-2); font-size: 10px; line-height: 1.4; }
+    .phone-setup-detected { padding: 5px 8px; color: #785b0d; background: #fff4d2; border-radius: 999px; font-size: 9px; font-weight: 850; white-space: nowrap; }
+    .phone-setup-detected.ready { color: #17643a; background: #eaf7ef; }
+    .phone-setup-manual { grid-template-columns: 22px minmax(0, 1fr); cursor: pointer; }
+    .phone-setup-manual input { width: 18px; height: 18px; margin: 0; accent-color: var(--bright-blue); }
+    .phone-setup-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .phone-setup-actions a, .phone-setup-actions button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 9px 12px; color: var(--bright-blue); background: #edf5fc; border: 1px solid #cbdff1; border-radius: 10px; font: inherit; font-size: 10.5px; font-weight: 850; text-decoration: none; cursor: pointer; }
 
     .training-grid {
       display: grid;
@@ -4022,7 +4034,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">60</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">61</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -5028,6 +5040,30 @@
         </div>
         <button class="job-secondary-action" id="trainingNextActionBtn" type="button">Open lesson</button>
       </aside>
+
+      <details class="panel report-quality-card" id="phoneSetupPanel">
+        <summary>
+          <span><strong>Company phone setup</strong><small>One-time readiness check for the app, offline access, notifications, schedule, and training account.</small></span>
+          <span class="daily-readiness-status" id="phoneSetupStatus">Checking…</span>
+        </summary>
+        <div class="phone-setup-body">
+          <div class="phone-setup-list">
+            <div class="phone-setup-item"><div><strong>MPI app added to the Home Screen</strong><small>Open from the MPI icon for the full app and iPhone notifications.</small></div><span class="phone-setup-detected" id="phoneSetupInstalled">Check needed</span></div>
+            <div class="phone-setup-item"><div><strong>Offline access saved</strong><small>Reconnect once and open the app so the current build can be stored on this phone.</small></div><span class="phone-setup-detected" id="phoneSetupOffline">Check needed</span></div>
+            <div class="phone-setup-item"><div><strong>MPI notifications enabled</strong><small>Company push messages can arrive when the app is closed.</small></div><span class="phone-setup-detected" id="phoneSetupNotifications">Check needed</span></div>
+            <div class="phone-setup-item"><div><strong>Inspector name remembered</strong><small>Start Job Companion once so MPI forms can use the correct inspector name.</small></div><span class="phone-setup-detected" id="phoneSetupInspector">Check needed</span></div>
+            <label class="phone-setup-item phone-setup-manual"><input id="phoneSetupCalendar" type="checkbox"><span><strong>Today’s Jobs verified</strong><small>I opened the schedule with my assigned MPI company account and saw the correct jobs.</small></span></label>
+            <label class="phone-setup-item phone-setup-manual"><input id="phoneSetupTraining" type="checkbox"><span><strong>Training profile verified</strong><small>I opened my MPI training profile and InterNACHI account under my own credentials.</small></span></label>
+          </div>
+          <div class="phone-setup-actions">
+            <a href="#job-companion">Save inspector name</a>
+            <a href="#today-jobs">Open Today’s Jobs</a>
+            <a href="#team-messages">Set up notifications</a>
+            <button id="refreshPhoneSetupBtn" type="button">Refresh phone check</button>
+          </div>
+          <p class="report-quality-note">The two confirmations and detected setup state remain only on this company phone. No setup report is emailed.</p>
+        </div>
+      </details>
 
       <aside class="external-training-card" aria-label="MPI assigned training profile">
         <div>
@@ -6459,6 +6495,15 @@
       const trainingNextActionTitle = document.getElementById("trainingNextActionTitle");
       const trainingNextActionDetail = document.getElementById("trainingNextActionDetail");
       const trainingNextActionBtn = document.getElementById("trainingNextActionBtn");
+      const phoneSetupPanel = document.getElementById("phoneSetupPanel");
+      const phoneSetupStatus = document.getElementById("phoneSetupStatus");
+      const phoneSetupInstalled = document.getElementById("phoneSetupInstalled");
+      const phoneSetupOffline = document.getElementById("phoneSetupOffline");
+      const phoneSetupNotifications = document.getElementById("phoneSetupNotifications");
+      const phoneSetupInspector = document.getElementById("phoneSetupInspector");
+      const phoneSetupCalendar = document.getElementById("phoneSetupCalendar");
+      const phoneSetupTraining = document.getElementById("phoneSetupTraining");
+      const refreshPhoneSetupBtn = document.getElementById("refreshPhoneSetupBtn");
       const onboardingForm = document.getElementById("onboardingForm");
       const onboardingChecks = [...document.querySelectorAll("[data-onboarding-id]")];
       const onboardingStages = [...document.querySelectorAll("[data-onboarding-stage]")];
@@ -10900,6 +10945,7 @@
           localStorage.setItem("mpiInspectorName", name);
           localStorage.setItem("mpiDamageInspector", name);
         } catch (_) {}
+        if (phoneSetupStatus) renderPhoneSetup();
       }
 
       function loadRememberedInspector() {
@@ -10910,9 +10956,55 @@
         }
       }
 
+      function loadPhoneSetupConfirmations() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(PHONE_SETUP_STORAGE_KEY) || "{}");
+          return { calendar: Boolean(saved?.calendar), training: Boolean(saved?.training) };
+        } catch (_) {
+          return { calendar: false, training: false };
+        }
+      }
+
+      function setPhoneSetupIndicator(element, ready, readyText) {
+        element.textContent = ready ? readyText : "Set up needed";
+        element.classList.toggle("ready", ready);
+      }
+
+      function renderPhoneSetup() {
+        const confirmations = loadPhoneSetupConfirmations();
+        phoneSetupCalendar.checked = confirmations.calendar;
+        phoneSetupTraining.checked = confirmations.training;
+        let pushToken = "";
+        try { pushToken = localStorage.getItem("mpiPushTokenV1") || ""; } catch (_) {}
+        const installed = isStandaloneApp();
+        const offline = Boolean(navigator.serviceWorker?.controller);
+        const notifications = "Notification" in window && Notification.permission === "granted" && Boolean(pushToken);
+        const inspector = Boolean(loadRememberedInspector());
+        setPhoneSetupIndicator(phoneSetupInstalled, installed, "Installed");
+        setPhoneSetupIndicator(phoneSetupOffline, offline, "Saved offline");
+        setPhoneSetupIndicator(phoneSetupNotifications, notifications, "Enabled");
+        setPhoneSetupIndicator(phoneSetupInspector, inspector, "Name saved");
+        const completed = [installed, offline, notifications, inspector, confirmations.calendar, confirmations.training].filter(Boolean).length;
+        phoneSetupStatus.textContent = completed === 6 ? "Phone ready" : `${completed} of 6`;
+        phoneSetupStatus.classList.toggle("is-ready", completed === 6);
+        phoneSetupPanel.classList.toggle("is-complete", completed === 6);
+      }
+
+      function savePhoneSetupConfirmations() {
+        try {
+          localStorage.setItem(PHONE_SETUP_STORAGE_KEY, JSON.stringify({
+            calendar: phoneSetupCalendar.checked,
+            training: phoneSetupTraining.checked,
+            updatedAt: new Date().toISOString()
+          }));
+        } catch (_) {}
+        renderPhoneSetup();
+      }
+
       const ACTIVE_JOB_STORAGE_KEY = "mpiActiveJobV1";
       const DAILY_READINESS_STORAGE_KEY = "mpiDailyReadinessV1";
       const TOOL_READINESS_STORAGE_KEY = "mpiToolReadinessV1";
+      const PHONE_SETUP_STORAGE_KEY = "mpiPhoneSetupV1";
       const FORM_DRAFT_CONFIG = [
         { form: damageForm, key: "mpiDraftDamageV1", status: damageSubmitStatus, photoReminder: true },
         { form: teamQuestionForm, key: "mpiDraftTeamQuestionV1", status: teamQuestionStatus },
@@ -12117,6 +12209,7 @@
           await registration.update();
           await navigator.serviceWorker.ready;
           offlineStatus.textContent = "Saved for offline use";
+          renderPhoneSetup();
           if (!wasAlreadySaved) showToast("Offline access is now ready");
         } catch (_) {
           offlineStatus.textContent = "Reconnect once to finish offline setup";
@@ -12153,6 +12246,7 @@
         pushTokenValue.textContent = token;
         pushSetupCode.hidden = false;
         try { localStorage.setItem(PUSH_TOKEN_STORAGE_KEY, token); } catch (_) {}
+        renderPhoneSetup();
       }
 
       async function initializeMessagingClient() {
@@ -13169,6 +13263,12 @@
         if (button) completeTrainingModule(button);
       });
       trainingNextActionBtn.addEventListener("click", openNextTrainingModule);
+      phoneSetupCalendar.addEventListener("change", savePhoneSetupConfirmations);
+      phoneSetupTraining.addEventListener("change", savePhoneSetupConfirmations);
+      refreshPhoneSetupBtn.addEventListener("click", () => {
+        renderPhoneSetup();
+        showToast("Company phone setup refreshed");
+      });
       onboardingChecks.forEach(check => check.addEventListener("change", () => updateOnboardingMilestone(check)));
       onboardingForm.addEventListener("submit", validateOnboardingSubmission);
       messageAckForm.addEventListener("submit", validateMessageAcknowledgement);
@@ -13290,6 +13390,7 @@
       updateToolCheckProgress();
       updateToolCheckResult();
       initializeTraining();
+      renderPhoneSetup();
       initializeOnboarding();
       initializeMessageAcknowledgements();
       initializeToolGuides();
