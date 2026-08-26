@@ -1266,3 +1266,41 @@ Status: published August 26, 2026 as GitHub commit `d7265810891421e49d27624677d9
 
 - Restore GitHub `main` to `1d7aaa7118eb3d3ea3a7e058f1c3f810d0364850` to keep Builds 1–31 but remove the special-service packing check.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 33 — Checkable special-service packs
+
+Status: published August 26, 2026 as GitHub commit `a5c06fb14ba82e911d602888284d0ac0aba6c76c` (app Build 70).
+
+#### Additions
+
+1. Turned every service pack into a real, temporary check-off aid.
+   - Each listed company tool now has its own checkbox while retaining the direct link to the exact instruction card.
+   - A final checkbox confirms applicable forms, consumables, PPE, power, storage, and assignment details.
+   - The panel shows live progress and changes to **Pack checked** only when every displayed check is complete.
+
+2. Kept the completion state deliberately narrow.
+   - Changing the selected service resets its checks, which prevents a prior service from appearing complete.
+   - The check does not state that the full vehicle inventory is complete or that the inspector is authorized to perform the service.
+   - Updated the visible build, version file, and offline cache identifier to Build 70.
+
+#### Validation record
+
+- Standard, Sewer, Mold/IAQ, Well/septic/water, Drone, and Crawlspace-robot packs each started at 0 and changed to **Pack checked** only after all displayed checks were selected.
+- Check totals were 5, 4, 4, 5, 2, and 4 respectively, including the final supporting-items confirmation.
+- The direct Sewer scope link still opened the exact company tool card.
+- 390-pixel phone layout: no horizontal overflow; every new button or confirmation target was at least 42 pixels high.
+- Duplicate HTML IDs: none detected.
+- Browser script errors: none detected.
+
+#### Whole-app workflow checkpoint
+
+- All 13 principal screens opened on a 390-pixel phone with no horizontal overflow.
+- A simulated current job populated the field forms and produced the correct Apple Maps address.
+- Room-photo progress, one factual reading, four closeout steps, and two release checks survived a reload.
+- Copied job status exactly reported 4 of 12 closeout steps, 1 of 2 rooms, one reading, and 2 of 6 release checks.
+- No email form was submitted during this test.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `524cbeb57cef17a1f2f80478fa0f1c6c6da3a6a6` to keep Builds 1–32 but return the service packs to read-only lists.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
