@@ -506,3 +506,42 @@ Status: published August 26, 2026 as GitHub commit `acc80637103ac0aa0112f002c776
 
 - Restore GitHub `main` to `7f5228ca05ab87cd45ec3db4727a384ea60ccc6a` to keep Builds 1–10 but remove the commissioning record.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 12 — New inspector field pathway
+
+Status: ready to publish as Build 49.
+
+#### Additions
+
+1. Added a collapsed **New inspector field pathway** inside Training Center.
+   - 20 milestones organized into five stages: safe start/company standard; rooms/wet areas/appliances; building systems; structure/access/closeout; and report quality/release.
+   - Milestones are drawn from the MPI handbook workflow and competency sign-off topics.
+   - Progress saves on the company phone and works offline.
+   - Each stage changes to a completed state only when all four milestones are checked.
+
+2. Added a deliberate management review summary.
+   - Inspector and optional trainer/reviewer names, review date, next review date, and next coaching focus can be recorded.
+   - One button emails Kevin a snapshot containing the completed milestones, remaining milestones, overall progress, and next focus.
+   - Nothing is emailed in the background and normal checkbox activity stays on the phone.
+
+3. Kept training authority clear.
+   - The pathway does not issue or approve InterNACHI badges.
+   - It does not replace MPI’s supervised competency sign-off.
+   - It does not authorize ancillary services or independent work beyond documented training.
+   - Updated the offline cache identifier to Build 49.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Onboarding milestones: 20 across 5 stages.
+- Progress persistence: 2 checked milestones remained checked after page reload.
+- Isolated email-summary test: 3 of 20 progress, 3 completed labels, 17 remaining labels, timestamp, and subject were generated correctly without external submission.
+- Recipient: only `kev@michiganpropertyinspections.com`.
+- 390-pixel phone layout: opened pathway and form stayed within the viewport with no horizontal overflow.
+- During an earlier redirect check, one QA progress submission may have been delivered only to Kevin; no inspector or other company address was included.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `46b3b8739f85b4efbb8c230b1096ac7b552bafcc` to keep Builds 1–11 but remove the onboarding pathway.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

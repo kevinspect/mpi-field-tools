@@ -1986,6 +1986,40 @@
     .module-complete-btn:hover { background: var(--forest-2); }
     .training-module.is-complete .module-complete-btn { color: #276a55; background: #e1f2eb; }
 
+    .onboarding-program { margin: 20px 0; overflow: hidden; }
+    .onboarding-program > summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+      min-height: 78px;
+      padding: 18px 20px;
+      cursor: pointer;
+      list-style: none;
+      background: linear-gradient(135deg, #11186a, #202974);
+    }
+    .onboarding-program > summary::-webkit-details-marker { display: none; }
+    .onboarding-program > summary strong { display: block; color: #fff; font-size: 15px; }
+    .onboarding-program > summary small { display: block; margin-top: 5px; color: rgba(255,255,255,.7); font-size: 11px; line-height: 1.4; }
+    .onboarding-program > summary::after { content: "+"; color: #f0cb72; font-size: 24px; font-weight: 900; }
+    .onboarding-program[open] > summary::after { content: "−"; }
+    .onboarding-body { padding: 22px; background: #fff; border-top: 3px solid var(--orange); }
+    .onboarding-progress-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 14px; }
+    .onboarding-progress-row h3 { margin: 0; color: var(--forest); font-size: 18px; }
+    .onboarding-progress-row p { margin: 6px 0 0; color: var(--ink-2); font-size: 11.5px; line-height: 1.5; }
+    .onboarding-progress-count { color: var(--bright-blue); font-size: 14px; font-weight: 950; white-space: nowrap; }
+    .onboarding-stage-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 19px; }
+    .onboarding-stage { padding: 15px; background: #f6f8fc; border: 1px solid #e0e4ef; border-radius: 13px; }
+    .onboarding-stage h4 { margin: 0 0 11px; color: var(--forest); font-size: 12px; }
+    .onboarding-milestone { display: flex; align-items: flex-start; gap: 9px; padding: 8px 0; color: var(--ink-2); font-size: 11px; line-height: 1.45; }
+    .onboarding-milestone + .onboarding-milestone { border-top: 1px solid #e4e7ef; }
+    .onboarding-milestone input { flex: none; width: 18px; height: 18px; margin: 0; accent-color: var(--bright-blue); }
+    .onboarding-stage.is-complete { background: #edf7f4; border-color: #bddfd3; }
+    .onboarding-email { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); }
+    .onboarding-email h3 { margin: 0 0 5px; color: var(--forest); font-size: 16px; }
+    .onboarding-email > p { margin: 0 0 15px; color: var(--ink-2); font-size: 11.5px; line-height: 1.5; }
+    .onboarding-boundary { margin-top: 16px; padding: 12px 13px; color: #6d5824; background: #fbf7ec; border-left: 4px solid var(--orange); border-radius: 0 9px 9px 0; font-size: 10.5px; line-height: 1.5; }
+
     .message-board {
       display: grid;
       grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
@@ -3666,6 +3700,9 @@
       .job-shortcuts,
       .daily-readiness-actions { grid-template-columns: 1fr; }
       .tool-commissioning-panel .damage-form { padding: 20px 16px 22px; }
+      .onboarding-stage-grid { grid-template-columns: 1fr; }
+      .onboarding-body { padding: 18px 15px 20px; }
+      .onboarding-progress-row { align-items: start; grid-template-columns: 1fr; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -4702,6 +4739,89 @@
           <a href="https://www.nachi.org/my/certification/cpi" target="_blank" rel="noopener">Open InterNACHI account</a>
         </div>
       </aside>
+
+      <details class="panel onboarding-program" id="onboardingProgram">
+        <summary><span><strong>New inspector field pathway</strong><small>Work through 20 MPI milestones in order, save progress on this phone, and send one review summary to Kevin.</small></span></summary>
+        <div class="onboarding-body">
+          <div class="onboarding-progress-row">
+            <div><h3>Supervised field progression</h3><p>Check a milestone only after it has been reviewed, practiced, or demonstrated at the level required by the trainer.</p></div>
+            <span class="onboarding-progress-count" id="onboardingProgressCount">0 of 20 complete</span>
+          </div>
+          <div class="training-progress-track" aria-hidden="true"><div class="training-progress-fill" id="onboardingProgressFill"></div></div>
+
+          <form id="onboardingForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+            <input type="hidden" name="_subject" id="onboardingSubject" value="MPI Inspector Onboarding Progress">
+            <input type="hidden" name="_template" value="table">
+            <input type="hidden" name="_captcha" value="false">
+            <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?onboarding-sent=1#training-center">
+            <input type="hidden" name="Submitted at" id="onboardingSubmittedAt" value="">
+            <input type="hidden" name="Progress" id="onboardingProgressValue" value="">
+            <input type="hidden" name="Completed milestones" id="onboardingCompletedValue" value="">
+            <input type="hidden" name="Remaining milestones" id="onboardingRemainingValue" value="">
+            <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
+
+            <div class="onboarding-stage-grid">
+              <section class="onboarding-stage" data-onboarding-stage>
+                <h4>1 · Safe start and company standard</h4>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="handbook" data-onboarding-label="Reviewed the current MPI handbook, app, scope boundaries, and stop-work authority"><span>Review the current MPI handbook, app, scope boundaries, and stop-work authority.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="equipment" data-onboarding-label="Demonstrated daily equipment readiness, first-use setup, PPE, and safe tool limits"><span>Demonstrate daily equipment readiness, first-use setup, PPE, and safe tool limits.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="prearrival" data-onboarding-label="Confirmed the correct property, scope, services, weather, tools, and report template before arrival"><span>Confirm the correct property, scope, services, weather, tools, and report template before arrival.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="photos" data-onboarding-label="Demonstrated four-corner overview, defect-evidence, and Before/After photography"><span>Demonstrate four-corner overview, defect-evidence, and Before/After photography.</span></label>
+              </section>
+
+              <section class="onboarding-stage" data-onboarding-stage>
+                <h4>2 · Rooms, wet areas, and appliances</h4>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="rooms" data-onboarding-label="Completed the universal room sequence without omitting doors, windows, finishes, registers, switches, or receptacles"><span>Complete the universal room sequence without omitting doors, windows, finishes, registers, switches, or receptacles.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="thermal" data-onboarding-label="Completed room thermal screening and corroborated anomalies without diagnosing concealed conditions"><span>Complete room thermal screening and corroborate anomalies without diagnosing concealed conditions.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="kitchen" data-onboarding-label="Completed the kitchen and appliance sequence, remained present, rechecked for leakage, and restored controls"><span>Complete the kitchen and appliance sequence, remain present, recheck for leakage, and restore controls.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="wet-areas" data-onboarding-label="Completed bathroom and laundry hot/cold, drainage, visible leakage, ventilation, and closeout checks"><span>Complete bathroom and laundry hot/cold, drainage, visible leakage, ventilation, and closeout checks.</span></label>
+              </section>
+
+              <section class="onboarding-stage" data-onboarding-stage>
+                <h4>3 · Building systems</h4>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="exterior-roof" data-onboarding-label="Completed exterior, site, drainage, roof-method, and safe-access decisions"><span>Complete exterior, site, drainage, roof-method, and safe-access decisions.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="plumbing" data-onboarding-label="Completed plumbing, pressure/flow, water-heater, drainage, sump, and applicable well-equipment checks"><span>Complete plumbing, pressure/flow, water-heater, drainage, sump, and applicable well-equipment checks.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="electrical" data-onboarding-label="Completed electrical service, panel, grounding/bonding, representative devices, protective-device testing, and restoration"><span>Complete electrical service, panel, grounding/bonding, representative devices, protective-device testing, and restoration.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="hvac" data-onboarding-label="Completed heating/cooling operation, temperature screening, venting/combustion checks, ambient CO, and thermostat restoration"><span>Complete heating/cooling operation, temperature screening, venting/combustion checks, ambient CO, and thermostat restoration.</span></label>
+              </section>
+
+              <section class="onboarding-stage" data-onboarding-stage>
+                <h4>4 · Structure, access, and closeout</h4>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="structure" data-onboarding-label="Completed basement, foundation, crawlspace, and structural observations using the safest available method"><span>Complete basement, foundation, crawlspace, and structural observations using the safest available method.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="attic" data-onboarding-label="Completed the attic access decision, insulation/ventilation/exhaust checks, and hatch restoration"><span>Complete the attic access decision, insulation/ventilation/exhaust checks, and hatch restoration.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="garage-safety" data-onboarding-label="Completed garages/outbuildings, moving-door safety, stairs, alarms, and applicable fireplace observations"><span>Complete garages/outbuildings, moving-door safety, stairs, alarms, and applicable fireplace observations.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="departure" data-onboarding-label="Completed final restoration, wet-area recheck, tool accountability, property security, and urgent communication"><span>Complete final restoration, wet-area recheck, tool accountability, property security, and urgent communication.</span></label>
+              </section>
+
+              <section class="onboarding-stage" data-onboarding-stage>
+                <h4>5 · Report quality and release</h4>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="template" data-onboarding-label="Addressed every applicable report section and used the correct component category"><span>Address every applicable report section and use the correct component category.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="limitations" data-onboarding-label="Wrote specific limitations stating the affected area, reason, method used, and effect on the inspection"><span>Write specific limitations stating the affected area, reason, method used, and effect on the inspection.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="oir" data-onboarding-label="Wrote condition-specific titles and supported Observation, Implication, and Recommendation comments"><span>Write condition-specific titles and supported Observation, Implication, and Recommendation comments.</span></label>
+                <label class="onboarding-milestone"><input type="checkbox" data-onboarding-id="release" data-onboarding-label="Matched photographs and evidence to findings and completed the 60-second report release check"><span>Match photographs and evidence to findings and complete the 60-second report release check.</span></label>
+              </section>
+            </div>
+
+            <div class="onboarding-email">
+              <h3>Send a progress review</h3>
+              <p>This sends one snapshot only when the inspector or trainer taps the button. Nothing is sent in the background.</p>
+              <div class="damage-field-row">
+                <div class="field"><label for="onboardingInspector">Inspector name *</label><input class="damage-input" id="onboardingInspector" name="Inspector" type="text" autocomplete="name" maxlength="80" required></div>
+                <div class="field"><label for="onboardingReviewer">Trainer / reviewer</label><input class="damage-input" id="onboardingReviewer" name="Trainer or reviewer" type="text" maxlength="80"></div>
+              </div>
+              <div class="damage-field-row">
+                <div class="field"><label for="onboardingReviewDate">Review date *</label><input class="damage-input" id="onboardingReviewDate" name="Review date" type="date" required></div>
+                <div class="field"><label for="onboardingNextReview">Next review date</label><input class="damage-input" id="onboardingNextReview" name="Next review date" type="date"></div>
+              </div>
+              <div class="field"><label for="onboardingFocus">Next coaching focus</label><textarea class="damage-action-input" id="onboardingFocus" name="Next coaching focus" maxlength="700" placeholder="Example: Repeat the panel sequence under supervision and review two electrical defect comments."></textarea></div>
+              <button class="decode-btn" id="onboardingSubmitBtn" type="submit">Email progress summary</button>
+              <p class="damage-submit-status" id="onboardingStatus" role="status" aria-live="polite"></p>
+              <div class="damage-success" id="onboardingSuccess" hidden><strong>Progress summary sent.</strong><span>Kevin received the completed, remaining, and next-focus information.</span></div>
+            </div>
+          </form>
+          <p class="onboarding-boundary"><strong>Training record boundary:</strong> this checklist guides MPI practice and coaching. It does not issue or approve InterNACHI badges, replace the company competency sign-off, or authorize ancillary work.</p>
+        </div>
+      </details>
 
       <div class="training-grid" id="trainingGrid">
         <details class="training-module" data-training-module="photo-records">
@@ -5970,6 +6090,21 @@
       const trainingProgressCount = document.getElementById("trainingProgressCount");
       const trainingProgressFill = document.getElementById("trainingProgressFill");
       const trainingProgressNote = document.getElementById("trainingProgressNote");
+      const onboardingForm = document.getElementById("onboardingForm");
+      const onboardingChecks = [...document.querySelectorAll("[data-onboarding-id]")];
+      const onboardingStages = [...document.querySelectorAll("[data-onboarding-stage]")];
+      const onboardingProgressCount = document.getElementById("onboardingProgressCount");
+      const onboardingProgressFill = document.getElementById("onboardingProgressFill");
+      const onboardingInspector = document.getElementById("onboardingInspector");
+      const onboardingReviewDate = document.getElementById("onboardingReviewDate");
+      const onboardingSubject = document.getElementById("onboardingSubject");
+      const onboardingSubmittedAt = document.getElementById("onboardingSubmittedAt");
+      const onboardingProgressValue = document.getElementById("onboardingProgressValue");
+      const onboardingCompletedValue = document.getElementById("onboardingCompletedValue");
+      const onboardingRemainingValue = document.getElementById("onboardingRemainingValue");
+      const onboardingSubmitBtn = document.getElementById("onboardingSubmitBtn");
+      const onboardingStatus = document.getElementById("onboardingStatus");
+      const onboardingSuccess = document.getElementById("onboardingSuccess");
       const escalationGuide = document.getElementById("escalationGuide");
       const teamQuestionForm = document.getElementById("teamQuestionForm");
       const teamQuestionInspector = document.getElementById("teamQuestionInspector");
@@ -10469,7 +10604,7 @@
 
       function syncActiveJobToForms(job, force = false) {
         if (!job) return;
-        const inspectorInputs = [damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector];
+        const inspectorInputs = [damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, onboardingInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector];
         const propertyInputs = [damageProperty, equipmentProperty, toolCheckProperty, teamQuestionProperty, safetyNoticeProperty];
         inspectorInputs.forEach(input => {
           if (input && (force || !input.value)) input.value = job.inspector;
@@ -10593,13 +10728,14 @@
 
       function initializeFieldForms() {
         const rememberedInspector = loadRememberedInspector();
-        [activeJobInspector, damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector].forEach(input => {
+        [activeJobInspector, damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, onboardingInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector].forEach(input => {
           if (input && !input.value) input.value = rememberedInspector;
         });
         syncActiveJobToForms(loadActiveJob());
         renderDailyReadiness();
 
         if (!toolCommissionDate.value) toolCommissionDate.value = new Date().toISOString().slice(0, 10);
+        if (!onboardingReviewDate.value) onboardingReviewDate.value = new Date().toISOString().slice(0, 10);
 
         if (!safetyNoticeOccurredAt.value) {
           const now = new Date();
@@ -10637,6 +10773,14 @@
           document.getElementById("toolCommissioningPanel").open = true;
           params.delete("tool-commission-sent");
           targetHash = "#tool-guides";
+        }
+        if (params.get("onboarding-sent") === "1") {
+          onboardingSuccess.hidden = false;
+          onboardingStatus.className = "damage-submit-status success";
+          onboardingStatus.textContent = "Onboarding progress submitted successfully.";
+          document.getElementById("onboardingProgram").open = true;
+          params.delete("onboarding-sent");
+          targetHash = "#training-center";
         }
         if (params.get("question-sent") === "1") {
           teamQuestionSuccess.hidden = false;
@@ -10909,7 +11053,9 @@
       }
 
       const TRAINING_STORAGE_KEY = "mpiTrainingProgressV1";
+      const ONBOARDING_STORAGE_KEY = "mpiOnboardingProgressV1";
       let completedTraining = new Set();
+      let completedOnboarding = new Set();
 
       function updateTrainingProgress() {
         trainingModules.forEach(module => {
@@ -10934,6 +11080,38 @@
           completedTraining = new Set();
         }
         updateTrainingProgress();
+      }
+
+      function updateOnboardingProgress() {
+        onboardingChecks.forEach(check => { check.checked = completedOnboarding.has(check.dataset.onboardingId); });
+        onboardingStages.forEach(stage => {
+          const stageChecks = [...stage.querySelectorAll("[data-onboarding-id]")];
+          stage.classList.toggle("is-complete", stageChecks.length > 0 && stageChecks.every(check => check.checked));
+        });
+        const completed = onboardingChecks.filter(check => check.checked);
+        const remaining = onboardingChecks.filter(check => !check.checked);
+        onboardingProgressCount.textContent = `${completed.length} of ${onboardingChecks.length} complete`;
+        onboardingProgressFill.style.width = `${onboardingChecks.length ? (completed.length / onboardingChecks.length) * 100 : 0}%`;
+        onboardingProgressValue.value = `${completed.length} of ${onboardingChecks.length} milestones complete`;
+        onboardingCompletedValue.value = completed.length ? completed.map(check => check.dataset.onboardingLabel).join("; ") : "None yet";
+        onboardingRemainingValue.value = remaining.length ? remaining.map(check => check.dataset.onboardingLabel).join("; ") : "None — all pathway milestones checked";
+      }
+
+      function initializeOnboarding() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(ONBOARDING_STORAGE_KEY) || "[]");
+          completedOnboarding = new Set(Array.isArray(saved) ? saved : []);
+        } catch (_) {
+          completedOnboarding = new Set();
+        }
+        updateOnboardingProgress();
+      }
+
+      function updateOnboardingMilestone(check) {
+        if (check.checked) completedOnboarding.add(check.dataset.onboardingId);
+        else completedOnboarding.delete(check.dataset.onboardingId);
+        try { localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify([...completedOnboarding])); } catch (_) {}
+        updateOnboardingProgress();
       }
 
       function completeTrainingModule(button) {
@@ -11093,6 +11271,20 @@
           submitButton: toolCommissionSubmitBtn,
           pendingText: "Sending commissioning record…",
           subjectText: () => `MPI New Tool Record — ${toolCommissionBrand.value.trim()} ${toolCommissionModel.value.trim()} — ${release?.value || "Status required"}`.slice(0, 180)
+        });
+      }
+
+      function validateOnboardingSubmission(event) {
+        updateOnboardingProgress();
+        validateSimpleEmailForm(event, {
+          form: onboardingForm,
+          status: onboardingStatus,
+          submittedAt: onboardingSubmittedAt,
+          subject: onboardingSubject,
+          inspector: onboardingInspector,
+          submitButton: onboardingSubmitBtn,
+          pendingText: "Sending progress summary…",
+          subjectText: () => `MPI Onboarding Progress — ${onboardingInspector.value.trim()} — ${onboardingProgressValue.value}`.slice(0, 180)
         });
       }
 
@@ -11882,6 +12074,8 @@
         const button = event.target.closest("[data-complete-training]");
         if (button) completeTrainingModule(button);
       });
+      onboardingChecks.forEach(check => check.addEventListener("change", () => updateOnboardingMilestone(check)));
+      onboardingForm.addEventListener("submit", validateOnboardingSubmission);
       teamQuestionForm.addEventListener("submit", validateTeamQuestionSubmission);
       escalationGuide.addEventListener("click", routeEscalation);
       safetyInformedOptions.forEach(option => option.addEventListener("change", event => updateSafetyInformedSelection(event.currentTarget)));
@@ -11902,6 +12096,8 @@
         toolCheckSubmitBtn.textContent = "Email completed tool check";
         toolCommissionSubmitBtn.disabled = false;
         toolCommissionSubmitBtn.textContent = "Email commissioning record";
+        onboardingSubmitBtn.disabled = false;
+        onboardingSubmitBtn.textContent = "Email progress summary";
         teamQuestionSubmitBtn.disabled = false;
         teamQuestionSubmitBtn.textContent = "Submit field question";
         safetyNoticeSubmitBtn.disabled = false;
@@ -11991,6 +12187,7 @@
       updateToolCheckProgress();
       updateToolCheckResult();
       initializeTraining();
+      initializeOnboarding();
       initializeToolGuides();
       initializeSopGuide();
       initializePushStatus();
