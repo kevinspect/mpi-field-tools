@@ -1101,3 +1101,38 @@ Status: published August 26, 2026 as GitHub commit `91e9a5d2713eab8f7102a4a475dc
 
 - Restore GitHub `main` to `3d50856e88654110ccb41cf5f560f0417ec0a0dc` to keep Builds 1–26 but remove the field readings notebook.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 28 — Copyable active-job status handoff
+
+Status: published August 26, 2026 as GitHub commit `e0ec4474c4edc2ea71ed930405d18f6094f37c80`.
+
+#### Additions
+
+1. Added **Copy job status** to the Current Job card.
+   - Copies the inspector, property, start time, closeout-step count, next incomplete action, room-photo coverage, saved-reading count, and report-release count.
+   - Uses the actual active-job records already stored on the phone.
+
+2. Added a factual handoff boundary.
+   - The app creates text only after the inspector deliberately taps Copy job status.
+   - The text can be pasted into Team Messages or another authorized company channel when a handoff or management question is needed.
+   - With no active job, the button refuses to create an empty or misleading summary.
+
+3. Kept the status private and offline.
+   - Nothing is emailed, uploaded, or shared automatically.
+   - The copied summary contains no location tracking, diagnosis, report conclusion, or invented completion claim.
+   - Updated the visible build, version file, and offline cache identifier to Build 65.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- No-job test displayed **Start the current job first** and produced no status.
+- A partial-job test copied **2 of 12** closeout steps, the exact next incomplete equipment-readiness step, **1 of 2 rooms confirmed**, one saved reading, and **1 of 6** release checks.
+- Date/time formatting used the phone’s local time.
+- 390-pixel phone layout: no horizontal overflow; Copy job status remained 44 pixels high and the three Current Job actions stacked on the phone.
+- No email, network submission, background monitoring, or automatic sharing was added.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `983c30454b373add8d849ad256f56f491edcd5c7` to keep Builds 1–27 but remove the job-status copy action.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
