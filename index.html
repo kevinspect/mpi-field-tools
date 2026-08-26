@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="57">
+  <meta name="app-build" content="58">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3727,6 +3727,27 @@
     .job-phase-item input { width: 18px; height: 18px; margin: 0; accent-color: var(--bright-blue); }
     .job-phase-item:has(input:checked) { color: #44536b; background: #edf7f4; }
 
+    .room-coverage-add { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; margin-top: 16px; }
+    .room-coverage-add .decode-btn { width: auto; min-height: 46px; margin: 0; }
+    .room-coverage-presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+    .room-coverage-list { display: grid; gap: 8px; }
+    .room-coverage-item {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      color: var(--ink-2);
+      background: #f8fafc;
+      border-radius: 9px;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    .room-coverage-item input { width: 18px; height: 18px; margin: 0; accent-color: var(--bright-blue); }
+    .room-coverage-item.is-complete { color: #44536b; background: #edf7f4; }
+    .room-coverage-remove { min-width: 44px; min-height: 44px; padding: 6px 9px; color: #8b2c26; background: #fff4f2; border: 1px solid #e7c0bc; border-radius: 9px; font-size: 10px; font-weight: 900; }
+    .room-coverage-empty { margin: 12px 0 0; color: var(--ink-2); font-size: 11px; line-height: 1.5; }
+
     .job-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
     .job-shortcuts a { display: grid; min-height: 54px; place-items: center; padding: 10px; }
 
@@ -3817,6 +3838,8 @@
       .temp-diff-actions { grid-template-columns: 1fr; }
       .job-next-action { align-items: stretch; grid-template-columns: 1fr; }
       .job-next-action button { width: 100%; }
+      .room-coverage-add { grid-template-columns: 1fr; }
+      .room-coverage-add .decode-btn { width: 100%; }
       .tool-commissioning-panel .damage-form { padding: 20px 16px 22px; }
       .onboarding-stage-grid { grid-template-columns: 1fr; }
       .onboarding-body { padding: 18px 15px 20px; }
@@ -3954,7 +3977,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">57</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">58</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4092,6 +4115,32 @@
           </div>
         </section>
       </div>
+
+      <details class="panel report-quality-card" id="roomCoverageCard">
+        <summary>
+          <span><strong>Room photo coverage</strong><small>Track the four required overview photographs for each actual room.</small></span>
+          <span class="daily-readiness-status" id="roomCoverageStatus">No rooms</span>
+        </summary>
+        <div class="report-quality-body">
+          <form class="room-coverage-add" id="roomCoverageForm">
+            <div class="field"><label for="roomCoverageName">Add a room or area</label><input class="damage-input" id="roomCoverageName" type="text" maxlength="80" placeholder="Example: Bedroom 1"></div>
+            <button class="decode-btn" type="submit">Add room</button>
+          </form>
+          <div class="room-coverage-presets" id="roomCoveragePresets" aria-label="Quick add common rooms">
+            <button class="sop-chip" type="button" data-room-preset="Living room">Living room</button>
+            <button class="sop-chip" type="button" data-room-preset="Kitchen">Kitchen</button>
+            <button class="sop-chip" type="button" data-room-preset="Dining room">Dining room</button>
+            <button class="sop-chip" type="button" data-room-preset="Bedroom">Bedroom</button>
+            <button class="sop-chip" type="button" data-room-preset="Bathroom">Bathroom</button>
+            <button class="sop-chip" type="button" data-room-preset="Laundry">Laundry</button>
+            <button class="sop-chip" type="button" data-room-preset="Basement">Basement</button>
+            <button class="sop-chip" type="button" data-room-preset="Garage">Garage</button>
+          </div>
+          <div class="room-coverage-list" id="roomCoverageList"></div>
+          <p class="room-coverage-empty" id="roomCoverageEmpty">Start the current job, then add the rooms that actually apply.</p>
+          <p class="report-quality-note">Optional field aid: check a room only after its four landscape overview photographs are present. Doorway, panoramic, thermal, and defect photographs do not replace the four required overview images. The report template remains authoritative.</p>
+        </div>
+      </details>
 
       <details class="panel report-quality-card" id="reportQualityCard">
         <summary>
@@ -6185,6 +6234,13 @@
       const jobNextActionTitle = document.getElementById("jobNextActionTitle");
       const jobNextActionDetail = document.getElementById("jobNextActionDetail");
       const jobNextActionBtn = document.getElementById("jobNextActionBtn");
+      const roomCoverageCard = document.getElementById("roomCoverageCard");
+      const roomCoverageStatus = document.getElementById("roomCoverageStatus");
+      const roomCoverageForm = document.getElementById("roomCoverageForm");
+      const roomCoverageName = document.getElementById("roomCoverageName");
+      const roomCoveragePresets = document.getElementById("roomCoveragePresets");
+      const roomCoverageList = document.getElementById("roomCoverageList");
+      const roomCoverageEmpty = document.getElementById("roomCoverageEmpty");
       const dailyReadiness = document.getElementById("dailyReadiness");
       const dailyReadinessStatus = document.getElementById("dailyReadinessStatus");
       const dailyReadinessReadyBtn = document.getElementById("dailyReadinessReadyBtn");
@@ -10916,7 +10972,12 @@
             property: String(saved.property || "").trim(),
             startedAt: String(saved.startedAt || ""),
             steps: Array.isArray(saved.steps) ? saved.steps.map(String) : [],
-            quality: Array.isArray(saved.quality) ? saved.quality.map(String) : []
+            quality: Array.isArray(saved.quality) ? saved.quality.map(String) : [],
+            rooms: Array.isArray(saved.rooms) ? saved.rooms.map((room, index) => ({
+              id: String(room?.id || `room-${index}`),
+              name: String(room?.name || "").trim().slice(0, 80),
+              complete: Boolean(room?.complete)
+            })).filter(room => room.name) : []
           };
         } catch (_) {
           return null;
@@ -10925,6 +10986,90 @@
 
       function storeActiveJob(job) {
         try { localStorage.setItem(ACTIVE_JOB_STORAGE_KEY, JSON.stringify(job)); } catch (_) {}
+      }
+
+      function renderRoomCoverage(job = loadActiveJob()) {
+        roomCoverageList.replaceChildren();
+        const rooms = job?.rooms || [];
+        const completeCount = rooms.filter(room => room.complete).length;
+        const allComplete = rooms.length > 0 && completeCount === rooms.length;
+        roomCoverageStatus.textContent = !job?.property ? "Start job" : rooms.length ? `${completeCount} of ${rooms.length}` : "No rooms";
+        roomCoverageStatus.classList.toggle("is-ready", allComplete);
+        roomCoverageCard.classList.toggle("is-complete", allComplete);
+        roomCoverageEmpty.hidden = rooms.length > 0;
+        roomCoverageEmpty.textContent = job?.property
+          ? "Add only the rooms and areas that apply to this property."
+          : "Start the current job, then add the rooms that actually apply.";
+
+        rooms.forEach(room => {
+          const row = document.createElement("div");
+          row.className = `room-coverage-item${room.complete ? " is-complete" : ""}`;
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = room.complete;
+          checkbox.dataset.roomComplete = room.id;
+          checkbox.setAttribute("aria-label", `${room.name}: four overview photographs complete`);
+          const name = document.createElement("span");
+          name.textContent = room.name;
+          const remove = document.createElement("button");
+          remove.className = "room-coverage-remove";
+          remove.type = "button";
+          remove.textContent = "Remove";
+          remove.dataset.roomRemove = room.id;
+          remove.setAttribute("aria-label", `Remove ${room.name} from the room photo tracker`);
+          row.append(checkbox, name, remove);
+          roomCoverageList.append(row);
+        });
+      }
+
+      function addRoomCoverage(name) {
+        const job = loadActiveJob();
+        if (!job?.property) {
+          showToast("Start the current job first");
+          activeJobProperty.focus();
+          return;
+        }
+        const cleanName = String(name || "").trim().slice(0, 80);
+        if (!cleanName) {
+          roomCoverageName.focus();
+          showToast("Enter a room or area");
+          return;
+        }
+        if (job.rooms.some(room => room.name.toLowerCase() === cleanName.toLowerCase())) {
+          showToast("That room is already on this job");
+          return;
+        }
+        job.rooms.push({ id: `room-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`, name: cleanName, complete: false });
+        storeActiveJob(job);
+        renderRoomCoverage(job);
+        roomCoverageName.value = "";
+      }
+
+      function nextPresetRoomName(base, rooms) {
+        if (!rooms.some(room => room.name.toLowerCase() === base.toLowerCase())) return base;
+        let number = 2;
+        while (rooms.some(room => room.name.toLowerCase() === `${base} ${number}`.toLowerCase())) number += 1;
+        return `${base} ${number}`;
+      }
+
+      function updateRoomCoverage(event) {
+        const job = loadActiveJob();
+        if (!job?.property) return;
+        const checkbox = event.target.closest("[data-room-complete]");
+        if (checkbox) {
+          const room = job.rooms.find(item => item.id === checkbox.dataset.roomComplete);
+          if (room) room.complete = checkbox.checked;
+          storeActiveJob(job);
+          renderRoomCoverage(job);
+          return;
+        }
+        const remove = event.target.closest("[data-room-remove]");
+        if (!remove) return;
+        const room = job.rooms.find(item => item.id === remove.dataset.roomRemove);
+        if (!room || !window.confirm(`Remove ${room.name} from this job’s room photo tracker?`)) return;
+        job.rooms = job.rooms.filter(item => item.id !== room.id);
+        storeActiveJob(job);
+        renderRoomCoverage(job);
       }
 
       function syncActiveJobToForms(job, force = false) {
@@ -11050,6 +11195,7 @@
           activeJobMapLink.href = "https://maps.apple.com/";
           activeJobMapLink.setAttribute("aria-disabled", "true");
           updateJobProgress(null);
+          renderRoomCoverage(null);
           return;
         }
         activeJobInspector.value = job.inspector;
@@ -11067,6 +11213,7 @@
         homeActiveJobProgress.textContent = `${completedSteps} of ${jobSteps.length} closeout steps${releaseComplete ? " · Release check complete" : ""}`;
         homeActiveJobMap.href = `https://maps.apple.com/?q=${encodeURIComponent(job.property)}`;
         updateJobProgress(job);
+        renderRoomCoverage(job);
         syncActiveJobToForms(job);
       }
 
@@ -11082,7 +11229,8 @@
           property,
           startedAt: sameJob && existing.startedAt ? existing.startedAt : new Date().toISOString(),
           steps: sameJob ? existing.steps : [],
-          quality: sameJob ? existing.quality : []
+          quality: sameJob ? existing.quality : [],
+          rooms: sameJob ? existing.rooms : []
         };
         storeActiveJob(job);
         saveInspectorName(inspector);
@@ -12628,6 +12776,25 @@
       dailyReadinessIssueBtn.addEventListener("click", openReadinessIssueRequest);
       jobSteps.forEach(step => step.addEventListener("change", () => updateActiveJobStep(step)));
       reportQualityChecks.forEach(check => check.addEventListener("change", () => updateReportQualityCheck(check)));
+      roomCoverageForm.addEventListener("submit", event => {
+        event.preventDefault();
+        addRoomCoverage(roomCoverageName.value);
+      });
+      roomCoveragePresets.addEventListener("click", event => {
+        const preset = event.target.closest("[data-room-preset]");
+        if (!preset) return;
+        const job = loadActiveJob();
+        if (!job?.property) {
+          showToast("Start the current job first");
+          activeJobProperty.focus();
+          return;
+        }
+        addRoomCoverage(nextPresetRoomName(preset.dataset.roomPreset, job.rooms));
+      });
+      roomCoverageList.addEventListener("change", updateRoomCoverage);
+      roomCoverageList.addEventListener("click", event => {
+        if (event.target.closest("[data-room-remove]")) updateRoomCoverage(event);
+      });
       calculateTempDifferenceBtn.addEventListener("click", calculateTemperatureDifference);
       copyTempDifferenceBtn.addEventListener("click", () => copyText(tempDifferenceResult.dataset.copyText || "", "Temperature readings copied"));
       damagePhoto1.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto1, damagePhotoPreview1, damagePhotoCard1));
