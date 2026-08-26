@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="70">
+  <meta name="app-build" content="71">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3670,6 +3670,19 @@
 
     .job-context-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
 
+    .job-service-panel { overflow: hidden; background: #f8fafc; border: 1px solid #dce5ee; border-radius: 12px; }
+    .job-service-panel > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 48px; padding: 11px 13px; color: var(--forest); cursor: pointer; list-style: none; }
+    .job-service-panel > summary::-webkit-details-marker { display: none; }
+    .job-service-panel > summary strong { display: block; font-size: 12px; }
+    .job-service-panel > summary small { display: block; margin-top: 2px; color: var(--ink-2); font-size: 9.5px; line-height: 1.35; }
+    .job-service-body { display: grid; gap: 10px; padding: 12px; background: #fff; border-top: 1px solid #dce5ee; }
+    .job-service-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .job-service-option { display: grid; grid-template-columns: 19px minmax(0, 1fr); align-items: center; gap: 8px; min-height: 44px; padding: 9px 10px; color: var(--forest); background: #f5f8fb; border: 1px solid #dce5ee; border-radius: 9px; font-size: 10px; font-weight: 800; line-height: 1.3; cursor: pointer; }
+    .job-service-option input { width: 19px; height: 19px; margin: 0; accent-color: var(--bright-blue); }
+    .job-service-links { display: flex; flex-wrap: wrap; gap: 8px; }
+    .job-service-links button { min-height: 42px; padding: 8px 11px; color: var(--bright-blue); background: #eef5fb; border: 1px solid #c7d9e8; border-radius: 9px; font-size: 10px; font-weight: 900; }
+    .job-service-note { margin: 0; color: var(--ink-2); font-size: 9.5px; line-height: 1.45; }
+
     .job-secondary-action {
       min-height: 44px;
       padding: 10px 12px;
@@ -3920,6 +3933,7 @@
       .job-shortcuts,
       .daily-readiness-actions,
       .temp-diff-actions { grid-template-columns: 1fr; }
+      .job-service-options { grid-template-columns: 1fr; }
       .job-next-action { align-items: stretch; grid-template-columns: 1fr; }
       .job-next-action button { width: 100%; }
       .room-coverage-add { grid-template-columns: 1fr; }
@@ -4078,7 +4092,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">70</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">71</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4143,6 +4157,24 @@
             <label for="activeJobProperty">Property address *</label>
             <input class="damage-input" id="activeJobProperty" type="text" autocomplete="street-address" maxlength="180" placeholder="Street, city, state" required>
           </div>
+
+          <details class="job-service-panel" id="jobServicePanel">
+            <summary>
+              <span><strong>Additional service packs</strong><small>Select only specialist equipment booked for this job.</small></span>
+              <span class="daily-readiness-status" id="jobServiceStatus">None</span>
+            </summary>
+            <div class="job-service-body">
+              <div class="job-service-options">
+                <label class="job-service-option"><input type="checkbox" data-job-service="sewer"><span>Sewer scope</span></label>
+                <label class="job-service-option"><input type="checkbox" data-job-service="mold"><span>Mold / IAQ sampling</span></label>
+                <label class="job-service-option"><input type="checkbox" data-job-service="well"><span>Well, septic, or water service</span></label>
+                <label class="job-service-option"><input type="checkbox" data-job-service="drone"><span>Drone roof inspection</span></label>
+                <label class="job-service-option"><input type="checkbox" data-job-service="crawl"><span>Crawlspace robot</span></label>
+              </div>
+              <div class="job-service-links" id="jobServiceLinks"></div>
+              <p class="job-service-note">The selection stays with this job on this phone. It opens packing guidance only and does not authorize an ancillary service.</p>
+            </div>
+          </details>
 
           <button class="decode-btn" id="saveActiveJobBtn" type="submit">Start or update this job</button>
 
@@ -6436,6 +6468,10 @@
       const jobContextForm = document.getElementById("jobContextForm");
       const activeJobInspector = document.getElementById("activeJobInspector");
       const activeJobProperty = document.getElementById("activeJobProperty");
+      const jobServicePanel = document.getElementById("jobServicePanel");
+      const jobServiceOptions = [...document.querySelectorAll("[data-job-service]")];
+      const jobServiceStatus = document.getElementById("jobServiceStatus");
+      const jobServiceLinks = document.getElementById("jobServiceLinks");
       const activeJobStatus = document.getElementById("activeJobStatus");
       const activeJobMapLink = document.getElementById("activeJobMapLink");
       const copyActiveJobStatusBtn = document.getElementById("copyActiveJobStatusBtn");
@@ -7139,6 +7175,14 @@
           ],
           extras: "Confirm media storage, cleaning supplies that do not introduce water, property protection, and a safe recovery plan before deployment."
         }
+      };
+
+      const JOB_SERVICE_LABELS = {
+        sewer: "Sewer scope",
+        mold: "Mold / IAQ sampling",
+        well: "Well, septic, or water service",
+        drone: "Drone roof inspection",
+        crawl: "Crawlspace robot"
       };
 
       const QUICK_SOP_PROCEDURES = [
@@ -11439,6 +11483,7 @@
             startedAt: String(saved.startedAt || ""),
             steps: Array.isArray(saved.steps) ? saved.steps.map(String) : [],
             quality: Array.isArray(saved.quality) ? saved.quality.map(String) : [],
+            services: Array.isArray(saved.services) ? saved.services.map(String).filter(service => JOB_SERVICE_LABELS[service]) : [],
             rooms: Array.isArray(saved.rooms) ? saved.rooms.map((room, index) => ({
               id: String(room?.id || `room-${index}`),
               name: String(room?.name || "").trim().slice(0, 80),
@@ -11459,6 +11504,48 @@
 
       function storeActiveJob(job) {
         try { localStorage.setItem(ACTIVE_JOB_STORAGE_KEY, JSON.stringify(job)); } catch (_) {}
+      }
+
+      function renderJobServices(job = loadActiveJob()) {
+        const selected = new Set(job?.services || []);
+        jobServiceOptions.forEach(option => { option.checked = selected.has(option.dataset.jobService); });
+        jobServiceStatus.textContent = !job?.property ? "Start job" : selected.size ? `${selected.size} selected` : "None";
+        jobServiceStatus.classList.toggle("is-ready", selected.size > 0);
+        jobServiceLinks.replaceChildren();
+        selected.forEach(service => {
+          if (!JOB_SERVICE_LABELS[service]) return;
+          const button = document.createElement("button");
+          button.type = "button";
+          button.dataset.jobServicePack = service;
+          button.textContent = `Open ${JOB_SERVICE_LABELS[service]} pack`;
+          jobServiceLinks.appendChild(button);
+        });
+      }
+
+      function updateJobServices() {
+        const job = loadActiveJob();
+        if (!job?.property) {
+          jobServiceOptions.forEach(option => { option.checked = false; });
+          renderJobServices(null);
+          activeJobProperty.focus();
+          showToast("Start the current job first");
+          return;
+        }
+        job.services = jobServiceOptions.filter(option => option.checked).map(option => option.dataset.jobService);
+        storeActiveJob(job);
+        renderJobServices(job);
+      }
+
+      function openJobServicePack(event) {
+        const button = event.target.closest("[data-job-service-pack]");
+        if (!button) return;
+        const service = button.dataset.jobServicePack;
+        if (!SERVICE_PACKS[service]) return;
+        servicePackSelect.value = service;
+        renderServicePack();
+        servicePackPanel.open = true;
+        window.location.hash = "tool-guides";
+        setTimeout(() => servicePackPanel.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
       }
 
       function renderRoomCoverage(job = loadActiveJob()) {
@@ -11675,6 +11762,7 @@
           `Inspector: ${job.inspector || "Not entered"}`,
           `Property: ${job.property}`,
           `Started: ${started}`,
+          `Additional service packs: ${job.services.length ? job.services.map(service => JOB_SERVICE_LABELS[service]).filter(Boolean).join(", ") : "None recorded"}`,
           `Closeout steps: ${completedSteps.size} of ${jobSteps.length} complete`,
           `Next action: ${nextAction}`,
           `Room photo coverage: ${job.rooms.length ? `${completedRooms} of ${job.rooms.length} rooms confirmed` : "Not started"}`,
@@ -11807,6 +11895,7 @@
           activeJobMapLink.href = "https://maps.apple.com/";
           activeJobMapLink.setAttribute("aria-disabled", "true");
           updateJobProgress(null);
+          renderJobServices(null);
           renderRoomCoverage(null);
           renderFieldReadings(null);
           return;
@@ -11826,6 +11915,7 @@
         homeActiveJobProgress.textContent = `${completedSteps} of ${jobSteps.length} closeout steps${releaseComplete ? " · Release check complete" : ""}`;
         homeActiveJobMap.href = `https://maps.apple.com/?q=${encodeURIComponent(job.property)}`;
         updateJobProgress(job);
+        renderJobServices(job);
         renderRoomCoverage(job);
         renderFieldReadings(job);
         syncActiveJobToForms(job);
@@ -11844,6 +11934,7 @@
           startedAt: sameJob && existing.startedAt ? existing.startedAt : new Date().toISOString(),
           steps: sameJob ? existing.steps : [],
           quality: sameJob ? existing.quality : [],
+          services: sameJob ? existing.services : [],
           rooms: sameJob ? existing.rooms : [],
           readings: sameJob ? existing.readings : []
         };
@@ -13729,6 +13820,8 @@
       });
 
       jobContextForm.addEventListener("submit", saveActiveJob);
+      jobServiceOptions.forEach(option => option.addEventListener("change", updateJobServices));
+      jobServiceLinks.addEventListener("click", openJobServicePack);
       copyActiveJobStatusBtn.addEventListener("click", copyActiveJobStatus);
       clearActiveJobBtn.addEventListener("click", clearActiveJob);
       jobNextActionBtn.addEventListener("click", openNextJobAction);
