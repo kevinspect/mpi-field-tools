@@ -956,3 +956,39 @@ Status: published August 26, 2026 as GitHub commit `3782b2efbdddb42714e213a4566f
 
 - Restore GitHub `main` to `9dfaa2418e8965c52d5880cdda5aae470946b5c9` to keep Builds 1–22 but remove the home search.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 24 — Company phone setup check
+
+Status: published August 26, 2026 as GitHub commit `3b785e496cb2eb59ccc8bc0e0ce31a585f0e56c9`.
+
+#### Additions
+
+1. Added a collapsed **Company phone setup** check to Training Center.
+   - Detects whether MPI Field Tools is running from the Home Screen, the current app is controlled by its offline service worker, MPI notification permission and the phone’s push token are present, and an inspector name is saved.
+   - Provides direct links to save the inspector name, verify Today’s Jobs, and set up MPI notifications.
+
+2. Added two clear account confirmations.
+   - The inspector confirms that Today’s Jobs opened with the correct MPI company Google account and showed the assigned jobs.
+   - The inspector confirms that the MPI training profile and InterNACHI account opened under their own credentials.
+   - The confirmations stay on that company phone and persist after reload.
+
+3. Kept the rollout check quiet and private.
+   - The card remains collapsed unless opened.
+   - A complete phone shows **Phone ready**; an incomplete phone displays the exact completed count out of six.
+   - No setup report, account information, push token, or checklist state is emailed.
+   - Updated the visible build, version file, and offline cache identifier to Build 61.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Complete-phone simulation detected Home Screen mode, active offline control, granted notification permission with a saved push token, and the saved inspector name.
+- Both manual account confirmations produced **Phone ready**.
+- Removing the training-account confirmation changed the result to **5 of 6** and persisted after reload.
+- 390-pixel phone layout: no horizontal overflow; all setup actions remained at least 44 pixels high.
+- No email, background monitoring, location collection, password handling, or external account data storage was added.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `b9b1248b08e620021085ca53199f8555d0500f86` to keep Builds 1–23 but remove the company phone setup check.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
