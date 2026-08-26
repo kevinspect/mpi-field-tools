@@ -255,7 +255,7 @@ Status: published August 26, 2026 as GitHub commit `11f11585eced2c7837f28b638910
 
 ### Build 6 — SOP knowledge checks
 
-Status: implemented locally; publication pending validation.
+Status: published August 26, 2026 as GitHub commit `b51d6fdc57f301bcf9960ee6f5cc4bea065cde72`.
 
 #### Additions
 
