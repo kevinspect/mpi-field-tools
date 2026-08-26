@@ -89,6 +89,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Copied Age Finder results now carry the equipment family, serial, manufacture result, date-code explanation, and the same approximate age shown on screen. **Implemented in Build 68.**
 - Company Tool Guides now includes a collapsed, service-specific packing check with direct links to the exact tool cards for standard, sewer, mold/IAQ, well/septic/water, drone, and crawlspace-robot work. **Implemented in Build 69.**
 - Every service pack now functions as a focused checklist with individual equipment checks, one supporting-items confirmation, and a clear completion state that resets when the service changes. **Implemented in Build 70.**
+- Current Job now saves booked specialist equipment packs with the active property, includes them in copied job status, and opens the exact service checklist in one tap. **Implemented in Build 71.**
 
 ## Low-cost improvements
 

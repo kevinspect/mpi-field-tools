@@ -1304,3 +1304,35 @@ Status: published August 26, 2026 as GitHub commit `a5c06fb14ba82e911d602888284d
 
 - Restore GitHub `main` to `524cbeb57cef17a1f2f80478fa0f1c6c6da3a6a6` to keep Builds 1–32 but return the service packs to read-only lists.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 34 — Job-linked service packs
+
+Status: published August 26, 2026 as GitHub commit `ef2192db0c6591ea7c9aeff1e0de2221cdda7eb3` (app Build 71).
+
+#### Additions
+
+1. Added a collapsed **Additional service packs** control to Current Job.
+   - The inspector can mark Sewer scope, Mold / IAQ sampling, Well/septic/water service, Drone roof inspection, and Crawlspace robot when that specialist equipment is booked for the active property.
+   - The selections stay with that property on the company phone and reset with a new or cleared job.
+   - A selection cannot be saved before the inspector starts the current job.
+
+2. Connected job scope to the exact field aid.
+   - Every selected service produces a direct button that opens its corresponding special-service packing checklist.
+   - The copied job-status handoff now lists the selected additional service packs.
+   - The visible note clarifies that this records equipment planning only and does not authorize the ancillary service.
+   - Updated the visible build, version file, and offline cache identifier to Build 71.
+
+#### Validation record
+
+- Attempting to select a service without an active job immediately cleared the selection and displayed **Start job**.
+- Sewer scope and Mold / IAQ sampling both saved to one test property and survived a full page reload.
+- The job-status clipboard output listed both service packs exactly.
+- **Open Sewer scope pack** navigated to Company Tool Guides, opened the pack panel, selected Sewer scope, and rendered the correct pack title.
+- 390-pixel phone layout: no horizontal overflow.
+- Duplicate HTML IDs: none detected.
+- Browser script errors: none detected.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `5f915992f5e9e572433ab49146b19667144d666a` to keep Builds 1–33 but remove job-linked service packs.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
