@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="77">
+  <meta name="app-build" content="78">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4103,7 +4103,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">77</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">78</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4222,6 +4222,7 @@
             <a class="job-secondary-action" id="activeJobMapLink" href="https://maps.apple.com/" target="_blank" rel="noopener">Open in Apple Maps</a>
             <button class="job-secondary-action" id="copyActiveJobStatusBtn" type="button">Copy job status</button>
             <button class="job-secondary-action danger" id="clearActiveJobBtn" type="button">Clear finished job</button>
+            <button class="job-secondary-action" id="restoreLastJobBtn" type="button" hidden>Restore last cleared job</button>
           </div>
 
           <div class="job-shortcuts" aria-label="Current job shortcuts">
@@ -6674,6 +6675,7 @@
       const homeSearchClear = document.getElementById("homeSearchClear");
       const homeSearchResults = document.getElementById("homeSearchResults");
       const clearActiveJobBtn = document.getElementById("clearActiveJobBtn");
+      const restoreLastJobBtn = document.getElementById("restoreLastJobBtn");
       const jobSteps = [...document.querySelectorAll("[data-job-step]")];
       const jobProgressFill = document.getElementById("jobProgressFill");
       const jobProgressText = document.getElementById("jobProgressText");
@@ -11524,6 +11526,7 @@
       }
 
       const ACTIVE_JOB_STORAGE_KEY = "mpiActiveJobV1";
+      const LAST_CLEARED_JOB_STORAGE_KEY = "mpiLastClearedJobV1";
       const DAILY_READINESS_STORAGE_KEY = "mpiDailyReadinessV1";
       const SHIFT_RESET_STORAGE_KEY = "mpiShiftResetV1";
       const TOOL_READINESS_STORAGE_KEY = "mpiToolReadinessV1";
@@ -11736,6 +11739,16 @@
 
       function storeActiveJob(job) {
         try { localStorage.setItem(ACTIVE_JOB_STORAGE_KEY, JSON.stringify(job)); } catch (_) {}
+      }
+
+      function loadLastClearedJob() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(LAST_CLEARED_JOB_STORAGE_KEY) || "null");
+          if (!saved?.job?.property || typeof saved.job !== "object") return null;
+          return saved;
+        } catch (_) {
+          return null;
+        }
       }
 
       function renderJobServices(job = loadActiveJob()) {
@@ -12116,6 +12129,7 @@
       function renderActiveJob(job = loadActiveJob()) {
         const title = activeJobStatus.querySelector("strong");
         const detail = activeJobStatus.querySelector("span");
+        restoreLastJobBtn.hidden = Boolean(job?.property) || !loadLastClearedJob();
         if (!job?.property) {
           homeActiveJob.hidden = true;
           homeActiveJobProperty.textContent = "";
@@ -12246,11 +12260,35 @@
 
       function clearActiveJob() {
         const job = loadActiveJob();
-        if (job?.property && !window.confirm(`Clear the finished job at ${job.property} from this phone?`)) return;
+        if (job?.property) {
+          const closeoutComplete = new Set(job.steps || []).size === jobSteps.length;
+          const releaseComplete = reportQualityChecks.length > 0 && new Set(job.quality || []).size === reportQualityChecks.length;
+          const message = closeoutComplete && releaseComplete
+            ? `Clear the finished job at ${job.property} from this phone? One recoverable copy will be kept on this phone.`
+            : `The job at ${job.property} still has incomplete closeout or report-release checks. Clear it anyway? One recoverable copy will be kept on this phone.`;
+          if (!window.confirm(message)) return;
+          try {
+            localStorage.setItem(LAST_CLEARED_JOB_STORAGE_KEY, JSON.stringify({ job, clearedAt: new Date().toISOString() }));
+          } catch (_) {}
+        }
         try { localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY); } catch (_) {}
         [damageProperty, equipmentProperty, toolCheckProperty, teamQuestionProperty, safetyNoticeProperty].forEach(input => { if (input) input.value = ""; });
         renderActiveJob(null);
-        showToast("Finished job cleared");
+        showToast(job?.property ? "Finished job cleared — recovery is available" : "No active job to clear");
+      }
+
+      function restoreLastClearedJob() {
+        const saved = loadLastClearedJob();
+        if (!saved?.job?.property) {
+          renderActiveJob(null);
+          showToast("No cleared job is available");
+          return;
+        }
+        storeActiveJob(saved.job);
+        try { localStorage.removeItem(LAST_CLEARED_JOB_STORAGE_KEY); } catch (_) {}
+        renderActiveJob(saved.job);
+        syncActiveJobToForms(saved.job, true);
+        showToast("Last cleared job restored");
       }
 
       function initializeFieldForms() {
@@ -14116,6 +14154,7 @@
       jobServiceLinks.addEventListener("click", openJobServicePack);
       copyActiveJobStatusBtn.addEventListener("click", copyActiveJobStatus);
       clearActiveJobBtn.addEventListener("click", clearActiveJob);
+      restoreLastJobBtn.addEventListener("click", restoreLastClearedJob);
       jobNextActionBtn.addEventListener("click", openNextJobAction);
       dailyReadinessReadyBtn.addEventListener("click", confirmDailyReadiness);
       dailyReadinessIssueBtn.addEventListener("click", openReadinessIssueRequest);
