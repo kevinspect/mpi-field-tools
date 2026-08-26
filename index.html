@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="85">
+  <meta name="app-build" content="86">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4104,7 +4104,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">85</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">86</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4880,7 +4880,7 @@
 
           <button class="decode-btn" id="toolCheckSubmitBtn" type="submit">Submit completed tool check</button>
           <p class="damage-submit-status" id="toolCheckSubmitStatus" role="status" aria-live="polite"></p>
-          <p class="privacy-note">Internet access is required to submit the record. The app does not store submitted checklists.</p>
+          <p class="privacy-note">Internet access is required to submit the record. An unfinished checklist stays on this phone until it is submitted; submitted checklists are not kept in the app.</p>
         </form>
 
         <aside class="panel damage-info-panel" aria-labelledby="tool-check-info-title">
@@ -5044,7 +5044,7 @@
             </div>
           </fieldset>
 
-          <label class="damage-confirmation"><input id="toolCommissionConfirmed" type="checkbox" required><span>I matched the exact equipment and current manufacturer instructions, completed the applicable readiness checks, and accurately recorded anything still preventing field use.</span></label>
+          <label class="damage-confirmation"><input id="toolCommissionConfirmed" name="Inspector confirmation" value="Equipment and current instructions matched; applicable readiness checks completed" type="checkbox" required><span>I matched the exact equipment and current manufacturer instructions, completed the applicable readiness checks, and accurately recorded anything still preventing field use.</span></label>
           <button class="decode-btn" id="toolCommissionSubmitBtn" type="submit">Submit commissioning record</button>
           <p class="damage-submit-status" id="toolCommissionStatus" role="status" aria-live="polite"></p>
           <div class="damage-success" id="toolCommissionSuccess" hidden><strong>Commissioning record submitted.</strong><span>The equipment identity, setup result, assignment, and release status were delivered to MPI management.</span></div>
@@ -11595,6 +11595,9 @@
       const PHONE_SETUP_STORAGE_KEY = "mpiPhoneSetupV1";
       const FORM_DRAFT_CONFIG = [
         { form: damageForm, key: "mpiDraftDamageV1", status: damageSubmitStatus, photoReminder: true },
+        { form: toolCheckForm, key: "mpiDraftToolCheckV1", status: toolCheckSubmitStatus },
+        { form: toolCommissionForm, key: "mpiDraftToolCommissionV1", status: toolCommissionStatus },
+        { form: onboardingForm, key: "mpiDraftOnboardingReviewV1", status: onboardingStatus },
         { form: teamQuestionForm, key: "mpiDraftTeamQuestionV1", status: teamQuestionStatus },
         { form: safetyNoticeForm, key: "mpiDraftSafetyNoticeV1", status: safetyNoticeStatus },
         { form: requestForm, key: "mpiDraftRequestV1", status: requestSubmitStatus }
@@ -12389,6 +12392,7 @@
           targetHash = "#equipment-record";
         }
         if (params.get("tool-check-sent") === "1") {
+          clearFormDraft("mpiDraftToolCheckV1");
           toolCheckSuccessBox.hidden = false;
           toolCheckSubmitStatus.className = "damage-submit-status success";
           toolCheckSubmitStatus.textContent = "End-of-job tool check submitted successfully.";
@@ -12396,6 +12400,7 @@
           targetHash = "#tool-check";
         }
         if (params.get("tool-commission-sent") === "1") {
+          clearFormDraft("mpiDraftToolCommissionV1");
           toolCommissionSuccess.hidden = false;
           toolCommissionStatus.className = "damage-submit-status success";
           toolCommissionStatus.textContent = "Commissioning record submitted successfully.";
@@ -12404,6 +12409,7 @@
           targetHash = "#tool-guides";
         }
         if (params.get("onboarding-sent") === "1") {
+          clearFormDraft("mpiDraftOnboardingReviewV1");
           onboardingSuccess.hidden = false;
           onboardingStatus.className = "damage-submit-status success";
           onboardingStatus.textContent = "Onboarding progress submitted successfully.";
