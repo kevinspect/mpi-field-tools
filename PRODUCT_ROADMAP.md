@@ -74,6 +74,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Job Companion identifies the single next incomplete field or report-release action and opens the relevant app screen or checklist stage. **Implemented in Build 53.** Showing only required forms by inspection type remains future work.
 - All internal destinations, phone screens, form recipients, labels, and field-reference links received a complete reliability audit; stale Trane, Bradford White, and sewer-camera references were refreshed. **Implemented in Build 54.**
 - Training Center now identifies and opens the exact next incomplete MPI refresher lesson. **Implemented in Build 55.** Management-selected InterNACHI course links continue through each inspector’s existing MPI training plan.
+- Unsent text and selections in the four principal field-support forms now survive a reload or signal interruption on the company phone and clear after successful submission; photographs are never stored. **Implemented in Build 56.**
 
 ## Low-cost improvements
 

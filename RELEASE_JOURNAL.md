@@ -764,3 +764,42 @@ Status: published August 26, 2026 as GitHub commit `113f424e3d11403bbacdf0c6f2ca
 
 - Restore GitHub `main` to `9214edb02bce3e4e76897b367ba479464ebe54f3` to keep Builds 1–17 but remove the next-refresher card.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 19 — Unsent field-form draft protection
+
+Status: published August 26, 2026 as GitHub commit `2ade1aa3cea5bc2aab76994f67bc31aeca83c561`.
+
+#### Additions
+
+1. Added device-only draft protection to the four field forms most likely to contain unsent notes.
+   - Damaged Item Notice.
+   - Ask Management.
+   - Safety & Near-Miss Notice.
+   - Requests & Feedback.
+
+2. Protected field work without saving photographs.
+   - Typed text, selected options, checkboxes, dates, inspector, and property information restore after reload or reopening the app.
+   - Photo selections are never stored by the app and must be selected again after a reload.
+   - A clear restored-draft message appears when saved information is recovered.
+
+3. Added safe cleanup.
+   - Each draft clears only after the matching FormSubmit success return is received.
+   - FormSubmit control fields, honeypots, hidden values, buttons, and file controls are excluded.
+   - Drafts remain only in that browser on the company phone; no background email or network transfer occurs.
+   - Updated the visible build, version file, and offline cache identifier to Build 56.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Damage draft: 13 user fields and selections restored after reload; both photo inputs remained empty.
+- Multi-selection test: informed-party choices and the conditional Other person field restored correctly.
+- Ask Management, Safety Notice, and Request drafts restored correctly after reload.
+- Successful-return simulations cleared each matching draft and displayed the existing success state.
+- 390-pixel phone layout: no horizontal overflow.
+- Live offline regression: Build 55 reopened from its service-worker cache with the connection disabled, the requested Field Procedures screen remained open, and all 26 procedure prompts were present with no runtime error.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `bcd4d418bff11bd1a7b598e2b6229fe9652e6377` to keep Builds 1–18 but remove device-only draft protection.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
