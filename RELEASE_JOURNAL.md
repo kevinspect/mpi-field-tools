@@ -918,3 +918,41 @@ Status: published August 26, 2026 as GitHub commit `e2f4c33213bcb7ec4f884c12f85a
 
 - Restore GitHub `main` to `655949a11ea61a710ec8716e1bd0580fbf64548d` to keep Builds 1–21 but remove the equipment readiness tracker.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 23 — Offline home tool and procedure search
+
+Status: published August 26, 2026 as GitHub commit `3782b2efbdddb42714e213a4566ff9d765644acc`.
+
+#### Additions
+
+1. Added one **Find a field tool or procedure** search at the top of the home screen.
+   - Searches all principal app screens, all 26 MPI field prompts, and all 21 company tool cards.
+   - Understands practical terms such as water pressure, moisture meter, damage, calendar, safety, training, and equipment age.
+   - Returns no more than eight focused matches and remains hidden when unused so the home screen stays uncluttered.
+
+2. Added exact destination routing.
+   - A procedure result opens Field Procedures with the correct prompt already selected.
+   - A tool result opens Company Tool Guides with the correct operating card already selected.
+   - A screen result opens the selected MPI tool directly.
+   - Enter opens the best match and Escape clears the search.
+
+3. Kept search private and offline.
+   - Search terms are not stored, submitted, or emailed.
+   - All results come from the app’s existing embedded MPI content and remain available without cell service after installation.
+   - Updated the visible build, version file, and offline cache identifier to Build 60.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- **Water pressure** opened the exact Water pressure and functional flow prompt.
+- **Moisture meter** opened the exact company tool card.
+- **Damage** opened Damaged Item Notice; keyboard Enter selected the best match.
+- A nonsense search displayed a clear no-match state without routing elsewhere.
+- 390-pixel phone layout: no horizontal overflow; the search field remained 52 pixels high.
+- No email, network submission, location collection, or search logging was added.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `9dfaa2418e8965c52d5880cdda5aae470946b5c9` to keep Builds 1–22 but remove the home search.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
