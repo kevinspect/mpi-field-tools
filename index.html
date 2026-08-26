@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="68">
+  <meta name="app-build" content="69">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3806,6 +3806,17 @@
     .tool-readiness-actions .decode-btn { flex: 1; margin: 0; }
     .tool-readiness-list { display: grid; gap: 10px; padding: 18px 20px 20px; }
     .tool-readiness-empty { margin: 0; color: var(--ink-2); font-size: 12px; line-height: 1.5; }
+    .service-pack-body { display: grid; gap: 16px; padding: 18px; border-top: 1px solid var(--line); }
+    .service-pack-result { display: grid; gap: 10px; }
+    .service-pack-result[hidden] { display: none; }
+    .service-pack-title { margin: 0; color: var(--forest); font-size: 15px; }
+    .service-pack-copy { margin: 0; color: var(--ink-2); font-size: 11.5px; line-height: 1.5; }
+    .service-pack-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .service-pack-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 12px 13px; background: #f7f9fc; border: 1px solid #dfe5ee; border-radius: 11px; }
+    .service-pack-item strong { display: block; color: var(--forest); font-size: 12px; }
+    .service-pack-item small { display: block; margin-top: 3px; color: var(--ink-2); font-size: 10px; line-height: 1.4; }
+    .service-pack-item button { min-height: 42px; padding: 8px 11px; color: var(--bright-blue); background: #fff; border: 1px solid #c7d9e8; border-radius: 9px; font-size: 10px; font-weight: 900; }
+    .service-pack-extras { margin: 0; padding: 12px 14px; color: #634a12; background: #fff9e9; border-left: 4px solid var(--orange); border-radius: 8px; font-size: 10.5px; line-height: 1.5; }
     .tool-readiness-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 14px; align-items: center; padding: 14px; background: #fff; border: 1px solid var(--line); border-radius: 13px; }
     .tool-readiness-copy { min-width: 0; }
     .tool-readiness-copy strong { display: block; color: var(--forest); font-size: 14px; }
@@ -4062,7 +4073,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">68</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">69</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4830,6 +4841,29 @@
         <span><strong>21 inventory tool cards + first-use setup</strong> · Model-specific links are included where exact controls matter.</span>
         <span class="sop-offline-badge">Cards work offline</span>
       </div>
+
+      <details class="panel escalation-guide" id="servicePackPanel">
+        <summary>
+          <span><strong>Special-service pack check</strong><small>Confirm the extra company equipment for the booked service.</small></span>
+          <span class="daily-readiness-status">Offline</span>
+        </summary>
+        <div class="service-pack-body">
+          <div class="field">
+            <label for="servicePackSelect">Booked service</label>
+            <div class="select-wrap"><select class="damage-input" id="servicePackSelect">
+              <option value="">Choose a service…</option>
+              <option value="standard">Standard home inspection</option>
+              <option value="sewer">Sewer scope</option>
+              <option value="mold">Mold / IAQ sampling</option>
+              <option value="well">Well, septic, or laboratory water sampling</option>
+              <option value="drone">Drone roof inspection</option>
+              <option value="crawl">Crawlspace robot inspection</option>
+            </select></div>
+          </div>
+          <div class="service-pack-result" id="servicePackResult" hidden></div>
+          <p class="report-quality-note">Packing aid only. Confirm the contracted scope, inspector authorization, current MPI procedure, required forms, batteries, PPE, consumables, and the full assigned tool list before travel.</p>
+        </div>
+      </details>
 
       <details class="panel escalation-guide" id="toolReadinessPanel">
         <summary>
@@ -6550,6 +6584,9 @@
       const toolGuideResultCount = document.getElementById("toolGuideResultCount");
       const toolGuideResults = document.getElementById("toolGuideResults");
       const toolGuideDetail = document.getElementById("toolGuideDetail");
+      const servicePackPanel = document.getElementById("servicePackPanel");
+      const servicePackSelect = document.getElementById("servicePackSelect");
+      const servicePackResult = document.getElementById("servicePackResult");
       const toolReadinessPanel = document.getElementById("toolReadinessPanel");
       const toolReadinessStatus = document.getElementById("toolReadinessStatus");
       const toolReadinessForm = document.getElementById("toolReadinessForm");
@@ -7034,6 +7071,69 @@
           ]
         }
       ];
+
+      const SERVICE_PACKS = {
+        standard: {
+          title: "Standard home inspection — high-use guide links",
+          copy: "Use the complete assigned tool list and start-of-day readiness check. These are quick links to high-use equipment, not a complete packing list.",
+          items: [
+            ["electrical-tester-kit", "Electrical tester kit", "Confirm the tester and voltage detector are present and function checked."],
+            ["moisture-meter", "Moisture meter", "Confirm battery, pins/sensor surfaces, and known-condition response."],
+            ["co-detector", "Carbon monoxide detector", "Confirm charge, sensor/service status, clean-air zero, and response check."],
+            ["telescoping-ladder", "Telescoping ladder", "Inspect rails, rungs, feet, locks, strap, and labels before the shift."]
+          ],
+          extras: "Also confirm the company phone/cameras, backup power, thermography equipment, water-pressure gauge, PPE, forms, consumables, and every other assigned item that applies."
+        },
+        sewer: {
+          title: "Sewer scope — extra pack",
+          copy: "Confirm the service is booked and the inspector is separately authorized before loading or operating the equipment.",
+          items: [
+            ["sewer-scope", "Sewer scope", "Camera head, skid, cable, reel, monitor, battery, storage, and recording checked."],
+            ["pocket-flood-light", "Rechargeable pocket flood light", "Charged backup light for the cleanout and work area."],
+            ["tool-pouch", "Tool pouch", "Only the approved small tools needed for the access arrangement."]
+          ],
+          extras: "Confirm approved PPE, drop cloth/property protection, cleaning and disinfection supplies, replacement O-rings/skids, and recording storage."
+        },
+        mold: {
+          title: "Mold / IAQ sampling — extra pack",
+          copy: "Sampling requires a contracted service, separate authorization, the approved sampling plan, and current laboratory instructions.",
+          items: [
+            ["mold-pump", "Mold / IAQ sampling pump", "Pump, stand/tripod, tubing, charge, known-flow check, and timing control ready."],
+            ["moisture-meter", "Moisture meter", "Ready for factual moisture screening where the approved procedure calls for it."],
+            ["headlamp", "Rechargeable headlamp", "Charged hands-free light for safe setup and label verification."]
+          ],
+          extras: "Confirm unopened sampling media, field blanks when required, labels, chain-of-custody form, timer, PPE decision, packaging, and laboratory delivery plan."
+        },
+        well: {
+          title: "Well, septic, or laboratory water service — extra pack",
+          copy: "Confirm exactly which ancillary service is contracted. Well-yield, septic evaluation, and water-quality sampling each require the separately approved procedure and authorization.",
+          items: [
+            ["digging-shovel", "Digging shovel", "Inspect the handle and blade; load only when the approved field procedure requires it."],
+            ["soil-probe", "Soil probe", "Inspect the shaft, handle, and tip; use only within the approved procedure."],
+            ["mattock", "Pick axe / mattock", "Load only for an approved task with a safe work area and current authorization."],
+            ["pocket-flood-light", "Rechargeable pocket flood light", "Charged light for equipment, access, labels, and sample documentation."]
+          ],
+          extras: "Confirm the correct laboratory bottles, preservatives, cooler/ice, gloves, disinfectant, sample labels, current chain-of-custody form, water-pressure or well-test equipment, and delivery time requirements for the booked service."
+        },
+        drone: {
+          title: "Drone roof inspection — extra pack",
+          copy: "The assigned pilot must confirm current company and FAA authorization, airspace, weather, property permission, and a controlled launch area.",
+          items: [
+            ["roof-drone", "Roof inspection drone", "Aircraft, propellers, batteries, controller, firmware, storage, Remote ID, and return-to-home setup checked."]
+          ],
+          extras: "Confirm charged flight batteries, controller/phone cable, media capacity, landing pad or controlled recovery area, weather limits, and any required airspace authorization."
+        },
+        crawl: {
+          title: "Crawlspace robot inspection — extra pack",
+          copy: "Confirm a dry, retrievable route from outside the access. The robot is not water resistant and does not authorize entry into an unsafe space.",
+          items: [
+            ["crawlspace-robot", "Crawlspace inspection robot", "Crawler, wheels, camera, lights, battery, controller, recording, and retrieval plan checked."],
+            ["headlamp", "Rechargeable headlamp", "Charged hands-free light for the access and setup area."],
+            ["pocket-flood-light", "Rechargeable pocket flood light", "Charged backup light for orientation and retrieval."]
+          ],
+          extras: "Confirm media storage, cleaning supplies that do not introduce water, property protection, and a safe recovery plan before deployment."
+        }
+      };
 
       const QUICK_SOP_PROCEDURES = [
         {
@@ -12925,6 +13025,53 @@
         });
       }
 
+      function renderServicePack() {
+        const pack = SERVICE_PACKS[servicePackSelect.value];
+        servicePackResult.hidden = !pack;
+        servicePackResult.replaceChildren();
+        if (!pack) return;
+
+        const title = document.createElement("h3");
+        title.className = "service-pack-title";
+        title.textContent = pack.title;
+        const copy = document.createElement("p");
+        copy.className = "service-pack-copy";
+        copy.textContent = pack.copy;
+        const list = document.createElement("ul");
+        list.className = "service-pack-list";
+        pack.items.forEach(([id, itemTitle, note]) => {
+          const item = document.createElement("li");
+          item.className = "service-pack-item";
+          const itemCopy = document.createElement("span");
+          const strong = document.createElement("strong");
+          strong.textContent = itemTitle;
+          const small = document.createElement("small");
+          small.textContent = note;
+          itemCopy.append(strong, small);
+          const button = document.createElement("button");
+          button.type = "button";
+          button.dataset.servicePackTool = id;
+          button.textContent = "Open guide";
+          item.append(itemCopy, button);
+          list.appendChild(item);
+        });
+        const extras = document.createElement("p");
+        extras.className = "service-pack-extras";
+        const extrasLabel = document.createElement("strong");
+        extrasLabel.textContent = "Also confirm: ";
+        extras.append(extrasLabel, document.createTextNode(pack.extras));
+        servicePackResult.append(title, copy, list, extras);
+      }
+
+      function openServicePackTool(id) {
+        const guide = TOOL_GUIDES.find(item => item.id === id);
+        if (!guide) return;
+        toolGuideSearch.value = guide.title;
+        toolGuideCategory.value = "";
+        renderToolGuideResults({ selectFirst: true });
+        toolGuideDetail.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
       function loadToolReadiness() {
         try {
           const saved = JSON.parse(localStorage.getItem(TOOL_READINESS_STORAGE_KEY) || "[]");
@@ -13074,6 +13221,7 @@
         const defaultGuide = TOOL_GUIDES.find(guide => guide.id === "moisture-meter") || TOOL_GUIDES[0];
         activeToolGuideId = defaultGuide?.id || "";
         if (defaultGuide) renderToolGuideDetail(defaultGuide);
+        renderServicePack();
         renderToolReadiness();
         renderToolGuideResults();
       }
@@ -13660,6 +13808,11 @@
       window.addEventListener("resize", sizeCommentOutput);
 
       toolGuideSearch.addEventListener("input", () => renderToolGuideResults({ selectFirst: true }));
+      servicePackSelect.addEventListener("change", renderServicePack);
+      servicePackResult.addEventListener("click", event => {
+        const button = event.target.closest("[data-service-pack-tool]");
+        if (button) openServicePackTool(button.dataset.servicePackTool);
+      });
       toolGuideCategory.addEventListener("change", () => renderToolGuideResults({ selectFirst: true }));
       toolGuideClear.addEventListener("click", () => {
         toolGuideSearch.value = "";
