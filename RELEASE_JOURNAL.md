@@ -509,7 +509,7 @@ Status: published August 26, 2026 as GitHub commit `acc80637103ac0aa0112f002c776
 
 ### Build 12 — New inspector field pathway
 
-Status: ready to publish as Build 49.
+Status: published August 26, 2026 as GitHub commit `6514beed53401864685374f457a567f4748c90ea`.
 
 #### Additions
 
