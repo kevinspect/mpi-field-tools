@@ -20,6 +20,69 @@
 
 ## Change log
 
+### Build 59 — Daily inspector workflow controller (App Build 97)
+
+Status: staged August 26, 2026 for owner review and publication.
+
+#### Additions
+
+1. Replaced the visible Job Companion/reporting aids with one daily field sequence.
+   - Company-phone inspector profile with name, inspector ID, optional phone, and assigned vehicle.
+   - Required ten-item Morning Readiness acknowledgement, completed once per working day.
+   - Today’s Jobs, next-job emphasis, Apple Maps directions, client calling, and two client-message templates.
+   - Dynamic inspector first name, client phone, and selected ETA in the prepared SMS wording.
+   - Explicitly records that the Messages composer opened; it does not claim the inspector pressed Send.
+   - Stage-based job controls: Scheduled, On My Way, Arrived, Inspection In Progress, Equipment Check, and Complete.
+
+2. Kept Spectora V10 as the inspection/report-writing system.
+   - Removed the visible room-photo tracker, field-reading notebook, report-release checklist, and four-stage reporting flow from the daily job screen.
+   - Start Inspection records the exact operational timestamp.
+   - A verified Spectora app/deep link supplied with the job can be used when available.
+   - The app does not invent or embed an undocumented Spectora URL scheme.
+
+3. Added job-aware equipment accountability and automatic next-job movement.
+   - Nine concise general closeout acknowledgements.
+   - Adds sewer, radon, well/water, septic, sampling, drone, or crawlspace equipment only when the scheduled service indicates it applies.
+   - Job completion is not recorded until the equipment check is complete.
+   - Completed jobs are archived on the company phone and the next scheduled job becomes prominent.
+
+4. Added a device-local owner activity dashboard.
+   - Today, Yesterday, This Week, and All-on-this-phone views.
+   - Optional filters by inspector and property.
+   - Logs readiness, job opening, directions, On My Way, client call/message actions, arrival, start, completion selection, equipment check, final completion, and Day Complete.
+   - Adds restrained flags for missing readiness, late arrival, missing start, Running Behind use, and an incomplete equipment check.
+   - Copies a concise daily summary or the full device activity log.
+
+5. Improved schedule data use without adding duplicate entry.
+   - Preserves the existing read-only Google Calendar connection and offline daily cache.
+   - Reads supported labels from calendar descriptions for client, agent, service, Spectora ID, and phone details when those values are present.
+   - The app now opens directly to Today’s Workflow when launched without a specific section link.
+
+#### Integration boundaries
+
+- GitHub Pages is a public static host. Inspector accounts, shared multi-device logs, automatic owner summaries, and secure Spectora API retrieval require a protected server-side connection.
+- Spectora API credentials must never be embedded in the public HTML file.
+- A specific-inspection V10 launch will only be enabled after MPI receives or verifies a supported Spectora app/universal link.
+- Until shared storage is connected, the owner dashboard is the source of truth for the company phone on which the actions occurred.
+
+#### Validation record
+
+- Fresh company-phone profile: passed.
+- Ten required readiness acknowledgements and disabled/enabled Ready button: passed.
+- Two-job daily schedule and next-job prominence: passed.
+- Dynamic `Jason` On My Way message with 20-minute ETA: passed.
+- Scheduled → On My Way → Arrived → Inspection In Progress → Equipment Check: passed.
+- Sewer-scope-specific equipment prompt: passed.
+- Equipment completion automatically advanced to the next job: passed.
+- Profile, readiness, first-job completion, and next-job state survived reload: passed.
+- Duplicate HTML IDs: none detected.
+- Desktop horizontal overflow: none detected.
+
+#### Rollback for this build
+
+- Restore the published Build 96 commit if the revised daily workflow is not approved.
+- Build 96 remains the exact public fallback immediately before this workflow-controller revision.
+
 ### Build 1 — Guided workday and company tool knowledge
 
 Status: published August 26, 2026 as GitHub commit `35b84a468f542021525a09cf0c57bfcf1fbffb82`.

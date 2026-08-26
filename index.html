@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="96">
+  <meta name="app-build" content="97">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
   <link rel="manifest" href="./site.webmanifest">
-  <meta name="description" content="Michigan Property Inspections field app for guided job closeout, company tool instructions, equipment ages, photo records, SOP prompts, training, and team support.">
+  <meta name="description" content="Michigan Property Inspections daily workflow app for inspector readiness, jobs, navigation, client contact, operational logging, field tools, and training.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="MPI Field Tools">
   <meta property="og:description" content="Field tools. Company standards. Team support. One MPI app.">
@@ -4156,6 +4156,186 @@
       *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
     }
 
+    /* Build 97: daily inspector workflow controller */
+    .workflow-shell {
+      display: grid;
+      gap: 18px;
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    .workflow-card {
+      overflow: hidden;
+      padding: clamp(20px, 4vw, 34px);
+      background: #fff;
+      border: 1px solid #dce3ee;
+      border-radius: 19px;
+      box-shadow: 0 12px 28px rgba(17,24,106,.08);
+    }
+
+    .workflow-card[hidden] { display: none !important; }
+    .workflow-card-header { margin-bottom: 22px; text-align: center; }
+    .workflow-card-header .eyebrow { justify-content: center; margin-bottom: 8px; }
+    .workflow-card-header h3 { margin: 0; color: var(--forest); font-size: clamp(25px, 5vw, 36px); line-height: 1.08; }
+    .workflow-card-header p { max-width: 580px; margin: 9px auto 0; color: var(--ink-2); font-size: 12.5px; line-height: 1.55; }
+    .workflow-profile-badge { display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 12px; color: var(--forest); background: #edf4fb; border-radius: 999px; font-size: 11px; font-weight: 900; }
+    .workflow-profile-badge::before { content: ""; width: 8px; height: 8px; background: #2f846b; border-radius: 50%; }
+
+    .workflow-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .workflow-form-grid .field-wide { grid-column: 1 / -1; }
+    .workflow-button,
+    .workflow-action,
+    .workflow-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 54px;
+      padding: 12px 18px;
+      border-radius: 13px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 950;
+      line-height: 1.2;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .workflow-button,
+    .workflow-action.primary { color: var(--forest); background: var(--orange); border: 0; box-shadow: inset 0 -4px 0 rgba(117,84,8,.28); }
+    .workflow-action { color: #fff; background: var(--forest); border: 0; }
+    .workflow-action.secondary,
+    .workflow-secondary { color: var(--bright-blue); background: #edf5fc; border: 1px solid #cbdff1; }
+    .workflow-action:disabled,
+    .workflow-button:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+    .workflow-action.danger { color: #8d2925; background: #fff1ef; border: 1px solid #f1c8c4; }
+    .workflow-action-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+    .workflow-action-grid .full { grid-column: 1 / -1; }
+
+    .workflow-checklist { display: grid; gap: 9px; margin: 0; }
+    .workflow-check {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      align-items: start;
+      gap: 11px;
+      min-height: 52px;
+      padding: 13px 14px;
+      color: var(--forest);
+      background: #f7f9fc;
+      border: 1px solid #e0e5ef;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.4;
+      cursor: pointer;
+    }
+    .workflow-check input { width: 22px; height: 22px; margin: 0; accent-color: var(--bright-blue); }
+    .workflow-check:has(input:checked) { background: #eef8f4; border-color: #b9dfd2; }
+    .workflow-checklist + .workflow-button { width: 100%; margin-top: 17px; }
+
+    .workflow-progress { display: flex; align-items: center; gap: 5px; margin: 0 0 20px; }
+    .workflow-progress span { flex: 1; height: 6px; background: #e5e9f0; border-radius: 99px; }
+    .workflow-progress span.complete { background: #2f846b; }
+    .workflow-progress span.current { background: var(--orange); }
+
+    .workflow-next-job {
+      padding: 20px;
+      color: #fff;
+      background: linear-gradient(145deg, #0b1050, #11186a 70%, #254f9a);
+      border: 1px solid rgba(180,135,32,.52);
+      border-radius: 16px;
+    }
+    .workflow-next-job > span { color: #e4c569; font-size: 10px; font-weight: 950; letter-spacing: .12em; text-transform: uppercase; }
+    .workflow-next-job h4 { margin: 8px 0 5px; color: #fff; font-size: 25px; line-height: 1.15; }
+    .workflow-next-job p { margin: 0; color: rgba(255,255,255,.76); font-size: 12px; line-height: 1.5; }
+    .workflow-job-meta { display: flex; flex-wrap: wrap; gap: 7px; margin: 14px 0 0; }
+    .workflow-job-meta span { padding: 7px 9px; color: var(--forest); background: #fff; border-radius: 999px; font-size: 10px; font-weight: 900; }
+    .workflow-next-job .workflow-button { width: 100%; margin-top: 17px; }
+
+    .workflow-jobs-list { display: grid; gap: 10px; margin-top: 16px; }
+    .workflow-job-row { display: grid; grid-template-columns: 68px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 14px; background: #f7f9fc; border: 1px solid #e0e5ef; border-radius: 13px; }
+    .workflow-job-row.is-complete { opacity: .62; }
+    .workflow-job-row time { color: var(--forest); font-size: 12px; font-weight: 950; text-align: center; }
+    .workflow-job-row strong { display: block; color: var(--forest); font-size: 13px; line-height: 1.3; }
+    .workflow-job-row small { display: block; margin-top: 4px; color: var(--ink-2); font-size: 10px; line-height: 1.4; }
+    .workflow-job-row button { min-height: 40px; padding: 0 12px; color: var(--bright-blue); background: #fff; border: 1px solid #cbdff1; border-radius: 10px; font: inherit; font-size: 10.5px; font-weight: 900; cursor: pointer; }
+    .workflow-schedule-tools { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; }
+    .workflow-schedule-tools p { margin: 0; color: var(--ink-2); font-size: 10.5px; line-height: 1.4; }
+    .workflow-schedule-tools button { flex: none; min-height: 42px; padding: 0 13px; color: var(--bright-blue); background: transparent; border: 0; font: inherit; font-size: 11px; font-weight: 900; cursor: pointer; }
+
+    .workflow-job-screen { color: #fff; background: linear-gradient(145deg, #0b1050, #11186a 68%, #254f9a); border-color: rgba(180,135,32,.48); }
+    .workflow-job-screen .workflow-card-header h3 { color: #fff; }
+    .workflow-job-screen .workflow-card-header p { color: rgba(255,255,255,.72); }
+    .workflow-status-pill { display: inline-flex; min-height: 31px; align-items: center; padding: 0 11px; color: var(--forest); background: #fff; border-radius: 999px; font-size: 10px; font-weight: 950; letter-spacing: .05em; text-transform: uppercase; }
+    .workflow-job-detail { display: grid; gap: 6px; margin-bottom: 18px; padding: 15px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); border-radius: 13px; }
+    .workflow-job-detail span { color: rgba(255,255,255,.65); font-size: 10px; font-weight: 850; letter-spacing: .05em; text-transform: uppercase; }
+    .workflow-job-detail strong { color: #fff; font-size: 14px; line-height: 1.4; }
+    .workflow-job-screen .workflow-action.secondary { color: #fff; background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.22); }
+    .workflow-job-screen .workflow-action.primary { color: var(--forest); background: var(--orange); }
+    .workflow-job-screen .workflow-action { background: var(--bright-blue); }
+    .workflow-job-back { display: inline-flex; min-height: 44px; align-items: center; margin-top: 15px; color: rgba(255,255,255,.76); background: transparent; border: 0; font: inherit; font-size: 11px; font-weight: 900; cursor: pointer; }
+
+    .workflow-message-dialog { width: min(92vw, 560px); padding: 0; border: 0; border-radius: 18px; box-shadow: 0 24px 80px rgba(9,14,74,.36); }
+    .workflow-message-dialog::backdrop { background: rgba(9,14,74,.67); }
+    .workflow-message-dialog-inner { padding: 24px; }
+    .workflow-message-dialog h3 { margin: 0; color: var(--forest); font-size: 25px; }
+    .workflow-message-dialog p { color: var(--ink-2); font-size: 12px; line-height: 1.5; }
+    .workflow-template-options,
+    .workflow-eta-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 15px 0; }
+    .workflow-template-options button,
+    .workflow-eta-options button { min-height: 46px; padding: 10px; color: var(--forest); background: #eef4fa; border: 1px solid #d3dfec; border-radius: 11px; font: inherit; font-size: 11px; font-weight: 900; cursor: pointer; }
+    .workflow-template-options button.selected,
+    .workflow-eta-options button.selected { color: #fff; background: var(--forest); border-color: var(--forest); }
+    .workflow-message-preview { min-height: 100px; padding: 14px; color: var(--forest); background: #f7f9fc; border: 1px solid #e0e5ef; border-radius: 12px; font-size: 12px; line-height: 1.55; }
+    .workflow-dialog-actions { display: grid; grid-template-columns: 1fr 1.5fr; gap: 9px; margin-top: 14px; }
+
+    .workflow-equipment-specialty { display: grid; gap: 9px; margin: 14px 0 0; }
+    .workflow-equipment-specialty:empty { display: none; }
+    .workflow-equipment-specialty .workflow-check { border-left: 4px solid var(--orange); }
+    .workflow-equipment-summary { margin: 0 0 16px; padding: 14px; color: var(--forest); background: #eef4fa; border-radius: 12px; font-size: 12px; line-height: 1.5; }
+
+    .workflow-day-complete { text-align: center; }
+    .workflow-day-complete-mark { display: grid; width: 74px; height: 74px; margin: 0 auto 14px; place-items: center; color: #fff; background: #2f846b; border-radius: 50%; font-size: 34px; font-weight: 950; }
+
+    .workflow-admin { max-width: 820px; margin: 18px auto 0; background: #fff; border: 1px solid #dce3ee; border-radius: 17px; box-shadow: 0 10px 24px rgba(17,24,106,.07); }
+    .workflow-admin > summary { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 66px; padding: 0 20px; color: var(--forest); font-size: 13px; font-weight: 950; cursor: pointer; }
+    .workflow-admin > summary::after { content: "+"; color: var(--orange-dark); font-size: 22px; }
+    .workflow-admin[open] > summary::after { content: "−"; }
+    .workflow-admin-body { padding: 0 20px 20px; }
+    .workflow-admin-note { margin: 0 0 14px; color: var(--ink-2); font-size: 10.5px; line-height: 1.5; }
+    .workflow-admin-filters { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+    .workflow-admin-filters button { min-height: 38px; padding: 0 11px; color: var(--bright-blue); background: #edf5fc; border: 1px solid #cbdff1; border-radius: 999px; font: inherit; font-size: 10px; font-weight: 900; cursor: pointer; }
+    .workflow-admin-filters button.selected { color: #fff; background: var(--forest); border-color: var(--forest); }
+    .workflow-exceptions { display: grid; gap: 8px; margin-bottom: 14px; }
+    .workflow-exception { padding: 12px; color: #7c2c27; background: #fff1ef; border-left: 4px solid #bb4d43; border-radius: 9px; font-size: 11px; line-height: 1.45; }
+    .workflow-log { display: grid; gap: 8px; max-height: 420px; overflow: auto; }
+    .workflow-log-entry { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 10px; padding: 11px 0; border-bottom: 1px solid #e6eaf0; }
+    .workflow-log-entry time { color: var(--bright-blue); font-size: 10px; font-weight: 900; }
+    .workflow-log-entry strong { display: block; color: var(--forest); font-size: 11.5px; }
+    .workflow-log-entry small { display: block; margin-top: 3px; color: var(--ink-2); font-size: 9.5px; line-height: 1.4; }
+    .workflow-admin-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 14px; }
+
+    .workflow-integration-note { margin: 18px auto 0; padding: 14px 16px; color: #5f6480; background: #f7f9fc; border: 1px solid #e0e5ef; border-radius: 13px; font-size: 10.5px; line-height: 1.55; }
+    .workflow-integration-note strong { color: var(--forest); }
+
+    @media (max-width: 560px) {
+      .workflow-shell { gap: 13px; }
+      .workflow-card { padding: 18px 14px; border-radius: 16px; }
+      .workflow-form-grid,
+      .workflow-action-grid { grid-template-columns: 1fr; }
+      .workflow-form-grid .field-wide,
+      .workflow-action-grid .full { grid-column: auto; }
+      .workflow-action,
+      .workflow-button { min-height: 58px; font-size: 13px; }
+      .workflow-job-row { grid-template-columns: 57px minmax(0, 1fr); }
+      .workflow-job-row button { grid-column: 1 / -1; width: 100%; }
+      .workflow-template-options,
+      .workflow-eta-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .workflow-dialog-actions,
+      .workflow-admin-actions { grid-template-columns: 1fr; }
+      .workflow-log-entry { grid-template-columns: 63px minmax(0, 1fr); }
+      .workflow-schedule-tools { align-items: flex-start; flex-direction: column; }
+    }
+
     :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
       outline: 3px solid #fff !important;
       outline-offset: 2px;
@@ -4221,7 +4401,7 @@
         <div class="home-tool-group-list">
           <a class="home-tool-card" href="#job-companion">
             <span class="home-tool-icon icon-job" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>Today’s Jobs</strong><small>Select the inspection, fill the address automatically, and complete four simple job stages.</small></span>
+            <span class="home-tool-copy"><strong>Today’s Workflow</strong><small>Morning readiness, next job, client contact, Spectora handoff, and equipment closeout.</small></span>
             <span class="home-tool-arrow" aria-hidden="true">→</span>
           </a>
           <a class="home-tool-card" href="#age-finder">
@@ -4292,7 +4472,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">94</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">97</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4315,13 +4495,174 @@
     <section class="field-app-section app-screen-view" id="job-companion" data-app-screen="job-companion" aria-labelledby="job-companion-title">
       <div class="field-section-heading">
         <div>
-          <p class="eyebrow">MPI today’s jobs</p>
-          <h2 id="job-companion-title">Today’s job. One simple closeout.</h2>
+          <p class="eyebrow">MPI daily workflow</p>
+          <h2 id="job-companion-title">The next job. The next action.</h2>
         </div>
-        <p>Choose the inspection from the company calendar. Its address becomes the current job and fills the other MPI field forms automatically.</p>
+        <p>Start ready, move through today’s inspections, open the tools already on the company phone, and finish with every item accounted for.</p>
       </div>
 
-      <section class="panel today-jobs-panel" aria-label="Today’s company schedule">
+      <div class="workflow-shell" id="dailyWorkflowApp">
+        <section class="workflow-card" id="workflowIdentityCard" aria-labelledby="workflow-identity-title">
+          <div class="workflow-card-header">
+            <p class="eyebrow">Company phone profile</p>
+            <h3 id="workflow-identity-title">Who is using this phone?</h3>
+            <p>Set this company phone to one inspector. The profile stays on the device and personalizes jobs, messages, and activity records.</p>
+          </div>
+          <form id="workflowIdentityForm" novalidate>
+            <div class="workflow-form-grid">
+              <div class="field"><label for="workflowInspectorName">Inspector name *</label><input class="damage-input" id="workflowInspectorName" type="text" autocomplete="name" maxlength="80" required placeholder="First and last name"></div>
+              <div class="field"><label for="workflowInspectorId">Inspector ID *</label><input class="damage-input" id="workflowInspectorId" type="text" autocomplete="off" maxlength="40" required placeholder="Company ID"></div>
+              <div class="field"><label for="workflowInspectorPhone">Inspector phone</label><input class="damage-input" id="workflowInspectorPhone" type="tel" autocomplete="tel" maxlength="30" placeholder="Optional"></div>
+              <div class="field"><label for="workflowInspectorVehicle">Assigned vehicle</label><input class="damage-input" id="workflowInspectorVehicle" type="text" maxlength="80" placeholder="Optional vehicle or unit"></div>
+              <button class="workflow-button field-wide" type="submit">SAVE COMPANY PHONE PROFILE</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="workflow-card" id="workflowReadinessCard" aria-labelledby="workflow-readiness-title" hidden>
+          <div class="workflow-card-header">
+            <span class="workflow-profile-badge" id="workflowReadinessInspector">Inspector</span>
+            <h3 id="workflow-readiness-title">Morning readiness</h3>
+            <p>Complete once before the first inspection. Every acknowledgement and the exact completion time are recorded on this phone.</p>
+          </div>
+          <div class="workflow-checklist" id="workflowReadinessChecklist">
+            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="vehicle-checked"><span>Vehicle checked.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="roadworthy"><span>Vehicle appears roadworthy.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="fuel"><span>Correct and sufficient fuel for today’s work.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="route"><span>Today’s route and job locations reviewed.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="equipment"><span>Required inspection equipment is onboard.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="specialty"><span>Required specialty equipment for today’s jobs is onboard.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="batteries"><span>Inspection equipment batteries are charged.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="phone"><span>Company phone or tablet is charged.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="chargers"><span>Chargers and spare batteries are onboard.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-readiness="ladders"><span>Required ladders and tools are onboard.</span></label>
+          </div>
+          <button class="workflow-button" id="workflowReadyBtn" type="button" disabled>READY FOR WORK</button>
+        </section>
+
+        <section class="workflow-card" id="workflowTodayCard" aria-labelledby="workflow-today-title" hidden>
+          <div class="workflow-card-header">
+            <span class="workflow-profile-badge" id="workflowTodayInspector">Inspector</span>
+            <h3 id="workflow-today-title">Today’s jobs</h3>
+            <p id="workflowScheduleStatus">Connect the MPI schedule once on this company phone.</p>
+          </div>
+          <div id="workflowNextJob"></div>
+          <div class="workflow-jobs-list" id="workflowJobsList"></div>
+          <div class="workflow-schedule-tools">
+            <p>Jobs remain available offline after the day’s schedule has been loaded.</p>
+            <div>
+              <button id="workflowConnectSchedule" type="button">Connect schedule</button>
+              <button id="workflowRefreshSchedule" type="button" hidden>Refresh</button>
+            </div>
+          </div>
+          <button class="workflow-secondary" id="workflowChangeProfile" type="button">Change inspector profile</button>
+        </section>
+
+        <section class="workflow-card workflow-job-screen" id="workflowJobCard" aria-labelledby="workflow-job-title" hidden>
+          <div class="workflow-progress" id="workflowJobProgress" aria-label="Job progress"><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="workflow-card-header">
+            <span class="workflow-status-pill" id="workflowJobStatus">Scheduled</span>
+            <h3 id="workflow-job-title">Current job</h3>
+            <p id="workflowJobSchedule"></p>
+          </div>
+          <div class="workflow-job-detail"><span>Property</span><strong id="workflowJobAddress"></strong></div>
+          <div class="workflow-job-detail" id="workflowJobClientBlock"><span>Client</span><strong id="workflowJobClient">Not listed</strong></div>
+          <div class="workflow-job-detail"><span>Inspection services</span><strong id="workflowJobServices">Inspection</strong></div>
+          <div class="workflow-action-grid" id="workflowJobActions">
+            <a class="workflow-action primary" id="workflowDirectionsBtn" href="https://maps.apple.com/" target="_blank" rel="noopener">DIRECTIONS</a>
+            <button class="workflow-action" id="workflowOnMyWayBtn" type="button">ON MY WAY</button>
+            <a class="workflow-action secondary" id="workflowCallClientBtn" href="#">CALL CLIENT</a>
+            <button class="workflow-action secondary" id="workflowMessageClientBtn" type="button">MESSAGE CLIENT</button>
+            <button class="workflow-action primary full" id="workflowArrivedBtn" type="button">ARRIVED</button>
+            <button class="workflow-action primary full" id="workflowStartInspectionBtn" type="button">START INSPECTION</button>
+            <button class="workflow-action primary full" id="workflowJobCompleteBtn" type="button">JOB COMPLETE</button>
+          </div>
+          <p class="workflow-integration-note" id="workflowSpectoraNote"><strong>Spectora V10:</strong> Start time is recorded here. A direct inspection launch will be enabled when MPI has a supported Spectora V10 app link for the job; until then the inspector opens the matching inspection in V10 from the company phone.</p>
+          <button class="workflow-job-back" id="workflowBackToJobs" type="button">← Back to today’s jobs</button>
+        </section>
+
+        <section class="workflow-card" id="workflowEquipmentCard" aria-labelledby="workflow-equipment-title" hidden>
+          <div class="workflow-card-header">
+            <p class="eyebrow">Before leaving</p>
+            <h3 id="workflow-equipment-title">Equipment accounted for</h3>
+            <p id="workflowEquipmentJob">Confirm only the equipment relevant to this inspection.</p>
+          </div>
+          <p class="workflow-equipment-summary">Job Complete has been selected. This job closes only after the accountability check is complete.</p>
+          <div class="workflow-checklist" id="workflowEquipmentChecklist">
+            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="inspection-tools"><span>Inspection tools accounted for.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="thermal-camera"><span>Thermal camera accounted for.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="moisture-meters"><span>Moisture meters accounted for.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="electrical-testing"><span>Electrical testing equipment accounted for.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="ladders"><span>Ladders returned to the vehicle.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="devices"><span>Cameras, tablets, and phones accounted for.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="power"><span>Chargers and batteries accounted for.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="nothing-left"><span>No tools were left inside or around the property.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="secured"><span>Property secured and keys returned where applicable.</span></label>
+          </div>
+          <div class="workflow-equipment-specialty" id="workflowSpecialtyEquipment"></div>
+          <button class="workflow-button" id="workflowEquipmentCompleteBtn" type="button" disabled>ALL EQUIPMENT ACCOUNTED FOR</button>
+        </section>
+
+        <section class="workflow-card workflow-day-complete" id="workflowDayCompleteCard" aria-labelledby="workflow-day-complete-title" hidden>
+          <div class="workflow-day-complete-mark">✓</div>
+          <div class="workflow-card-header">
+            <h3 id="workflow-day-complete-title">Day complete</h3>
+            <p>All scheduled inspections have been closed with their equipment checks.</p>
+          </div>
+          <button class="workflow-button" id="workflowDayCompleteBtn" type="button">CONFIRM DAY COMPLETE</button>
+          <p class="workflow-integration-note" id="workflowDayCompleteStatus">The exact time will be added to today’s activity log.</p>
+        </section>
+      </div>
+
+      <details class="workflow-admin" id="workflowAdminPanel">
+        <summary>Owner activity dashboard</summary>
+        <div class="workflow-admin-body">
+          <p class="workflow-admin-note"><strong>Current foundation:</strong> this dashboard is private to this company phone. Shared multi-inspector history and automatic owner summaries require the secure management connection planned for the next integration phase.</p>
+          <div class="workflow-admin-filters" id="workflowAdminFilters">
+            <button class="selected" type="button" data-workflow-log-filter="today">Today</button>
+            <button type="button" data-workflow-log-filter="yesterday">Yesterday</button>
+            <button type="button" data-workflow-log-filter="week">This week</button>
+            <button type="button" data-workflow-log-filter="all">All on this phone</button>
+          </div>
+          <div class="workflow-form-grid">
+            <div class="field"><label for="workflowAdminInspectorFilter">By inspector</label><div class="select-wrap"><select class="damage-input" id="workflowAdminInspectorFilter"><option value="">All inspectors on this phone</option></select></div></div>
+            <div class="field"><label for="workflowAdminJobFilter">By job</label><div class="select-wrap"><select class="damage-input" id="workflowAdminJobFilter"><option value="">All jobs</option></select></div></div>
+          </div>
+          <div class="workflow-exceptions" id="workflowExceptions"></div>
+          <div class="workflow-log" id="workflowActivityLog"></div>
+          <div class="workflow-admin-actions">
+            <button class="workflow-secondary" id="workflowCopySummary" type="button">Copy daily summary</button>
+            <button class="workflow-secondary" id="workflowExportLog" type="button">Copy full activity log</button>
+          </div>
+        </div>
+      </details>
+
+      <dialog class="workflow-message-dialog" id="workflowMessageDialog">
+        <div class="workflow-message-dialog-inner">
+          <h3>Message client</h3>
+          <p>Select the message and ETA. The iPhone Messages composer opens with the client number and wording filled in; the inspector still presses Send.</p>
+          <div class="workflow-template-options" id="workflowMessageTemplates">
+            <button type="button" data-workflow-template="on-my-way">ON MY WAY</button>
+            <button type="button" data-workflow-template="running-behind">RUNNING BEHIND</button>
+          </div>
+          <p><strong>Select ETA</strong></p>
+          <div class="workflow-eta-options" id="workflowEtaOptions">
+            <button type="button" data-workflow-eta="5">5 minutes</button><button type="button" data-workflow-eta="10">10 minutes</button>
+            <button type="button" data-workflow-eta="15">15 minutes</button><button type="button" data-workflow-eta="20">20 minutes</button>
+            <button type="button" data-workflow-eta="25">25 minutes</button><button type="button" data-workflow-eta="30">30 minutes</button>
+            <button type="button" data-workflow-eta="45">45 minutes</button><button type="button" data-workflow-eta="60">60 minutes</button>
+          </div>
+          <div class="workflow-message-preview" id="workflowMessagePreview">Select a message and ETA.</div>
+          <div class="workflow-dialog-actions">
+            <button class="workflow-secondary" id="workflowCancelMessage" type="button">Cancel</button>
+            <button class="workflow-button" id="workflowOpenMessages" type="button" disabled>OPEN MESSAGES</button>
+          </div>
+        </div>
+      </dialog>
+
+      <p class="workflow-integration-note"><strong>Connection roadmap:</strong> Google Calendar currently supplies the working schedule and offline cache. Secure Spectora job retrieval, shared owner logs, account authentication, and automatic summaries require a protected server connection; no API key will be placed in this public GitHub Pages file.</p>
+
+      <section class="panel today-jobs-panel" aria-label="Legacy schedule compatibility" hidden aria-hidden="true">
         <div class="today-jobs-toolbar">
           <div>
             <span class="today-jobs-date" id="todayJobsDate">Today</span>
@@ -4344,7 +4685,7 @@
         <p class="calendar-readonly-note">Read-only calendar access · Today’s jobs remain visible on this phone after the Google connection expires · MPI Field Tools cannot change calendar events.</p>
       </section>
 
-      <details class="panel daily-readiness" id="dailyReadiness">
+      <details class="panel daily-readiness" id="dailyReadiness" hidden aria-hidden="true">
         <summary>
           <span><strong>Start-of-day readiness</strong><small>One 30-second check before the first job.</small></span>
           <span class="daily-readiness-status" id="dailyReadinessStatus">Not checked today</span>
@@ -4365,7 +4706,7 @@
         </div>
       </details>
 
-      <details class="panel daily-readiness" id="shiftReset">
+      <details class="panel daily-readiness" id="shiftReset" hidden aria-hidden="true">
         <summary>
           <span><strong>End-of-day reset</strong><small>One final check before the company vehicle and equipment are left for the night.</small></span>
           <span class="daily-readiness-status" id="shiftResetStatus">Not completed today</span>
@@ -4387,7 +4728,7 @@
         </div>
       </details>
 
-      <div class="workflow-grid">
+      <div class="workflow-grid" hidden aria-hidden="true">
         <form class="panel job-context-card" id="jobContextForm" novalidate>
           <div class="panel-heading">
             <div><h2>Current job</h2><p>The selected calendar job supplies this address automatically. Manual entry remains available as a backup.</p></div>
@@ -4451,7 +4792,7 @@
         </section>
       </div>
 
-      <details class="panel report-quality-card" id="roomCoverageCard">
+      <details class="panel report-quality-card" id="roomCoverageCard" hidden aria-hidden="true">
         <summary>
           <span><strong>Room photo coverage</strong><small>Track the four required overview photographs for each actual room.</small></span>
           <span class="daily-readiness-status" id="roomCoverageStatus">No rooms</span>
@@ -4477,7 +4818,7 @@
         </div>
       </details>
 
-      <details class="panel report-quality-card" id="fieldReadingsCard">
+      <details class="panel report-quality-card" id="fieldReadingsCard" hidden aria-hidden="true">
         <summary>
           <span><strong>Field readings notebook</strong><small>Keep factual measurements with the active job and copy them into the report before closeout.</small></span>
           <span class="daily-readiness-status" id="fieldReadingsStatus">No readings</span>
@@ -4513,7 +4854,7 @@
         </div>
       </details>
 
-      <details class="panel report-quality-card" id="reportQualityCard">
+      <details class="panel report-quality-card" id="reportQualityCard" hidden aria-hidden="true">
         <summary>
           <span><strong>60-second report release check</strong><small>Complete this after the field report is finished.</small></span>
           <span class="daily-readiness-status" id="reportQualityStatus">0 of 6</span>
@@ -6450,7 +6791,7 @@
 
       const APP_SCREEN_TITLES = {
         "home": "MPI Field Tools",
-        "job-companion": "Today’s Jobs",
+        "job-companion": "Today’s Workflow",
         "age-finder": "Equipment Age Finder",
         "damage-report": "Damaged Item Notice",
         "equipment-record": "Equipment Photo Record",
@@ -6469,7 +6810,9 @@
       function renderAppScreen() {
         const rawRequestedScreen = window.location.hash.slice(1);
         const requestedScreen = rawRequestedScreen === "today-jobs" ? "job-companion" : rawRequestedScreen;
-        const activeScreen = Object.hasOwn(APP_SCREEN_TITLES, requestedScreen) ? requestedScreen : "home";
+        const activeScreen = Object.hasOwn(APP_SCREEN_TITLES, requestedScreen)
+          ? requestedScreen
+          : (rawRequestedScreen ? "home" : "job-companion");
         if (rawRequestedScreen === "today-jobs") history.replaceState(null, "", `${location.pathname}${location.search}#job-companion`);
         for (const view of screenViews) view.hidden = view.dataset.appScreen !== activeScreen;
         screenNav.hidden = activeScreen === "home";
@@ -7005,6 +7348,65 @@
       const jobNextActionTitle = document.getElementById("jobNextActionTitle");
       const jobNextActionDetail = document.getElementById("jobNextActionDetail");
       const jobNextActionBtn = document.getElementById("jobNextActionBtn");
+      const workflowIdentityCard = document.getElementById("workflowIdentityCard");
+      const workflowIdentityForm = document.getElementById("workflowIdentityForm");
+      const workflowInspectorName = document.getElementById("workflowInspectorName");
+      const workflowInspectorId = document.getElementById("workflowInspectorId");
+      const workflowInspectorPhone = document.getElementById("workflowInspectorPhone");
+      const workflowInspectorVehicle = document.getElementById("workflowInspectorVehicle");
+      const workflowReadinessCard = document.getElementById("workflowReadinessCard");
+      const workflowReadinessInspector = document.getElementById("workflowReadinessInspector");
+      const workflowReadinessChecks = [...document.querySelectorAll("[data-workflow-readiness]")];
+      const workflowReadyBtn = document.getElementById("workflowReadyBtn");
+      const workflowTodayCard = document.getElementById("workflowTodayCard");
+      const workflowTodayInspector = document.getElementById("workflowTodayInspector");
+      const workflowScheduleStatus = document.getElementById("workflowScheduleStatus");
+      const workflowNextJob = document.getElementById("workflowNextJob");
+      const workflowJobsList = document.getElementById("workflowJobsList");
+      const workflowConnectSchedule = document.getElementById("workflowConnectSchedule");
+      const workflowRefreshSchedule = document.getElementById("workflowRefreshSchedule");
+      const workflowChangeProfile = document.getElementById("workflowChangeProfile");
+      const workflowJobCard = document.getElementById("workflowJobCard");
+      const workflowJobProgress = document.getElementById("workflowJobProgress");
+      const workflowJobStatus = document.getElementById("workflowJobStatus");
+      const workflowJobTitle = document.getElementById("workflow-job-title");
+      const workflowJobSchedule = document.getElementById("workflowJobSchedule");
+      const workflowJobAddress = document.getElementById("workflowJobAddress");
+      const workflowJobClient = document.getElementById("workflowJobClient");
+      const workflowJobClientBlock = document.getElementById("workflowJobClientBlock");
+      const workflowJobServices = document.getElementById("workflowJobServices");
+      const workflowDirectionsBtn = document.getElementById("workflowDirectionsBtn");
+      const workflowOnMyWayBtn = document.getElementById("workflowOnMyWayBtn");
+      const workflowCallClientBtn = document.getElementById("workflowCallClientBtn");
+      const workflowMessageClientBtn = document.getElementById("workflowMessageClientBtn");
+      const workflowArrivedBtn = document.getElementById("workflowArrivedBtn");
+      const workflowStartInspectionBtn = document.getElementById("workflowStartInspectionBtn");
+      const workflowJobCompleteBtn = document.getElementById("workflowJobCompleteBtn");
+      const workflowSpectoraNote = document.getElementById("workflowSpectoraNote");
+      const workflowBackToJobs = document.getElementById("workflowBackToJobs");
+      const workflowEquipmentCard = document.getElementById("workflowEquipmentCard");
+      const workflowEquipmentJob = document.getElementById("workflowEquipmentJob");
+      const workflowEquipmentChecklist = document.getElementById("workflowEquipmentChecklist");
+      const workflowEquipmentChecks = [...document.querySelectorAll("[data-workflow-equipment]")];
+      const workflowSpecialtyEquipment = document.getElementById("workflowSpecialtyEquipment");
+      const workflowEquipmentCompleteBtn = document.getElementById("workflowEquipmentCompleteBtn");
+      const workflowDayCompleteCard = document.getElementById("workflowDayCompleteCard");
+      const workflowDayCompleteBtn = document.getElementById("workflowDayCompleteBtn");
+      const workflowDayCompleteStatus = document.getElementById("workflowDayCompleteStatus");
+      const workflowAdminPanel = document.getElementById("workflowAdminPanel");
+      const workflowAdminFilters = document.getElementById("workflowAdminFilters");
+      const workflowAdminInspectorFilter = document.getElementById("workflowAdminInspectorFilter");
+      const workflowAdminJobFilter = document.getElementById("workflowAdminJobFilter");
+      const workflowExceptions = document.getElementById("workflowExceptions");
+      const workflowActivityLog = document.getElementById("workflowActivityLog");
+      const workflowCopySummary = document.getElementById("workflowCopySummary");
+      const workflowExportLog = document.getElementById("workflowExportLog");
+      const workflowMessageDialog = document.getElementById("workflowMessageDialog");
+      const workflowMessageTemplates = document.getElementById("workflowMessageTemplates");
+      const workflowEtaOptions = document.getElementById("workflowEtaOptions");
+      const workflowMessagePreview = document.getElementById("workflowMessagePreview");
+      const workflowCancelMessage = document.getElementById("workflowCancelMessage");
+      const workflowOpenMessages = document.getElementById("workflowOpenMessages");
       const roomCoverageCard = document.getElementById("roomCoverageCard");
       const roomCoverageStatus = document.getElementById("roomCoverageStatus");
       const roomCoverageForm = document.getElementById("roomCoverageForm");
@@ -11682,6 +12084,8 @@
       }
 
       function renderTodayJobs(jobs, calendarName, { cached = false } = {}) {
+        workflowCurrentJobs = Array.isArray(jobs) ? jobs : [];
+        renderWorkflowTodayJobs(workflowCurrentJobs, calendarName, { cached });
         todayJobsList.replaceChildren();
         todayCalendarName.textContent = calendarName || "Company schedule";
         if (!jobs.length) {
@@ -11798,10 +12202,19 @@
           calendarSummary: String(job.summary || "Inspection appointment"),
           scheduledStart: String(job.start?.dateTime || job.start?.date || ""),
           scheduledEnd: String(job.end?.dateTime || job.end?.date || ""),
-          startedAt: new Date().toISOString(),
+          startedAt: "",
+          workflowStatus: "scheduled",
+          workflowTimestamps: {},
+          clientName: String(job.clientName || ""),
+          clientPhone: String(job.clientPhone || ""),
+          agentName: String(job.agentName || ""),
+          agentPhone: String(job.agentPhone || ""),
+          serviceNames: Array.isArray(job.serviceNames) ? job.serviceNames.map(String) : [],
+          spectoraJobId: String(job.spectoraJobId || ""),
+          spectoraLink: String(job.spectoraLink || ""),
           steps: [],
           quality: [],
-          services: [],
+          services: Array.isArray(job.serviceCodes) ? job.serviceCodes.filter(service => JOB_SERVICE_LABELS[service]) : [],
           rooms: [],
           readings: []
         };
@@ -11843,6 +12256,71 @@
         return true;
       }
 
+      function calendarField(text, labels) {
+        const labelPattern = labels.map(label => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+        const match = String(text || "").match(new RegExp(`(?:^|\\n)\\s*(?:${labelPattern})\\s*[:\\-]\\s*([^\\n]+)`, "i"));
+        return match ? match[1].trim() : "";
+      }
+
+      function normalizePhone(value) {
+        const trimmed = String(value || "").trim();
+        if (!trimmed) return "";
+        const extension = trimmed.match(/(?:ext\.?|x)\s*(\d+)/i)?.[1] || "";
+        const digits = trimmed.replace(/\D/g, "");
+        const main = digits.length > 10 && digits.startsWith("1") ? digits.slice(1, 11) : digits.slice(0, 10);
+        return main.length === 10 ? `${main}${extension ? `;${extension}` : ""}` : "";
+      }
+
+      function inferServiceDetails(summary, description) {
+        const text = `${summary || ""} ${description || ""}`.toLowerCase();
+        const names = [];
+        const codes = [];
+        const add = (name, code = "") => {
+          if (!names.includes(name)) names.push(name);
+          if (code && !codes.includes(code)) codes.push(code);
+        };
+        if (/residential|home inspection|buyer|pre.?listing/.test(text)) add("Residential inspection");
+        if (/commercial/.test(text)) add("Commercial inspection");
+        if (/sewer|scope/.test(text)) add("Sewer scope", "sewer");
+        if (/radon/.test(text)) add("Radon testing");
+        if (/mold|air quality|iaq/.test(text)) add("Mold / IAQ", "mold");
+        if (/\bwell\b|yield test|water test|water quality/.test(text)) add("Well / water service", "well");
+        if (/septic/.test(text)) add("Septic inspection", "well");
+        if (/drone/.test(text)) add("Drone roof service", "drone");
+        if (/crawlspace robot|crawl robot/.test(text)) add("Crawlspace robot", "crawl");
+        if (/new build|blue tape/.test(text)) add("New-build inspection");
+        if (!names.length) add(String(summary || "Inspection appointment").trim() || "Inspection appointment");
+        return { names, codes };
+      }
+
+      function parseCalendarJobDetails(event) {
+        const description = String(event.description || "");
+        const summary = String(event.summary || "Inspection appointment");
+        const clientName = calendarField(description, ["Client", "Buyer", "Customer", "Client name"]);
+        const clientPhoneRaw = calendarField(description, ["Client phone", "Buyer phone", "Customer phone", "Phone", "Mobile"]);
+        const agentName = calendarField(description, ["Agent", "Realtor", "Buyer agent", "Agent name"]);
+        const agentPhoneRaw = calendarField(description, ["Agent phone", "Realtor phone"]);
+        const phoneFallback = description.match(/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/)?.[0] || "";
+        const urls = description.match(/https?:\/\/[^\s<>]+/gi) || [];
+        const spectoraLink = urls.find(url => /spectora/i.test(url)) || "";
+        const spectoraJobId = calendarField(description, ["Spectora inspection ID", "Spectora job ID", "Inspection ID", "Job ID"])
+          || spectoraLink.match(/(?:inspections?|jobs?|reports?)\/(\d+)/i)?.[1]
+          || "";
+        const servicesField = calendarField(description, ["Services", "Inspection services", "Add-ons", "Service"]);
+        const serviceDetails = inferServiceDetails(`${summary} ${servicesField}`, description);
+        return {
+          description,
+          clientName,
+          clientPhone: normalizePhone(clientPhoneRaw || phoneFallback),
+          agentName,
+          agentPhone: normalizePhone(agentPhoneRaw),
+          serviceNames: serviceDetails.names,
+          serviceCodes: serviceDetails.codes,
+          spectoraJobId,
+          spectoraLink
+        };
+      }
+
       function keepInspectionEvents(events) {
         const nonJobTitle = /^(?:block|hold|lunch|personal|office|unavailable|max call)(?:\b|\s|[-–—])/i;
         const likelyJobTitle = /inspection|walkthrough|septic|well|radon|mold|testing|blue tape|commercial|home/i;
@@ -11854,13 +12332,18 @@
             if (nonJobTitle.test(title)) return false;
             return Boolean(location) || likelyJobTitle.test(title);
           })
-          .map(event => ({
-            id: event.id || "",
-            summary: String(event.summary || "Inspection appointment").trim(),
-            location: String(event.location || "").trim(),
-            start: event.start || {},
-            end: event.end || {}
-          }));
+          .map(event => {
+            const details = parseCalendarJobDetails(event);
+            return {
+              id: event.id || "",
+              summary: String(event.summary || "Inspection appointment").trim(),
+              location: String(event.location || "").trim(),
+              start: event.start || {},
+              end: event.end || {},
+              htmlLink: String(event.htmlLink || ""),
+              ...details
+            };
+          });
       }
 
       async function fetchTodaySchedule(calendar, token = savedCalendarToken()) {
@@ -12075,6 +12558,23 @@
       const SHIFT_RESET_STORAGE_KEY = "mpiShiftResetV1";
       const TOOL_READINESS_STORAGE_KEY = "mpiToolReadinessV1";
       const PHONE_SETUP_STORAGE_KEY = "mpiPhoneSetupV1";
+      const WORKFLOW_PROFILE_STORAGE_KEY = "mpiWorkflowProfileV1";
+      const WORKFLOW_ACTIVITY_STORAGE_KEY = "mpiWorkflowActivityV1";
+      const WORKFLOW_HISTORY_STORAGE_KEY = "mpiWorkflowJobHistoryV1";
+      const WORKFLOW_DAY_COMPLETE_STORAGE_KEY = "mpiWorkflowDayCompleteV1";
+      const WORKFLOW_STAGES = ["scheduled", "on-my-way", "arrived", "in-progress", "equipment", "completed"];
+      const WORKFLOW_STAGE_LABELS = {
+        scheduled: "Scheduled",
+        "on-my-way": "On My Way",
+        arrived: "Arrived",
+        "in-progress": "Inspection In Progress",
+        equipment: "Equipment Check",
+        completed: "Complete"
+      };
+      let workflowCurrentJobs = [];
+      let workflowMessageTemplate = "";
+      let workflowMessageEta = "";
+      let workflowAdminFilter = "today";
       const FORM_DRAFT_CONFIG = [
         { form: damageForm, key: "mpiDraftDamageV1", status: damageSubmitStatus, photoReminder: true },
         { form: toolCheckForm, key: "mpiDraftToolCheckV1", status: toolCheckSubmitStatus },
@@ -12158,6 +12658,726 @@
         const month = String(date.getMonth() + 1).padStart(2, "0");
         const day = String(date.getDate()).padStart(2, "0");
         return `${year}-${month}-${day}`;
+      }
+
+      function loadWorkflowProfile() {
+        try {
+          const profile = JSON.parse(localStorage.getItem(WORKFLOW_PROFILE_STORAGE_KEY) || "null");
+          if (!profile?.name || !profile?.id) return null;
+          return {
+            name: String(profile.name).trim().slice(0, 80),
+            id: String(profile.id).trim().slice(0, 40),
+            phone: String(profile.phone || "").trim().slice(0, 30),
+            vehicle: String(profile.vehicle || "").trim().slice(0, 80),
+            savedAt: String(profile.savedAt || "")
+          };
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function saveWorkflowProfile(event) {
+        event.preventDefault();
+        if (!workflowIdentityForm.reportValidity()) return;
+        const profile = {
+          name: workflowInspectorName.value.trim(),
+          id: workflowInspectorId.value.trim(),
+          phone: workflowInspectorPhone.value.trim(),
+          vehicle: workflowInspectorVehicle.value.trim(),
+          savedAt: new Date().toISOString()
+        };
+        try { localStorage.setItem(WORKFLOW_PROFILE_STORAGE_KEY, JSON.stringify(profile)); } catch (_) {}
+        saveInspectorName(profile.name);
+        appendWorkflowEvent("Inspector profile confirmed", { inspectorId: profile.id, vehicle: profile.vehicle || "Not assigned" });
+        renderWorkflowApp();
+        showToast(`${profile.name} is signed in on this company phone`);
+      }
+
+      function loadWorkflowActivity() {
+        try {
+          const activity = JSON.parse(localStorage.getItem(WORKFLOW_ACTIVITY_STORAGE_KEY) || "[]");
+          return Array.isArray(activity) ? activity.filter(item => item && item.timestamp && item.action) : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function appendWorkflowEvent(action, data = {}, job = loadActiveJob()) {
+        const profile = loadWorkflowProfile();
+        const event = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          timestamp: new Date().toISOString(),
+          date: localDateKey(),
+          inspector: profile?.name || job?.inspector || loadRememberedInspector() || "Unknown inspector",
+          inspectorId: profile?.id || "",
+          jobId: job?.spectoraJobId || job?.calendarEventId || "",
+          calendarEventId: job?.calendarEventId || "",
+          property: job?.property || "",
+          action: String(action),
+          data: data && typeof data === "object" ? { ...data } : {}
+        };
+        const activity = loadWorkflowActivity();
+        activity.push(event);
+        try { localStorage.setItem(WORKFLOW_ACTIVITY_STORAGE_KEY, JSON.stringify(activity.slice(-5000))); } catch (_) {}
+        renderWorkflowAdmin();
+        return event;
+      }
+
+      function loadWorkflowHistory() {
+        try {
+          const history = JSON.parse(localStorage.getItem(WORKFLOW_HISTORY_STORAGE_KEY) || "[]");
+          return Array.isArray(history) ? history.filter(item => item?.job?.property) : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function storeWorkflowHistory(job) {
+        const history = loadWorkflowHistory();
+        history.push({ date: localDateKey(), completedAt: new Date().toISOString(), job: { ...job } });
+        try { localStorage.setItem(WORKFLOW_HISTORY_STORAGE_KEY, JSON.stringify(history.slice(-1000))); } catch (_) {}
+      }
+
+      function workflowCompletedEventIds() {
+        return new Set(loadWorkflowHistory()
+          .filter(item => item.date === localDateKey())
+          .map(item => item.job?.calendarEventId)
+          .filter(Boolean));
+      }
+
+      function workflowDayCompleteRecord() {
+        try {
+          const record = JSON.parse(localStorage.getItem(WORKFLOW_DAY_COMPLETE_STORAGE_KEY) || "null");
+          return record?.date === localDateKey() ? record : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function workflowReadinessRecord() {
+        try {
+          const record = JSON.parse(localStorage.getItem(DAILY_READINESS_STORAGE_KEY) || "null");
+          return record?.date === localDateKey() ? record : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function updateWorkflowReadinessButton() {
+        const complete = workflowReadinessChecks.length > 0 && workflowReadinessChecks.every(check => check.checked);
+        workflowReadyBtn.disabled = !complete;
+        workflowReadyBtn.textContent = complete ? "READY FOR WORK" : `READY FOR WORK · ${workflowReadinessChecks.filter(check => check.checked).length}/${workflowReadinessChecks.length}`;
+      }
+
+      function completeWorkflowReadiness() {
+        const profile = loadWorkflowProfile();
+        if (!profile || !workflowReadinessChecks.every(check => check.checked)) return;
+        const completedAt = new Date().toISOString();
+        const items = workflowReadinessChecks.map(check => check.dataset.workflowReadiness);
+        const record = { date: localDateKey(), inspector: profile.name, inspectorId: profile.id, completedAt, items };
+        try { localStorage.setItem(DAILY_READINESS_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
+        appendWorkflowEvent("Morning readiness completed", { checklist: items, completedAt });
+        renderDailyReadiness();
+        renderWorkflowApp();
+        showToast(`Ready for work recorded at ${new Date(completedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`);
+      }
+
+      function workflowScheduleJobs() {
+        if (workflowCurrentJobs.length) return workflowCurrentJobs;
+        try {
+          const cache = JSON.parse(localStorage.getItem(CALENDAR_CACHE_KEY) || "null");
+          return cache?.date === localDateKey() && Array.isArray(cache.jobs) ? cache.jobs : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function workflowJobIsComplete(job) {
+        return Boolean(job?.id && workflowCompletedEventIds().has(job.id));
+      }
+
+      function workflowNextScheduledJob(jobs = workflowScheduleJobs()) {
+        const completed = workflowCompletedEventIds();
+        const active = loadActiveJob();
+        if (active?.calendarEventId) return jobs.find(job => job.id === active.calendarEventId) || null;
+        const remaining = jobs.filter(job => !completed.has(job.id));
+        if (!remaining.length) return null;
+        const now = Date.now();
+        return remaining.find(job => scheduleJobTimestamp(job, "end") > now)
+          || remaining[0];
+      }
+
+      function workflowServiceLabel(job) {
+        const names = Array.isArray(job?.serviceNames) ? job.serviceNames.filter(Boolean) : [];
+        if (names.length) return names.join(" + ");
+        return job?.calendarSummary || job?.summary || "Inspection appointment";
+      }
+
+      function renderWorkflowTodayJobs(jobs = workflowScheduleJobs(), calendarName = "Company schedule", { cached = false } = {}) {
+        workflowCurrentJobs = Array.isArray(jobs) ? jobs : [];
+        if (!workflowJobsList || !workflowNextJob) return;
+        const profile = loadWorkflowProfile();
+        const completed = workflowCompletedEventIds();
+        const next = workflowNextScheduledJob(workflowCurrentJobs);
+        workflowTodayInspector.textContent = profile?.name || "Inspector";
+        workflowScheduleStatus.textContent = workflowCurrentJobs.length
+          ? `${workflowCurrentJobs.length} ${workflowCurrentJobs.length === 1 ? "job" : "jobs"} · ${calendarName || "Company schedule"}${cached ? " · saved on this phone" : ""}`
+          : "Connect the MPI schedule once on this company phone.";
+        workflowConnectSchedule.textContent = savedCalendarToken() ? "Connected ✓" : "Connect schedule";
+        workflowRefreshSchedule.hidden = !savedCalendarToken() && !workflowCurrentJobs.length;
+        workflowNextJob.replaceChildren();
+        if (next) {
+          const nextCard = document.createElement("article");
+          nextCard.className = "workflow-next-job";
+          const time = eventTimeLabel(next).time;
+          nextCard.innerHTML = `<span>Next job</span><h4>${escapeHtml(next.location || next.summary || "Inspection appointment")}</h4><p>${escapeHtml(time)} · ${escapeHtml(workflowServiceLabel(next))}</p><div class="workflow-job-meta">${next.clientName ? `<span>${escapeHtml(next.clientName)}</span>` : ""}${next.spectoraJobId ? `<span>Job ${escapeHtml(next.spectoraJobId)}</span>` : ""}</div><button class="workflow-button" type="button" data-workflow-open-job="${escapeHtml(next.id || "")}">OPEN NEXT JOB</button>`;
+          workflowNextJob.appendChild(nextCard);
+        } else if (workflowCurrentJobs.length) {
+          const complete = document.createElement("div");
+          complete.className = "workflow-next-job";
+          complete.innerHTML = "<span>Schedule complete</span><h4>All jobs are closed</h4><p>Confirm the end of the working day below.</p>";
+          workflowNextJob.appendChild(complete);
+        }
+        workflowJobsList.replaceChildren();
+        workflowCurrentJobs.forEach(job => {
+          const done = completed.has(job.id);
+          const row = document.createElement("article");
+          row.className = `workflow-job-row${done ? " is-complete" : ""}`;
+          const time = document.createElement("time");
+          time.textContent = eventTimeLabel(job).time;
+          const copy = document.createElement("div");
+          const title = document.createElement("strong");
+          title.textContent = job.location || job.summary || "Inspection appointment";
+          const detail = document.createElement("small");
+          detail.textContent = done ? "Completed today" : workflowServiceLabel(job);
+          copy.append(title, detail);
+          const button = document.createElement("button");
+          button.type = "button";
+          button.dataset.workflowOpenJob = job.id || "";
+          button.textContent = done ? "Complete ✓" : "Open";
+          button.disabled = done;
+          row.append(time, copy, button);
+          workflowJobsList.appendChild(row);
+        });
+        renderWorkflowDayComplete();
+        renderWorkflowAdmin();
+      }
+
+      function openWorkflowScheduleJob(job) {
+        if (!job?.location) {
+          showToast("This scheduled job does not include a property address");
+          return;
+        }
+        const existing = loadActiveJob();
+        if (existing?.property && existing.calendarEventId !== job.id && existing.workflowStatus !== "completed") {
+          showToast(`Finish the current job at ${existing.property} first`);
+          renderWorkflowJob(existing);
+          return;
+        }
+        activateScheduleJob(job);
+        const active = loadActiveJob();
+        appendWorkflowEvent("Job opened", { scheduledStart: active?.scheduledStart || "" }, active);
+        renderWorkflowJob(active);
+      }
+
+      function handleWorkflowJobSelection(event) {
+        const button = event.target.closest("[data-workflow-open-job]");
+        if (!button || button.disabled) return;
+        const job = workflowScheduleJobs().find(item => String(item.id || "") === button.dataset.workflowOpenJob);
+        if (job) openWorkflowScheduleJob(job);
+      }
+
+      function workflowStageIndex(status) {
+        const index = WORKFLOW_STAGES.indexOf(status);
+        return index < 0 ? 0 : index;
+      }
+
+      function updateWorkflowStage(job, status, action, data = {}) {
+        if (!job?.property || !WORKFLOW_STAGES.includes(status)) return null;
+        const now = new Date().toISOString();
+        job.workflowStatus = status;
+        job.workflowTimestamps = { ...(job.workflowTimestamps || {}), [status]: now };
+        if (status === "in-progress") job.startedAt = now;
+        storeActiveJob(job);
+        appendWorkflowEvent(action, { ...data, status, timestamp: now }, job);
+        renderWorkflowJob(job);
+        renderWorkflowTodayJobs();
+        return job;
+      }
+
+      function renderWorkflowJob(job = loadActiveJob()) {
+        if (!job?.property) {
+          renderWorkflowApp();
+          return;
+        }
+        workflowIdentityCard.hidden = true;
+        workflowReadinessCard.hidden = true;
+        workflowTodayCard.hidden = true;
+        workflowEquipmentCard.hidden = job.workflowStatus !== "equipment";
+        workflowJobCard.hidden = job.workflowStatus === "equipment";
+        workflowDayCompleteCard.hidden = true;
+        if (job.workflowStatus === "equipment") {
+          renderWorkflowEquipment(job);
+          return;
+        }
+        const status = WORKFLOW_STAGES.includes(job.workflowStatus) ? job.workflowStatus : "scheduled";
+        const index = workflowStageIndex(status);
+        [...workflowJobProgress.children].forEach((bar, barIndex) => {
+          bar.classList.toggle("complete", barIndex < index);
+          bar.classList.toggle("current", barIndex === Math.min(index, 4));
+        });
+        workflowJobStatus.textContent = WORKFLOW_STAGE_LABELS[status];
+        workflowJobTitle.textContent = job.property;
+        const scheduled = job.scheduledStart ? new Date(job.scheduledStart) : null;
+        const scheduledText = scheduled && !Number.isNaN(scheduled.getTime())
+          ? scheduled.toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" })
+          : "Scheduled time not listed";
+        const timestamp = job.workflowTimestamps?.[status];
+        workflowJobSchedule.textContent = timestamp && status !== "scheduled"
+          ? `Scheduled ${scheduledText} · ${WORKFLOW_STAGE_LABELS[status]} ${new Date(timestamp).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
+          : `Scheduled ${scheduledText}`;
+        workflowJobAddress.textContent = job.property;
+        workflowJobClient.textContent = job.clientName || "Not listed in the schedule";
+        workflowJobClientBlock.hidden = !job.clientName && !job.clientPhone;
+        workflowJobServices.textContent = workflowServiceLabel(job);
+        workflowDirectionsBtn.href = `https://maps.apple.com/?daddr=${encodeURIComponent(job.property)}&dirflg=d`;
+        workflowCallClientBtn.href = job.clientPhone ? `tel:${job.clientPhone}` : "#";
+        workflowCallClientBtn.setAttribute("aria-disabled", String(!job.clientPhone));
+        workflowCallClientBtn.style.opacity = job.clientPhone ? "1" : ".45";
+        workflowCallClientBtn.textContent = job.clientPhone ? "CALL CLIENT" : "CLIENT PHONE NOT LISTED";
+        workflowMessageClientBtn.disabled = !job.clientPhone;
+        workflowOnMyWayBtn.hidden = status !== "scheduled";
+        workflowArrivedBtn.hidden = status !== "on-my-way";
+        workflowStartInspectionBtn.hidden = status !== "arrived";
+        workflowJobCompleteBtn.hidden = status !== "in-progress";
+        workflowDirectionsBtn.hidden = !["scheduled", "on-my-way", "arrived"].includes(status);
+        workflowCallClientBtn.hidden = !["scheduled", "on-my-way", "arrived"].includes(status);
+        workflowMessageClientBtn.hidden = !["scheduled", "on-my-way"].includes(status);
+        workflowOnMyWayBtn.textContent = "ON MY WAY";
+        workflowSpectoraNote.hidden = status !== "arrived";
+        workflowSpectoraNote.innerHTML = job.spectoraLink && /^(?:spectora:|https:\/\/(?:link\.)?spectora\.app|https:\/\/spectora\.app\.link)/i.test(job.spectoraLink)
+          ? "<strong>Spectora V10 link detected:</strong> Start Inspection will record the time and open the supported job link supplied with this appointment."
+          : "<strong>Spectora V10:</strong> Start time is recorded here. A direct inspection launch will be enabled when MPI has a supported Spectora V10 app link for the job; until then the inspector opens the matching inspection in V10 from the company phone.";
+        homeActiveJob.hidden = false;
+        homeActiveJobProperty.textContent = job.property;
+        homeActiveJobProgress.textContent = WORKFLOW_STAGE_LABELS[status];
+        homeActiveJobMap.href = workflowDirectionsBtn.href;
+      }
+
+      function handleWorkflowDirections() {
+        const job = loadActiveJob();
+        if (job?.property) appendWorkflowEvent("Directions selected", {}, job);
+      }
+
+      function setWorkflowOnMyWay() {
+        const job = loadActiveJob();
+        if (!job?.property) return;
+        updateWorkflowStage(job, "on-my-way", "On My Way selected");
+        if (job.clientPhone) openWorkflowMessageDialog("on-my-way");
+        showToast("On My Way time recorded");
+      }
+
+      function setWorkflowArrived() {
+        const job = loadActiveJob();
+        if (!job?.property) return;
+        updateWorkflowStage(job, "arrived", "Arrived", { scheduledStart: job.scheduledStart || "" });
+        showToast("Arrival time recorded");
+      }
+
+      function startWorkflowInspection() {
+        let job = loadActiveJob();
+        if (!job?.property) return;
+        job = updateWorkflowStage(job, "in-progress", "Inspection started", { spectoraJobId: job.spectoraJobId || "" });
+        const supportedLink = job?.spectoraLink && /^(?:spectora:|https:\/\/(?:link\.)?spectora\.app|https:\/\/spectora\.app\.link)/i.test(job.spectoraLink) ? job.spectoraLink : "";
+        if (supportedLink) {
+          appendWorkflowEvent("Spectora V10 job link opened", { linkType: supportedLink.split(":")[0] }, job);
+          window.location.href = supportedLink;
+        } else {
+          showToast("Inspection start saved — open the matching job in Spectora V10");
+        }
+      }
+
+      function selectWorkflowJobComplete() {
+        const job = loadActiveJob();
+        if (!job?.property) return;
+        updateWorkflowStage(job, "equipment", "Job Complete selected");
+        renderWorkflowEquipment(loadActiveJob());
+      }
+
+      function specialtyEquipmentForJob(job) {
+        const text = `${workflowServiceLabel(job)} ${(job.services || []).join(" ")}`.toLowerCase();
+        const items = [];
+        if (/sewer/.test(text)) items.push(["sewer-camera", "Sewer camera returned to the vehicle."]);
+        if (/radon/.test(text)) items.push(["radon-equipment", "Radon equipment accounted for."]);
+        if (/well|water/.test(text)) items.push(["well-equipment", "Well testing equipment accounted for."]);
+        if (/septic/.test(text)) items.push(["septic-equipment", "Septic tools and equipment accounted for."]);
+        if (/mold|iaq|air quality/.test(text)) items.push(["sampling-equipment", "Sampling equipment and media accounted for."]);
+        if (/drone/.test(text)) items.push(["drone-equipment", "Drone, controller, batteries, and case accounted for."]);
+        if (/crawl/.test(text)) items.push(["crawl-equipment", "Crawlspace robot, controller, and retrieval equipment accounted for."]);
+        return items;
+      }
+
+      function renderWorkflowEquipment(job = loadActiveJob()) {
+        workflowIdentityCard.hidden = true;
+        workflowReadinessCard.hidden = true;
+        workflowTodayCard.hidden = true;
+        workflowJobCard.hidden = true;
+        workflowEquipmentCard.hidden = false;
+        workflowDayCompleteCard.hidden = true;
+        workflowEquipmentJob.textContent = `${job?.property || "Current job"} · ${workflowServiceLabel(job)}`;
+        workflowEquipmentChecks.forEach(check => { check.checked = false; });
+        workflowSpecialtyEquipment.replaceChildren();
+        specialtyEquipmentForJob(job).forEach(([key, label]) => {
+          const option = document.createElement("label");
+          option.className = "workflow-check";
+          option.innerHTML = `<input type="checkbox" data-workflow-specialty-equipment="${escapeHtml(key)}"><span>${escapeHtml(label)}</span>`;
+          workflowSpecialtyEquipment.appendChild(option);
+        });
+        updateWorkflowEquipmentButton();
+      }
+
+      function workflowAllEquipmentChecks() {
+        return [...workflowEquipmentChecks, ...workflowSpecialtyEquipment.querySelectorAll("input[type=checkbox]")];
+      }
+
+      function updateWorkflowEquipmentButton() {
+        const checks = workflowAllEquipmentChecks();
+        const complete = checks.length > 0 && checks.every(check => check.checked);
+        workflowEquipmentCompleteBtn.disabled = !complete;
+        workflowEquipmentCompleteBtn.textContent = complete ? "ALL EQUIPMENT ACCOUNTED FOR" : `ACCOUNT FOR EQUIPMENT · ${checks.filter(check => check.checked).length}/${checks.length}`;
+      }
+
+      function completeWorkflowEquipment() {
+        const job = loadActiveJob();
+        const checks = workflowAllEquipmentChecks();
+        if (!job?.property || !checks.every(check => check.checked)) return;
+        const acknowledgements = checks.map(check => check.dataset.workflowEquipment || check.dataset.workflowSpecialtyEquipment || "equipment");
+        const completed = updateWorkflowStage(job, "completed", "Equipment check completed", { acknowledgements });
+        if (!completed) return;
+        appendWorkflowEvent("Final job completion", { equipmentCheckCompletedAt: new Date().toISOString() }, completed);
+        storeWorkflowHistory(completed);
+        try { localStorage.setItem(LAST_CLEARED_JOB_STORAGE_KEY, JSON.stringify({ job: completed, clearedAt: new Date().toISOString() })); } catch (_) {}
+        try { localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY); } catch (_) {}
+        renderActiveJob(null);
+        renderWorkflowTodayJobs();
+        renderWorkflowApp();
+        showToast("Job closed and equipment check recorded");
+      }
+
+      function renderWorkflowDayComplete() {
+        const jobs = workflowScheduleJobs();
+        const complete = workflowCompletedEventIds();
+        const active = loadActiveJob();
+        const ready = jobs.length > 0 && jobs.every(job => complete.has(job.id)) && !active?.property;
+        const record = workflowDayCompleteRecord();
+        workflowDayCompleteCard.hidden = !ready;
+        workflowDayCompleteBtn.disabled = Boolean(record);
+        workflowDayCompleteBtn.textContent = record ? "DAY COMPLETE RECORDED" : "CONFIRM DAY COMPLETE";
+        workflowDayCompleteStatus.textContent = record?.completedAt
+          ? `Recorded at ${new Date(record.completedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}.`
+          : "The exact time will be added to today’s activity log.";
+      }
+
+      function completeWorkflowDay() {
+        const profile = loadWorkflowProfile();
+        const completedAt = new Date().toISOString();
+        const record = { date: localDateKey(), inspector: profile?.name || "Unknown inspector", completedAt };
+        try { localStorage.setItem(WORKFLOW_DAY_COMPLETE_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
+        appendWorkflowEvent("Day Complete", { completedAt });
+        renderWorkflowDayComplete();
+        showToast("Working day completion recorded");
+      }
+
+      function openWorkflowMessageDialog(template = "") {
+        const job = loadActiveJob();
+        if (!job?.clientPhone) {
+          showToast("The client phone number is not listed in this job");
+          return;
+        }
+        workflowMessageTemplate = template;
+        workflowMessageEta = "";
+        workflowMessageTemplates.querySelectorAll("button").forEach(button => button.classList.toggle("selected", button.dataset.workflowTemplate === template));
+        workflowEtaOptions.querySelectorAll("button").forEach(button => button.classList.remove("selected"));
+        updateWorkflowMessagePreview();
+        if (typeof workflowMessageDialog.showModal === "function") workflowMessageDialog.showModal();
+        else workflowMessageDialog.setAttribute("open", "");
+      }
+
+      function workflowMessageText() {
+        const profile = loadWorkflowProfile();
+        const name = profile?.name?.split(/\s+/)[0] || "your inspector";
+        if (!workflowMessageTemplate || !workflowMessageEta) return "";
+        if (workflowMessageTemplate === "running-behind") {
+          return `Hey, this is ${name} from Michigan Property Inspections. Just letting you know I am running slightly behind schedule. My updated ETA is approximately ${workflowMessageEta} minutes. Sorry for the delay and I’ll see you shortly.`;
+        }
+        return `Hey, this is ${name} from Michigan Property Inspections. I am currently on my way to your property. My ETA is approximately ${workflowMessageEta} minutes. See you soon.`;
+      }
+
+      function updateWorkflowMessagePreview() {
+        const text = workflowMessageText();
+        workflowMessagePreview.textContent = text || "Select a message and ETA.";
+        workflowOpenMessages.disabled = !text;
+      }
+
+      function selectWorkflowMessageTemplate(event) {
+        const button = event.target.closest("[data-workflow-template]");
+        if (!button) return;
+        workflowMessageTemplate = button.dataset.workflowTemplate;
+        workflowMessageTemplates.querySelectorAll("button").forEach(item => item.classList.toggle("selected", item === button));
+        updateWorkflowMessagePreview();
+      }
+
+      function selectWorkflowEta(event) {
+        const button = event.target.closest("[data-workflow-eta]");
+        if (!button) return;
+        workflowMessageEta = button.dataset.workflowEta;
+        workflowEtaOptions.querySelectorAll("button").forEach(item => item.classList.toggle("selected", item === button));
+        updateWorkflowMessagePreview();
+      }
+
+      function openWorkflowMessagesComposer() {
+        const job = loadActiveJob();
+        const text = workflowMessageText();
+        if (!job?.clientPhone || !text) return;
+        const templateLabel = workflowMessageTemplate === "running-behind" ? "Running Behind" : "On My Way";
+        appendWorkflowEvent("Client message composer opened", {
+          template: templateLabel,
+          etaMinutes: Number(workflowMessageEta),
+          contact: job.clientName || "Client",
+          status: "Composer opened — send result not available to this web app"
+        }, job);
+        if (workflowMessageTemplate === "running-behind") appendWorkflowEvent("Running Behind selected", { etaMinutes: Number(workflowMessageEta) }, job);
+        workflowMessageDialog.close?.();
+        window.location.href = `sms:${job.clientPhone}&body=${encodeURIComponent(text)}`;
+      }
+
+      function cancelWorkflowMessage() {
+        if (workflowMessageTemplate || workflowMessageEta) appendWorkflowEvent("Client message cancelled", { template: workflowMessageTemplate || "Not selected", etaMinutes: workflowMessageEta || "Not selected" });
+        workflowMessageDialog.close?.();
+      }
+
+      function logWorkflowClientCall(event) {
+        const job = loadActiveJob();
+        if (!job?.clientPhone) {
+          event.preventDefault();
+          showToast("The client phone number is not listed in this job");
+          return;
+        }
+        appendWorkflowEvent("Client call initiated", { contact: job.clientName || "Client" }, job);
+      }
+
+      function workflowFilterStart(filter) {
+        const now = new Date();
+        const start = new Date(now);
+        start.setHours(0, 0, 0, 0);
+        if (filter === "yesterday") start.setDate(start.getDate() - 1);
+        if (filter === "week") start.setDate(start.getDate() - 6);
+        if (filter === "all") return 0;
+        return start.getTime();
+      }
+
+      function workflowFilteredActivity(filter = workflowAdminFilter) {
+        const activity = loadWorkflowActivity();
+        const start = workflowFilterStart(filter);
+        const end = filter === "yesterday" ? start + 24 * 60 * 60 * 1000 : Infinity;
+        return activity.filter(item => {
+          const timestamp = new Date(item.timestamp).getTime();
+          const inspectorMatch = !workflowAdminInspectorFilter?.value || item.inspector === workflowAdminInspectorFilter.value;
+          const jobMatch = !workflowAdminJobFilter?.value || item.property === workflowAdminJobFilter.value;
+          return timestamp >= start && timestamp < end && inspectorMatch && jobMatch;
+        });
+      }
+
+      function populateWorkflowAdminSelect(select, values, placeholder) {
+        const selected = select.value;
+        select.replaceChildren();
+        const all = document.createElement("option");
+        all.value = "";
+        all.textContent = placeholder;
+        select.appendChild(all);
+        [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b)).forEach(value => {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = value;
+          select.appendChild(option);
+        });
+        select.value = [...select.options].some(option => option.value === selected) ? selected : "";
+      }
+
+      function workflowExceptionFlags() {
+        const flags = [];
+        const jobs = workflowScheduleJobs();
+        const activity = loadWorkflowActivity().filter(item => item.date === localDateKey());
+        const now = Date.now();
+        const readiness = activity.find(item => item.action === "Morning readiness completed");
+        const firstStart = jobs.map(job => scheduleJobTimestamp(job, "start")).filter(Boolean).sort((a, b) => a - b)[0];
+        if (jobs.length && !readiness && firstStart && now >= firstStart) flags.push("Morning readiness has not been completed.");
+        if (readiness && firstStart && new Date(readiness.timestamp).getTime() > firstStart) flags.push("Morning readiness was completed after the first scheduled appointment.");
+        jobs.forEach(job => {
+          const jobEvents = activity.filter(item => item.calendarEventId === job.id);
+          const scheduled = scheduleJobTimestamp(job, "start");
+          const arrived = jobEvents.find(item => item.action === "Arrived");
+          const started = jobEvents.find(item => item.action === "Inspection started");
+          const complete = jobEvents.find(item => item.action === "Final job completion");
+          const selectedComplete = jobEvents.find(item => item.action === "Job Complete selected");
+          if (arrived && scheduled && new Date(arrived.timestamp).getTime() > scheduled + 10 * 60 * 1000) flags.push(`${job.location}: arrival was more than 10 minutes after the scheduled time.`);
+          if (scheduled && now > scheduled + 30 * 60 * 1000 && !started) flags.push(`${job.location}: no Start Inspection event is recorded.`);
+          if (selectedComplete && !complete && now > new Date(selectedComplete.timestamp).getTime() + 15 * 60 * 1000) flags.push(`${job.location}: Job Complete was selected but the equipment check is unfinished.`);
+        });
+        const runningBehind = activity.filter(item => item.action === "Running Behind selected");
+        runningBehind.forEach(item => flags.push(`${item.property || "Job"}: Running Behind message selected.`));
+        return [...new Set(flags)].slice(0, 12);
+      }
+
+      function renderWorkflowAdmin() {
+        if (!workflowActivityLog) return;
+        const allActivity = loadWorkflowActivity();
+        populateWorkflowAdminSelect(workflowAdminInspectorFilter, allActivity.map(item => item.inspector), "All inspectors on this phone");
+        populateWorkflowAdminSelect(workflowAdminJobFilter, allActivity.map(item => item.property), "All jobs");
+        workflowAdminFilters.querySelectorAll("button").forEach(button => button.classList.toggle("selected", button.dataset.workflowLogFilter === workflowAdminFilter));
+        workflowExceptions.replaceChildren();
+        const flags = workflowExceptionFlags();
+        if (!flags.length) {
+          const clear = document.createElement("div");
+          clear.className = "workflow-admin-note";
+          clear.textContent = "No useful exception flags for this view.";
+          workflowExceptions.appendChild(clear);
+        } else {
+          flags.forEach(flag => {
+            const item = document.createElement("div");
+            item.className = "workflow-exception";
+            item.textContent = flag;
+            workflowExceptions.appendChild(item);
+          });
+        }
+        const activity = workflowFilteredActivity().slice().reverse();
+        workflowActivityLog.replaceChildren();
+        if (!activity.length) {
+          const empty = document.createElement("p");
+          empty.className = "workflow-admin-note";
+          empty.textContent = "No activity is recorded for this period on this phone.";
+          workflowActivityLog.appendChild(empty);
+          return;
+        }
+        activity.forEach(item => {
+          const row = document.createElement("div");
+          row.className = "workflow-log-entry";
+          const time = document.createElement("time");
+          time.textContent = new Date(item.timestamp).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+          const copy = document.createElement("div");
+          const title = document.createElement("strong");
+          title.textContent = item.action;
+          const detail = document.createElement("small");
+          const supporting = Object.entries(item.data || {}).filter(([, value]) => value !== "" && value != null).map(([key, value]) => `${key.replace(/([A-Z])/g, " $1")}: ${Array.isArray(value) ? value.join(", ") : value}`).join(" · ");
+          detail.textContent = [item.inspector, item.property, supporting].filter(Boolean).join(" · ");
+          copy.append(title, detail);
+          row.append(time, copy);
+          workflowActivityLog.appendChild(row);
+        });
+      }
+
+      function workflowSummaryText(full = false) {
+        const activity = full ? loadWorkflowActivity() : loadWorkflowActivity().filter(item => item.date === localDateKey());
+        const profile = loadWorkflowProfile();
+        const lines = [
+          full ? "MPI Workflow Activity Log" : "MPI Daily Activity Summary",
+          `Inspector: ${profile?.name || "Not assigned"}`,
+          `Date: ${new Date().toLocaleDateString("en-US", { dateStyle: "long" })}`,
+          ""
+        ];
+        activity.forEach(item => {
+          const time = new Date(item.timestamp).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+          const supporting = Object.entries(item.data || {}).filter(([, value]) => value !== "" && value != null).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : value}`).join("; ");
+          lines.push(`${time} — ${item.action}${item.property ? ` — ${item.property}` : ""}${supporting ? ` (${supporting})` : ""}`);
+        });
+        const flags = workflowExceptionFlags();
+        if (flags.length) {
+          lines.push("", "Exception flags:", ...flags.map(flag => `- ${flag}`));
+        }
+        return lines.join("\n");
+      }
+
+      function changeWorkflowProfile() {
+        const profile = loadWorkflowProfile();
+        if (!window.confirm(`Change the company-phone profile currently assigned to ${profile?.name || "this inspector"}? Today’s activity log will remain on this phone.`)) return;
+        try { localStorage.removeItem(WORKFLOW_PROFILE_STORAGE_KEY); } catch (_) {}
+        renderWorkflowApp();
+      }
+
+      function renderWorkflowApp() {
+        if (!workflowIdentityCard) return;
+        const profile = loadWorkflowProfile();
+        const readiness = workflowReadinessRecord();
+        const active = loadActiveJob();
+        workflowIdentityCard.hidden = Boolean(profile);
+        workflowReadinessCard.hidden = true;
+        workflowTodayCard.hidden = true;
+        workflowJobCard.hidden = true;
+        workflowEquipmentCard.hidden = true;
+        workflowDayCompleteCard.hidden = true;
+        if (!profile) {
+          workflowInspectorName.value = loadRememberedInspector();
+          workflowInspectorId.value = "";
+          workflowInspectorPhone.value = "";
+          workflowInspectorVehicle.value = "";
+          return;
+        }
+        workflowReadinessInspector.textContent = profile.name;
+        workflowTodayInspector.textContent = profile.name;
+        if (!readiness) {
+          workflowReadinessCard.hidden = false;
+          updateWorkflowReadinessButton();
+          return;
+        }
+        if (active?.property) {
+          renderWorkflowJob(active);
+          return;
+        }
+        workflowTodayCard.hidden = false;
+        renderWorkflowTodayJobs();
+      }
+
+      function initializeWorkflowApp() {
+        workflowIdentityForm.addEventListener("submit", saveWorkflowProfile);
+        workflowReadinessChecks.forEach(check => check.addEventListener("change", updateWorkflowReadinessButton));
+        workflowReadyBtn.addEventListener("click", completeWorkflowReadiness);
+        workflowJobsList.addEventListener("click", handleWorkflowJobSelection);
+        workflowNextJob.addEventListener("click", handleWorkflowJobSelection);
+        workflowConnectSchedule.addEventListener("click", connectCompanyCalendar);
+        workflowRefreshSchedule.addEventListener("click", refreshCompanyCalendar);
+        workflowChangeProfile.addEventListener("click", changeWorkflowProfile);
+        workflowDirectionsBtn.addEventListener("click", handleWorkflowDirections);
+        workflowOnMyWayBtn.addEventListener("click", setWorkflowOnMyWay);
+        workflowCallClientBtn.addEventListener("click", logWorkflowClientCall);
+        workflowMessageClientBtn.addEventListener("click", () => openWorkflowMessageDialog());
+        workflowArrivedBtn.addEventListener("click", setWorkflowArrived);
+        workflowStartInspectionBtn.addEventListener("click", startWorkflowInspection);
+        workflowJobCompleteBtn.addEventListener("click", selectWorkflowJobComplete);
+        workflowBackToJobs.addEventListener("click", () => {
+          workflowJobCard.hidden = true;
+          workflowTodayCard.hidden = false;
+          renderWorkflowTodayJobs();
+        });
+        workflowEquipmentChecklist.addEventListener("change", updateWorkflowEquipmentButton);
+        workflowSpecialtyEquipment.addEventListener("change", updateWorkflowEquipmentButton);
+        workflowEquipmentCompleteBtn.addEventListener("click", completeWorkflowEquipment);
+        workflowDayCompleteBtn.addEventListener("click", completeWorkflowDay);
+        workflowMessageTemplates.addEventListener("click", selectWorkflowMessageTemplate);
+        workflowEtaOptions.addEventListener("click", selectWorkflowEta);
+        workflowCancelMessage.addEventListener("click", cancelWorkflowMessage);
+        workflowOpenMessages.addEventListener("click", openWorkflowMessagesComposer);
+        workflowAdminFilters.addEventListener("click", event => {
+          const button = event.target.closest("[data-workflow-log-filter]");
+          if (!button) return;
+          workflowAdminFilter = button.dataset.workflowLogFilter;
+          renderWorkflowAdmin();
+        });
+        workflowAdminInspectorFilter.addEventListener("change", renderWorkflowAdmin);
+        workflowAdminJobFilter.addEventListener("change", renderWorkflowAdmin);
+        workflowCopySummary.addEventListener("click", () => copyText(workflowSummaryText(false), "Daily activity summary copied"));
+        workflowExportLog.addEventListener("click", () => copyText(workflowSummaryText(true), "Full activity log copied"));
+        renderWorkflowApp();
+        renderWorkflowAdmin();
       }
 
       function loadDailyReadiness() {
@@ -12266,6 +13486,15 @@
             scheduledStart: String(saved.scheduledStart || ""),
             scheduledEnd: String(saved.scheduledEnd || ""),
             startedAt: String(saved.startedAt || ""),
+            workflowStatus: WORKFLOW_STAGES.includes(String(saved.workflowStatus || "")) ? String(saved.workflowStatus) : "scheduled",
+            workflowTimestamps: saved.workflowTimestamps && typeof saved.workflowTimestamps === "object" ? { ...saved.workflowTimestamps } : {},
+            clientName: String(saved.clientName || "").trim().slice(0, 120),
+            clientPhone: String(saved.clientPhone || "").trim().slice(0, 40),
+            agentName: String(saved.agentName || "").trim().slice(0, 120),
+            agentPhone: String(saved.agentPhone || "").trim().slice(0, 40),
+            serviceNames: Array.isArray(saved.serviceNames) ? saved.serviceNames.map(String).filter(Boolean).slice(0, 20) : [],
+            spectoraJobId: String(saved.spectoraJobId || "").trim().slice(0, 120),
+            spectoraLink: String(saved.spectoraLink || "").trim().slice(0, 500),
             steps: simpleSteps,
             quality: Array.isArray(saved.quality) ? saved.quality.map(String) : [],
             services: Array.isArray(saved.services) ? saved.services.map(String).filter(service => JOB_SERVICE_LABELS[service]) : [],
@@ -12842,7 +14071,7 @@
         }
 
         const params = new URLSearchParams(location.search);
-        let targetHash = location.hash || "#home";
+        let targetHash = location.hash || "#job-companion";
         if (params.get("damage-sent") === "1") {
           clearFormDraft("mpiDraftDamageV1");
           damageSuccessBox.hidden = false;
@@ -15272,6 +16501,7 @@
       setCommentType("defect");
       populateReportItems();
       initializeFieldForms();
+      initializeWorkflowApp();
       renderActiveJob();
       initializeTodayJobs();
       updateToolCheckProgress();
