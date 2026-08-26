@@ -81,6 +81,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - The home screen now searches every principal app screen, all 26 field prompts, and all 21 tool cards offline and opens the exact selected destination. **Implemented in Build 60.**
 - Training Center now includes a one-time company-phone setup check for Home Screen installation, offline access, MPI notifications, inspector identity, the company schedule account, and the inspector’s own training account. **Implemented in Build 61.**
 - Held and overdue equipment now produces one exception-only home banner, while normal and due-soon items remain quiet; a workbook audit confirmed all 21 master-list tools have complete app cards. **Implemented in Build 62.**
+- Every water-test package in the COC guide now provides one-tap copying of its exact MPI package name and visible parameter list. **Implemented in Build 63.**
 
 ## Low-cost improvements
 

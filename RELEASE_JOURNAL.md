@@ -1031,3 +1031,35 @@ Status: published August 26, 2026 as GitHub commit `3a50c6aefb348ebca6f17224abde
 
 - Restore GitHub `main` to `492a6995dd573f85d1e6a3a3a2ce1c525926b39a` to keep Builds 1–24 but remove the home equipment exception banner.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 26 — One-tap water COC package copy
+
+Status: published August 26, 2026 as GitHub commit `5a24e5e9cfc0ef4d4598be665534412b864e4bf7`.
+
+#### Additions
+
+1. Added a **Copy COC list** control to every package in the existing Water test parameters / COC guide.
+   - Copies the exact visible MPI package name followed by only that package’s listed parameters.
+   - Covers Basic Water Test, FHA/VA Water Test, Essential Water Test, and Complete Water Test.
+   - Keeps the package cards and their existing visual hierarchy unchanged until the inspector chooses to copy.
+
+2. Kept the helper factual and offline.
+   - It does not add a contaminant, interpret a result, choose a package, complete a chain-of-custody form, or submit information.
+   - The inspector still confirms the contracted package, current laboratory form, sample identifiers, preservation, times, and signatures.
+   - Updated the visible build, version file, and offline cache identifier to Build 63.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Water-test search opened the exact Water test parameters / COC guide.
+- All four package cards displayed a copy control.
+- The Basic Water Test copied exactly **Basic Water Test: Coliform, Nitrate, Arsenic**, matching its three visible parameter chips.
+- The successful-copy confirmation appeared.
+- 390-pixel phone layout: no horizontal overflow; every Copy COC list control remained 44 pixels high.
+- No email, network submission, data storage, location collection, or laboratory interpretation was added.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `bb2b6f935ae4b48afa6762ff55f3c74ae04ee9e2` to keep Builds 1–25 but remove the water-package copy controls.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
