@@ -76,7 +76,7 @@ Status: published August 26, 2026 as GitHub commit `35b84a468f542021525a09cf0c57
 
 ### Build 2 — Calmer navigation and connected field help
 
-Status: implemented locally; publication pending validation.
+Status: published August 26, 2026 as GitHub commit `43875547513bbe3e684ce3956232de696354854d`.
 
 #### Additions
 
@@ -110,4 +110,45 @@ Status: implemented locally; publication pending validation.
 #### Rollback for this build
 
 - Restore GitHub `main` to `35b84a468f542021525a09cf0c57bfcf1fbffb82` to keep Build 1 but remove Build 2.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 3 — Safety and near-miss communication
+
+Status: implemented locally; publication pending validation.
+
+#### Additions
+
+1. Added **Safety & Near-Miss Notice** under Team & support.
+   - Covers near misses, unsafe access/site conditions, tool or equipment failures, vehicle events, property concerns, injury/illness, and other safety events.
+   - Captures the occurrence time, facts observed, inspection decision, immediate action, everyone informed, and follow-up needed.
+   - Allows multiple notified parties, an explained Other selection, or No one informed.
+   - Sends the initial notice only to `kev@michiganpropertyinspections.com` through the same existing form-delivery service already used by MPI Field Tools.
+   - Does not add a new recipient, subscription, paid service, photo upload, or background tracking.
+
+2. Connected the notice to the current field workflow.
+   - Current-job inspector and property details fill automatically.
+   - Job Companion includes a direct Safety / near miss shortcut.
+   - The universal safe-stop procedure links directly to the Safety Notice and Ask Management.
+   - The notice links separately to Damaged Item Notice when confirmed damage must also be recorded.
+
+3. Added clear safety and privacy boundaries.
+   - Emergency response and reaching a safe position come before completing the form.
+   - The form is an initial company notice, not an emergency request or substitute for a required formal report.
+   - Inspectors are told to record facts, not blame or unsupported causes, and not to enter medical history or identification numbers.
+
+4. Updated the offline cache identifier to Build 40.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Safety screen count: 1.
+- People-informed choices: 8.
+- Other / No one selection behavior: passed.
+- Current-job inspector and property autofill: passed locally.
+- No test email was submitted during validation.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `43875547513bbe3e684ce3956232de696354854d` to keep Builds 1–2 but remove the Safety Notice.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

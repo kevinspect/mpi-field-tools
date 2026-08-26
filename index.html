@@ -395,7 +395,8 @@
     }
 
     .home-tool-icon.icon-job,
-    .home-tool-icon.icon-tool-guides {
+    .home-tool-icon.icon-tool-guides,
+    .home-tool-icon.icon-safety {
       position: relative;
       display: grid;
       place-items: center;
@@ -406,7 +407,8 @@
     }
 
     .home-tool-icon.icon-job::before,
-    .home-tool-icon.icon-tool-guides::before {
+    .home-tool-icon.icon-tool-guides::before,
+    .home-tool-icon.icon-safety::before {
       display: grid;
       width: 42px;
       height: 42px;
@@ -423,6 +425,7 @@
 
     .home-tool-icon.icon-job::before { content: "MY DAY"; }
     .home-tool-icon.icon-tool-guides::before { content: "HOW TO"; }
+    .home-tool-icon.icon-safety::before { content: "SAFE"; }
 
     .home-tool-copy strong { display: block; font-size: 17px; line-height: 1.25; }
     .home-tool-copy small { display: block; margin-top: 4px; color: var(--ink-2); font-size: 12px; line-height: 1.35; }
@@ -3618,6 +3621,11 @@
       <section class="home-tool-group" aria-labelledby="home-group-support">
         <h2 class="home-tool-group-title" id="home-group-support">Team &amp; support</h2>
         <div class="home-tool-group-list">
+          <a class="home-tool-card" href="#safety-notice">
+            <span class="home-tool-icon icon-safety" aria-hidden="true"></span>
+            <span class="home-tool-copy"><strong>Safety &amp; Near-Miss Notice</strong><small>Send MPI an immediate, factual record of a safety event, equipment failure, or close call.</small></span>
+            <span class="home-tool-arrow" aria-hidden="true">→</span>
+          </a>
           <a class="home-tool-card" href="#team-messages">
             <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
             <span class="home-tool-copy"><strong>Team Messages</strong><small>Receive MPI notifications, read updates, and ask management.</small></span>
@@ -3697,6 +3705,7 @@
           <div class="job-shortcuts" aria-label="Current job shortcuts">
             <a class="job-secondary-action" href="#equipment-record">Before/After photos</a>
             <a class="job-secondary-action" href="#damage-report">Damage notice</a>
+            <a class="job-secondary-action" href="#safety-notice">Safety / near miss</a>
             <a class="job-secondary-action" href="#sop-guide">Field procedure</a>
             <a class="job-secondary-action" href="#tool-check">Tool closeout</a>
           </div>
@@ -4633,6 +4642,118 @@
       <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
     </section>
 
+    <section class="field-app-section app-screen-view" id="safety-notice" data-app-screen="safety-notice" aria-labelledby="safety-notice-title">
+      <div class="field-section-heading">
+        <div>
+          <p class="eyebrow">MPI safety communication</p>
+          <h2 id="safety-notice-title">Report the event while details are clear.</h2>
+        </div>
+        <p>Use this short initial notice for a near miss, injury, unsafe condition, vehicle event, or equipment failure. Get to safety and contact emergency services first when needed.</p>
+      </div>
+
+      <div class="workflow-grid">
+        <form class="panel damage-form" id="safetyNoticeForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+          <input type="hidden" name="_subject" id="safetyNoticeSubject" value="MPI Safety and Near-Miss Notice">
+          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_captcha" value="false">
+          <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?safety-sent=1#safety-notice">
+          <input type="hidden" name="Submitted at" id="safetyNoticeSubmittedAt" value="">
+          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
+
+          <div class="panel-heading">
+            <div><h2>Initial safety notice</h2><p>Required fields are marked with an asterisk.</p></div>
+            <span class="step-count">Online only</span>
+          </div>
+
+          <div class="damage-field-row">
+            <div class="field"><label for="safetyNoticeInspector">Inspector name *</label><input class="damage-input" id="safetyNoticeInspector" name="Inspector" type="text" autocomplete="name" maxlength="80" required></div>
+            <div class="field"><label for="safetyNoticeProperty">Property / location *</label><input class="damage-input" id="safetyNoticeProperty" name="Property or location" type="text" autocomplete="street-address" maxlength="180" required></div>
+          </div>
+
+          <div class="damage-field-row">
+            <div class="field">
+              <label for="safetyNoticeType">Notice type *</label>
+              <div class="select-wrap">
+                <select class="damage-input" id="safetyNoticeType" name="Notice type" required>
+                  <option value="">Choose the event…</option>
+                  <option>Near miss / close call</option>
+                  <option>Unsafe access or site condition</option>
+                  <option>Tool or equipment failure</option>
+                  <option>Vehicle or driving event</option>
+                  <option>Property concern without confirmed damage</option>
+                  <option>Injury or illness</option>
+                  <option>Other safety event</option>
+                </select>
+              </div>
+            </div>
+            <div class="field"><label for="safetyNoticeOccurredAt">Date and time *</label><input class="damage-input" id="safetyNoticeOccurredAt" name="Occurred at" type="datetime-local" required></div>
+          </div>
+
+          <div class="field"><label for="safetyNoticeFacts">What happened? *</label><textarea id="safetyNoticeFacts" name="What happened" maxlength="1400" placeholder="Record only the facts you observed: the task, condition, sequence, people present, and result." required></textarea></div>
+
+          <div class="damage-field-row">
+            <div class="field">
+              <label for="safetyNoticeDecision">Inspection decision *</label>
+              <div class="select-wrap">
+                <select class="damage-input" id="safetyNoticeDecision" name="Inspection decision" required>
+                  <option value="">Choose what happened next…</option>
+                  <option>Continued after the condition was made safe</option>
+                  <option>Continued with the affected area or task excluded</option>
+                  <option>Stopped the affected procedure</option>
+                  <option>Stopped the inspection and left the property</option>
+                  <option>Emergency services or utility response requested</option>
+                </select>
+              </div>
+            </div>
+            <div class="field"><label for="safetyNoticeAction">Immediate action taken *</label><textarea class="damage-action-input" id="safetyNoticeAction" name="Immediate action taken" maxlength="900" placeholder="State how the area was protected, who received care, what equipment was removed from service, or what was left unchanged." required></textarea></div>
+          </div>
+
+          <fieldset class="field damage-choice-field">
+            <legend>Who was informed? *</legend>
+            <p class="damage-action-help">Choose every person or service notified.</p>
+            <div class="damage-informed-list">
+              <label class="damage-informed-option"><input name="People informed" value="MPI management" type="checkbox" data-safety-informed="MPI management"><span>MPI management</span></label>
+              <label class="damage-informed-option"><input name="People informed" value="Realtor" type="checkbox" data-safety-informed="Realtor"><span>Realtor</span></label>
+              <label class="damage-informed-option"><input name="People informed" value="Homeowner" type="checkbox" data-safety-informed="Homeowner"><span>Homeowner</span></label>
+              <label class="damage-informed-option"><input name="People informed" value="Building manager" type="checkbox" data-safety-informed="Building manager"><span>Building manager</span></label>
+              <label class="damage-informed-option"><input name="People informed" value="Tenant or occupant" type="checkbox" data-safety-informed="Tenant or occupant"><span>Tenant / occupant</span></label>
+              <label class="damage-informed-option"><input name="People informed" value="Emergency services or utility" type="checkbox" data-safety-informed="Emergency services or utility"><span>Emergency services / utility</span></label>
+              <label class="damage-informed-option"><input id="safetyOtherInformed" name="People informed" value="Other" type="checkbox" data-safety-informed="Other"><span>Other</span></label>
+              <label class="damage-informed-option damage-none-option"><input id="safetyNoneInformed" name="People informed" value="No one informed" type="checkbox" data-safety-informed="No one informed"><span>No one informed</span></label>
+            </div>
+            <div class="damage-other-informed" id="safetyOtherInformedField" hidden>
+              <label for="safetyOtherInformedName">Who else was informed? *</label>
+              <input class="damage-input" id="safetyOtherInformedName" name="Other person informed" type="text" maxlength="120" placeholder="Enter the person's name, role, or service">
+            </div>
+          </fieldset>
+
+          <div class="field"><label for="safetyNoticeFollowUp">Follow-up needed</label><textarea class="damage-action-input" id="safetyNoticeFollowUp" name="Follow-up needed" maxlength="700" placeholder="Optional: equipment replacement, medical follow-up, coaching, property contact, or procedure review."></textarea></div>
+
+          <button class="decode-btn" id="safetyNoticeSubmitBtn" type="submit">Submit safety notice</button>
+          <p class="damage-submit-status" id="safetyNoticeStatus" role="status" aria-live="polite"></p>
+          <div class="form-success-box" id="safetyNoticeSuccess" hidden><strong>Safety notice submitted.</strong>The initial notice was delivered to MPI management.</div>
+          <p class="privacy-note">This is an initial company notice, not an emergency request or a substitute for any required formal report. Do not enter medical history, identification numbers, or unrelated personal information.</p>
+        </form>
+
+        <aside class="panel damage-info-panel" aria-labelledby="safety-notice-info-title">
+          <span class="damage-online-badge">Safety first</span>
+          <h3 id="safety-notice-info-title">Respond first. Document second.</h3>
+          <ul class="damage-checklist">
+            <li>Move to a safe position and stop the affected procedure.</li>
+            <li>Call 911, the utility, or another emergency service when the situation requires it.</li>
+            <li>Notify MPI management as soon as practical.</li>
+            <li>Record facts, not blame, guesses, or an unsupported cause.</li>
+            <li>Use the Damaged Item Notice separately when property or equipment damage is confirmed.</li>
+          </ul>
+          <div class="job-shortcuts">
+            <a class="job-secondary-action" href="#damage-report">Damaged Item Notice</a>
+            <a class="job-secondary-action" href="#team-messages">Ask management</a>
+          </div>
+        </aside>
+      </div>
+      <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
+    </section>
+
     <section class="field-app-section app-screen-view" id="requests-feedback" data-app-screen="requests-feedback" aria-labelledby="requests-feedback-title">
       <div class="field-section-heading">
         <div>
@@ -4789,6 +4910,7 @@
         "sop-guide": "Field Procedures",
         "training-center": "Training Center",
         "team-messages": "Team Messages",
+        "safety-notice": "Safety & Near-Miss Notice",
         "requests-feedback": "Requests & Feedback"
       };
       const screenViews = Array.from(document.querySelectorAll("[data-app-screen]"));
@@ -5389,6 +5511,21 @@
       const teamQuestionSubmitBtn = document.getElementById("teamQuestionSubmitBtn");
       const teamQuestionStatus = document.getElementById("teamQuestionStatus");
       const teamQuestionSuccess = document.getElementById("teamQuestionSuccess");
+      const safetyNoticeForm = document.getElementById("safetyNoticeForm");
+      const safetyNoticeInspector = document.getElementById("safetyNoticeInspector");
+      const safetyNoticeProperty = document.getElementById("safetyNoticeProperty");
+      const safetyNoticeType = document.getElementById("safetyNoticeType");
+      const safetyNoticeOccurredAt = document.getElementById("safetyNoticeOccurredAt");
+      const safetyNoticeSubject = document.getElementById("safetyNoticeSubject");
+      const safetyNoticeSubmittedAt = document.getElementById("safetyNoticeSubmittedAt");
+      const safetyNoticeSubmitBtn = document.getElementById("safetyNoticeSubmitBtn");
+      const safetyNoticeStatus = document.getElementById("safetyNoticeStatus");
+      const safetyNoticeSuccess = document.getElementById("safetyNoticeSuccess");
+      const safetyInformedOptions = [...document.querySelectorAll("[data-safety-informed]")];
+      const safetyNoneInformed = document.getElementById("safetyNoneInformed");
+      const safetyOtherInformed = document.getElementById("safetyOtherInformed");
+      const safetyOtherInformedField = document.getElementById("safetyOtherInformedField");
+      const safetyOtherInformedName = document.getElementById("safetyOtherInformedName");
       const enablePushBtn = document.getElementById("enablePushBtn");
       const pushStatus = document.getElementById("pushStatus");
       const pushSetupCode = document.getElementById("pushSetupCode");
@@ -9351,8 +9488,8 @@
 
       function syncActiveJobToForms(job, force = false) {
         if (!job) return;
-        const inspectorInputs = [damageInspector, equipmentInspector, toolCheckInspector, teamQuestionInspector, requestInspector];
-        const propertyInputs = [damageProperty, equipmentProperty, toolCheckProperty, teamQuestionProperty];
+        const inspectorInputs = [damageInspector, equipmentInspector, toolCheckInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector];
+        const propertyInputs = [damageProperty, equipmentProperty, toolCheckProperty, teamQuestionProperty, safetyNoticeProperty];
         inspectorInputs.forEach(input => {
           if (input && (force || !input.value)) input.value = job.inspector;
         });
@@ -9438,17 +9575,23 @@
         const job = loadActiveJob();
         if (job?.property && !window.confirm(`Clear the finished job at ${job.property} from this phone?`)) return;
         try { localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY); } catch (_) {}
-        [damageProperty, equipmentProperty, toolCheckProperty, teamQuestionProperty].forEach(input => { if (input) input.value = ""; });
+        [damageProperty, equipmentProperty, toolCheckProperty, teamQuestionProperty, safetyNoticeProperty].forEach(input => { if (input) input.value = ""; });
         renderActiveJob(null);
         showToast("Finished job cleared");
       }
 
       function initializeFieldForms() {
         const rememberedInspector = loadRememberedInspector();
-        [activeJobInspector, damageInspector, equipmentInspector, toolCheckInspector, teamQuestionInspector, requestInspector].forEach(input => {
+        [activeJobInspector, damageInspector, equipmentInspector, toolCheckInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector].forEach(input => {
           if (input && !input.value) input.value = rememberedInspector;
         });
         syncActiveJobToForms(loadActiveJob());
+
+        if (!safetyNoticeOccurredAt.value) {
+          const now = new Date();
+          now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+          safetyNoticeOccurredAt.value = now.toISOString().slice(0, 16);
+        }
 
         const params = new URLSearchParams(location.search);
         let targetHash = location.hash || "#home";
@@ -9479,6 +9622,13 @@
           teamQuestionStatus.textContent = "Field question submitted successfully.";
           params.delete("question-sent");
           targetHash = "#team-messages";
+        }
+        if (params.get("safety-sent") === "1") {
+          safetyNoticeSuccess.hidden = false;
+          safetyNoticeStatus.className = "damage-submit-status success";
+          safetyNoticeStatus.textContent = "Safety notice submitted successfully.";
+          params.delete("safety-sent");
+          targetHash = "#safety-notice";
         }
         if (params.get("request-sent") === "1") {
           requestSuccessBox.hidden = false;
@@ -9516,6 +9666,20 @@
         damageAction.placeholder = noOneInformed
           ? "Describe what you did and why no one was informed."
           : "Describe what you did after finding the damage.";
+      }
+
+      function updateSafetyInformedSelection(changedOption = null) {
+        if (changedOption === safetyNoneInformed && safetyNoneInformed.checked) {
+          safetyInformedOptions.forEach(option => {
+            if (option !== safetyNoneInformed) option.checked = false;
+          });
+        } else if (changedOption?.checked) {
+          safetyNoneInformed.checked = false;
+        }
+        const otherSelected = safetyOtherInformed.checked;
+        safetyOtherInformedField.hidden = !otherSelected;
+        safetyOtherInformedName.required = otherSelected;
+        if (!otherSelected) safetyOtherInformedName.value = "";
       }
 
       function loadImageFile(file) {
@@ -9859,6 +10023,27 @@
           submitButton: teamQuestionSubmitBtn,
           pendingText: "Sending field question…",
           subjectText: () => `MPI Field Question — ${teamQuestionTiming.value} — ${teamQuestionInspector.value.trim()}`.slice(0, 180)
+        });
+      }
+
+      function validateSafetyNoticeSubmission(event) {
+        updateSafetyInformedSelection();
+        if (!safetyInformedOptions.some(option => option.checked)) {
+          event.preventDefault();
+          safetyNoticeStatus.className = "damage-submit-status error";
+          safetyNoticeStatus.textContent = "Choose who was informed, or choose No one informed.";
+          safetyInformedOptions[0]?.focus();
+          return;
+        }
+        validateSimpleEmailForm(event, {
+          form: safetyNoticeForm,
+          status: safetyNoticeStatus,
+          submittedAt: safetyNoticeSubmittedAt,
+          subject: safetyNoticeSubject,
+          inspector: safetyNoticeInspector,
+          submitButton: safetyNoticeSubmitBtn,
+          pendingText: "Sending safety notice…",
+          subjectText: () => `MPI Safety Notice — ${safetyNoticeType.value} — ${safetyNoticeInspector.value.trim()}`.slice(0, 180)
         });
       }
 
@@ -10394,6 +10579,20 @@
         else appendQuickSopList(content, record.stepsHeading || "Step by step", record.steps, "sop-quick-step-list");
         appendQuickSopList(content, record.recordHeading || "Record in the report", record.record, "sop-quick-check-list");
         appendQuickSopList(content, record.stopHeading || "Stop or limit the test when", record.stop, "sop-quick-check-list sop-stop-list");
+        if (record.id === "quick-safe-stop") {
+          const actions = document.createElement("div");
+          actions.className = "job-shortcuts";
+          const safetyLink = document.createElement("a");
+          safetyLink.className = "job-secondary-action";
+          safetyLink.href = "#safety-notice";
+          safetyLink.textContent = "Safety / near-miss notice";
+          const questionLink = document.createElement("a");
+          questionLink.className = "job-secondary-action";
+          questionLink.href = "#team-messages";
+          questionLink.textContent = "Ask management";
+          actions.append(safetyLink, questionLink);
+          content.appendChild(actions);
+        }
         const source = document.createElement("p");
         source.className = "sop-detail-source";
         source.textContent = record.sourceNote || `Source: MPI SOP ${record.source} · Version ${SOP_DATA.meta.version} · Effective ${SOP_DATA.meta.effective}. This prompt is a condensed field aid; the controlled company SOP and current training govern.`;
@@ -10631,6 +10830,9 @@
         if (button) completeTrainingModule(button);
       });
       teamQuestionForm.addEventListener("submit", validateTeamQuestionSubmission);
+      safetyInformedOptions.forEach(option => option.addEventListener("change", event => updateSafetyInformedSelection(event.currentTarget)));
+      safetyOtherInformedName.addEventListener("input", () => updateSafetyInformedSelection());
+      safetyNoticeForm.addEventListener("submit", validateSafetyNoticeSubmission);
       enablePushBtn.addEventListener("click", enablePushNotifications);
       copyPushTokenBtn.addEventListener("click", () => {
         const token = pushTokenValue.textContent.trim();
@@ -10646,6 +10848,8 @@
         toolCheckSubmitBtn.textContent = "Email completed tool check";
         teamQuestionSubmitBtn.disabled = false;
         teamQuestionSubmitBtn.textContent = "Submit field question";
+        safetyNoticeSubmitBtn.disabled = false;
+        safetyNoticeSubmitBtn.textContent = "Submit safety notice";
         requestSubmitBtn.disabled = false;
         requestSubmitBtn.textContent = "Submit request";
       });

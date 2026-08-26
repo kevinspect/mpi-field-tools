@@ -31,6 +31,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Short form for injury, near miss, property concern, equipment failure, or unsafe access.
 - Capture immediate action and who was informed.
 - Keep it separate from the damaged-item notice so safety trends can be reviewed.
+- **Initial email notice implemented in Build 40; a central trend dashboard remains future work.**
 
 ### 5. Daily readiness check
 
