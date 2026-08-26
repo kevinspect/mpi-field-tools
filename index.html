@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="55">
+  <meta name="app-build" content="56">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3937,7 +3937,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">55</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">56</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4379,7 +4379,7 @@
 
           <button class="decode-btn" id="damageSubmitBtn" type="submit">Submit damaged item notice</button>
           <p class="damage-submit-status" id="damageSubmitStatus" role="status" aria-live="polite"></p>
-        <p class="privacy-note">Internet access is required to submit this record. The information and photos are not stored by the app.</p>
+        <p class="privacy-note">Internet access is required to submit. Text and selections are saved only as an unsent draft on this company phone. Photos are never stored by the app and must be reselected after a reload.</p>
         </form>
 
         <aside class="panel damage-info-panel" aria-labelledby="damage-info-title">
@@ -5330,6 +5330,7 @@
           <div class="field"><label for="teamQuestionText">Question or support needed *</label><textarea id="teamQuestionText" name="Question or support needed" maxlength="1200" placeholder="Include the system, visible condition, what you have already checked, and the decision you need help with." required></textarea></div>
           <button class="decode-btn" id="teamQuestionSubmitBtn" type="submit">Submit field question</button>
           <p class="damage-submit-status" id="teamQuestionStatus" role="status" aria-live="polite"></p>
+          <p class="privacy-note">An unsent text draft stays only on this company phone and clears after successful submission.</p>
           <div class="form-success-box" id="teamQuestionSuccess" hidden><strong>Question submitted.</strong>The field question was delivered to MPI management.</div>
         </form>
       </div>
@@ -5441,7 +5442,7 @@
           <button class="decode-btn" id="safetyNoticeSubmitBtn" type="submit">Submit safety notice</button>
           <p class="damage-submit-status" id="safetyNoticeStatus" role="status" aria-live="polite"></p>
           <div class="form-success-box" id="safetyNoticeSuccess" hidden><strong>Safety notice submitted.</strong>The initial notice was delivered to MPI management.</div>
-          <p class="privacy-note">This is an initial company notice, not an emergency request or a substitute for any required formal report. Do not enter medical history, identification numbers, or unrelated personal information.</p>
+          <p class="privacy-note">An unsent text draft stays only on this company phone and clears after successful submission. This is an initial company notice, not an emergency request or a substitute for any required formal report. Do not enter medical history, identification numbers, or unrelated personal information.</p>
         </form>
 
         <aside class="panel damage-info-panel" aria-labelledby="safety-notice-info-title">
@@ -5529,7 +5530,7 @@
           <div class="field"><label for="requestSuggestion">Suggested solution or supplier</label><textarea class="damage-action-input" id="requestSuggestion" name="Suggested solution or supplier" maxlength="700" placeholder="Optional: Add a link, product name, supplier, or idea that may help."></textarea></div>
           <button class="decode-btn" id="requestSubmitBtn" type="submit">Submit request</button>
           <p class="damage-submit-status" id="requestSubmitStatus" role="status" aria-live="polite"></p>
-          <p class="privacy-note">Submitted requests are delivered to MPI management. The app does not maintain an employee order history.</p>
+          <p class="privacy-note">An unsent text draft stays only on this company phone and clears after successful submission. Submitted requests are delivered to MPI management; the app does not maintain an employee order history.</p>
         </form>
 
         <aside class="panel damage-info-panel" aria-labelledby="request-info-title">
@@ -10717,6 +10718,74 @@
 
       const ACTIVE_JOB_STORAGE_KEY = "mpiActiveJobV1";
       const DAILY_READINESS_STORAGE_KEY = "mpiDailyReadinessV1";
+      const FORM_DRAFT_CONFIG = [
+        { form: damageForm, key: "mpiDraftDamageV1", status: damageSubmitStatus, photoReminder: true },
+        { form: teamQuestionForm, key: "mpiDraftTeamQuestionV1", status: teamQuestionStatus },
+        { form: safetyNoticeForm, key: "mpiDraftSafetyNoticeV1", status: safetyNoticeStatus },
+        { form: requestForm, key: "mpiDraftRequestV1", status: requestSubmitStatus }
+      ];
+      const formDraftTimers = new Map();
+
+      function draftEligibleControls(form) {
+        return [...form.elements].filter(control => {
+          if (!control.name || control.name.startsWith("_") || control.disabled) return false;
+          return !["hidden", "file", "submit", "button", "reset", "password"].includes(control.type);
+        });
+      }
+
+      function saveFormDraft(config) {
+        const values = draftEligibleControls(config.form).map(control => ({
+          id: control.id || "",
+          name: control.name,
+          type: control.type,
+          value: control.value,
+          checked: control.checked
+        }));
+        try { localStorage.setItem(config.key, JSON.stringify({ savedAt: new Date().toISOString(), values })); } catch (_) {}
+      }
+
+      function scheduleFormDraft(config) {
+        clearTimeout(formDraftTimers.get(config.key));
+        formDraftTimers.set(config.key, setTimeout(() => saveFormDraft(config), 250));
+      }
+
+      function clearFormDraft(key) {
+        clearTimeout(formDraftTimers.get(key));
+        formDraftTimers.delete(key);
+        try { localStorage.removeItem(key); } catch (_) {}
+      }
+
+      function restoreFormDraft(config) {
+        let saved;
+        try { saved = JSON.parse(localStorage.getItem(config.key) || "null"); } catch (_) { saved = null; }
+        if (!Array.isArray(saved?.values) || !saved.values.length) return false;
+        const controls = draftEligibleControls(config.form);
+        saved.values.forEach((item, index) => {
+          const control = item.id ? document.getElementById(item.id) : controls[index];
+          if (!control || !config.form.contains(control) || control.name !== item.name) return;
+          if (control.type === "checkbox" || control.type === "radio") control.checked = Boolean(item.checked);
+          else control.value = String(item.value ?? "");
+        });
+        controls.forEach(control => {
+          if (control.type === "checkbox" || control.type === "radio" || control.tagName === "SELECT") {
+            control.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+        });
+        config.status.className = "damage-submit-status";
+        config.status.textContent = config.photoReminder
+          ? "Unsent text draft restored. Re-select both photos before submitting."
+          : "Unsent draft restored on this phone.";
+        return true;
+      }
+
+      function initializeFormDrafts() {
+        FORM_DRAFT_CONFIG.forEach(config => {
+          restoreFormDraft(config);
+          config.form.addEventListener("input", () => scheduleFormDraft(config));
+          config.form.addEventListener("change", () => scheduleFormDraft(config));
+        });
+      }
+
       const JOB_STEP_GUIDANCE = {
         scope: { title: "Confirm today’s inspection scope", detail: "Check the property, services ordered, access notes, and special instructions before travel.", route: "#today-jobs", button: "Open today’s jobs" },
         schedule: { title: "Review timing, weather, and route", detail: "Confirm the appointment timing and safe travel or exterior-inspection conditions.", route: "#today-jobs", button: "Open today’s jobs" },
@@ -11033,6 +11102,7 @@
         const params = new URLSearchParams(location.search);
         let targetHash = location.hash || "#home";
         if (params.get("damage-sent") === "1") {
+          clearFormDraft("mpiDraftDamageV1");
           damageSuccessBox.hidden = false;
           damageSubmitStatus.className = "damage-submit-status success";
           damageSubmitStatus.textContent = "Damage notice submitted successfully.";
@@ -11078,6 +11148,7 @@
           targetHash = "#team-messages";
         }
         if (params.get("question-sent") === "1") {
+          clearFormDraft("mpiDraftTeamQuestionV1");
           teamQuestionSuccess.hidden = false;
           teamQuestionStatus.className = "damage-submit-status success";
           teamQuestionStatus.textContent = "Field question submitted successfully.";
@@ -11085,6 +11156,7 @@
           targetHash = "#team-messages";
         }
         if (params.get("safety-sent") === "1") {
+          clearFormDraft("mpiDraftSafetyNoticeV1");
           safetyNoticeSuccess.hidden = false;
           safetyNoticeStatus.className = "damage-submit-status success";
           safetyNoticeStatus.textContent = "Safety notice submitted successfully.";
@@ -11092,6 +11164,7 @@
           targetHash = "#safety-notice";
         }
         if (params.get("request-sent") === "1") {
+          clearFormDraft("mpiDraftRequestV1");
           requestSuccessBox.hidden = false;
           requestSubmitStatus.className = "damage-submit-status success";
           requestSubmitStatus.textContent = "Inspector request submitted successfully.";
@@ -11100,6 +11173,7 @@
         }
         const cleanQuery = params.toString();
         history.replaceState(null, "", `${location.pathname}${cleanQuery ? `?${cleanQuery}` : ""}${targetHash}`);
+        initializeFormDrafts();
       }
 
       function updateDamageInformedSelection(changedOption = null) {
