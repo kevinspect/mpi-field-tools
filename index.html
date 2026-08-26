@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="74">
+  <meta name="app-build" content="75">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3897,6 +3897,17 @@
 
     .tool-manual-link.tool-support-link::after { content: "→"; }
 
+    .tool-manual-link.tool-guide-copy-link {
+      min-height: 44px;
+      color: var(--bright-blue);
+      background: #eef5fb;
+      border: 1px solid #c7d9e8;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .tool-manual-link.tool-guide-copy-link::after { content: "⧉"; }
+
     .tool-guide-source-note {
       margin: 22px 0 0;
       padding-top: 15px;
@@ -4092,7 +4103,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">74</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">75</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4897,7 +4908,7 @@
       </div>
 
       <div class="sop-version-bar">
-        <span><strong>21 inventory tool cards + first-use setup</strong> · Model-specific links are included where exact controls matter.</span>
+        <span><strong>21 inventory tool cards + first-use setup</strong> · Model-specific manuals and copyable direct links are included.</span>
         <span class="sop-offline-badge">Cards work offline</span>
       </div>
 
@@ -13297,6 +13308,12 @@
         supportLink.dataset.toolSupportItem = guide.supportItem || `${guide.title} — ${guide.model}`;
         supportLink.textContent = guide.supportLabel || "Report a problem with this tool";
         content.appendChild(supportLink);
+        const copyGuideLink = document.createElement("button");
+        copyGuideLink.type = "button";
+        copyGuideLink.className = "tool-manual-link tool-guide-copy-link";
+        copyGuideLink.dataset.copyToolGuide = guide.id;
+        copyGuideLink.textContent = "Copy direct link to this guide";
+        content.appendChild(copyGuideLink);
         const sourceNote = document.createElement("p");
         sourceNote.className = "tool-guide-source-note";
         sourceNote.textContent = "Quick card prepared from the MPI field SOP, company tool master list, and available manufacturer instructions. Confirm the model label and current manual before first use or whenever controls, accessories, or procedures change.";
@@ -13562,12 +13579,24 @@
 
       function initializeToolGuides() {
         populateToolGuideCategories();
-        const defaultGuide = TOOL_GUIDES.find(guide => guide.id === "moisture-meter") || TOOL_GUIDES[0];
+        const requestedGuideId = new URL(window.location.href).searchParams.get("tool") || "";
+        const requestedGuide = TOOL_GUIDES.find(guide => guide.id === requestedGuideId);
+        const defaultGuide = requestedGuide || TOOL_GUIDES.find(guide => guide.id === "moisture-meter") || TOOL_GUIDES[0];
+        if (requestedGuide) toolGuideSearch.value = requestedGuide.title;
         activeToolGuideId = defaultGuide?.id || "";
         if (defaultGuide) renderToolGuideDetail(defaultGuide);
         renderServicePack();
         renderToolReadiness();
         renderToolGuideResults();
+      }
+
+      function copyToolGuideLink(guideId) {
+        if (!TOOL_GUIDES.some(guide => guide.id === guideId)) return;
+        const url = new URL(window.location.href);
+        url.search = "";
+        url.searchParams.set("tool", guideId);
+        url.hash = "tool-guides";
+        copyText(url.href, "Direct tool-guide link copied");
       }
 
       function sopEntryText(entry) {
@@ -14189,6 +14218,11 @@
         if (window.innerWidth < 861) toolGuideDetail.scrollIntoView({ behavior: "smooth", block: "start" });
       });
       toolGuideDetail.addEventListener("click", event => {
+        const copyGuideLink = event.target.closest("[data-copy-tool-guide]");
+        if (copyGuideLink) {
+          copyToolGuideLink(copyGuideLink.dataset.copyToolGuide);
+          return;
+        }
         const procedureLink = event.target.closest("[data-related-sop-query]");
         if (procedureLink) {
           sopSearch.value = procedureLink.dataset.relatedSopQuery;
