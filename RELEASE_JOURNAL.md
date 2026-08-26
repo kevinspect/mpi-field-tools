@@ -1136,3 +1136,42 @@ Status: published August 26, 2026 as GitHub commit `e0ec4474c4edc2ea71ed930405d1
 
 - Restore GitHub `main` to `983c30454b373add8d849ad256f56f491edcd5c7` to keep Builds 1–27 but remove the job-status copy action.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 29 — Trane historical age-finder reliability
+
+Status: published August 26, 2026 as GitHub commit `9c75647fce45dde88ae0ad1218a8ca15d15f98ea`.
+
+#### Additions
+
+1. Rechecked the Trane/American Standard decoder against the current Trane Residential and Light Commercial Product Handbook.
+   - Retained the factory year table used by nine-character Trane serials from 1980 through the 2004 transition, including **L = 1996**.
+   - Retained the ten-character YYWW format used from the 2004 transition onward.
+   - Added the factory-documented three-character date block used on certain Trane accessories and coils.
+
+2. Added clearer field guidance.
+   - The dropdown now identifies the Trane choice as based on the factory 1980+ table.
+   - The format helper gives a full 1996 example, a short accessory/coil example, and a modern example.
+   - Short accessory/coil results display **Check the era** and explicitly warn the inspector not to apply the short code to a main unit.
+   - A printed manufacture date takes priority over a serial inference.
+
+3. Added a safe unsupported-format route.
+   - A Trane serial that does not match a documented pattern is not guessed.
+   - The no-match result provides a direct link to Trane’s official warranty lookup for verification.
+   - Replaced the prior label-location reference with the current factory product-handbook equipment-date table.
+   - Updated the visible build, version file, and offline cache identifier to Build 66.
+
+#### Validation record
+
+- Trane `L264A1B2C` decoded as production week 26 of **1996**.
+- Trane accessory/coil block `L26` decoded as production week 26 of **1996** with the short-code caution.
+- Trane `11241KADBB` decoded as production week 24 of **2011**.
+- Invalid `MODEL123` produced **No reliable match**, displayed all three expected patterns, and offered **Verify with Trane**.
+- 390-pixel phone layout: no horizontal overflow.
+- Duplicate HTML IDs: none detected.
+- Browser script errors: none detected.
+- Technical source: Trane Technologies, *2026 Residential & Light Commercial Product Handbook*, equipment-date identification table.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `88973b393e9cb569db9abca5d6fc1d83b0094a9d` to keep Builds 1–28 but remove the Trane age-finder changes.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
