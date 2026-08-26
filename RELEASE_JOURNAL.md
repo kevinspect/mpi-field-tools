@@ -1784,3 +1784,42 @@ Status: published August 26, 2026 as GitHub commit `38a68aaf3c795dac0b9875d6db31
 
 - Restore GitHub `main` to `6d96358fd7f90469201f237d23544eb7afd17db8` to keep Builds 1–46 but remove lesson results from Home search.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Form regression checkpoint — all non-photo company submissions
+
+Status: passed August 26, 2026 against app Build 84.
+
+#### Validation record
+
+- Exercised the complete valid-submit path for the End-of-Job Tool Check, tool commissioning, MPI refresher progress, new-inspector progress, required-message acknowledgement, field question, Safety / Near-Miss Notice, and Requests & Feedback forms.
+- Confirmed all eight prepared a professional subject, local America/Detroit timestamp, and complete form payload.
+- Confirmed every action remained a POST addressed only to `kev@michiganpropertyinspections.com`.
+- Blocked the final browser submit boundary; zero test emails were sent.
+- The two photograph forms remain covered by the separate real-image attachment regression checkpoint.
+
+### Build 48 — Honor all-not-used tool closeouts
+
+Status: published August 26, 2026 as GitHub commit `ccc579797a44c221725871c29e5fda2bf50e771b` (app Build 85).
+
+#### Additions
+
+1. Corrected the End-of-Job Tool Check edge case.
+   - When both **Field / General** and **Specialist / Company** sections are truthfully marked **Not used on this job**, the inspector can now submit without falsely checking an individual tool.
+   - When either section remains applicable, the form still requires at least one applicable checked tool and retains the existing section-level behavior.
+   - Updated the validation message to explain both valid completion methods.
+
+2. Changed the brief pending state from **Emailing** to the more professional **Submitting completed tool check**.
+
+3. Updated the visible build, version file, and offline cache identifier to Build 85.
+
+#### Validation record
+
+- Submitted a zero-tool test record with both sections marked not used.
+- Confirmed both section names were included, zero individual tools were claimed, the subject and Detroit timestamp were prepared, and the action remained a Kevin-only POST.
+- Intercepted the submit boundary; no email was sent.
+- Re-ran the complete 13-screen structural and phone-width audit with no failures.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `8bc160c7df0485b3afabe2981f2b2d20f1721072` to keep Builds 1–47 but restore the earlier tool-check rule.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
