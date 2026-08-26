@@ -417,3 +417,49 @@ Status: published August 26, 2026 as GitHub commit `e9ff0a0a9df54249361e8fabfd62
 
 - Restore GitHub `main` to `5f080f755b088d0604fd4679eefa4156984a86ff` to keep Builds 1–8 but remove the escalation guide.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 10 — Factory-documented Age Finder expansion
+
+Status: ready to publish as Build 47.
+
+#### Additions
+
+1. Added four clearly separated equipment choices to the Age Finder.
+   - Lochinvar tank-type water heaters using the documented 2011+ year/week code or the documented 1993–2012 year/month letter code.
+   - Navien NR/NP units using the documented middle `YYYYMMDD` product-date block.
+   - Lochinvar Copper-Fin, Power-Fin, Knight, Armor, Shield, Sync, Crest, FTXL, and related systems using the documented pre-May-2015 or post-May-2015 code.
+   - Lochinvar legacy specialty equipment, with separate handling for legacy Copper-Fin, Hi-Fire/Power Gas/oil-fired equipment, and electric boosters.
+
+2. Added older documented Lochinvar coverage.
+   - Copper-Fin month/year examples supported from the published 1970–1981 year table.
+   - Hi-Fire/Power Gas/oil-fired month/year examples supported for the published 1975–1986 table.
+   - Eight-digit year/month format supported from 1984 onward.
+   - Electric-booster year/month positions supported for the documented 1978–2010 layout.
+   - The unusual Lochinvar 2015 week/year transition is decoded separately from the 2016+ year/week order.
+
+3. Added safety controls around ambiguous labels.
+   - Lochinvar product families are separate dropdown choices so one family’s code is not silently applied to another.
+   - Navien formats outside the documented NR/NP layout direct the inspector to Navien’s official serial lookup.
+   - Invalid calendar dates, future dates, unsupported year ranges, invalid weeks, and mismatched serial lengths are rejected.
+   - Updated the offline cache identifier to Build 47.
+
+#### Source control
+
+- Lochinvar Serial Number Guide, Lochinvar LLC, document 904026WARR Rev. 21.
+- Navien NR/NP Service Manual serial-number example and Navien official serial lookup.
+- Only formats explicitly documented by the manufacturers were added.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Manufacturer/equipment choices: 20; every choice has a decoder configuration.
+- All 20 built-in examples: passed in the browser.
+- Historical and transition examples tested: 10; all returned the documented dates.
+- Invalid and cross-format examples tested: 5; all were safely rejected.
+- 390-pixel phone layout: Age Finder remained inside the viewport with no horizontal overflow.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `312c193c44ef078517a4b8c271d06b115eda794b` to keep Builds 1–9 but remove the manufacturer expansion.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

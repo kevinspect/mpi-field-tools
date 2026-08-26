@@ -3974,10 +3974,14 @@
                 <option value="bradford">Bradford White — tank type</option>
                 <option value="rheem_water">Rheem / Ruud / Richmond / Rheem-built GE — common formats, 1960+</option>
                 <option value="rinnai">Rinnai tankless / direct-vent — common formats</option>
+                <option value="lochinvar_tank">Lochinvar tank-type water heaters — documented 1993+ formats</option>
+                <option value="navien_legacy">Navien NR / NP — product-date serial block</option>
               </optgroup>
               <optgroup label="Boilers, heat pumps & specialty equipment">
                 <option value="bosch">Bosch / Buderus — 2010+ 3-character date code</option>
                 <option value="weil_mclain">Weil-McLain boiler — official CP-number ranges, 1988+</option>
+                <option value="lochinvar_system">Lochinvar Copper-Fin / Power-Fin / Knight / Armor / Shield / Sync / Crest / FTXL — documented format</option>
+                <option value="lochinvar_legacy">Lochinvar legacy specialty — Copper-Fin, Hi-Fire, Power Gas, oil-fired, or electric booster</option>
                 <option value="york_mapics">YORK commercial / chiller — Mapics 1971+ or SAP date code</option>
               </optgroup>
             </select>
@@ -5189,8 +5193,8 @@
         </article>
         <article class="coverage-card">
           <span class="tag">Special codes</span>
-          <h3>Bradford White, Bosch, YORK commercial, Weil-McLain</h3>
-          <p>Handles repeating letter cycles, Bosch date tables, YORK factory codes, and Weil-McLain CP ranges.</p>
+          <h3>Bradford White, Bosch, YORK commercial, Weil-McLain, Lochinvar, Navien</h3>
+          <p>Handles repeating letter cycles, factory date tables, CP ranges, legacy commercial formats, and an embedded product-date block.</p>
         </article>
       </div>
 
@@ -5210,6 +5214,9 @@
             <li><a href="https://www.bosch-homecomfort.com/us/media/country_pool/documents/serial_number_reference_guide_06.2023.pdf" target="_blank" rel="noreferrer">Bosch/Buderus serial date-code table</a></li>
             <li><a href="https://files.myrheem.com/webpartners/rheemcom/warranty/rheem_waterheater_faq.pdf" target="_blank" rel="noreferrer">Rheem factory water-heater serial guidance</a></li>
             <li><a href="https://www.weil-mclain.com/wp-content/uploads/CP-Date-Ranges-2026.pdf" target="_blank" rel="noreferrer">Weil-McLain official CP date ranges</a></li>
+            <li><a href="https://assets.lochinvar.com/damroot/Original/10013/904026WARR_Rev%2021_100161789_2000019081.pdf" target="_blank" rel="noreferrer">Lochinvar factory serial-number coding guide</a></li>
+            <li><a href="https://www.navieninc.com/attachment/61/download/1-Locating%2BSerial%2BNumber" target="_blank" rel="noreferrer">Navien NR/NP service-manual product-date example</a></li>
+            <li><a href="https://www.navieninc.com/serial" target="_blank" rel="noreferrer">Navien official serial-number lookup</a></li>
             <li><a href="https://docs.johnsoncontrols.com/chillers/api/khub/documents/vAw~Zwio7mZkX8CKwDT8qg/content" target="_blank" rel="noreferrer">YORK factory Mapics and SAP serial schemes</a></li>
             <li><a href="https://dwt-front-prod.daikincomfort.com/docs/default-source/general/warranty-certificates/pwdfurnsntg.pdf" target="_blank" rel="noreferrer">Daikin factory YYMM serial guidance</a></li>
           </ul>
@@ -5281,6 +5288,16 @@
         A: 2009, B: 2010, C: 2011, D: 2012, E: 2013, F: 2014, G: 2015,
         H: 2016, J: 2017, K: 2018, L: 2019, M: 2020, N: 2021, P: 2022,
         R: 2023, S: 2024, T: 2025, W: 2026, X: 2027, Y: 2028, Z: 2029
+      };
+      const LOCHINVAR_TANK_YEAR_CODES = {
+        K: 1993, L: 1994, M: 1995, N: 1996, P: 1997, S: 1998, T: 1999,
+        W: 2000, X: 2001, Y: 2002, Z: 2003, A: 2004, B: 2005, C: 2006,
+        D: 2007, E: 2008, F: 2009, G: 2010, H: 2011, J: 2012
+      };
+      const LOCHINVAR_SYSTEM_MONTHS = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, I: 8, J: 9, K: 10, L: 11 };
+      const LOCHINVAR_COPPER_FIN_YEAR_CODES = {
+        P: 1970, R: 1971, S: 1972, T: 1973, U: 1974, V: 1975,
+        W: 1976, X: 1977, Y: 1978, Z: 1979, AA: 1980, BB: 1981
       };
       const YORK_MAPICS_YEAR_CODES = {
         A: 1971, B: 1972, C: 1973, D: 1974, E: 1975, F: 1976, G: 1977,
@@ -6910,6 +6927,20 @@
           example: "BH.AB-000123",
           decoder: decodeRinnai
         },
+        lochinvar_tank: {
+          name: "Lochinvar tank-type water heaters",
+          hint: "2011+: first 2 characters = year and next 2 = week. Supported 1993–2011 labels use year and month letters first.",
+          format: "Examples: 1142N012345 = week 42 of 2011; KJ1000130 = September 1993.",
+          example: "1142N012345",
+          decoder: decodeLochinvarTank
+        },
+        navien_legacy: {
+          name: "Navien NR / NP tankless water heater",
+          hint: "The documented NR/NP Navien code places an 8-digit YYYYMMDD product date between two production blocks.",
+          format: "Expected documented example: 9262-20081208-1027. Other Navien formats require the official serial lookup.",
+          example: "9262-20081208-1027",
+          decoder: decodeNavienLegacy
+        },
         bosch: {
           name: "Bosch / Buderus equipment with 3-character date code",
           hint: "For supported products, characters 5–7 are the Bosch manufacture-date code.",
@@ -6923,6 +6954,20 @@
           format: "Expected: CP followed by 7 digits, such as CP3003001.",
           example: "CP3003001",
           decoder: decodeWeilMclain
+        },
+        lochinvar_system: {
+          name: "Lochinvar Copper-Fin / Power-Fin / Knight / Armor / Shield / Sync / Crest / FTXL",
+          hint: "Before May 2015: month letter + 2-digit year. After May 2015: the first 4 digits contain year/week, with the 2015 transition reversed.",
+          format: "Examples: J930012 = October 1993; 162201213456 = week 22 of 2016.",
+          example: "J930012",
+          decoder: decodeLochinvarSystem
+        },
+        lochinvar_legacy: {
+          name: "Lochinvar legacy specialty equipment",
+          hint: "Use only after matching the data-plate model family to the factory guide: legacy Copper-Fin, Hi-Fire, Power Gas, oil-fired, or electric booster.",
+          format: "Examples: 5Y013 = May 1978 Copper-Fin; M78013 = December 1978 Hi-Fire; 1234569708 = August 1997 electric booster.",
+          example: "5Y013",
+          decoder: decodeLochinvarLegacy
         },
         york_mapics: {
           name: "YORK commercial / chiller",
@@ -7289,6 +7334,147 @@
           });
         }
         return fail("That does not match the supported older numeric or modern four-letter Rinnai serial format.");
+      }
+
+      function decodeLochinvarTank(serial) {
+        let match = serial.match(/^(\d{2})(\d{2})[A-Z0-9]{7}$/);
+        if (match) {
+          const year = resolveTwoDigitYear(match[1], 2011);
+          const week = Number(match[2]);
+          if (year && week >= 1 && week <= 52) {
+            return weekResult({
+              year, week, usedIndices: [0,1,2,3],
+              explanation: `Characters 1–2 give year ${year}; characters 3–4 give production week ${week}.`,
+              note: "Applies to Lochinvar's documented 11-character tank-type serial format used from 2011 onward. Character 5 identifies the manufacturing plant."
+            });
+          }
+        }
+
+        match = serial.match(/^([A-HJ-NPSTW-Z])([A-HJ-M])\d{6,7}$/);
+        if (match) {
+          const year = LOCHINVAR_TANK_YEAR_CODES[match[1]];
+          const month = LENNOX_MONTHS[match[2]];
+          if (year && month !== undefined) {
+            return monthResult({
+              year, month, usedIndices: [0,1], confidence: "caution",
+              explanation: `Character 1 (${match[1]}) is Lochinvar's year code for ${year}; character 2 (${match[2]}) means ${MONTHS[month]}.`,
+              note: "Applies to Lochinvar tank-type product families that use the documented two-letter plus six- or seven-digit warranty-date format."
+            });
+          }
+        }
+        return fail("That does not match the documented Lochinvar tank-type 11-character YYWW format or supported two-letter warranty-date format.");
+      }
+
+      function decodeNavienLegacy(serial) {
+        const match = serial.match(/^\d{4}(\d{4})(\d{2})(\d{2})\d{4}$/);
+        if (!match) return fail("That does not match the documented Navien NR/NP code with a middle YYYYMMDD product-date block. Use Navien's official serial lookup for other formats.");
+        const year = Number(match[1]);
+        const month = Number(match[2]) - 1;
+        const day = Number(match[3]);
+        const date = new Date(year, month, day);
+        const now = new Date();
+        if (year < 2000 || year > now.getFullYear() || month < 0 || month > 11 || day < 1 || date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day || date > now) {
+          return fail("The middle product-date block does not contain a valid past calendar date.");
+        }
+        return monthResult({
+          year, month, usedIndices: [4,5,6,7,8,9,10,11], confidence: "caution",
+          explanation: `Characters 5–12 contain Navien product date ${String(month + 1).padStart(2, "0")}/${String(day).padStart(2, "0")}/${year}.`,
+          detail: `Product date ${MONTHS[month]} ${day}, ${year}`,
+          note: "Applies to the NR/NP-series label format shown in Navien's factory service manual. Use Navien's official serial lookup for other models and serial layouts."
+        });
+      }
+
+      function decodeLochinvarSystem(serial) {
+        let match = serial.match(/^([A-L])(\d{2})(?:[A-Z0-9]{4}|[A-Z0-9]{9})$/);
+        if (match) {
+          const month = LOCHINVAR_SYSTEM_MONTHS[match[1]];
+          const year = resolveTwoDigitYear(match[2], 1991);
+          if (month !== undefined && year && year <= 2015 && !(year === 2015 && month >= 4)) {
+            return monthResult({
+              year, month, usedIndices: [0,1,2], confidence: "caution",
+              explanation: `Character 1 (${match[1]}) means ${MONTHS[month]}; characters 2–3 give year ${year}.`,
+              note: "Applies to the documented 7- or 12-character Lochinvar system used before May 2015 on the listed Copper-Fin, Power-Fin, Knight, Armor, Shield, Sync, Crest, FTXL, and related families."
+            });
+          }
+        }
+
+        match = serial.match(/^\d{12,13}$/);
+        if (match) {
+          const first = Number(serial.slice(0, 2));
+          const second = Number(serial.slice(2, 4));
+          const modernYear = resolveTwoDigitYear(serial.slice(0, 2), 2016);
+          if (modernYear && second >= 1 && second <= 52) {
+            return weekResult({
+              year: modernYear, week: second, usedIndices: [0,1,2,3],
+              explanation: `Characters 1–2 give year ${modernYear}; characters 3–4 give production week ${second}.`,
+              note: "Applies to Lochinvar's documented post-2015 12- or 13-character system serial format."
+            });
+          }
+          if (second === 15 && first >= 18 && first <= 52) {
+            return weekResult({
+              year: 2015, week: first, usedIndices: [0,1,2,3], confidence: "caution",
+              explanation: `The 2015 transition format reverses the first four digits: characters 1–2 give week ${first}; characters 3–4 give year 2015.`,
+              note: "Applies to the Lochinvar production transition after May 2015."
+            });
+          }
+        }
+        return fail("That does not match the selected Lochinvar system's documented pre-May-2015 month/year format or post-May-2015 year/week format.");
+      }
+
+      function decodeLochinvarLegacy(serial) {
+        let match = serial.match(/^(1[0-2]|[1-9])(AA|BB|[PRSTUVWXYZ])\d{3}$/);
+        if (match) {
+          const month = Number(match[1]) - 1;
+          const year = LOCHINVAR_COPPER_FIN_YEAR_CODES[match[2]];
+          if (year) {
+            const dateLength = match[1].length + match[2].length;
+            return monthResult({
+              year, month, usedIndices: Array.from({ length: dateLength }, (_, index) => index), confidence: "caution",
+              explanation: `The leading number gives ${MONTHS[month]}; code ${match[2]} gives year ${year}.`,
+              note: "Applies only to Lochinvar Copper-Fin water heaters or boilers using the documented 1968–1981 legacy layout; the published year-code table covers 1970–1981."
+            });
+          }
+        }
+
+        match = serial.match(/^([A-HJ-M])(\d{2})\d{3}$/);
+        if (match) {
+          const month = LENNOX_MONTHS[match[1]];
+          const year = Number(`19${match[2]}`);
+          if (month !== undefined && year >= 1975 && year <= 1986) {
+            return monthResult({
+              year, month, usedIndices: [0,1,2], confidence: "caution",
+              explanation: `Character 1 (${match[1]}) means ${MONTHS[month]}; characters 2–3 give year ${year}.`,
+              note: "Applies only to the Lochinvar Hi-Fire, Power Gas, or G-O oil-fired legacy model families and the years shown in the manufacturer's published table."
+            });
+          }
+        }
+
+        match = serial.match(/^(\d{2})(\d{2})\d{4}$/);
+        if (match) {
+          const year = resolveTwoDigitYear(match[1], 1984);
+          const month = Number(match[2]) - 1;
+          if (year && month >= 0 && month <= 11) {
+            return monthResult({
+              year, month, usedIndices: [0,1,2,3], confidence: "caution",
+              explanation: `Characters 1–2 give year ${year}; characters 3–4 give month ${String(month + 1).padStart(2, "0")}.`,
+              note: "Applies only to the documented 8-digit Lochinvar Hi-Fire, Power Gas, or G-O oil-fired format used from 1984 onward. Confirm the model family before using this result."
+            });
+          }
+        }
+
+        match = serial.match(/^\d{6}(\d{2})(\d{2})$/);
+        if (match) {
+          const year = resolveTwoDigitYear(match[1], 1978);
+          const month = Number(match[2]) - 1;
+          if (year && month >= 0 && month <= 11) {
+            return monthResult({
+              year, month, usedIndices: [6,7,8,9], confidence: "caution",
+              explanation: `Characters 7–8 give year ${year}; characters 9–10 give month ${String(month + 1).padStart(2, "0")}.`,
+              note: "Applies only to Lochinvar electric boosters using the documented 10-digit 1978–2010 layout."
+            });
+          }
+        }
+        return fail("That does not match a supported Lochinvar legacy specialty format. Confirm the exact model family against the factory guide before decoding.");
       }
 
       function boschDateCodeMap() {
