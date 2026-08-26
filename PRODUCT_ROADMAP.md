@@ -16,6 +16,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - 10 short offline knowledge checks that reinforce the MPI field sequence and safety boundaries.
 - A one-tap, phone-local start-of-day readiness check with exception-only support routing.
 - A 60-second, active-job report release check for coverage, evidence, limitations, wording, communication, and synchronization.
+- A five-route field escalation guide connected to existing safety, damage, management-question, tool-support, and procedure workflows.
 
 ### 1. Manager coaching and competency matrix
 
@@ -63,6 +64,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 
 - Tool guides link directly to the matching SOP test. **Initial links implemented in Build 39.**
 - SOP stop conditions link to Damage Notice, Incident/Near Miss, or Team Question.
+- Team Messages routes common field problems to the correct existing MPI workflow. **Implemented in Build 46.**
 - Job Companion shows only the forms still needed for the current job.
 - Training coaching links to the exact lesson or InterNACHI course.
 

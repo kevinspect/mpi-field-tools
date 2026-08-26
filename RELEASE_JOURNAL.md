@@ -381,3 +381,39 @@ Status: published August 26, 2026 as GitHub commit `e3278efd19e05e8ad24136f35a7e
 - Horizontal overflow: none detected on all 13 screens.
 - With the test browser’s network disabled after the first visit, the cached app opened Job Companion and displayed Start-of-day readiness successfully.
 - Online-only forms and live company services still require a connection by design.
+
+### Build 9 — Field escalation guide
+
+Status: implemented locally; publication pending validation.
+
+#### Additions
+
+1. Added **What needs attention?** inside Team Messages.
+   - Immediate danger or injury: stop, move to safety, keep others clear, call emergency services, then open the Safety Notice.
+   - Property damage or an item not restored: protect the area, photograph it, inform the responsible party, and open Damaged Item Notice.
+   - Cannot proceed, access, or finish: open a management question with During this inspection selected and a factual decision prompt already entered.
+   - Tool or equipment problem: open Inspector Request with Tool or equipment repair, the requested date, and a tool-condition prompt already entered.
+   - Procedure or report decision: open Field Procedures first or open a management question with Before the report is released selected.
+
+2. Kept escalation deliberate and low-noise.
+   - The guide opens the correct existing workflow but never submits a form automatically.
+   - No new recipient, service, paid system, or background activity was added.
+   - The guide is collapsed by default and does not add another home-screen tool.
+
+3. Updated the offline cache identifier to Build 46.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Escalation routes: 5.
+- Access/finish route: correctly filled During this inspection and the management-question prompt.
+- Tool-problem route: correctly filled Tool or equipment repair, the item, requested date, and details prompt.
+- 390-pixel phone layout: one-column route cards with no horizontal overflow.
+- Browser error log during the route test: 0 errors.
+- No form, phone call, or emergency-service action was submitted during testing.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `5f080f755b088d0604fd4679eefa4156984a86ff` to keep Builds 1–8 but remove the escalation guide.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
