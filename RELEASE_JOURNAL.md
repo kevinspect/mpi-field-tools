@@ -384,7 +384,7 @@ Status: published August 26, 2026 as GitHub commit `e3278efd19e05e8ad24136f35a7e
 
 ### Build 9 — Field escalation guide
 
-Status: implemented locally; publication pending validation.
+Status: published August 26, 2026 as GitHub commit `e9ff0a0a9df54249361e8fabfd6228a218465165`.
 
 #### Additions
 
