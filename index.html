@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="83">
+  <meta name="app-build" content="84">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4014,12 +4014,12 @@
       <a href="#tool-guides">Review equipment</a>
     </aside>
     <div class="home-search" id="homeSearch">
-      <label for="homeSearchInput">Find a field tool or procedure</label>
+      <label for="homeSearchInput">Find a field tool, procedure, or lesson</label>
       <div class="home-search-wrap">
-        <input class="home-search-input" id="homeSearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Example: water pressure, moisture meter, damage">
+        <input class="home-search-input" id="homeSearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Example: water pressure, moisture meter, training">
         <button class="home-search-clear" id="homeSearchClear" type="button" aria-label="Clear app search" hidden>×</button>
       </div>
-      <div class="home-search-results" id="homeSearchResults" role="listbox" aria-label="Matching MPI tools and procedures" hidden></div>
+      <div class="home-search-results" id="homeSearchResults" role="listbox" aria-label="Matching MPI tools, procedures, and lessons" hidden></div>
     </div>
     <p class="home-section-label">What do you need?</p>
     <nav class="home-tools" aria-label="MPI field tools">
@@ -4104,7 +4104,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">83</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">84</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -13280,7 +13280,19 @@
           query: guide.title,
           searchText: toolGuideSearchText(guide)
         }));
-        return [...screens, ...procedures, ...guides];
+        const lessons = trainingModules.map(module => {
+          const title = module.querySelector(".training-summary-copy strong")?.textContent?.trim() || "MPI refresher";
+          const detail = module.querySelector(".training-summary-copy small")?.textContent?.trim() || "Company training refresher";
+          return {
+            title,
+            detail: `MPI refresher · ${detail}`,
+            route: "#training-center",
+            kind: "lesson",
+            query: module.dataset.trainingModule,
+            searchText: normalizeSopText(module.textContent)
+          };
+        });
+        return [...screens, ...procedures, ...guides, ...lessons];
       }
 
       function renderHomeSearchResults() {
@@ -13306,7 +13318,7 @@
         if (!matches.length) {
           const empty = document.createElement("p");
           empty.className = "home-search-empty";
-          empty.textContent = "No MPI tool or quick procedure matched that search.";
+          empty.textContent = "No MPI tool, quick procedure, or refresher lesson matched that search.";
           homeSearchResults.append(empty);
         } else {
           matches.forEach(({ entry }) => {
@@ -13340,6 +13352,12 @@
           toolGuideCategory.value = "";
           toolGuideSearch.value = query;
           renderToolGuideResults({ selectFirst: true });
+        } else if (button.dataset.homeSearchKind === "lesson") {
+          const module = trainingModules.find(item => item.dataset.trainingModule === query);
+          if (module) {
+            module.open = true;
+            setTimeout(() => module.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+          }
         }
         homeSearchInput.value = "";
         renderHomeSearchResults();
