@@ -266,6 +266,32 @@
     .home-tools {
       display: block;
       max-width: 690px;
+    }
+
+    .home-tool-group + .home-tool-group {
+      margin-top: 28px;
+    }
+
+    .home-tool-group-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 7px;
+      color: var(--bright-blue);
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .home-tool-group-title::before {
+      content: "";
+      width: 24px;
+      height: 2px;
+      background: var(--orange);
+    }
+
+    .home-tool-group-list {
       border-top: 1px solid #eceef2;
     }
 
@@ -284,6 +310,10 @@
       box-shadow: none;
       text-decoration: none;
       transition: color .16s ease, background-color .16s ease;
+    }
+
+    .home-tool-group-list .home-tool-card:last-child {
+      border-bottom-color: #dde3ea;
     }
 
     .home-tool-card:hover, .home-tool-card:focus-visible {
@@ -3466,6 +3496,12 @@
 
     .tool-manual-link::after { content: "↗"; }
 
+    .tool-manual-link.related-procedure-link {
+      background: var(--orange-dark);
+    }
+
+    .tool-manual-link.related-procedure-link::after { content: "→"; }
+
     .tool-guide-source-note {
       margin: 22px 0 0;
       padding-top: 15px;
@@ -3522,68 +3558,83 @@
         <p class="home-tagline">Field tools. Company standards. Team support. One MPI app.</p>
       </div>
     </div>
-    <p class="home-section-label">Choose a field tool</p>
+    <p class="home-section-label">What do you need?</p>
     <nav class="home-tools" aria-label="MPI field tools">
-      <a class="home-tool-card" href="#job-companion">
-        <span class="home-tool-icon icon-job" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Job Companion</strong><small>Enter the job once, follow the four closeout stages, and open the forms already filled in.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#today-jobs">
-        <span class="home-tool-icon icon-calendar" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Today’s Jobs</strong><small>Open today’s company schedule and start Apple Maps directions.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#age-finder">
-        <span class="home-tool-icon icon-age" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Equipment Age Finder</strong><small>Decode supported HVAC, furnace and water-heater serial numbers.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#damage-report">
-        <span class="home-tool-icon icon-damage" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Damaged Item Notice</strong><small>Record the item, photos, action taken and people informed.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#equipment-record">
-        <span class="home-tool-icon icon-record" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Equipment Photo Record</strong><small>Document thermostat settings and furnace access before and after inspection.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#tool-check">
-        <span class="home-tool-icon icon-tool-check" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>End-of-Job Tool Check</strong><small>Confirm inspection tools are accounted for and secured before leaving.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#tool-guides">
-        <span class="home-tool-icon icon-tool-guides" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Company Tool Guides</strong><small>Open concise operating, safety, care, and documentation steps for every MPI tool.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#sop-guide">
-        <span class="home-tool-icon icon-sop" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Field Procedures</strong><small>Open short, step-by-step prompts from the MPI handbook.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#training-center">
-        <span class="home-tool-icon icon-training" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Training Center</strong><small>Complete short MPI lessons and save progress on this device.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#team-messages">
-        <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Team Messages</strong><small>Receive MPI notifications, read updates, and ask management.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#requests-feedback">
-        <span class="home-tool-icon icon-requests" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Requests &amp; Feedback</strong><small>Request tools, uniforms, supplies or training and share feedback.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <div class="home-tool-card phase-two" role="note" aria-label="MPI Comment Builder is planned for phase two">
-        <span class="home-tool-icon icon-ai" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>MPI Comment Builder</strong><small>Online MPI commentary will be added after the free tools are complete.</small></span>
-        <span class="home-tool-arrow">Phase 2</span>
-      </div>
+      <section class="home-tool-group" aria-labelledby="home-group-work">
+        <h2 class="home-tool-group-title" id="home-group-work">Today’s inspection</h2>
+        <div class="home-tool-group-list">
+          <a class="home-tool-card" href="#job-companion">
+            <span class="home-tool-icon icon-job" aria-hidden="true"></span>
+            <span class="home-tool-copy"><strong>Job Companion</strong><small>Enter the job once, follow the four closeout stages, and open the forms already filled in.</small></span>
+            <span class="home-tool-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="home-tool-card" href="#today-jobs">
+            <span class="home-tool-icon icon-calendar" aria-hidden="true"></span>
+            <span class="home-tool-copy"><strong>Today’s Jobs</strong><small>Open today’s company schedule and start Apple Maps directions.</small></span>
+            <span class="home-tool-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="home-tool-card" href="#age-finder">
+            <span class="home-tool-icon icon-age" aria-hidden="true"></span>
+            <span class="home-tool-copy"><strong>Equipment Age Finder</strong><small>Decode supported HVAC, furnace and water-heater serial numbers.</small></span>
+            <span class="home-tool-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="home-tool-card" href="#damage-report">
+            <span class="home-tool-icon icon-damage" aria-hidden="true"></span>
+            <span class="home-tool-copy"><strong>Damaged Item Notice</strong><small>Record the item, photos, action taken and people informed.</small></span>
+            <span class="home-tool-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="home-tool-card" href="#equipment-record">
+            <span class="home-tool-icon icon-record" aria-hidden="true"></span>
+            <span class="home-tool-copy"><strong>Equipment Photo Record</strong><small>Document thermostat settings and furnace access before and after inspection.</small></span>
+            <span class="home-tool-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="home-tool-card" href="#tool-check">
+            <span class="home-tool-icon icon-tool-check" aria-hidden="true"></span>
+            <span class="home-tool-copy"><strong>End-of-Job Tool Check</strong><small>Confirm inspection tools are accounted for and secured before leaving.</small></span>
+            <span class="home-tool-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </section>
+      <section class="home-tool-group" aria-labelledby="home-group-reference">
+        <h2 class="home-tool-group-title" id="home-group-reference">Reference &amp; training</h2>
+        <div class="home-tool-group-list">
+          <a class="home-tool-card" href="#tool-guides">
+            <span class="home-tool-icon icon-tool-guides" aria-hidden="true"></span>
+            <span class="home-tool-copy"><strong>Company Tool Guides</strong><small>Open concise operating, safety, care, and documentation steps for every MPI tool.</small></span>
+            <span class="home-tool-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="home-tool-card" href="#sop-guide">
+            <span class="home-tool-icon icon-sop" aria-hidden="true"></span>
+            <span class="home-tool-copy"><strong>Field Procedures</strong><small>Open short, step-by-step prompts from the MPI handbook.</small></span>
+            <span class="home-tool-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="home-tool-card" href="#training-center">
+            <span class="home-tool-icon icon-training" aria-hidden="true"></span>
+            <span class="home-tool-copy"><strong>Training Center</strong><small>Complete short MPI lessons and save progress on this device.</small></span>
+            <span class="home-tool-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </section>
+      <section class="home-tool-group" aria-labelledby="home-group-support">
+        <h2 class="home-tool-group-title" id="home-group-support">Team &amp; support</h2>
+        <div class="home-tool-group-list">
+          <a class="home-tool-card" href="#team-messages">
+            <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
+            <span class="home-tool-copy"><strong>Team Messages</strong><small>Receive MPI notifications, read updates, and ask management.</small></span>
+            <span class="home-tool-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="home-tool-card" href="#requests-feedback">
+            <span class="home-tool-icon icon-requests" aria-hidden="true"></span>
+            <span class="home-tool-copy"><strong>Requests &amp; Feedback</strong><small>Request tools, uniforms, supplies or training and share feedback.</small></span>
+            <span class="home-tool-arrow" aria-hidden="true">→</span>
+          </a>
+          <div class="home-tool-card phase-two" role="note" aria-label="MPI Comment Builder is planned for phase two">
+            <span class="home-tool-icon icon-ai" aria-hidden="true"></span>
+            <span class="home-tool-copy"><strong>MPI Comment Builder</strong><small>Online MPI commentary will be added after the free tools are complete.</small></span>
+            <span class="home-tool-arrow">Phase 2</span>
+          </div>
+        </div>
+      </section>
     </nav>
   </section>
 
@@ -4213,6 +4264,7 @@
             <li>If anything is missing, damaged, or unsecured, select Issue found and explain it.</li>
             <li>The completed record is emailed directly to MPI management.</li>
           </ul>
+          <a class="job-secondary-action" href="#tool-guides">Open company tool instructions</a>
           <div class="form-success-box" id="toolCheckSuccessBox" hidden><strong>Tool check submitted.</strong>The completed end-of-job checklist was emailed successfully.</div>
         </aside>
       </div>
@@ -5392,6 +5444,7 @@
           title: "Electrical tester kit",
           model: "Milwaukee 3203-20 voltage detector + 2224-20 GFCI receptacle tester",
           aliases: "outlet receptacle gfci voltage detector electrical tester",
+          sopQuery: "electrical panel cover",
           purpose: "Screen accessible receptacles for indicated wiring conditions and perform the company-authorized GFCI functional check without dismantling the device.",
           steps: [
             "Inspect the tester bodies and battery indication. Prove the voltage detector on a known energized source before relying on it.",
@@ -5414,6 +5467,7 @@
           title: "IR thermometer / secondary voltage detector",
           model: "Milwaukee 2225-20",
           aliases: "infrared thermometer laser temperature non contact voltage hvac",
+          sopQuery: "cooling temperature differential",
           purpose: "Compare surface temperatures and screen for the presence of AC voltage within the manufacturer-rated range.",
           steps: [
             "Inspect the lens, housing, battery indication, and voltage-detector readiness. Prove voltage detection on a known energized source before use.",
@@ -5525,6 +5579,7 @@
           title: "Combustible gas detector",
           model: "TOPTES PT210S",
           aliases: "gas leak methane propane natural combustible sniffer",
+          sopQuery: "universal safe stop",
           purpose: "Screen for a change in combustible-gas concentration and help locate a suspected source without declaring a system leak-free.",
           steps: ["Power on and complete the manufacturer warm-up/zero procedure in outdoor or other air known to be free of combustible gas.", "Confirm battery and sensor response using the company-approved readiness check; never test with an uncontrolled flame.", "Approach the area from clean air, move the probe slowly around accessible joints and controls, and use lower sensitivity to narrow a response.", "If the response increases, stop disturbing the area, move to clean air, follow the MPI gas-odor response, and document from a safe position.", "Return to clean air, allow the reading to clear, power off, and protect the sensor head."],
           record: ["Equipment/location, detector mode, response pattern, and any odor.", "Person notified, time, and action taken for a concerning response."],
@@ -5538,6 +5593,7 @@
           title: "Carbon monoxide detector",
           model: "TOPTES CT-580",
           aliases: "co carbon monoxide meter ambient combustion",
+          sopQuery: "ambient carbon monoxide screening",
           purpose: "Complete the MPI ambient carbon-monoxide screen at safely operated fuel-fired equipment and document current and peak readings.",
           steps: ["Confirm charge, sensor/service status, alarm settings, date/time, and manufacturer self-test before the job.", "Power on and complete zero calibration only in clean outdoor air known to be free of carbon monoxide.", "Establish and record an initial background reading, then allow the manufacturer response interval at the MPI measurement location while the appliance operates normally.", "Watch the current and peak readings. Follow the MPI escalation procedure immediately for a concerning or rising result, alarm, odor, or symptoms.", "Take the final indoor background reading, save the required evidence, and recharge after the job."],
           record: ["Meter identification, location, appliance state, current reading, peak reading, and time.", "Notifications and emergency actions when applicable."],
@@ -5629,6 +5685,7 @@
           title: "Telescoping ladder",
           model: "Xtend+Climb PSE155+/300",
           aliases: "ladder attic roof telescopic access",
+          sopQuery: "roof access decision",
           purpose: "Provide authorized access only after the inspector confirms the ladder, setup area, opening, and task can be used safely.",
           steps: ["Inspect rails, rungs, feet, locks, strap, labels, and cleanliness before the first use of the shift. Tag and remove a damaged ladder from service.", "Set on firm, level footing away from doors, vehicles, conductors, pets, and traffic; secure or barricade where displacement is possible.", "Extend and lock each required rung exactly as the manufacturer instructs. Confirm every lock visually and physically before climbing.", "Face the ladder, maintain three points of control, keep the body between the rails, and raise bulky equipment separately.", "Descend, collapse with hands clear of pinch points, clean the feet/rungs, secure the strap, and store the ladder in the vehicle."],
           record: ["Use a specific limitation when safe access or correct setup is not available.", "Report and tag any damaged or unreliable locking component."],
@@ -5671,6 +5728,7 @@
           title: "Roof inspection drone",
           model: "DJI Mini 4 Pro",
           aliases: "drone uas roof aerial dji part 107",
+          sopQuery: "roof access decision",
           purpose: "Collect authorized alternate roof views when the pilot, aircraft, airspace, weather, property, and operation meet company and FAA requirements.",
           steps: ["Confirm the pilot’s current Part 107 authority, aircraft registration/Remote ID as applicable, airspace authorization, property permission, and company assignment before travel.", "Complete the manufacturer preflight: aircraft, propellers, battery, controller, firmware, storage, compass/GNSS status, return-to-home settings, control link, and home point.", "Assess wind, precipitation, visibility, temperature, sun, trees, wires, people, vehicles, animals, and emergency landing areas. Maintain visual line of sight and required separation.", "Fly a deliberate perimeter and roof-elevation pattern without operating over uninvolved people. Capture orientation views before close details.", "Land with reserve, inspect the aircraft, confirm media saved, log any abnormal event, and secure batteries for transport/charging."],
           record: ["Pilot, aircraft, date/time, property, airspace/authorization, weather, launch area, and inspection method.", "Representative roof images and every area not visible.", "Any incident, abnormal flight, damage, or required FAA report."],
@@ -10047,6 +10105,15 @@
         appendToolGuideBlock(content, "Care and return", guide.care);
         appendToolGuideBlock(content, "Stop and get direction", guide.stop);
 
+        if (guide.sopQuery) {
+          const procedureLink = document.createElement("a");
+          procedureLink.className = "tool-manual-link related-procedure-link";
+          procedureLink.href = "#sop-guide";
+          procedureLink.dataset.relatedSopQuery = guide.sopQuery;
+          procedureLink.textContent = "Open related MPI field procedure";
+          content.appendChild(procedureLink);
+        }
+
         (guide.links || []).forEach(link => {
           const anchor = document.createElement("a");
           anchor.className = "tool-manual-link";
@@ -10611,6 +10678,13 @@
           option.setAttribute("aria-current", String(selected));
         }
         if (window.innerWidth < 861) toolGuideDetail.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      toolGuideDetail.addEventListener("click", event => {
+        const link = event.target.closest("[data-related-sop-query]");
+        if (!link) return;
+        sopSearch.value = link.dataset.relatedSopQuery;
+        sopChapter.value = "";
+        renderSopResults({ selectFirst: true });
       });
 
       sopSearch.addEventListener("input", () => renderSopResults({ selectFirst: true }));

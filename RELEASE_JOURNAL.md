@@ -22,7 +22,7 @@
 
 ### Build 1 — Guided workday and company tool knowledge
 
-Status: implemented locally; publication pending validation.
+Status: published August 26, 2026 as GitHub commit `35b84a468f542021525a09cf0c57bfcf1fbffb82`.
 
 #### Additions
 
@@ -74,3 +74,40 @@ Status: implemented locally; publication pending validation.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26`.
 - The protected branch contains the complete prior live release, including its matching service worker.
 
+### Build 2 — Calmer navigation and connected field help
+
+Status: implemented locally; publication pending validation.
+
+#### Additions
+
+1. Reorganized the home screen into three clearly labeled work areas.
+   - Today’s inspection.
+   - Reference & training.
+   - Team & support.
+   - Preserved every existing tool as a full-width, website-style button; no feature was removed or hidden in a menu.
+
+2. Connected the end-of-job checklist to Company Tool Guides.
+   - The checklist guidance now includes a direct button to the operating cards.
+
+3. Added direct tool-to-procedure links where a controlled MPI procedure exists.
+   - Electrical tester kit → electrical panel cover safety check.
+   - IR thermometer → cooling temperature differential.
+   - Combustible-gas detector → universal safe-stop procedure.
+   - Carbon-monoxide detector → ambient CO screening.
+   - Telescoping ladder and roof drone → roof access decision.
+   - The matching procedure and search result open automatically.
+
+4. Updated the offline cache identifier to Build 39.
+
+#### Validation record
+
+- Home-screen tool count: 12, unchanged.
+- Home-screen groups: 3.
+- Tool-guide inventory count: 21, unchanged.
+- Tool-to-procedure navigation: tested locally through the IR thermometer card.
+- IR thermometer link opened “Cooling temperature differential” automatically.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `35b84a468f542021525a09cf0c57bfcf1fbffb82` to keep Build 1 but remove Build 2.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

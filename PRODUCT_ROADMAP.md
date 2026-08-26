@@ -46,7 +46,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 
 ### 7. Smart links between the existing tools
 
-- Tool guides link directly to the matching SOP test.
+- Tool guides link directly to the matching SOP test. **Initial links implemented in Build 39.**
 - SOP stop conditions link to Damage Notice, Incident/Near Miss, or Team Question.
 - Job Companion shows only the forms still needed for the current job.
 - Training coaching links to the exact lesson or InterNACHI course.
@@ -97,4 +97,3 @@ Kevin’s view should lead with exceptions, not raw activity:
 - Keep employee training and coaching data behind company sign-in.
 - Show inspectors what is recorded and how it is used.
 - Do not mix safety reporting with performance discipline.
-
