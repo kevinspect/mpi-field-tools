@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="92">
+  <meta name="app-build" content="93">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3382,6 +3382,12 @@
       box-shadow: 0 7px 18px rgba(17,24,106,.07);
     }
 
+    .today-job-card.is-current {
+      border-color: rgba(180,135,32,.7);
+      border-left-color: var(--orange);
+      box-shadow: 0 10px 24px rgba(17,24,106,.12);
+    }
+
     .today-job-time {
       color: var(--forest);
       font-size: 13px;
@@ -3428,6 +3434,29 @@
 
     .today-job-map:hover, .today-job-map:focus-visible { background: var(--forest); outline: none; }
 
+    .today-job-actions {
+      display: grid;
+      gap: 8px;
+      min-width: 104px;
+    }
+
+    .today-job-use {
+      min-height: 42px;
+      padding: 0 13px;
+      color: var(--forest);
+      background: var(--orange);
+      border: 0;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .today-job-use[aria-pressed="true"] {
+      color: #fff;
+      background: var(--forest);
+    }
+
     .today-jobs-empty {
       padding: 38px 20px;
       color: var(--ink-2);
@@ -3465,6 +3494,19 @@
       line-height: 1.5;
       text-align: center;
     }
+
+    .job-phases-simple { gap: 10px; }
+
+    .job-stage-card {
+      min-height: 76px;
+      padding: 15px;
+      border-left: 5px solid var(--bright-blue);
+    }
+
+    .job-stage-card > span { display: grid; gap: 4px; }
+    .job-stage-card strong { color: var(--forest); font-size: 14px; line-height: 1.25; }
+    .job-stage-card small { color: var(--ink-2); font-size: 10.5px; line-height: 1.45; }
+    .job-stage-card:has(input:checked) { border-left-color: #2f846b; }
 
     .secure-schedule-intro {
       display: grid;
@@ -3945,7 +3987,8 @@
       .today-jobs-toolbar { align-items: stretch; flex-direction: column; }
       .calendar-action { width: 100%; }
       .today-job-card { grid-template-columns: 58px minmax(0, 1fr); gap: 12px; padding: 14px 12px; }
-      .today-job-map { grid-column: 1 / -1; width: 100%; }
+      .today-job-actions { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; width: 100%; }
+      .today-job-map, .today-job-use { width: 100%; }
       .today-jobs-actions { align-items: stretch; flex-direction: column; }
       .today-jobs-actions .calendar-action { order: -1; }
       .secure-schedule-frame { min-height: 680px; }
@@ -4044,12 +4087,7 @@
         <div class="home-tool-group-list">
           <a class="home-tool-card" href="#job-companion">
             <span class="home-tool-icon icon-job" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>Job Companion</strong><small>Enter the job once, follow the four closeout stages, and open the forms already filled in.</small></span>
-            <span class="home-tool-arrow" aria-hidden="true">→</span>
-          </a>
-          <a class="home-tool-card" href="#today-jobs">
-            <span class="home-tool-icon icon-calendar" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>Today’s Jobs</strong><small>Open today’s company schedule and start Apple Maps directions.</small></span>
+            <span class="home-tool-copy"><strong>Today’s Jobs</strong><small>Select the inspection, fill the address automatically, and complete four simple job stages.</small></span>
             <span class="home-tool-arrow" aria-hidden="true">→</span>
           </a>
           <a class="home-tool-card" href="#age-finder">
@@ -4120,7 +4158,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">92</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">93</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4143,11 +4181,34 @@
     <section class="field-app-section app-screen-view" id="job-companion" data-app-screen="job-companion" aria-labelledby="job-companion-title">
       <div class="field-section-heading">
         <div>
-          <p class="eyebrow">MPI job companion</p>
-          <h2 id="job-companion-title">One job. One guided closeout.</h2>
+          <p class="eyebrow">MPI today’s jobs</p>
+          <h2 id="job-companion-title">Today’s job. One simple closeout.</h2>
         </div>
-        <p>Enter the property once. MPI Field Tools remembers it on this phone, fills the field forms, and keeps the job closeout steps together.</p>
+        <p>Choose the inspection from the company calendar. Its address becomes the current job and fills the other MPI field forms automatically.</p>
       </div>
+
+      <section class="panel today-jobs-panel" aria-label="Today’s company schedule">
+        <div class="today-jobs-toolbar">
+          <div>
+            <span class="today-jobs-date" id="todayJobsDate">Today</span>
+            <strong class="today-jobs-calendar-name" id="todayCalendarName">Company schedule</strong>
+            <p class="today-jobs-status" id="todayJobsStatus">Connect the company calendar once to load today’s inspections.</p>
+          </div>
+          <button class="calendar-action" id="calendarConnectBtn" type="button">Connect schedule</button>
+        </div>
+        <div class="calendar-selector-wrap" id="calendarSelectorWrap" hidden>
+          <label for="calendarSelector">Company calendar</label>
+          <select class="damage-input" id="calendarSelector"></select>
+        </div>
+        <div class="today-jobs-list" id="todayJobsList">
+          <div class="today-jobs-empty">Today’s jobs will appear here and remain saved on this company phone.</div>
+        </div>
+        <div class="today-jobs-actions">
+          <button class="calendar-link-button" id="calendarChangeBtn" type="button" hidden>Choose another calendar</button>
+          <button class="calendar-link-button" id="calendarRefreshBtn" type="button" hidden>Refresh today’s jobs</button>
+        </div>
+        <p class="calendar-readonly-note">Read-only calendar access · Today’s jobs remain visible on this phone after the Google connection expires · MPI Field Tools cannot change calendar events.</p>
+      </section>
 
       <details class="panel daily-readiness" id="dailyReadiness">
         <summary>
@@ -4195,7 +4256,7 @@
       <div class="workflow-grid">
         <form class="panel job-context-card" id="jobContextForm" novalidate>
           <div class="panel-heading">
-            <div><h2>Current job</h2><p>This information stays on the company phone until the job is cleared.</p></div>
+            <div><h2>Current job</h2><p>The selected calendar job supplies this address automatically. Manual entry remains available as a backup.</p></div>
             <span class="step-count">Device only</span>
           </div>
 
@@ -4233,7 +4294,7 @@
             <span>Enter the inspector and property to begin.</span>
           </div>
           <div class="job-progress-track" aria-hidden="true"><div class="job-progress-fill" id="jobProgressFill"></div></div>
-          <p class="privacy-note" id="jobProgressText">0 of 12 closeout steps complete.</p>
+          <p class="privacy-note" id="jobProgressText">0 of 4 job stages complete.</p>
 
           <div class="job-context-actions">
             <a class="job-secondary-action" id="activeJobMapLink" href="https://maps.apple.com/" target="_blank" rel="noopener">Open in Apple Maps</a>
@@ -4253,7 +4314,7 @@
 
         <section class="panel" aria-labelledby="job-stages-title">
           <div class="panel-heading">
-            <div><h2 id="job-stages-title">Four-stage job check</h2><p>Use the prompts as a final safety net, not a substitute for the MPI SOP.</p></div>
+            <div><h2 id="job-stages-title">Four-stage job check</h2><p>One tap at each point in the inspection.</p></div>
             <span class="step-count">Offline</span>
           </div>
           <div class="job-next-action" id="jobNextAction" aria-live="polite">
@@ -4264,39 +4325,11 @@
             </div>
             <button class="job-secondary-action" id="jobNextActionBtn" type="button" hidden>Open</button>
           </div>
-          <div class="job-phases" id="jobPhases">
-            <details class="job-phase" open>
-              <summary>1. Before travel</summary>
-              <div class="job-phase-list">
-                <label class="job-phase-item"><input type="checkbox" data-job-step="scope"><span>Confirm the address, inspection scope, ancillary services, and special access notes.</span></label>
-                <label class="job-phase-item"><input type="checkbox" data-job-step="schedule"><span>Review timing, weather, roof conditions, and the route to the property.</span></label>
-                <label class="job-phase-item"><input type="checkbox" data-job-step="equipment"><span>Confirm phone, meters, cameras, ladders, PPE, batteries, and required forms are ready.</span></label>
-              </div>
-            </details>
-            <details class="job-phase">
-              <summary>2. On arrival</summary>
-              <div class="job-phase-list">
-                <label class="job-phase-item"><input type="checkbox" data-job-step="property"><span>Verify the property and report template before beginning.</span></label>
-                <label class="job-phase-item"><input type="checkbox" data-job-step="conditions"><span>Record weather, occupancy, utilities, and visible access or safety limitations.</span></label>
-                <label class="job-phase-item"><input type="checkbox" data-job-step="before-photos"><span>Take required Before photographs before changing controls or opening equipment.</span></label>
-              </div>
-            </details>
-            <details class="job-phase">
-              <summary>3. Before leaving</summary>
-              <div class="job-phase-list">
-                <label class="job-phase-item"><input type="checkbox" data-job-step="restore"><span>Restore thermostats, covers, appliances, fixtures, windows, doors, and access panels.</span></label>
-                <label class="job-phase-item"><input type="checkbox" data-job-step="wet-check"><span>Recheck wet areas, confirm water is off, reset tested GFCIs, and verify no inspection-created leakage remains.</span></label>
-                <label class="job-phase-item"><input type="checkbox" data-job-step="after-photos"><span>Take required After photographs and report any item that could not be restored.</span></label>
-              </div>
-            </details>
-            <details class="job-phase">
-              <summary>4. Closeout</summary>
-              <div class="job-phase-list">
-                <label class="job-phase-item"><input type="checkbox" data-job-step="tools"><span>Account for every assigned or used tool, ladder, meter, screw, and item of PPE.</span></label>
-                <label class="job-phase-item"><input type="checkbox" data-job-step="communicate"><span>Communicate urgent hazards or property concerns and document who was informed.</span></label>
-                <label class="job-phase-item"><input type="checkbox" data-job-step="report"><span>Synchronize the report and confirm no applicable section, limitation, photograph, or summary item was left incomplete.</span></label>
-              </div>
-            </details>
+          <div class="job-phases job-phases-simple" id="jobPhases">
+            <label class="job-phase-item job-stage-card"><input type="checkbox" data-job-step="arrived"><span><strong>1 · Arrived</strong><small>Confirm the correct property and note any immediate access or safety issue.</small></span></label>
+            <label class="job-phase-item job-stage-card"><input type="checkbox" data-job-step="photos"><span><strong>2 · Before &amp; After Pictures</strong><small>Complete the required thermostat and furnace photo record.</small></span></label>
+            <label class="job-phase-item job-stage-card"><input type="checkbox" data-job-step="before-leaving"><span><strong>3 · Before Leaving</strong><small>Restore operated items, recheck wet areas, and account for tools.</small></span></label>
+            <label class="job-phase-item job-stage-card"><input type="checkbox" data-job-step="closeout"><span><strong>4 · Closeout</strong><small>Finish and synchronize the report, then document any required communication.</small></span></label>
           </div>
         </section>
       </div>
@@ -4384,26 +4417,6 @@
         </div>
       </details>
       <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
-    </section>
-
-    <section class="field-app-section app-screen-view" id="today-jobs" data-app-screen="today-jobs" aria-labelledby="today-jobs-title">
-      <div class="field-section-heading">
-        <div>
-          <p class="eyebrow">MPI daily schedule</p>
-          <h2 id="today-jobs-title">Today’s Jobs.</h2>
-        </div>
-        <p>Your company schedule stays linked to your MPI Google account. Open each job for turn-by-turn Apple Maps directions.</p>
-      </div>
-
-      <section class="panel today-jobs-panel" aria-label="Secure company schedule">
-        <div class="secure-schedule-intro">
-          <strong>Company account connection</strong>
-          <p>The first time only, tap the button and approve read-only calendar access with your MPI company account. Google remembers that authorization on your account.</p>
-          <a class="calendar-action" href="https://script.google.com/a/macros/michiganpropertyinspections.com/s/AKfycbxPXDbrf0NDveWG8D9YxkUeBh837wNNMb6Y3rcG9ElZ12Awo8aqDYHrRjkKep2Uzw7c1A/exec" target="_blank" rel="noopener">Open secure schedule <span>→</span></a>
-        </div>
-        <iframe class="secure-schedule-frame" title="MPI Today’s Jobs secure company schedule" src="https://script.google.com/a/macros/michiganpropertyinspections.com/s/AKfycbxPXDbrf0NDveWG8D9YxkUeBh837wNNMb6Y3rcG9ElZ12Awo8aqDYHrRjkKep2Uzw7c1A/exec" loading="lazy"></iframe>
-        <p class="calendar-readonly-note">Company accounts only · View-only calendar access · MPI Field Tools cannot add, change, or delete calendar events.</p>
-      </section>
     </section>
 
     <section class="tool-grid app-screen-view" data-app-screen="age-finder" aria-label="Serial number decoder">
@@ -5267,13 +5280,12 @@
             <div class="phone-setup-item"><div><strong>MPI app added to the Home Screen</strong><small>Open from the MPI icon for the full app and iPhone notifications.</small></div><span class="phone-setup-detected" id="phoneSetupInstalled">Check needed</span></div>
             <div class="phone-setup-item"><div><strong>Offline access saved</strong><small>Reconnect once and open the app so the current build can be stored on this phone.</small></div><span class="phone-setup-detected" id="phoneSetupOffline">Check needed</span></div>
             <div class="phone-setup-item"><div><strong>MPI notifications enabled</strong><small>Company push messages can arrive when the app is closed.</small></div><span class="phone-setup-detected" id="phoneSetupNotifications">Check needed</span></div>
-            <div class="phone-setup-item"><div><strong>Inspector name remembered</strong><small>Start Job Companion once so MPI forms can use the correct inspector name.</small></div><span class="phone-setup-detected" id="phoneSetupInspector">Check needed</span></div>
+            <div class="phone-setup-item"><div><strong>Inspector name remembered</strong><small>Open Today’s Jobs once so MPI forms can use the correct inspector name.</small></div><span class="phone-setup-detected" id="phoneSetupInspector">Check needed</span></div>
             <label class="phone-setup-item phone-setup-manual"><input id="phoneSetupCalendar" type="checkbox"><span><strong>Today’s Jobs verified</strong><small>I opened the schedule with my assigned MPI company account and saw the correct jobs.</small></span></label>
             <label class="phone-setup-item phone-setup-manual"><input id="phoneSetupTraining" type="checkbox"><span><strong>Training profile verified</strong><small>I opened my MPI training profile and InterNACHI account under my own credentials.</small></span></label>
           </div>
           <div class="phone-setup-actions">
-            <a href="#job-companion">Save inspector name</a>
-            <a href="#today-jobs">Open Today’s Jobs</a>
+            <a href="#job-companion">Open Today’s Jobs</a>
             <a href="#team-messages">Set up notifications</a>
             <button id="refreshPhoneSetupBtn" type="button">Refresh phone check</button>
           </div>
@@ -6189,6 +6201,7 @@
 
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
       "use strict";
@@ -6199,8 +6212,7 @@
 
       const APP_SCREEN_TITLES = {
         "home": "MPI Field Tools",
-        "job-companion": "Job Companion",
-        "today-jobs": "Today’s Jobs",
+        "job-companion": "Today’s Jobs",
         "age-finder": "Equipment Age Finder",
         "damage-report": "Damaged Item Notice",
         "equipment-record": "Equipment Photo Record",
@@ -6217,8 +6229,10 @@
       const screenTitle = document.getElementById("screenTitle");
 
       function renderAppScreen() {
-        const requestedScreen = window.location.hash.slice(1);
+        const rawRequestedScreen = window.location.hash.slice(1);
+        const requestedScreen = rawRequestedScreen === "today-jobs" ? "job-companion" : rawRequestedScreen;
         const activeScreen = Object.hasOwn(APP_SCREEN_TITLES, requestedScreen) ? requestedScreen : "home";
+        if (rawRequestedScreen === "today-jobs") history.replaceState(null, "", `${location.pathname}${location.search}#job-companion`);
         for (const view of screenViews) view.hidden = view.dataset.appScreen !== activeScreen;
         screenNav.hidden = activeScreen === "home";
         screenTitle.textContent = APP_SCREEN_TITLES[activeScreen];
@@ -7041,6 +7055,7 @@
       const GOOGLE_CALENDAR_SCOPES = "https://www.googleapis.com/auth/calendar.events.readonly https://www.googleapis.com/auth/calendar.calendarlist.readonly";
       const CALENDAR_TOKEN_KEY = "mpiCalendarAccessTokenV1";
       const CALENDAR_TOKEN_EXPIRY_KEY = "mpiCalendarAccessTokenExpiryV1";
+      const CALENDAR_AUTHORIZED_KEY = "mpiCalendarAuthorizedV1";
       const CALENDAR_ID_KEY = "mpiScheduleCalendarIdV1";
       const CALENDAR_NAME_KEY = "mpiScheduleCalendarNameV1";
       const CALENDAR_CACHE_KEY = "mpiTodayJobsCacheV1";
@@ -11231,8 +11246,8 @@
 
       function savedCalendarToken() {
         try {
-          const token = sessionStorage.getItem(CALENDAR_TOKEN_KEY) || "";
-          const expiry = Number(sessionStorage.getItem(CALENDAR_TOKEN_EXPIRY_KEY) || 0);
+          const token = localStorage.getItem(CALENDAR_TOKEN_KEY) || sessionStorage.getItem(CALENDAR_TOKEN_KEY) || "";
+          const expiry = Number(localStorage.getItem(CALENDAR_TOKEN_EXPIRY_KEY) || sessionStorage.getItem(CALENDAR_TOKEN_EXPIRY_KEY) || 0);
           return token && expiry > Date.now() ? token : "";
         } catch (_) {
           return "";
@@ -11241,6 +11256,8 @@
 
       function clearCalendarToken() {
         try {
+          localStorage.removeItem(CALENDAR_TOKEN_KEY);
+          localStorage.removeItem(CALENDAR_TOKEN_EXPIRY_KEY);
           sessionStorage.removeItem(CALENDAR_TOKEN_KEY);
           sessionStorage.removeItem(CALENDAR_TOKEN_EXPIRY_KEY);
         } catch (_) {}
@@ -11249,8 +11266,9 @@
       function saveCalendarToken(response) {
         const lifetime = Math.max(60, Number(response.expires_in || 3600) - 90);
         try {
-          sessionStorage.setItem(CALENDAR_TOKEN_KEY, response.access_token);
-          sessionStorage.setItem(CALENDAR_TOKEN_EXPIRY_KEY, String(Date.now() + lifetime * 1000));
+          localStorage.setItem(CALENDAR_TOKEN_KEY, response.access_token);
+          localStorage.setItem(CALENDAR_TOKEN_EXPIRY_KEY, String(Date.now() + lifetime * 1000));
+          localStorage.setItem(CALENDAR_AUTHORIZED_KEY, "yes");
         } catch (_) {}
       }
 
@@ -11299,7 +11317,9 @@
             }),
             error_callback: finish(error => reject(new Error(error?.message || "Calendar sign-in was closed")))
           });
-          tokenClient.requestAccessToken({ prompt: "select_account" });
+          let previouslyAuthorized = false;
+          try { previouslyAuthorized = localStorage.getItem(CALENDAR_AUTHORIZED_KEY) === "yes"; } catch (_) {}
+          tokenClient.requestAccessToken({ prompt: previouslyAuthorized ? "" : "select_account" });
         });
       }
 
@@ -11374,9 +11394,16 @@
           todayJobsList.appendChild(empty);
           return;
         }
+        const activeJob = loadActiveJob();
         for (const job of jobs) {
           const card = document.createElement("article");
           card.className = "today-job-card";
+          card.dataset.calendarJobId = job.id || "";
+          const isCurrent = Boolean(activeJob?.property) && (
+            (job.id && activeJob.calendarEventId === job.id)
+            || (!activeJob.calendarEventId && job.location && activeJob.property.toLowerCase() === job.location.toLowerCase())
+          );
+          card.classList.toggle("is-current", isCurrent);
           const time = document.createElement("div");
           time.className = "today-job-time";
           const timeParts = eventTimeLabel(job);
@@ -11395,7 +11422,17 @@
           address.textContent = job.location || "Address not listed in the calendar event";
           copy.append(title, address);
           card.append(time, copy);
+          const actions = document.createElement("div");
+          actions.className = "today-job-actions";
           if (job.location) {
+            const useJob = document.createElement("button");
+            useJob.className = "today-job-use";
+            useJob.type = "button";
+            useJob.dataset.useCalendarJob = job.id || "";
+            useJob.setAttribute("aria-pressed", String(isCurrent));
+            useJob.textContent = isCurrent ? "Current job ✓" : "Use this job";
+            useJob.setAttribute("aria-label", `${isCurrent ? "Current job" : "Use job"} at ${job.location}`);
+            actions.appendChild(useJob);
             const directions = document.createElement("a");
             directions.className = "today-job-map";
             directions.href = `https://maps.apple.com/?daddr=${encodeURIComponent(job.location)}&dirflg=d`;
@@ -11403,21 +11440,107 @@
             directions.rel = "noreferrer";
             directions.textContent = "Directions";
             directions.setAttribute("aria-label", `Open Apple Maps directions to ${job.location}`);
-            card.appendChild(directions);
+            actions.appendChild(directions);
           }
+          if (actions.childElementCount) card.appendChild(actions);
           todayJobsList.appendChild(card);
         }
+      }
+
+      function scheduleJobTimestamp(job, boundary = "start") {
+        const value = job?.[boundary]?.dateTime || job?.[boundary]?.date || "";
+        const timestamp = new Date(value).getTime();
+        return Number.isFinite(timestamp) ? timestamp : 0;
+      }
+
+      function chooseCurrentScheduleJob(jobs) {
+        const withAddress = jobs.filter(job => job.location);
+        if (!withAddress.length) return null;
+        const cleared = loadLastClearedJob()?.job;
+        const candidates = cleared?.calendarEventId
+          ? withAddress.filter(job => job.id !== cleared.calendarEventId)
+          : withAddress;
+        const available = candidates.length ? candidates : withAddress;
+        const now = Date.now();
+        return available.find(job => {
+          const start = scheduleJobTimestamp(job, "start");
+          const end = scheduleJobTimestamp(job, "end");
+          return start && end && start <= now && now < end;
+        }) || available.find(job => scheduleJobTimestamp(job, "start") >= now) || available[available.length - 1];
+      }
+
+      function activateScheduleJob(job, { automatic = false } = {}) {
+        if (!job?.location) {
+          showToast("This calendar job does not include an address");
+          return false;
+        }
+        const existing = loadActiveJob();
+        const sameJob = Boolean(existing?.property) && (
+          (job.id && existing.calendarEventId === job.id)
+          || existing.property.toLowerCase() === job.location.toLowerCase()
+        );
+        if (sameJob) {
+          renderActiveJob(existing);
+          return true;
+        }
+        if (automatic && existing?.property) return false;
+        if (!automatic && existing?.property) {
+          if (new Set(existing.steps || []).size > 0) {
+            const switchJobs = window.confirm(`Switch the current job from ${existing.property} to ${job.location}? A recovery copy of the current job will be kept on this phone.`);
+            if (!switchJobs) return false;
+          }
+          try { localStorage.setItem(LAST_CLEARED_JOB_STORAGE_KEY, JSON.stringify({ job: existing, clearedAt: new Date().toISOString() })); } catch (_) {}
+        }
+        const inspector = existing?.inspector || loadRememberedInspector();
+        const active = {
+          inspector,
+          property: job.location,
+          calendarEventId: String(job.id || ""),
+          calendarSummary: String(job.summary || "Inspection appointment"),
+          scheduledStart: String(job.start?.dateTime || job.start?.date || ""),
+          scheduledEnd: String(job.end?.dateTime || job.end?.date || ""),
+          startedAt: new Date().toISOString(),
+          steps: [],
+          quality: [],
+          services: [],
+          rooms: [],
+          readings: []
+        };
+        storeActiveJob(active);
+        renderActiveJob(active);
+        syncActiveJobToForms(active, true);
+        showToast(automatic ? "Current job loaded from today’s schedule" : "Current job and address updated");
+        return true;
+      }
+
+      function autoSelectCurrentScheduleJob(jobs) {
+        if (loadActiveJob()?.property) return;
+        const current = chooseCurrentScheduleJob(jobs);
+        if (current) activateScheduleJob(current, { automatic: true });
+      }
+
+      function useCalendarJob(event) {
+        const button = event.target.closest("[data-use-calendar-job]");
+        if (!button) return;
+        let saved = null;
+        try { saved = JSON.parse(localStorage.getItem(CALENDAR_CACHE_KEY) || "null"); } catch (_) {}
+        const job = saved?.jobs?.find(item => String(item.id || "") === button.dataset.useCalendarJob)
+          || saved?.jobs?.find(item => item.location === button.getAttribute("aria-label")?.replace(/^.* at /, ""));
+        if (!job || !activateScheduleJob(job)) return;
+        renderTodayJobs(saved.jobs, saved.calendarName, { cached: true });
+        activeJobStatus.scrollIntoView({ behavior: "smooth", block: "center" });
       }
 
       function renderSavedTodayJobs() {
         let saved = null;
         try { saved = JSON.parse(localStorage.getItem(CALENDAR_CACHE_KEY) || "null"); } catch (_) {}
         if (!saved || saved.date !== localDateKey() || !Array.isArray(saved.jobs)) return false;
+        autoSelectCurrentScheduleJob(saved.jobs);
         renderTodayJobs(saved.jobs, saved.calendarName, { cached: true });
         todayJobsStatus.textContent = navigator.onLine
           ? "Showing the last schedule saved on this phone. Tap Refresh for the latest jobs."
           : "Offline — showing the last schedule saved on this phone.";
-        calendarRefreshBtn.hidden = !savedCalendarToken();
+        calendarRefreshBtn.hidden = false;
         return true;
       }
 
@@ -11458,6 +11581,7 @@
         const data = await calendarApi(`/calendars/${encodeURIComponent(calendar.id)}/events?${parameters}`, token);
         const jobs = keepInspectionEvents(data.items || []);
         saveScheduleCalendar(calendar);
+        autoSelectCurrentScheduleJob(jobs);
         renderTodayJobs(jobs, calendar.summary || "Company schedule");
         try {
           localStorage.setItem(CALENDAR_CACHE_KEY, JSON.stringify({
@@ -11545,7 +11669,11 @@
         if (savedCalendarToken()) {
           calendarConnectBtn.textContent = "Connected ✓";
           calendarRefreshBtn.hidden = false;
-          if (window.location.hash === "#today-jobs" && navigator.onLine) loadScheduleCalendars().catch(() => renderSavedTodayJobs());
+          if (window.location.hash === "#job-companion" && navigator.onLine) loadScheduleCalendars().catch(() => renderSavedTodayJobs());
+        } else {
+          let previouslyAuthorized = false;
+          try { previouslyAuthorized = localStorage.getItem(CALENDAR_AUTHORIZED_KEY) === "yes"; } catch (_) {}
+          if (previouslyAuthorized) calendarConnectBtn.textContent = "Refresh schedule";
         }
       }
 
@@ -11720,18 +11848,10 @@
       }
 
       const JOB_STEP_GUIDANCE = {
-        scope: { title: "Confirm today’s inspection scope", detail: "Check the property, services ordered, access notes, and special instructions before travel.", route: "#today-jobs", button: "Open today’s jobs" },
-        schedule: { title: "Review timing, weather, and route", detail: "Confirm the appointment timing and safe travel or exterior-inspection conditions.", route: "#today-jobs", button: "Open today’s jobs" },
-        equipment: { title: "Confirm the field kit is ready", detail: "Check charged devices, meters, cameras, ladders, PPE, batteries, and required forms.", route: "#tool-guides", button: "Open tool guides" },
-        property: { title: "Verify the property and report", detail: "Confirm the address and correct report template before beginning the inspection.", local: "step", button: "Open this stage" },
-        conditions: { title: "Record arrival conditions", detail: "Document weather, occupancy, utilities, and visible access or safety limitations.", local: "step", button: "Open this stage" },
-        "before-photos": { title: "Take required Before photographs", detail: "Photograph controls and equipment before changing settings or opening covers.", route: "#equipment-record", button: "Open photo record" },
-        restore: { title: "Restore every operated item", detail: "Return thermostats, covers, fixtures, windows, doors, appliances, and access panels to their original safe condition.", route: "#equipment-record", button: "Open photo record" },
-        "wet-check": { title: "Complete the final wet-area check", detail: "Recheck for leakage, confirm water is off, and reset tested GFCIs before leaving.", route: "#sop-guide", button: "Open field procedures" },
-        "after-photos": { title: "Take required After photographs", detail: "Document restored controls and closed equipment before leaving the property.", route: "#equipment-record", button: "Open photo record" },
-        tools: { title: "Account for the complete field kit", detail: "Confirm all tools, ladders, meters, loose hardware, and PPE are back in the company vehicle.", route: "#tool-check", button: "Open tool closeout" },
-        communicate: { title: "Complete required communication", detail: "Report urgent hazards or property concerns and record who was informed.", route: "#team-messages", button: "Open communication" },
-        report: { title: "Complete and synchronize the report", detail: "Confirm every applicable section, limitation, photograph, and summary item is complete.", local: "step", button: "Open this stage" }
+        arrived: { title: "Confirm arrival", detail: "Verify the property and note any immediate access or safety issue.", local: "step", button: "Open arrived stage" },
+        photos: { title: "Complete Before & After pictures", detail: "Use the photo record for the thermostat and furnace before proceeding to closeout.", route: "#equipment-record", button: "Open photo record" },
+        "before-leaving": { title: "Complete the before-leaving check", detail: "Restore operated items, recheck wet areas, and account for all tools.", route: "#tool-check", button: "Open tool check" },
+        closeout: { title: "Complete job closeout", detail: "Finish and synchronize the report and document any required communication.", local: "step", button: "Open closeout stage" }
       };
 
       function localDateKey(date = new Date()) {
@@ -11796,8 +11916,7 @@
         const job = loadActiveJob();
         if (job?.property) {
           const stepsComplete = new Set(job.steps || []).size === jobSteps.length;
-          const releaseComplete = new Set(job.quality || []).size === reportQualityChecks.length;
-          if ((!stepsComplete || !releaseComplete) && !window.confirm("The current job still has incomplete closeout or report-release checks on this phone. Record the end-of-day reset anyway?")) return;
+          if (!stepsComplete && !window.confirm("The current job still has an incomplete four-stage closeout on this phone. Record the end-of-day reset anyway?")) return;
         }
         const record = { date: localDateKey(), completedAt: new Date().toISOString() };
         try { localStorage.setItem(SHIFT_RESET_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
@@ -11832,11 +11951,23 @@
         try {
           const saved = JSON.parse(localStorage.getItem(ACTIVE_JOB_STORAGE_KEY) || "null");
           if (!saved || typeof saved !== "object") return null;
+          const originalSteps = new Set(Array.isArray(saved.steps) ? saved.steps.map(String) : []);
+          const usesSimpleStages = ["arrived", "photos", "before-leaving", "closeout"].some(step => originalSteps.has(step));
+          const simpleSteps = usesSimpleStages ? [...originalSteps].filter(step => ["arrived", "photos", "before-leaving", "closeout"].includes(step)) : [
+            originalSteps.has("property") || originalSteps.has("conditions") ? "arrived" : "",
+            originalSteps.has("before-photos") && originalSteps.has("after-photos") ? "photos" : "",
+            originalSteps.has("restore") && originalSteps.has("wet-check") ? "before-leaving" : "",
+            originalSteps.has("tools") && originalSteps.has("report") ? "closeout" : ""
+          ].filter(Boolean);
           return {
             inspector: String(saved.inspector || "").trim(),
             property: String(saved.property || "").trim(),
+            calendarEventId: String(saved.calendarEventId || ""),
+            calendarSummary: String(saved.calendarSummary || ""),
+            scheduledStart: String(saved.scheduledStart || ""),
+            scheduledEnd: String(saved.scheduledEnd || ""),
             startedAt: String(saved.startedAt || ""),
-            steps: Array.isArray(saved.steps) ? saved.steps.map(String) : [],
+            steps: simpleSteps,
             quality: Array.isArray(saved.quality) ? saved.quality.map(String) : [],
             services: Array.isArray(saved.services) ? saved.services.map(String).filter(service => JOB_SERVICE_LABELS[service]) : [],
             rooms: Array.isArray(saved.rooms) ? saved.rooms.map((room, index) => ({
@@ -12111,14 +12242,11 @@
           return;
         }
         const completedSteps = new Set(job.steps || []);
-        const completedQuality = new Set(job.quality || []);
         const completedRooms = (job.rooms || []).filter(room => room.complete).length;
         const nextStep = jobSteps.find(step => !completedSteps.has(step.dataset.jobStep));
         const nextAction = nextStep
           ? nextStep.closest("label")?.querySelector("span")?.textContent.trim() || "Continue the job closeout steps."
-          : completedQuality.size < reportQualityChecks.length
-            ? "Complete the 60-second report release check."
-            : "Job closeout checks complete.";
+          : "Job closeout complete.";
         const started = job.startedAt
           ? new Date(job.startedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })
           : "Not recorded";
@@ -12128,11 +12256,10 @@
           `Property: ${job.property}`,
           `Started: ${started}`,
           `Additional service packs: ${job.services.length ? job.services.map(service => JOB_SERVICE_LABELS[service]).filter(Boolean).join(", ") : "None recorded"}`,
-          `Closeout steps: ${completedSteps.size} of ${jobSteps.length} complete`,
+          `Job stages: ${completedSteps.size} of ${jobSteps.length} complete`,
           `Next action: ${nextAction}`,
           `Room photo coverage: ${job.rooms.length ? `${completedRooms} of ${job.rooms.length} rooms confirmed` : "Not started"}`,
-          `Field readings: ${job.readings.length} saved`,
-          `Report release check: ${completedQuality.size} of ${reportQualityChecks.length} complete`
+          `Field readings: ${job.readings.length} saved`
         ];
         copyText(lines.join("\n"), "Current job status copied");
       }
@@ -12170,20 +12297,10 @@
           guidance = JOB_STEP_GUIDANCE[nextStep.dataset.jobStep];
           jobNextActionBtn.dataset.step = nextStep.dataset.jobStep;
         } else {
-          const completedQuality = new Set(job.quality || []);
-          const qualityComplete = reportQualityChecks.length > 0 && completedQuality.size === reportQualityChecks.length;
-          if (qualityComplete) {
-            jobNextAction.classList.add("is-complete");
-            jobNextActionTitle.textContent = "Job closeout checks complete";
-            jobNextActionDetail.textContent = "All 12 field steps and the report release check are complete on this phone.";
-            return;
-          }
-          guidance = {
-            title: "Complete the report release check",
-            detail: "Use the 60-second check below before the report is released.",
-            local: "quality",
-            button: "Open release check"
-          };
+          jobNextAction.classList.add("is-complete");
+          jobNextActionTitle.textContent = "Job closeout complete";
+          jobNextActionDetail.textContent = "All four job stages are complete on this phone.";
+          return;
         }
 
         jobNextActionTitle.textContent = guidance.title;
@@ -12201,19 +12318,9 @@
           return;
         }
 
-        if (jobNextActionBtn.dataset.localTarget === "quality") {
-          reportQualityCard.open = true;
-          reportQualityCard.scrollIntoView({ behavior: "smooth", block: "start" });
-          return;
-        }
-
         const stepKey = jobNextActionBtn.dataset.step;
         const step = jobSteps.find(item => item.dataset.jobStep === stepKey);
-        const phase = step?.closest(".job-phase");
-        if (phase) {
-          phase.open = true;
-          phase.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
+        if (step) step.closest("label")?.scrollIntoView({ behavior: "smooth", block: "center" });
       }
 
       function updateJobProgress(job = loadActiveJob()) {
@@ -12221,14 +12328,13 @@
         jobSteps.forEach(step => { step.checked = completed.has(step.dataset.jobStep); });
         const count = jobSteps.filter(step => step.checked).length;
         jobProgressFill.style.width = `${jobSteps.length ? (count / jobSteps.length) * 100 : 0}%`;
-        jobProgressText.textContent = `${count} of ${jobSteps.length} closeout steps complete${count === jobSteps.length ? " — ready to finish the job." : "."}`;
+        jobProgressText.textContent = `${count} of ${jobSteps.length} job stages complete${count === jobSteps.length ? " — closeout complete." : "."}`;
         jobPhases.forEach(phase => {
           const phaseSteps = [...phase.querySelectorAll("[data-job-step]")];
           phase.classList.toggle("is-complete", phaseSteps.length > 0 && phaseSteps.every(step => step.checked));
         });
         if (job?.property) {
-          const releaseComplete = reportQualityChecks.length > 0 && new Set(job.quality || []).size === reportQualityChecks.length;
-          homeActiveJobProgress.textContent = `${count} of ${jobSteps.length} closeout steps${releaseComplete ? " · Release check complete" : ""}`;
+          homeActiveJobProgress.textContent = `${count} of ${jobSteps.length} job stages`;
         }
         updateReportQualityProgress(job);
       }
@@ -12242,7 +12348,6 @@
         reportQualityStatus.textContent = complete ? "Release check complete" : `${count} of ${reportQualityChecks.length}`;
         reportQualityStatus.classList.toggle("is-ready", complete);
         reportQualityCard.classList.toggle("is-complete", complete);
-        if (job?.property) homeActiveJobProgress.textContent = `${new Set(job.steps || []).size} of ${jobSteps.length} closeout steps${complete ? " · Release check complete" : ""}`;
         renderNextJobAction(job);
       }
 
@@ -12269,16 +12374,17 @@
         activeJobInspector.value = job.inspector;
         activeJobProperty.value = job.property;
         title.textContent = job.property;
-        detail.textContent = job.startedAt
-          ? `Started ${new Date(job.startedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })} · Information stays on this phone.`
+        detail.textContent = job.scheduledStart
+          ? `${job.calendarSummary || "Inspection appointment"} · ${new Date(job.scheduledStart).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })} · Saved on this phone.`
+          : job.startedAt
+          ? `Started ${new Date(job.startedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })} · Saved on this phone.`
           : "Current job information stays on this phone.";
         activeJobMapLink.href = `https://maps.apple.com/?q=${encodeURIComponent(job.property)}`;
         activeJobMapLink.removeAttribute("aria-disabled");
         const completedSteps = new Set(job.steps || []).size;
-        const releaseComplete = reportQualityChecks.length > 0 && new Set(job.quality || []).size === reportQualityChecks.length;
         homeActiveJob.hidden = false;
         homeActiveJobProperty.textContent = job.property;
-        homeActiveJobProgress.textContent = `${completedSteps} of ${jobSteps.length} closeout steps${releaseComplete ? " · Release check complete" : ""}`;
+        homeActiveJobProgress.textContent = `${completedSteps} of ${jobSteps.length} job stages`;
         homeActiveJobMap.href = `https://maps.apple.com/?q=${encodeURIComponent(job.property)}`;
         updateJobProgress(job);
         renderJobServices(job);
@@ -12297,6 +12403,10 @@
         const job = {
           inspector,
           property,
+          calendarEventId: sameJob ? existing.calendarEventId || "" : "",
+          calendarSummary: sameJob ? existing.calendarSummary || "" : "",
+          scheduledStart: sameJob ? existing.scheduledStart || "" : "",
+          scheduledEnd: sameJob ? existing.scheduledEnd || "" : "",
           startedAt: sameJob && existing.startedAt ? existing.startedAt : new Date().toISOString(),
           steps: sameJob ? existing.steps : [],
           quality: sameJob ? existing.quality : [],
@@ -12382,10 +12492,9 @@
         const job = loadActiveJob();
         if (job?.property) {
           const closeoutComplete = new Set(job.steps || []).size === jobSteps.length;
-          const releaseComplete = reportQualityChecks.length > 0 && new Set(job.quality || []).size === reportQualityChecks.length;
-          const message = closeoutComplete && releaseComplete
+          const message = closeoutComplete
             ? `Clear the finished job at ${job.property} from this phone? One recoverable copy will be kept on this phone.`
-            : `The job at ${job.property} still has incomplete closeout or report-release checks. Clear it anyway? One recoverable copy will be kept on this phone.`;
+            : `The job at ${job.property} still has an incomplete four-stage closeout. Clear it anyway? One recoverable copy will be kept on this phone.`;
           if (!window.confirm(message)) return;
           try {
             localStorage.setItem(LAST_CLEARED_JOB_STORAGE_KEY, JSON.stringify({ job, clearedAt: new Date().toISOString() }));
@@ -13313,8 +13422,7 @@
 
       function getHomeSearchEntries() {
         const screens = [
-          { title: "Job Companion", detail: "Current inspection, closeout, room photos, and report release", route: "#job-companion", aliases: "job property closeout current inspection report review" },
-          { title: "Today’s Jobs", detail: "Company schedule and Apple Maps directions", route: "#today-jobs", aliases: "calendar address route navigation maps" },
+          { title: "Today’s Jobs", detail: "Company schedule, automatic job address, Apple Maps, and four-stage closeout", route: "#job-companion", aliases: "calendar job companion property closeout current inspection address route navigation maps" },
           { title: "Equipment Age Finder", detail: "HVAC, furnace, boiler, and water-heater serial numbers", route: "#age-finder", aliases: "serial date manufacturer manufacture age trane ducane" },
           { title: "Damaged Item Notice", detail: "Property damage, photographs, action, and people informed", route: "#damage-report", aliases: "broken damage incident attic hatch" },
           { title: "Equipment Photo Record", detail: "Thermostat and furnace Before/After documentation", route: "#equipment-record", aliases: "before after restored cover photo" },
@@ -14325,6 +14433,27 @@
       });
 
       jobContextForm.addEventListener("submit", saveActiveJob);
+      todayJobsList.addEventListener("click", useCalendarJob);
+      calendarConnectBtn.addEventListener("click", connectCompanyCalendar);
+      calendarRefreshBtn.addEventListener("click", refreshCompanyCalendar);
+      calendarChangeBtn.addEventListener("click", () => {
+        calendarSelectorWrap.hidden = !calendarSelectorWrap.hidden;
+        if (!calendarSelectorWrap.hidden) calendarSelector.focus();
+      });
+      calendarSelector.addEventListener("change", async () => {
+        const selected = availableScheduleCalendars.find(calendar => calendar.id === calendarSelector.value);
+        if (!selected) return;
+        if (!savedCalendarToken()) {
+          await connectCompanyCalendar();
+          return;
+        }
+        try {
+          await fetchTodaySchedule(selected);
+          calendarSelectorWrap.hidden = true;
+        } catch (_) {
+          await refreshCompanyCalendar();
+        }
+      });
       jobServiceOptions.forEach(option => option.addEventListener("change", updateJobServices));
       jobServiceLinks.addEventListener("click", openJobServicePack);
       copyActiveJobStatusBtn.addEventListener("click", copyActiveJobStatus);
@@ -14543,6 +14672,7 @@
       populateReportItems();
       initializeFieldForms();
       renderActiveJob();
+      initializeTodayJobs();
       updateToolCheckProgress();
       updateToolCheckResult();
       initializeTraining();

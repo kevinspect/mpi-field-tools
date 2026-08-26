@@ -2088,3 +2088,42 @@ Status: accepted for field trial on August 26, 2026 at public app Build 92.
 - No paid service, purchase, background location tracking, new data recipient, hidden email, or automatic inspector submission was added during the cycle.
 - Field-trial recommendation: use Build 92 with a small inspector group before adding another workflow. Record unclear labels, repeated support questions, and any step inspectors skip; improve only the evidence-backed friction points so the app remains calm.
 - Intentionally deferred: the controlled online MPI Comment Builder, centralized manager dashboards/digests, role-based device enrollment, and deeper Spectora integration. These require a deliberate service and privacy decision rather than another static-page feature.
+
+### Build 56 — Merge Today’s Jobs and simplify job closeout
+
+Status: prepared August 26, 2026 as app Build 93.
+
+#### Additions
+
+1. Merged Today’s Jobs and Job Companion into one screen and one home-screen button.
+   - The company calendar appears above the current-job record.
+   - Selecting a calendar event fills the current property address and the connected field forms automatically.
+   - When no job is active, the inspection occurring now—or the next scheduled inspection—is selected automatically when the schedule loads.
+   - The former Today’s Jobs link redirects to the merged screen so saved links do not break.
+
+2. Replaced the 12-item job checklist with four stages.
+   - Arrived.
+   - Before & After Pictures.
+   - Before Leaving.
+   - Closeout.
+   - The separate report-quality reminders no longer block completion of the four-stage job closeout.
+
+3. Improved schedule persistence on company phones.
+   - Replaced the blocked third-party schedule frame with the existing read-only Google Calendar connection.
+   - Keeps the short-lived read-only access token through an app restart when still valid.
+   - Saves today’s loaded jobs on the phone so they remain visible when the Google token expires or the phone temporarily loses service.
+   - Saves the active job and four-stage progress in phone storage and restores both after reopening the app.
+
+#### Validation record
+
+- Confirmed one Today’s Jobs button appears on the home screen and no separate Job Companion button remains.
+- Confirmed the former `#today-jobs` route opens the merged screen.
+- Confirmed exactly four job-stage controls appear at a 390-pixel phone width with no horizontal overflow.
+- Started a test job, reloaded the app, and confirmed its address remained populated.
+- Completed all four stages, reloaded the app, and confirmed all four remained checked.
+- Confirmed no app-owned browser error occurred during the merged-flow tests.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `e48ad817b8397ecfa9658724935a93c5d5e881ac` to restore public Build 92.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire improvement cycle.
