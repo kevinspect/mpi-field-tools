@@ -100,6 +100,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Training Center now lets an inspector deliberately email Kevin one exact snapshot of the 16 phone-local MPI refreshers completed and remaining; nothing is sent in the background and credentials/authorization remain separate. **Implemented in Build 79.**
 - Equipment Age Finder no-match results now copy the exact equipment family, serial, reason, and supported-format guidance for office or manufacturer verification without guessing an age. **Implemented in Build 80.**
 - An unresolved Equipment Age Finder result now opens a prefilled, reload-protected management question for verification before report release; the inspector remains in control of submission. **Implemented in Build 81.**
+- Older inspector-facing submission wording now consistently uses professional MPI-management language while preserving Kevin as the only recipient and keeping every send deliberate. **Implemented in Build 82.**
 
 ## Low-cost improvements
 

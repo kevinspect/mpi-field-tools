@@ -1697,3 +1697,42 @@ Status: published August 26, 2026 as GitHub commit `5ba6b282d5f1a9823c98d0131b10
 
 - Restore GitHub `main` to `34bcd68bf3111be84786bfddfe159e6636c48da3` to keep Builds 1–43 but remove one-tap unresolved-age escalation.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Hardening checkpoint — complete screen, link, and published-offline audit
+
+Status: passed August 26, 2026 against app Build 81.
+
+#### Validation record
+
+- Audited all 13 app screens at a 390-pixel phone width.
+- Confirmed all 16 forms are structurally valid and all 10 company-submission forms route only to `kev@michiganpropertyinspections.com`.
+- Confirmed there are no duplicate IDs, broken internal destinations, unnamed visible controls, unsafe new-window links, horizontal overflow, or visible legacy **AI Comment Builder** wording.
+- Tested all 64 shareable guidance destinations: 22 Company Tool Guides, 26 Field Procedures, and 16 MPI refresher lessons. Every direct URL reopened the exact requested item.
+- Confirmed the published site reported Build 81 and was controlled by its service worker.
+- After switching the browser fully offline, confirmed exact direct links still reopened the Roof inspection drone guide, Water test parameters / COC procedure, and Water sampling and chain of custody refresher.
+- Browser script errors: none detected. Google’s own sign-in page may refuse to appear inside its embedded frame; the app retains the secure open-in-browser link for that case.
+
+### Build 45 — Professional company submission language
+
+Status: published August 26, 2026 as GitHub commit `75d1e67c2fe118a4d4e3ae7a833e65bea071a3a8` (app Build 82).
+
+#### Additions
+
+1. Standardized older inspector-facing submission wording.
+   - Replaced informal references such as **email … to Kevin** with professional **submit to MPI management** language.
+   - Updated the end-of-job tool check, tool commissioning, MPI refresher progress, new-inspector pathway, and company-message acknowledgement wording.
+   - Kept the recipient, deliberate-submit boundary, online requirement, and no-background-send behavior unchanged.
+
+2. Updated the visible build, version file, and offline cache identifier to Build 82.
+
+#### Validation record
+
+- Confirmed no visible direct-to-Kevin or email-to-Kevin phrasing remains.
+- Re-ran the complete 13-screen structural audit at 390 pixels.
+- Confirmed all 10 company-submission forms still route only to Kevin’s company address.
+- Confirmed no broken routes, duplicate IDs, unsafe links, unnamed visible controls, legacy AI naming, or horizontal overflow.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `79f93855228d80c8fa6e8f84623c908bbc8fe22a` to keep Builds 1–44 but remove the submission-language cleanup.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
