@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="65">
+  <meta name="app-build" content="66">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4062,7 +4062,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">65</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">66</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4330,7 +4330,7 @@
                 <option value="ducane">Ducane / Armstrong Air / AirEase / Concord / Allied Air — common formats</option>
                 <option value="nortek">Nordyne / Nortek / Broan / Frigidaire / Gibson / Intertherm / Maytag / Miller / NuTone / Philco / Tappan / Westinghouse — newer</option>
                 <option value="rheem_hvac">Rheem / Ruud / WeatherKing</option>
-                <option value="trane">Trane / American Standard — 1980+</option>
+                <option value="trane">Trane / American Standard — factory table, 1980+</option>
                 <option value="york">York / Coleman / Luxaire / Champion / Evcon / Guardian / Fraser-Johnston — late 2004+</option>
               </optgroup>
               <optgroup label="Water heaters">
@@ -5851,7 +5851,7 @@
             <li><a href="https://aosmithinternational.com/manufacturing-date-device/" target="_blank" rel="noreferrer">A. O. Smith year/week guidance</a></li>
             <li><a href="https://forthepro.bradfordwhite.com/determining-the-age-of-a-water-heater/" target="_blank" rel="noreferrer">Bradford White factory date-code chart</a></li>
             <li><a href="https://www.ducanehvac.com/owner-support/warranty-registration/" target="_blank" rel="noreferrer">Ducane model/serial verification</a></li>
-            <li><a href="https://www.trane.com/content/dam/Trane/residential/downloads/SNInstructions-Trane.pdf" target="_blank" rel="noreferrer">Trane factory serial-label guide</a></li>
+            <li><a href="https://elibrary.tranetechnologies.com/public/residential-hvac/Literature/Product%20Catalog/22-8301-39_05012026.pdf" target="_blank" rel="noreferrer">Trane 2026 factory equipment-date table</a></li>
             <li><a href="https://www.shareddocs.com/hvac/docs/1011/Public/03/ICP_51601260200_28400.pdf" target="_blank" rel="noreferrer">ICP factory year/week nomenclature example</a></li>
             <li><a href="https://media.rinnai.us/salsify_asset/s-3406a2d0-e0f0-4876-9f26-95943260d2a1/200000014%20Direct%20Vent%20Service%20Manual.pdf" target="_blank" rel="noreferrer">Rinnai serial-number format table</a></li>
             <li><a href="https://www.bosch-homecomfort.com/us/media/country_pool/documents/serial_number_reference_guide_06.2023.pdf" target="_blank" rel="noreferrer">Bosch/Buderus serial date-code table</a></li>
@@ -7645,9 +7645,11 @@
         },
         trane: {
           name: "Trane / American Standard",
-          hint: "1980–2009: first character is the factory year code; characters 2–3 are the week. Newer 10-character serials begin YYWW.",
-          format: "Examples: L264A1B2C = 1996, week 26; 11241KADBB = 2011, week 24.",
+          hint: "1980–2009: first character is the factory year code; characters 2–3 are the week. Newer 10-character serials begin YYWW. Some accessories or coils use only the 3 date characters.",
+          format: "Examples: L264A1B2C = 1996, week 26; L26 = 1996 accessory/coil date block; 11241KADBB = 2011, week 24.",
           example: "L264A1B2C",
+          verifyUrl: "https://www.trane.com/residential/en/resources/warranty-and-registration/lookup/",
+          verifyLabel: "Verify with Trane",
           decoder: decodeTrane
         },
         york: {
@@ -7974,7 +7976,19 @@
             });
           }
         }
-        return fail("That does not match the documented 9-character Trane 1980–2009 code or the newer 10-character YYWW format.");
+        match = serial.match(/^([A-Z2-9])(\d{2})$/);
+        if (match) {
+          const year = TRANE_YEAR_CODES[match[1]];
+          const week = Number(match[2]);
+          if (year && week >= 1 && week <= 53) {
+            return weekResult({
+              year, week, usedIndices: [0,1,2], confidence: "caution",
+              explanation: `Character 1 (${match[1]}) is Trane's factory year code for ${year}; characters 2–3 give week ${week}.`,
+              note: "Use this short result only for a Trane accessory or coil whose label contains the factory-documented three-character date code. A main unit should have the complete serial, and a printed manufacture date takes priority."
+            });
+          }
+        }
+        return fail("That does not match the documented 9-character Trane 1980–2009 code, the newer 10-character YYWW format, or a three-character accessory/coil date code.");
       }
 
       function decodeYork(serial) {
@@ -10622,6 +10636,9 @@
 
       function renderError(message, config) {
         copyPayload = "";
+        const verificationLink = config.verifyUrl
+          ? `<p><a href="${escapeHtml(config.verifyUrl)}" target="_blank" rel="noreferrer">${escapeHtml(config.verifyLabel || "Open official manufacturer lookup")}</a></p>`
+          : "";
         resultContent.innerHTML = `
           <div class="result-topline"><span class="result-status error">No reliable match</span></div>
           <div class="error-result">
@@ -10629,6 +10646,7 @@
             <h2>That format looks different.</h2>
             <p>${escapeHtml(message)} Recheck I/1, O/0, the selected manufacturer, and whether you copied the model number by mistake.</p>
             <div class="format-box">${escapeHtml(config.format)}</div>
+            ${verificationLink}
           </div>
           <p class="result-note">Manufacturers may use multiple formats across plants, product types, and eras. An unsupported serial should be verified with the printed date or manufacturer lookup.</p>
         `;
