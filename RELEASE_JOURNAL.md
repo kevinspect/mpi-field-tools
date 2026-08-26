@@ -1529,3 +1529,81 @@ Status: published August 26, 2026 as GitHub commit `78dfecef93394233e980be952be8
 
 - Restore GitHub `main` to `8d495cf590e4769e9bab055176d730790f101121` to keep Builds 1–39 but remove direct MPI lesson links.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Regression checkpoint — labeled photo email records
+
+Status: passed August 26, 2026 against app Build 77. No email was sent during the test.
+
+#### Validation record
+
+- Re-ran the Damaged Item Notice with two real iPhone photographs through the complete submit-preparation path.
+- Confirmed one generated `MPI-Before-After-Photo-Record.jpg` attachment at 1200 × 1900 pixels with permanent **PHOTO 1 — BEFORE** and **PHOTO 2 — AFTER** labels.
+- Re-ran the Thermostat & Furnace Photo Record with four real iPhone photographs through the complete submit-preparation path.
+- Confirmed one generated `MPI-Thermostat-Furnace-Photo-Record.jpg` attachment at 1200 × 3510 pixels with permanent labels for thermostat Before, thermostat After / Restored, furnace Before Opening, and furnace After Closing / System Restored.
+- Confirmed both forms reached the intended final native-submit boundary while the test harness blocked the send.
+- Confirmed zero outbound FormSubmit requests and therefore zero test emails.
+- No application change was required; the existing Build 77 implementation passed.
+
+### Regression checkpoint — Equipment Age Finder coverage
+
+Status: passed August 26, 2026 against app Build 77.
+
+#### Validation record
+
+- Exercised the displayed example for every one of the 21 selectable equipment families; all 21 produced a decoded result with no browser errors.
+- Confirmed the Trane / American Standard factory code `L264A1B2C` resolves to production week 26 of 1996.
+- Exercised 16 additional historical or alternate layouts and confirmed every expected year, including:
+  - Trane short accessory/coil and modern serials.
+  - A. O. Smith and Rheem-family 1960 water-heater formats.
+  - Pre-1996 Ducane oil-furnace layout.
+  - Rinnai older numeric code.
+  - Lochinvar tank, system, and specialty legacy layouts.
+  - Navien NR/NP product-date block.
+  - HTP/Ariston legacy, transition, and current layouts.
+  - YORK commercial SAP layout.
+- No application change was required; the current Build 77 date decoders passed all 37 field examples.
+
+### Live regression checkpoint — direct guidance links and offline use
+
+Status: passed August 26, 2026 on the published GitHub Pages Build 77.
+
+#### Validation record
+
+- Confirmed the live version file and visible app both report Build 77.
+- Confirmed the installed-app service worker controls the published app.
+- Confirmed the exact Roof inspection drone tool URL opens that one company tool card.
+- Confirmed the exact Water Test Parameters / COC URL opens that one field procedure.
+- Confirmed the exact Ambient CO screening URL opens that one MPI refresher lesson.
+- Switched the browser fully offline and reloaded the linked lesson; the requested Training Center screen and lesson remained available with no script errors.
+- No application change was required; the published Build 77 passed.
+
+### Build 41 — Recover the last cleared job
+
+Status: published August 26, 2026 as GitHub commit `036c4cf326f86dae28a6400252c85dec37220585` (app Build 78).
+
+#### Additions
+
+1. Added a one-job recovery safety net to Job Companion.
+   - Clearing a finished job now retains one recoverable copy on that company phone.
+   - **Restore last cleared job** appears only when there is no active job and a recovery copy exists, so normal job use is not made busier.
+   - Restoring brings back the inspector, property, start time, specialist services, closeout steps, report-release checks, room-photo coverage, and factual field readings.
+   - After a successful restore, the recovery copy is removed and the action hides again.
+
+2. Strengthened the clear-job warning.
+   - A completed job receives a concise finished-job confirmation.
+   - A job with incomplete closeout or report-release checks receives an explicit warning before anything is cleared.
+   - Updated the visible build, version file, and offline cache identifier to Build 78.
+
+#### Validation record
+
+- Started a job at `789 Recovery Street` and saved one closeout step, a Kitchen room record, and a 62 psi water-pressure reading.
+- Cleared the incomplete job and confirmed the stronger warning appeared.
+- Confirmed the active record was removed, one recovery copy was retained, and the restore action became visible.
+- Restored the job and confirmed the property, inspector, start time, step, room, and reading all returned exactly.
+- Confirmed the recovery copy then cleared, the restore action hid, and the 390-pixel phone layout had no horizontal overflow.
+- Browser script errors: none detected.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `3978bc4f6e5ba1a94f4d7905728457713da42f2b` to keep Builds 1–40 but remove cleared-job recovery.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

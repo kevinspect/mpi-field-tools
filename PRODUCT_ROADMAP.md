@@ -13,7 +13,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Direct links between selected tool cards, controlled SOP prompts, support requests, and safety reporting.
 - Safety & Near-Miss initial notice.
 - 26 condensed field prompts traceable to the controlled MPI SOP.
-- 10 short offline knowledge checks that reinforce the MPI field sequence and safety boundaries.
+- 16 short offline knowledge checks that reinforce the MPI field sequence and safety boundaries.
 - A one-tap, phone-local start-of-day readiness check with exception-only support routing.
 - A 60-second, active-job report release check for coverage, evidence, limitations, wording, communication, and synchronization.
 - A five-route field escalation guide connected to existing safety, damage, management-question, tool-support, and procedure workflows.
@@ -96,6 +96,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Every Company Tool Guide now has a stable copyable URL that opens the exact card, enabling no-cost links in training assignments, messages, equipment records, or future QR labels. **Implemented in Build 75.**
 - Every Field Procedure now has a stable copyable URL that opens the exact prompt, enabling precise links from inspector training assignments, coaching notes, messages, and field guidance. **Implemented in Build 76.**
 - Every MPI refresher lesson now has a stable copyable URL that opens the exact module, completing a no-cost manager-guidance system across tool cards, field procedures, and training lessons. **Implemented in Build 77.**
+- Job Companion now retains one recoverable copy of the last cleared job on the company phone and warns explicitly before clearing incomplete work, preventing accidental loss without adding a permanent archive or another account. **Implemented in Build 78.**
 
 ## Low-cost improvements
 
