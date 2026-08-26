@@ -1736,3 +1736,27 @@ Status: published August 26, 2026 as GitHub commit `75d1e67c2fe118a4d4e3ae7a833e
 
 - Restore GitHub `main` to `79f93855228d80c8fa6e8f84623c908bbc8fe22a` to keep Builds 1–44 but remove the submission-language cleanup.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 46 — Calm mobile section navigation
+
+Status: published August 26, 2026 as GitHub commit `699040bf188030ef53cd068573435f3d1d349ac9` (app Build 83).
+
+#### Additions
+
+1. Simplified the secondary header on narrow phones.
+   - Replaced the long mobile **Back to Field Tools** label with a familiar 44-pixel back arrow.
+   - Centered the current section name and protected long names with clean truncation instead of allowing labels to collide.
+   - Kept the full back label on larger screens.
+
+2. Updated the visible build, version file, and offline cache identifier to Build 83.
+
+#### Validation record
+
+- Captured and visually reviewed the Home, Job Companion, Company Tool Guides, Field Procedures, and Training Center screens at 390 × 844 pixels.
+- Confirmed Company Tool Guides and Training Center no longer crowd or join the back label and section title.
+- Re-ran the complete 13-screen phone audit and confirmed no horizontal overflow, route failures, duplicate IDs, unnamed controls, unsafe links, non-Kevin submission recipients, or legacy AI naming.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `e48442aad9ef7334a5d7c325ad1bd02cfc2a4ad5` to keep Builds 1–45 but restore the earlier mobile secondary header.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
