@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="81">
+  <meta name="app-build" content="82">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4103,7 +4103,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">81</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">82</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4877,9 +4877,9 @@
             <span>I reviewed every tool assigned to or used by me at this job and recorded any exception before leaving the property.</span>
           </label>
 
-          <button class="decode-btn" id="toolCheckSubmitBtn" type="submit">Email completed tool check</button>
+          <button class="decode-btn" id="toolCheckSubmitBtn" type="submit">Submit completed tool check</button>
           <p class="damage-submit-status" id="toolCheckSubmitStatus" role="status" aria-live="polite"></p>
-          <p class="privacy-note">Internet access is required to email the record. The app does not store submitted checklists.</p>
+          <p class="privacy-note">Internet access is required to submit the record. The app does not store submitted checklists.</p>
         </form>
 
         <aside class="panel damage-info-panel" aria-labelledby="tool-check-info-title">
@@ -4890,10 +4890,10 @@
             <li>Complete the checklist while still at the property.</li>
             <li>Open each section and verify the vehicle, tool pouch, ladder storage, and charging area.</li>
             <li>If anything is missing, damaged, or unsecured, select Issue found and explain it.</li>
-            <li>The completed record is emailed directly to MPI management.</li>
+            <li>The completed record is submitted directly to MPI management.</li>
           </ul>
           <a class="job-secondary-action" href="#tool-guides">Open company tool instructions</a>
-          <div class="form-success-box" id="toolCheckSuccessBox" hidden><strong>Tool check submitted.</strong>The completed end-of-job checklist was emailed successfully.</div>
+          <div class="form-success-box" id="toolCheckSuccessBox" hidden><strong>Tool check submitted.</strong>The completed end-of-job checklist was delivered to MPI management.</div>
         </aside>
       </div>
       <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
@@ -4966,7 +4966,7 @@
 
       <details class="panel escalation-guide tool-commissioning-panel" id="toolCommissioningPanel">
         <summary>
-          <span><strong>Put a new or replacement tool into service</strong><small>Follow the first-use guide, record the exact equipment, and email one commissioning record to Kevin.</small></span>
+          <span><strong>Put a new or replacement tool into service</strong><small>Follow the first-use guide, record the exact equipment, and submit one commissioning record to MPI management.</small></span>
         </summary>
         <form class="damage-form" id="toolCommissionForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
           <input type="hidden" name="_subject" id="toolCommissionSubject" value="MPI New Tool Commissioning Record">
@@ -5044,9 +5044,9 @@
           </fieldset>
 
           <label class="damage-confirmation"><input id="toolCommissionConfirmed" type="checkbox" required><span>I matched the exact equipment and current manufacturer instructions, completed the applicable readiness checks, and accurately recorded anything still preventing field use.</span></label>
-          <button class="decode-btn" id="toolCommissionSubmitBtn" type="submit">Email commissioning record</button>
+          <button class="decode-btn" id="toolCommissionSubmitBtn" type="submit">Submit commissioning record</button>
           <p class="damage-submit-status" id="toolCommissionStatus" role="status" aria-live="polite"></p>
-          <div class="damage-success" id="toolCommissionSuccess" hidden><strong>Commissioning record sent.</strong><span>Kevin received the equipment identity, setup result, assignment, and release status.</span></div>
+          <div class="damage-success" id="toolCommissionSuccess" hidden><strong>Commissioning record submitted.</strong><span>The equipment identity, setup result, assignment, and release status were delivered to MPI management.</span></div>
         </form>
       </details>
 
@@ -5232,9 +5232,9 @@
               <label for="trainingShareInspector">Inspector name *</label>
               <input class="damage-input" id="trainingShareInspector" name="Inspector" type="text" autocomplete="name" maxlength="80" required>
             </div>
-            <button class="decode-btn" id="trainingShareSubmitBtn" type="submit">Email MPI refresher progress</button>
+            <button class="decode-btn" id="trainingShareSubmitBtn" type="submit">Submit MPI refresher progress</button>
             <p class="damage-submit-status" id="trainingShareStatus" role="status" aria-live="polite"></p>
-            <div class="damage-success" id="trainingShareSuccess" hidden><strong>Refresher progress sent.</strong><span>Kevin received the completed and remaining MPI lesson list.</span></div>
+            <div class="damage-success" id="trainingShareSuccess" hidden><strong>Refresher progress submitted.</strong><span>The completed and remaining MPI lesson list was delivered to MPI management.</span></div>
           </form>
           <p class="report-quality-note">Nothing is sent in the background. This reports only the 16 MPI refresher checks saved on this phone; it does not issue a credential, approve a competency, or change the inspector’s InterNACHI account.</p>
         </div>
@@ -5267,7 +5267,7 @@
       <aside class="external-training-card" aria-label="MPI assigned training profile">
         <div>
           <h3>Your MPI training plan</h3>
-          <p>Open the courses assigned to you, review due dates, mark completed work in your MPI plan, and see credentials issued through your InterNACHI account. Kevin’s manager view can assign a specific course to an individual inspector and set the completion date.</p>
+          <p>Open the courses assigned to you, review due dates, mark completed work in your MPI plan, and see credentials issued through your InterNACHI account. The MPI management view can assign a specific course to an individual inspector and set the completion date.</p>
           <span class="training-account-note">Use your MPI company Google account. Each inspector sees only their own training profile.</span>
         </div>
         <div class="external-training-actions">
@@ -5277,7 +5277,7 @@
       </aside>
 
       <details class="panel onboarding-program" id="onboardingProgram">
-        <summary><span><strong>New inspector field pathway</strong><small>Work through 20 MPI milestones in order, save progress on this phone, and send one review summary to Kevin.</small></span></summary>
+        <summary><span><strong>New inspector field pathway</strong><small>Work through 20 MPI milestones in order, save progress on this phone, and submit one review summary to MPI management.</small></span></summary>
         <div class="onboarding-body">
           <div class="onboarding-progress-row">
             <div><h3>Supervised field progression</h3><p>Check a milestone only after it has been reviewed, practiced, or demonstrated at the level required by the trainer.</p></div>
@@ -5350,9 +5350,9 @@
                 <div class="field"><label for="onboardingNextReview">Next review date</label><input class="damage-input" id="onboardingNextReview" name="Next review date" type="date"></div>
               </div>
               <div class="field"><label for="onboardingFocus">Next coaching focus</label><textarea class="damage-action-input" id="onboardingFocus" name="Next coaching focus" maxlength="700" placeholder="Example: Repeat the panel sequence under supervision and review two electrical defect comments."></textarea></div>
-              <button class="decode-btn" id="onboardingSubmitBtn" type="submit">Email progress summary</button>
+              <button class="decode-btn" id="onboardingSubmitBtn" type="submit">Submit progress summary</button>
               <p class="damage-submit-status" id="onboardingStatus" role="status" aria-live="polite"></p>
-              <div class="damage-success" id="onboardingSuccess" hidden><strong>Progress summary sent.</strong><span>Kevin received the completed, remaining, and next-focus information.</span></div>
+              <div class="damage-success" id="onboardingSuccess" hidden><strong>Progress summary submitted.</strong><span>The completed, remaining, and next-focus information was delivered to MPI management.</span></div>
             </div>
           </form>
           <p class="onboarding-boundary"><strong>Training record boundary:</strong> this checklist guides MPI practice and coaching. It does not issue or approve InterNACHI badges, replace the company competency sign-off, or authorize ancillary work.</p>
@@ -5850,7 +5850,7 @@
               <button class="decode-btn" id="messageAckSubmitBtn" type="submit">Send acknowledgement</button>
               <p class="damage-submit-status" id="messageAckStatus" role="status" aria-live="polite"></p>
             </form>
-            <div class="message-ack-complete" id="messageAckComplete" hidden><strong>Acknowledged on this phone.</strong> Kevin received the acknowledgement when this record was submitted.</div>
+            <div class="message-ack-complete" id="messageAckComplete" hidden><strong>Acknowledged on this phone.</strong> MPI management received the acknowledgement when this record was submitted.</div>
           </details>
           <p class="free-tool-note">Published messages remain on the phone for offline use. New push alerts require an internet connection and notification permission.</p>
         </section>
