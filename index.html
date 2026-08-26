@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="78">
+  <meta name="app-build" content="79">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4103,7 +4103,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">78</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">79</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -5211,6 +5211,34 @@
         </div>
         <button class="job-secondary-action" id="trainingNextActionBtn" type="button">Open lesson</button>
       </aside>
+
+      <details class="panel report-quality-card" id="trainingProgressSharePanel">
+        <summary>
+          <span><strong>Share MPI refresher progress</strong><small>Send one exact completed-and-remaining snapshot to management when requested.</small></span>
+          <span class="daily-readiness-status" id="trainingShareSummary">Not sent</span>
+        </summary>
+        <div class="report-quality-body">
+          <form id="trainingProgressShareForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+            <input type="hidden" name="_subject" id="trainingShareSubject" value="MPI Refresher Progress">
+            <input type="hidden" name="_template" value="table">
+            <input type="hidden" name="_captcha" value="false">
+            <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?refresher-progress-sent=1#training-center">
+            <input type="hidden" name="Submitted at" id="trainingShareSubmittedAt" value="">
+            <input type="hidden" name="Progress" id="trainingShareProgress" value="">
+            <textarea name="Completed MPI refreshers" id="trainingShareCompleted" hidden></textarea>
+            <textarea name="Remaining MPI refreshers" id="trainingShareRemaining" hidden></textarea>
+            <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
+            <div class="field">
+              <label for="trainingShareInspector">Inspector name *</label>
+              <input class="damage-input" id="trainingShareInspector" name="Inspector" type="text" autocomplete="name" maxlength="80" required>
+            </div>
+            <button class="decode-btn" id="trainingShareSubmitBtn" type="submit">Email MPI refresher progress</button>
+            <p class="damage-submit-status" id="trainingShareStatus" role="status" aria-live="polite"></p>
+            <div class="damage-success" id="trainingShareSuccess" hidden><strong>Refresher progress sent.</strong><span>Kevin received the completed and remaining MPI lesson list.</span></div>
+          </form>
+          <p class="report-quality-note">Nothing is sent in the background. This reports only the 16 MPI refresher checks saved on this phone; it does not issue a credential, approve a competency, or change the inspector’s InterNACHI account.</p>
+        </div>
+      </details>
 
       <details class="panel report-quality-card" id="phoneSetupPanel">
         <summary>
@@ -6853,6 +6881,18 @@
       const trainingNextActionTitle = document.getElementById("trainingNextActionTitle");
       const trainingNextActionDetail = document.getElementById("trainingNextActionDetail");
       const trainingNextActionBtn = document.getElementById("trainingNextActionBtn");
+      const trainingProgressSharePanel = document.getElementById("trainingProgressSharePanel");
+      const trainingProgressShareForm = document.getElementById("trainingProgressShareForm");
+      const trainingShareSummary = document.getElementById("trainingShareSummary");
+      const trainingShareSubject = document.getElementById("trainingShareSubject");
+      const trainingShareSubmittedAt = document.getElementById("trainingShareSubmittedAt");
+      const trainingShareProgress = document.getElementById("trainingShareProgress");
+      const trainingShareCompleted = document.getElementById("trainingShareCompleted");
+      const trainingShareRemaining = document.getElementById("trainingShareRemaining");
+      const trainingShareInspector = document.getElementById("trainingShareInspector");
+      const trainingShareSubmitBtn = document.getElementById("trainingShareSubmitBtn");
+      const trainingShareStatus = document.getElementById("trainingShareStatus");
+      const trainingShareSuccess = document.getElementById("trainingShareSuccess");
       const phoneSetupPanel = document.getElementById("phoneSetupPanel");
       const phoneSetupStatus = document.getElementById("phoneSetupStatus");
       const phoneSetupInstalled = document.getElementById("phoneSetupInstalled");
@@ -12293,7 +12333,7 @@
 
       function initializeFieldForms() {
         const rememberedInspector = loadRememberedInspector();
-        [activeJobInspector, damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, onboardingInspector, messageAckInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector].forEach(input => {
+        [activeJobInspector, damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, trainingShareInspector, onboardingInspector, messageAckInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector].forEach(input => {
           if (input && !input.value) input.value = rememberedInspector;
         });
         syncActiveJobToForms(loadActiveJob());
@@ -12347,6 +12387,16 @@
           onboardingStatus.textContent = "Onboarding progress submitted successfully.";
           document.getElementById("onboardingProgram").open = true;
           params.delete("onboarding-sent");
+          targetHash = "#training-center";
+        }
+        if (params.get("refresher-progress-sent") === "1") {
+          trainingShareSuccess.hidden = false;
+          trainingShareStatus.className = "damage-submit-status success";
+          trainingShareStatus.textContent = "MPI refresher progress submitted successfully.";
+          trainingShareSummary.textContent = "Sent";
+          trainingShareSummary.classList.add("is-ready");
+          trainingProgressSharePanel.open = true;
+          params.delete("refresher-progress-sent");
           targetHash = "#training-center";
         }
         if (params.get("message-ack-sent") === REQUIRED_PHOTO_MESSAGE_ID) {
@@ -12679,6 +12729,15 @@
         trainingProgressNote.textContent = completeCount === trainingModules.length
           ? "All current refresher modules are complete on this phone."
           : "Progress stays on this phone and works offline.";
+        const completedTitles = trainingModules
+          .filter(module => completedTraining.has(module.dataset.trainingModule))
+          .map(module => module.querySelector(".training-summary-copy strong")?.textContent?.trim() || module.dataset.trainingModule);
+        const remainingTitles = trainingModules
+          .filter(module => !completedTraining.has(module.dataset.trainingModule))
+          .map(module => module.querySelector(".training-summary-copy strong")?.textContent?.trim() || module.dataset.trainingModule);
+        trainingShareProgress.value = `${completeCount} of ${trainingModules.length} MPI refreshers complete`;
+        trainingShareCompleted.value = completedTitles.length ? completedTitles.join("; ") : "None completed on this phone";
+        trainingShareRemaining.value = remainingTitles.length ? remainingTitles.join("; ") : "None — all current MPI refreshers complete";
         updateTrainingNextAction();
       }
 
@@ -12947,6 +13006,20 @@
           submitButton: onboardingSubmitBtn,
           pendingText: "Sending progress summary…",
           subjectText: () => `MPI Onboarding Progress — ${onboardingInspector.value.trim()} — ${onboardingProgressValue.value}`.slice(0, 180)
+        });
+      }
+
+      function validateTrainingProgressSubmission(event) {
+        updateTrainingProgress();
+        validateSimpleEmailForm(event, {
+          form: trainingProgressShareForm,
+          status: trainingShareStatus,
+          submittedAt: trainingShareSubmittedAt,
+          subject: trainingShareSubject,
+          inspector: trainingShareInspector,
+          submitButton: trainingShareSubmitBtn,
+          pendingText: "Sending refresher progress…",
+          subjectText: () => `MPI Refresher Progress — ${trainingShareInspector.value.trim()} — ${trainingShareProgress.value}`.slice(0, 180)
         });
       }
 
@@ -14221,6 +14294,7 @@
         if (button) completeTrainingModule(button);
       });
       trainingNextActionBtn.addEventListener("click", openNextTrainingModule);
+      trainingProgressShareForm.addEventListener("submit", validateTrainingProgressSubmission);
       phoneSetupCalendar.addEventListener("change", savePhoneSetupConfirmations);
       phoneSetupTraining.addEventListener("change", savePhoneSetupConfirmations);
       refreshPhoneSetupBtn.addEventListener("click", () => {
@@ -14257,6 +14331,8 @@
         toolCommissionSubmitBtn.textContent = "Email commissioning record";
         onboardingSubmitBtn.disabled = false;
         onboardingSubmitBtn.textContent = "Email progress summary";
+        trainingShareSubmitBtn.disabled = false;
+        trainingShareSubmitBtn.textContent = "Email MPI refresher progress";
         messageAckSubmitBtn.disabled = false;
         messageAckSubmitBtn.textContent = "Send acknowledgement";
         teamQuestionSubmitBtn.disabled = false;
