@@ -335,7 +335,7 @@ Status: published August 26, 2026 as GitHub commit `23f4732b1bc59235cd98ba0500ca
 
 ### Build 8 — Report release quality check
 
-Status: implemented locally; publication pending validation.
+Status: published August 26, 2026 as GitHub commit `e3278efd19e05e8ad24136f35a7e283b297aec5e`.
 
 #### Additions
 
