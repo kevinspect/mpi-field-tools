@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="71">
+  <meta name="app-build" content="72">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4092,7 +4092,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">71</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">72</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4139,6 +4139,28 @@
             <a class="job-secondary-action" id="dailyReadinessIssueBtn" href="#requests-feedback">Something needs attention</a>
           </div>
           <p class="daily-readiness-note">A normal readiness check stays on this phone and does not send an email. Use the issue button only when management action is needed.</p>
+        </div>
+      </details>
+
+      <details class="panel daily-readiness" id="shiftReset">
+        <summary>
+          <span><strong>End-of-day reset</strong><small>One final check before the company vehicle and equipment are left for the night.</small></span>
+          <span class="daily-readiness-status" id="shiftResetStatus">Not completed today</span>
+        </summary>
+        <div class="daily-readiness-body">
+          <ul class="daily-readiness-list">
+            <li>Completed reports, photographs, and required records are synchronized and no unsent field draft is being overlooked.</li>
+            <li>Samples, labels, chain-of-custody forms, storage conditions, and laboratory delivery requirements are handled.</li>
+            <li>Company phone, cameras, meters, pumps, detectors, drone/robot equipment, and spare batteries are charging as applicable.</li>
+            <li>Tools, ladders, PPE, removed fasteners, and specialist equipment are clean, dry, accounted for, and secured.</li>
+            <li>Damaged, questionable, missing, or expired equipment is held out of service and reported to management.</li>
+            <li>Vehicle supplies and forms are restocked, tomorrow’s schedule is reviewed, and required damage, safety, or team notices are submitted.</li>
+          </ul>
+          <div class="daily-readiness-actions">
+            <button class="decode-btn" id="shiftResetCompleteBtn" type="button">Shift reset complete</button>
+            <a class="job-secondary-action" id="shiftResetIssueBtn" href="#requests-feedback">Something needs attention</a>
+          </div>
+          <p class="daily-readiness-note">A normal reset stays on this phone. It does not email management or claim that a report, laboratory delivery, or equipment service was independently verified.</p>
         </div>
       </details>
 
@@ -6517,6 +6539,10 @@
       const dailyReadinessStatus = document.getElementById("dailyReadinessStatus");
       const dailyReadinessReadyBtn = document.getElementById("dailyReadinessReadyBtn");
       const dailyReadinessIssueBtn = document.getElementById("dailyReadinessIssueBtn");
+      const shiftReset = document.getElementById("shiftReset");
+      const shiftResetStatus = document.getElementById("shiftResetStatus");
+      const shiftResetCompleteBtn = document.getElementById("shiftResetCompleteBtn");
+      const shiftResetIssueBtn = document.getElementById("shiftResetIssueBtn");
       const reportQualityCard = document.getElementById("reportQualityCard");
       const reportQualityChecks = [...document.querySelectorAll("[data-report-quality]")];
       const reportQualityStatus = document.getElementById("reportQualityStatus");
@@ -11333,6 +11359,7 @@
 
       const ACTIVE_JOB_STORAGE_KEY = "mpiActiveJobV1";
       const DAILY_READINESS_STORAGE_KEY = "mpiDailyReadinessV1";
+      const SHIFT_RESET_STORAGE_KEY = "mpiShiftResetV1";
       const TOOL_READINESS_STORAGE_KEY = "mpiToolReadinessV1";
       const PHONE_SETUP_STORAGE_KEY = "mpiPhoneSetupV1";
       const FORM_DRAFT_CONFIG = [
@@ -11455,6 +11482,45 @@
         requestType.value = "Scheduling or operational support";
         requestItem.value = "Start-of-day readiness issue";
         if (!requestDetails.value.trim()) requestDetails.value = "Readiness item needing attention: ";
+        if (!requestNeededBy.value) requestNeededBy.value = localDateKey();
+      }
+
+      function loadShiftReset() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(SHIFT_RESET_STORAGE_KEY) || "null");
+          return saved && saved.date === localDateKey() ? saved : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function renderShiftReset() {
+        const saved = loadShiftReset();
+        shiftResetStatus.classList.toggle("is-ready", Boolean(saved));
+        shiftResetStatus.textContent = saved?.completedAt
+          ? `Complete · ${new Date(saved.completedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
+          : "Not completed today";
+        shiftResetCompleteBtn.textContent = saved ? "Shift reset recorded" : "Shift reset complete";
+      }
+
+      function confirmShiftReset() {
+        const job = loadActiveJob();
+        if (job?.property) {
+          const stepsComplete = new Set(job.steps || []).size === jobSteps.length;
+          const releaseComplete = new Set(job.quality || []).size === reportQualityChecks.length;
+          if ((!stepsComplete || !releaseComplete) && !window.confirm("The current job still has incomplete closeout or report-release checks on this phone. Record the end-of-day reset anyway?")) return;
+        }
+        const record = { date: localDateKey(), completedAt: new Date().toISOString() };
+        try { localStorage.setItem(SHIFT_RESET_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
+        renderShiftReset();
+        shiftReset.open = false;
+        showToast("End-of-day reset saved on this phone");
+      }
+
+      function openShiftResetIssueRequest() {
+        requestType.value = "Scheduling or operational support";
+        requestItem.value = "End-of-day reset issue";
+        if (!requestDetails.value.trim()) requestDetails.value = "End-of-day item needing attention: ";
         if (!requestNeededBy.value) requestNeededBy.value = localDateKey();
       }
 
@@ -12028,6 +12094,7 @@
         });
         syncActiveJobToForms(loadActiveJob());
         renderDailyReadiness();
+        renderShiftReset();
 
         if (!toolCommissionDate.value) toolCommissionDate.value = new Date().toISOString().slice(0, 10);
         if (!onboardingReviewDate.value) onboardingReviewDate.value = new Date().toISOString().slice(0, 10);
@@ -13827,6 +13894,8 @@
       jobNextActionBtn.addEventListener("click", openNextJobAction);
       dailyReadinessReadyBtn.addEventListener("click", confirmDailyReadiness);
       dailyReadinessIssueBtn.addEventListener("click", openReadinessIssueRequest);
+      shiftResetCompleteBtn.addEventListener("click", confirmShiftReset);
+      shiftResetIssueBtn.addEventListener("click", openShiftResetIssueRequest);
       jobSteps.forEach(step => step.addEventListener("change", () => updateActiveJobStep(step)));
       reportQualityChecks.forEach(check => check.addEventListener("change", () => updateReportQualityCheck(check)));
       roomCoverageForm.addEventListener("submit", event => {
