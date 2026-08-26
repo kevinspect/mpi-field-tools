@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="58">
+  <meta name="app-build" content="59">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3748,6 +3748,22 @@
     .room-coverage-remove { min-width: 44px; min-height: 44px; padding: 6px 9px; color: #8b2c26; background: #fff4f2; border: 1px solid #e7c0bc; border-radius: 9px; font-size: 10px; font-weight: 900; }
     .room-coverage-empty { margin: 12px 0 0; color: var(--ink-2); font-size: 11px; line-height: 1.5; }
 
+    .tool-readiness-form { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; padding: 20px; border-bottom: 1px solid var(--line); }
+    .tool-readiness-form .field-wide { grid-column: 1 / -1; }
+    .tool-readiness-actions { display: flex; grid-column: 1 / -1; gap: 10px; }
+    .tool-readiness-actions .decode-btn { flex: 1; margin: 0; }
+    .tool-readiness-list { display: grid; gap: 10px; padding: 18px 20px 20px; }
+    .tool-readiness-empty { margin: 0; color: var(--ink-2); font-size: 12px; line-height: 1.5; }
+    .tool-readiness-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 14px; align-items: center; padding: 14px; background: #fff; border: 1px solid var(--line); border-radius: 13px; }
+    .tool-readiness-copy { min-width: 0; }
+    .tool-readiness-copy strong { display: block; color: var(--forest); font-size: 14px; }
+    .tool-readiness-copy span { display: block; margin-top: 4px; color: var(--ink-2); font-size: 11px; line-height: 1.45; }
+    .tool-readiness-badge { padding: 6px 9px; color: #17643a; background: #eaf7ef; border-radius: 999px; font-size: 10px; font-weight: 850; white-space: nowrap; }
+    .tool-readiness-badge.due-soon { color: #785b0d; background: #fff4d2; }
+    .tool-readiness-badge.attention { color: #9a2c28; background: #fff0ef; }
+    .tool-readiness-item-actions { display: flex; grid-column: 1 / -1; gap: 8px; }
+    .tool-readiness-item-actions button { min-height: 44px; padding: 8px 12px; color: var(--bright); background: #edf5fc; border: 1px solid #cbdff1; border-radius: 10px; font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; }
+
     .job-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
     .job-shortcuts a { display: grid; min-height: 54px; place-items: center; padding: 10px; }
 
@@ -3840,6 +3856,8 @@
       .job-next-action button { width: 100%; }
       .room-coverage-add { grid-template-columns: 1fr; }
       .room-coverage-add .decode-btn { width: 100%; }
+      .tool-readiness-form { grid-template-columns: 1fr; }
+      .tool-readiness-form .field-wide { grid-column: auto; }
       .tool-commissioning-panel .damage-form { padding: 20px 16px 22px; }
       .onboarding-stage-grid { grid-template-columns: 1fr; }
       .onboarding-body { padding: 18px 15px 20px; }
@@ -3977,7 +3995,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">58</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">59</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4707,6 +4725,34 @@
         <span><strong>21 inventory tool cards + first-use setup</strong> · Model-specific links are included where exact controls matter.</span>
         <span class="sop-offline-badge">Cards work offline</span>
       </div>
+
+      <details class="panel escalation-guide" id="toolReadinessPanel">
+        <summary>
+          <span><strong>Equipment readiness</strong><small>Keep a device-only list of field equipment that is ready, due for a required check, or held out of service.</small></span>
+          <span class="daily-readiness-status" id="toolReadinessStatus">No items</span>
+        </summary>
+        <form class="tool-readiness-form" id="toolReadinessForm">
+          <input id="toolReadinessEditId" type="hidden">
+          <div class="field"><label for="toolReadinessName">Tool and identifying number *</label><input class="damage-input" id="toolReadinessName" type="text" maxlength="120" placeholder="Example: Tramex MEP / Asset 04" required></div>
+          <div class="field"><label for="toolReadinessDue">Next required check or service</label><input class="damage-input" id="toolReadinessDue" type="date"></div>
+          <div class="field">
+            <label for="toolReadinessState">Current status *</label>
+            <div class="select-wrap"><select class="damage-input" id="toolReadinessState" required>
+              <option value="ready">Ready for approved company use</option>
+              <option value="hold">Hold out of service</option>
+            </select></div>
+          </div>
+          <div class="field"><label for="toolReadinessNote">Check, restriction, or storage note</label><input class="damage-input" id="toolReadinessNote" type="text" maxlength="180" placeholder="Example: Known-condition check completed"></div>
+          <div class="tool-readiness-actions">
+            <button class="decode-btn" type="submit">Save readiness item</button>
+            <button class="secondary-btn" id="toolReadinessCancel" type="button" hidden>Cancel edit</button>
+          </div>
+        </form>
+        <div class="tool-readiness-list" id="toolReadinessList">
+          <p class="tool-readiness-empty" id="toolReadinessEmpty">Add only equipment with a company or manufacturer check, calibration, inspection, or service requirement. Dates must come from the current instruction or company schedule.</p>
+        </div>
+        <p class="report-quality-note">This list stays on this phone and does not replace a manufacturer instruction, company asset record, calibration certificate, ladder inspection, or management hold. Use Requests &amp; Feedback to report an equipment problem.</p>
+      </details>
 
       <details class="panel escalation-guide tool-commissioning-panel" id="toolCommissioningPanel">
         <summary>
@@ -6353,6 +6399,17 @@
       const toolGuideResultCount = document.getElementById("toolGuideResultCount");
       const toolGuideResults = document.getElementById("toolGuideResults");
       const toolGuideDetail = document.getElementById("toolGuideDetail");
+      const toolReadinessPanel = document.getElementById("toolReadinessPanel");
+      const toolReadinessStatus = document.getElementById("toolReadinessStatus");
+      const toolReadinessForm = document.getElementById("toolReadinessForm");
+      const toolReadinessEditId = document.getElementById("toolReadinessEditId");
+      const toolReadinessName = document.getElementById("toolReadinessName");
+      const toolReadinessDue = document.getElementById("toolReadinessDue");
+      const toolReadinessState = document.getElementById("toolReadinessState");
+      const toolReadinessNote = document.getElementById("toolReadinessNote");
+      const toolReadinessCancel = document.getElementById("toolReadinessCancel");
+      const toolReadinessList = document.getElementById("toolReadinessList");
+      const toolReadinessEmpty = document.getElementById("toolReadinessEmpty");
       const toolCommissionForm = document.getElementById("toolCommissionForm");
       const toolCommissionInspector = document.getElementById("toolCommissionInspector");
       const toolCommissionDate = document.getElementById("toolCommissionDate");
@@ -10825,6 +10882,7 @@
 
       const ACTIVE_JOB_STORAGE_KEY = "mpiActiveJobV1";
       const DAILY_READINESS_STORAGE_KEY = "mpiDailyReadinessV1";
+      const TOOL_READINESS_STORAGE_KEY = "mpiToolReadinessV1";
       const FORM_DRAFT_CONFIG = [
         { form: damageForm, key: "mpiDraftDamageV1", status: damageSubmitStatus, photoReminder: true },
         { form: teamQuestionForm, key: "mpiDraftTeamQuestionV1", status: teamQuestionStatus },
@@ -12316,11 +12374,149 @@
         });
       }
 
+      function loadToolReadiness() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(TOOL_READINESS_STORAGE_KEY) || "[]");
+          if (!Array.isArray(saved)) return [];
+          return saved.map((item, index) => ({
+            id: String(item?.id || `tool-${index}`),
+            name: String(item?.name || "").trim().slice(0, 120),
+            due: /^\d{4}-\d{2}-\d{2}$/.test(String(item?.due || "")) ? String(item.due) : "",
+            state: item?.state === "hold" ? "hold" : "ready",
+            note: String(item?.note || "").trim().slice(0, 180),
+            updatedAt: String(item?.updatedAt || "")
+          })).filter(item => item.name);
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function storeToolReadiness(items) {
+        try { localStorage.setItem(TOOL_READINESS_STORAGE_KEY, JSON.stringify(items)); } catch (_) {}
+      }
+
+      function toolReadinessCondition(item) {
+        if (item.state === "hold") return { rank: 0, label: "Hold", className: "attention", attention: true, detail: "Held out of service" };
+        if (!item.due) return { rank: 3, label: "Ready", className: "", attention: false, detail: "No scheduled date" };
+        const today = new Date(`${localDateKey()}T12:00:00`);
+        const due = new Date(`${item.due}T12:00:00`);
+        const days = Math.round((due - today) / 86400000);
+        const formatted = due.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        if (days < 0) return { rank: 0, label: "Overdue", className: "attention", attention: true, detail: `Required date was ${formatted}` };
+        if (days === 0) return { rank: 0, label: "Due today", className: "attention", attention: true, detail: `Required date is ${formatted}` };
+        if (days <= 30) return { rank: 1, label: `Due in ${days}d`, className: "due-soon", attention: false, detail: `Required date is ${formatted}` };
+        return { rank: 2, label: "Ready", className: "", attention: false, detail: `Next required date is ${formatted}` };
+      }
+
+      function resetToolReadinessForm() {
+        toolReadinessForm.reset();
+        toolReadinessEditId.value = "";
+        toolReadinessState.value = "ready";
+        toolReadinessCancel.hidden = true;
+        toolReadinessForm.querySelector('button[type="submit"]').textContent = "Save readiness item";
+      }
+
+      function renderToolReadiness() {
+        const items = loadToolReadiness().map(item => ({ ...item, condition: toolReadinessCondition(item) }))
+          .sort((a, b) => a.condition.rank - b.condition.rank || a.name.localeCompare(b.name));
+        const attentionCount = items.filter(item => item.condition.attention).length;
+        toolReadinessStatus.textContent = attentionCount ? `${attentionCount} need attention` : items.length ? `${items.length} tracked` : "No items";
+        toolReadinessStatus.classList.toggle("is-ready", items.length > 0 && attentionCount === 0);
+        toolReadinessPanel.classList.toggle("is-complete", items.length > 0 && attentionCount === 0);
+        toolReadinessList.replaceChildren();
+        if (!items.length) {
+          toolReadinessEmpty.textContent = "Add only equipment with a company or manufacturer check, calibration, inspection, or service requirement. Dates must come from the current instruction or company schedule.";
+          toolReadinessList.append(toolReadinessEmpty);
+          return;
+        }
+
+        items.forEach(item => {
+          const row = document.createElement("div");
+          row.className = "tool-readiness-item";
+          const copy = document.createElement("div");
+          copy.className = "tool-readiness-copy";
+          const name = document.createElement("strong");
+          name.textContent = item.name;
+          const detail = document.createElement("span");
+          detail.textContent = `${item.condition.detail}${item.note ? ` · ${item.note}` : ""}`;
+          copy.append(name, detail);
+          const badge = document.createElement("span");
+          badge.className = `tool-readiness-badge${item.condition.className ? ` ${item.condition.className}` : ""}`;
+          badge.textContent = item.condition.label;
+          const actions = document.createElement("div");
+          actions.className = "tool-readiness-item-actions";
+          const edit = document.createElement("button");
+          edit.type = "button";
+          edit.dataset.toolReadinessEdit = item.id;
+          edit.textContent = "Update";
+          const remove = document.createElement("button");
+          remove.type = "button";
+          remove.dataset.toolReadinessRemove = item.id;
+          remove.textContent = "Remove";
+          actions.append(edit, remove);
+          row.append(copy, badge, actions);
+          toolReadinessList.append(row);
+        });
+      }
+
+      function saveToolReadiness(event) {
+        event.preventDefault();
+        if (!toolReadinessForm.reportValidity()) return;
+        const items = loadToolReadiness();
+        const editingId = toolReadinessEditId.value;
+        const name = toolReadinessName.value.trim().slice(0, 120);
+        if (!editingId && items.some(item => item.name.toLowerCase() === name.toLowerCase())) {
+          showToast("That equipment is already tracked");
+          return;
+        }
+        const record = {
+          id: editingId || `tool-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+          name,
+          due: toolReadinessDue.value,
+          state: toolReadinessState.value === "hold" ? "hold" : "ready",
+          note: toolReadinessNote.value.trim().slice(0, 180),
+          updatedAt: new Date().toISOString()
+        };
+        const index = items.findIndex(item => item.id === record.id);
+        if (index >= 0) items[index] = record;
+        else items.push(record);
+        storeToolReadiness(items);
+        resetToolReadinessForm();
+        renderToolReadiness();
+        showToast(index >= 0 ? "Readiness item updated" : "Readiness item saved on this phone");
+      }
+
+      function handleToolReadinessAction(event) {
+        const edit = event.target.closest("[data-tool-readiness-edit]");
+        const remove = event.target.closest("[data-tool-readiness-remove]");
+        if (!edit && !remove) return;
+        const items = loadToolReadiness();
+        const id = (edit || remove).dataset.toolReadinessEdit || (edit || remove).dataset.toolReadinessRemove;
+        const item = items.find(entry => entry.id === id);
+        if (!item) return;
+        if (edit) {
+          toolReadinessEditId.value = item.id;
+          toolReadinessName.value = item.name;
+          toolReadinessDue.value = item.due;
+          toolReadinessState.value = item.state;
+          toolReadinessNote.value = item.note;
+          toolReadinessCancel.hidden = false;
+          toolReadinessForm.querySelector('button[type="submit"]').textContent = "Update readiness item";
+          toolReadinessForm.scrollIntoView({ behavior: "smooth", block: "center" });
+          return;
+        }
+        if (!window.confirm(`Remove ${item.name} from this phone’s readiness list?`)) return;
+        storeToolReadiness(items.filter(entry => entry.id !== id));
+        if (toolReadinessEditId.value === id) resetToolReadinessForm();
+        renderToolReadiness();
+      }
+
       function initializeToolGuides() {
         populateToolGuideCategories();
         const defaultGuide = TOOL_GUIDES.find(guide => guide.id === "moisture-meter") || TOOL_GUIDES[0];
         activeToolGuideId = defaultGuide?.id || "";
         if (defaultGuide) renderToolGuideDetail(defaultGuide);
+        renderToolReadiness();
         renderToolGuideResults();
       }
 
@@ -12812,6 +13008,9 @@
       toolCheckResultOptions.forEach(option => option.addEventListener("change", updateToolCheckResult));
       toolCheckForm.addEventListener("submit", validateToolCheckSubmission);
       toolCommissionForm.addEventListener("submit", validateToolCommissionSubmission);
+      toolReadinessForm.addEventListener("submit", saveToolReadiness);
+      toolReadinessList.addEventListener("click", handleToolReadinessAction);
+      toolReadinessCancel.addEventListener("click", resetToolReadinessForm);
       openFirstUseGuideBtn.addEventListener("click", () => {
         toolGuideSearch.value = "newly purchased tool";
         toolGuideCategory.value = "";
