@@ -1947,8 +1947,36 @@ Status: published August 26, 2026 as GitHub commit `52c59217fc4057e4b1b44f605391
 - Opened all 12 non-Home screens through a fresh direct URL on a 390-pixel phone viewport; every screen finished at the top with its centered title visible and no horizontal overflow.
 - Opened representative direct links for the moisture meter, cooling-temperature-difference procedure, and Before/After photo lesson; each selected the correct content and placed it at the top of the phone viewport.
 - Re-ran all 64 exact guidance links, the complete 13-screen structural audit, the 21-family Equipment Age Finder suite, the offline field-question recovery test, and the installable-app manifest/icon audit with no failures.
+- Repeated the 12-screen and three exact-content landing tests against the public GitHub Pages site with no failures, then disconnected the browser and reopened the roof-drone guide, water-test/COC procedure, and water-sampling lesson from the Build 88 offline cache.
 
 #### Rollback for this build
 
 - Restore GitHub `main` to `137f0c65c8da4b449a28b3fa6123a14dfe889bc2` to keep Builds 1–50 and restore the previous direct-link movement.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 52 — Make every field action easier to tap
+
+Status: published August 26, 2026 as GitHub commit `45b6c55d123b657dd03043db06161be0e182578d` (app Build 89).
+
+#### Additions
+
+1. Increased the active tap area for compact field controls without adding another panel or step.
+   - Room presets and Tool Guide / Field Procedure quick filters now provide a 44-pixel minimum target.
+   - All 16 refresher knowledge-check answers now provide a 44-pixel minimum row, even when the answer is only one line.
+   - Tool manuals, tool-support routes, copied direct links, training-account actions, Job Companion shortcuts, and Team Message escalation actions now provide the same phone-sized target.
+   - Age Finder source links inside the optional reference panel are easier to select deliberately.
+   - The new-inspector coaching-focus field now provides a practical writing area.
+
+2. Updated the visible build, version file, and offline cache identifier to Build 89.
+
+#### Validation record
+
+- Audited every visible button, link, input, select, textarea, and disclosure summary across all 13 phone screens at 390 pixels.
+- Reduced controls below the audit’s 40-pixel threshold from 81 to zero; checkbox and radio controls were measured through their full clickable label rows.
+- Re-ran all 64 exact guidance links, all 16 refresher completions, all eight non-photo company submission paths, all direct-route landings, the 13-screen structural audit, and the installable-app audit.
+- All functional tests passed. The training-profile iframe continues to use Google’s own protected sign-in boundary, and no test email was sent.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `d665697d00039a5308a56072bc804ba068c65f5b` to keep Builds 1–51 and restore the earlier compact tap areas.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

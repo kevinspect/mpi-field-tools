@@ -107,6 +107,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Unfinished End-of-Job Tool Checks, new-tool commissioning records, and new-inspector coaching reviews now survive an iPhone reload and clear after successful submission. **Implemented in Build 86.**
 - The retired hidden generic comment library has been removed from the phone payload, reducing the main document by 40.6% while preserving MPI Comment Builder as a future controlled online feature. **Implemented in Build 87.**
 - Direct screen URLs now preserve the centered mobile header, while copied Tool Guide, Field Procedure, and refresher links land on the exact selected content. **Implemented in Build 88.**
+- Compact filters, training answers, guide links, escalation actions, and other field controls now meet the app’s phone tap-target standard across every screen. **Implemented in Build 89.**
 
 ## Low-cost improvements
 
