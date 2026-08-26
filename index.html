@@ -256,6 +256,27 @@
       line-height: 1.55;
     }
 
+    .home-active-job {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 18px;
+      max-width: 690px;
+      margin-top: 24px;
+      padding: 18px 20px;
+      color: #fff;
+      background: linear-gradient(135deg, #11186a, #202974);
+      border: 1px solid rgba(180,135,32,.68);
+      border-radius: 15px;
+      box-shadow: 0 13px 30px rgba(17,24,106,.18);
+    }
+    .home-active-job span { display: block; color: #f0cb72; font-size: 9px; font-weight: 950; letter-spacing: .12em; text-transform: uppercase; }
+    .home-active-job strong { display: block; margin-top: 6px; font-size: 16px; line-height: 1.35; }
+    .home-active-job small { display: block; margin-top: 5px; color: rgba(255,255,255,.72); font-size: 11px; line-height: 1.45; }
+    .home-active-job-actions { display: grid; grid-template-columns: repeat(2, auto); gap: 8px; }
+    .home-active-job-actions a { display: grid; min-height: 44px; place-items: center; padding: 9px 12px; color: var(--forest); background: #fff; border-radius: 9px; font-size: 10.5px; font-weight: 900; text-decoration: none; }
+    .home-active-job-actions a:first-child { color: #11186a; background: #d7ad48; }
+
     .home-section-label {
       margin: 40px 0 10px;
       color: var(--ink);
@@ -3703,6 +3724,8 @@
       .onboarding-stage-grid { grid-template-columns: 1fr; }
       .onboarding-body { padding: 18px 15px 20px; }
       .onboarding-progress-row { align-items: start; grid-template-columns: 1fr; }
+      .home-active-job { align-items: stretch; grid-template-columns: 1fr; padding: 17px; }
+      .home-active-job-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -3738,6 +3761,17 @@
         <p class="home-tagline">Field tools. Company standards. Team support. One MPI app.</p>
       </div>
     </div>
+    <aside class="home-active-job" id="homeActiveJob" aria-live="polite" hidden>
+      <div>
+        <span>Current inspection</span>
+        <strong id="homeActiveJobProperty"></strong>
+        <small id="homeActiveJobProgress"></small>
+      </div>
+      <div class="home-active-job-actions">
+        <a href="#job-companion">Resume job</a>
+        <a id="homeActiveJobMap" href="https://maps.apple.com/" target="_blank" rel="noopener">Directions</a>
+      </div>
+    </aside>
     <p class="home-section-label">What do you need?</p>
     <nav class="home-tools" aria-label="MPI field tools">
       <section class="home-tool-group" aria-labelledby="home-group-work">
@@ -5964,6 +5998,10 @@
       const activeJobProperty = document.getElementById("activeJobProperty");
       const activeJobStatus = document.getElementById("activeJobStatus");
       const activeJobMapLink = document.getElementById("activeJobMapLink");
+      const homeActiveJob = document.getElementById("homeActiveJob");
+      const homeActiveJobProperty = document.getElementById("homeActiveJobProperty");
+      const homeActiveJobProgress = document.getElementById("homeActiveJobProgress");
+      const homeActiveJobMap = document.getElementById("homeActiveJobMap");
       const clearActiveJobBtn = document.getElementById("clearActiveJobBtn");
       const jobSteps = [...document.querySelectorAll("[data-job-step]")];
       const jobProgressFill = document.getElementById("jobProgressFill");
@@ -10624,6 +10662,10 @@
           const phaseSteps = [...phase.querySelectorAll("[data-job-step]")];
           phase.classList.toggle("is-complete", phaseSteps.length > 0 && phaseSteps.every(step => step.checked));
         });
+        if (job?.property) {
+          const releaseComplete = reportQualityChecks.length > 0 && new Set(job.quality || []).size === reportQualityChecks.length;
+          homeActiveJobProgress.textContent = `${count} of ${jobSteps.length} closeout steps${releaseComplete ? " · Release check complete" : ""}`;
+        }
         updateReportQualityProgress(job);
       }
 
@@ -10636,12 +10678,16 @@
         reportQualityStatus.textContent = complete ? "Release check complete" : `${count} of ${reportQualityChecks.length}`;
         reportQualityStatus.classList.toggle("is-ready", complete);
         reportQualityCard.classList.toggle("is-complete", complete);
+        if (job?.property) homeActiveJobProgress.textContent = `${new Set(job.steps || []).size} of ${jobSteps.length} closeout steps${complete ? " · Release check complete" : ""}`;
       }
 
       function renderActiveJob(job = loadActiveJob()) {
         const title = activeJobStatus.querySelector("strong");
         const detail = activeJobStatus.querySelector("span");
         if (!job?.property) {
+          homeActiveJob.hidden = true;
+          homeActiveJobProperty.textContent = "";
+          homeActiveJobProgress.textContent = "";
           activeJobInspector.value = loadRememberedInspector();
           activeJobProperty.value = "";
           title.textContent = "No active job on this phone";
@@ -10659,6 +10705,12 @@
           : "Current job information stays on this phone.";
         activeJobMapLink.href = `https://maps.apple.com/?q=${encodeURIComponent(job.property)}`;
         activeJobMapLink.removeAttribute("aria-disabled");
+        const completedSteps = new Set(job.steps || []).size;
+        const releaseComplete = reportQualityChecks.length > 0 && new Set(job.quality || []).size === reportQualityChecks.length;
+        homeActiveJob.hidden = false;
+        homeActiveJobProperty.textContent = job.property;
+        homeActiveJobProgress.textContent = `${completedSteps} of ${jobSteps.length} closeout steps${releaseComplete ? " · Release check complete" : ""}`;
+        homeActiveJobMap.href = `https://maps.apple.com/?q=${encodeURIComponent(job.property)}`;
         updateJobProgress(job);
         syncActiveJobToForms(job);
       }

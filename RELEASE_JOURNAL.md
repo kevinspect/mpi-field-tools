@@ -545,3 +545,37 @@ Status: published August 26, 2026 as GitHub commit `6514beed53401864685374f457a5
 
 - Restore GitHub `main` to `46b3b8739f85b4efbb8c230b1096ac7b552bafcc` to keep Builds 1–11 but remove the onboarding pathway.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 13 — Home-screen active job resume
+
+Status: ready to publish as Build 50.
+
+#### Additions
+
+1. Added a current-inspection banner at the top of the home screen when Job Companion has an active property.
+   - Shows the exact property address.
+   - Shows live closeout progress out of 12 steps.
+   - Shows when the report release check is complete.
+   - Provides one-tap Resume job and Apple Maps Directions actions.
+
+2. Kept the home screen uncluttered.
+   - The banner is completely hidden when no job is active.
+   - It uses information already stored by Job Companion on the company phone.
+   - No new tracking, email, background service, or home-screen tool was added.
+   - Progress changes immediately as Job Companion steps or the release check are updated.
+
+3. Updated the offline cache identifier to Build 50.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Active job: property, Apple Maps link, step count, and release-check status displayed correctly.
+- Live progress: checking two Job Companion steps updated the banner to 2 of 12.
+- 390-pixel phone layout: a long demonstration property address and both action buttons stayed inside the viewport with no horizontal overflow.
+- No network request or email is created by the banner.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `18c4d43cedf4e14e8013200963c9ee22a15bed62` to keep Builds 1–12 but remove the active-job banner.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

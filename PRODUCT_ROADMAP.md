@@ -68,6 +68,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - The Age Finder now separates factory-documented Lochinvar product families and adds Navien NR/NP coverage. **Implemented in Build 47.**
 - Company Tool Guides now includes a first-use commissioning record and explicit ready/hold decision for new or replacement equipment. **Implemented in Build 48.**
 - Training Center now includes a 20-milestone new-inspector pathway with local progress and a deliberate email review to Kevin. **Implemented in Build 49.**
+- The home screen now shows a one-tap resume/directions banner for the active Job Companion property. **Implemented in Build 50.**
 - Job Companion shows only the forms still needed for the current job.
 - Training coaching links to the exact lesson or InterNACHI course.
 
