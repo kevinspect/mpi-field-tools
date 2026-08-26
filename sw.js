@@ -1,4 +1,4 @@
-const CACHE_NAME = "mpi-field-tools-shell-v36";
+const CACHE_NAME = "mpi-field-tools-shell-v37";
 const APP_SHELL = ["./", "./index.html", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./mpi-logo.png", "./tool-thumbnails.png"];
 
 async function fetchFresh(resource) {

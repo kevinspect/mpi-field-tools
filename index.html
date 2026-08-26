@@ -3267,6 +3267,14 @@
 
     .external-training-card h3 { margin: 0 0 6px; color: #fff; }
     .external-training-card p { margin: 0; color: #dfe4ff; font-size: 12px; line-height: 1.5; }
+    .external-training-card .training-account-note {
+      display: block;
+      margin-top: 10px;
+      color: #f4cf70;
+      font-size: 10.5px;
+      font-weight: 850;
+      letter-spacing: .04em;
+    }
     .external-training-actions { display: grid; gap: 8px; min-width: 190px; }
     .external-training-actions a {
       display: block;
@@ -3280,6 +3288,15 @@
       text-decoration: none;
     }
     .external-training-actions a:last-child { color: var(--forest); background: #fff; }
+    .training-marquee-frame {
+      width: 100%;
+      height: 66px;
+      margin: 2px 0 18px;
+      background: var(--forest);
+      border: 0;
+      border-radius: 14px;
+      overflow: hidden;
+    }
 
     @media (max-width: 560px) {
       .today-jobs-toolbar { align-items: stretch; flex-direction: column; }
@@ -3988,7 +4005,7 @@
           <p class="eyebrow">MPI training center</p>
           <h2 id="training-center-title">Learn it. Practice it. Use it.</h2>
         </div>
-        <p>Short company lessons turn the handbook into repeatable field habits. Progress is stored only on the inspector’s device and remains available offline.</p>
+        <p>Open assigned InterNACHI training, track InterNACHI-issued credentials, and use short MPI lessons to turn the handbook into repeatable field habits.</p>
       </div>
 
       <div class="training-overview">
@@ -4004,14 +4021,15 @@
         </aside>
       </div>
 
-      <aside class="external-training-card" aria-label="InterNACHI member training">
+      <aside class="external-training-card" aria-label="MPI assigned training profile">
         <div>
-          <h3>InterNACHI member training</h3>
-          <p>Each inspector uses their own InterNACHI account. The account normally stays signed in on that company phone, and InterNACHI keeps the employee’s course progress and certificates.</p>
+          <h3>Your MPI training plan</h3>
+          <p>Open the courses assigned to you, review due dates, mark completed work in your MPI plan, and see credentials issued through your InterNACHI account. Kevin’s manager view can assign a specific course to an individual inspector and set the completion date.</p>
+          <span class="training-account-note">Use your MPI company Google account. Each inspector sees only their own training profile.</span>
         </div>
         <div class="external-training-actions">
-          <a href="https://www.nachi.org/my/certification/cpi" target="_blank" rel="noopener">Open CPI certification</a>
-          <a href="https://www.nachi.org/education/" target="_blank" rel="noopener">Browse training courses</a>
+          <a href="https://script.google.com/a/macros/michiganpropertyinspections.com/s/AKfycbyyU-4_BDEcrYPqDasXn3tCFcmuLg97dAm4JCjS3tZSx-I7Tcg8KrFFg8oFzY-FrPqk/exec" target="_blank" rel="noopener">Open my training profile</a>
+          <a href="https://www.nachi.org/my/certification/cpi" target="_blank" rel="noopener">Open InterNACHI account</a>
         </div>
       </aside>
 
@@ -4138,6 +4156,7 @@
           </div>
         </details>
       </div>
+      <iframe class="training-marquee-frame" title="Your InterNACHI-issued training achievements" src="https://script.google.com/a/macros/michiganpropertyinspections.com/s/AKfycbyyU-4_BDEcrYPqDasXn3tCFcmuLg97dAm4JCjS3tZSx-I7Tcg8KrFFg8oFzY-FrPqk/exec?view=marquee" loading="lazy"></iframe>
       <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
     </section>
 
