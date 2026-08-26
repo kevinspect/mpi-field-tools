@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="61">
+  <meta name="app-build" content="62">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -277,6 +277,11 @@
     .home-active-job-actions { display: grid; grid-template-columns: repeat(2, auto); gap: 8px; }
     .home-active-job-actions a { display: grid; min-height: 44px; place-items: center; padding: 9px 12px; color: var(--forest); background: #fff; border-radius: 9px; font-size: 10.5px; font-weight: 900; text-decoration: none; }
     .home-active-job-actions a:first-child { color: #11186a; background: #d7ad48; }
+
+    .home-tool-attention { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; max-width: 690px; margin: 12px auto 0; padding: 14px 16px; color: #621b18; background: #fff0ef; border: 1px solid #e7b7b3; border-radius: 14px; box-shadow: 0 10px 24px rgba(44,12,12,.12); }
+    .home-tool-attention strong { display: block; font-size: 13px; }
+    .home-tool-attention span { display: block; margin-top: 3px; color: #82403b; font-size: 10.5px; line-height: 1.4; }
+    .home-tool-attention a { display: grid; min-height: 44px; place-items: center; padding: 8px 12px; color: #fff; background: #9a2c28; border-radius: 9px; font-size: 10.5px; font-weight: 900; text-decoration: none; }
 
     .home-section-label {
       margin: 40px 0 10px;
@@ -3895,6 +3900,7 @@
       .onboarding-progress-row { align-items: start; grid-template-columns: 1fr; }
       .home-active-job { align-items: stretch; grid-template-columns: 1fr; padding: 17px; }
       .home-active-job-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .home-tool-attention { align-items: stretch; grid-template-columns: 1fr; }
       .home-version-row { align-items: stretch; flex-direction: column; }
       .app-update-notice { align-items: stretch; grid-template-columns: 1fr; }
     }
@@ -3942,6 +3948,10 @@
         <a href="#job-companion">Resume job</a>
         <a id="homeActiveJobMap" href="https://maps.apple.com/" target="_blank" rel="noopener">Directions</a>
       </div>
+    </aside>
+    <aside class="home-tool-attention" id="homeToolAttention" aria-live="polite" hidden>
+      <div><strong id="homeToolAttentionTitle">Equipment needs attention</strong><span id="homeToolAttentionDetail">Review held or overdue field equipment before use.</span></div>
+      <a href="#tool-guides">Review equipment</a>
     </aside>
     <div class="home-search" id="homeSearch">
       <label for="homeSearchInput">Find a field tool or procedure</label>
@@ -4034,7 +4044,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">61</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">62</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -6334,6 +6344,9 @@
       const homeActiveJobProperty = document.getElementById("homeActiveJobProperty");
       const homeActiveJobProgress = document.getElementById("homeActiveJobProgress");
       const homeActiveJobMap = document.getElementById("homeActiveJobMap");
+      const homeToolAttention = document.getElementById("homeToolAttention");
+      const homeToolAttentionTitle = document.getElementById("homeToolAttentionTitle");
+      const homeToolAttentionDetail = document.getElementById("homeToolAttentionDetail");
       const homeSearchInput = document.getElementById("homeSearchInput");
       const homeSearchClear = document.getElementById("homeSearchClear");
       const homeSearchResults = document.getElementById("homeSearchResults");
@@ -12644,6 +12657,13 @@
         toolReadinessStatus.textContent = attentionCount ? `${attentionCount} need attention` : items.length ? `${items.length} tracked` : "No items";
         toolReadinessStatus.classList.toggle("is-ready", items.length > 0 && attentionCount === 0);
         toolReadinessPanel.classList.toggle("is-complete", items.length > 0 && attentionCount === 0);
+        homeToolAttention.hidden = attentionCount === 0;
+        if (attentionCount) {
+          homeToolAttentionTitle.textContent = `${attentionCount} equipment ${attentionCount === 1 ? "item needs" : "items need"} attention`;
+          const held = items.filter(item => item.state === "hold").length;
+          const overdue = items.filter(item => item.state !== "hold" && item.condition.label === "Overdue").length;
+          homeToolAttentionDetail.textContent = [held ? `${held} held out of service` : "", overdue ? `${overdue} overdue` : ""].filter(Boolean).join(" · ");
+        }
         toolReadinessList.replaceChildren();
         if (!items.length) {
           toolReadinessEmpty.textContent = "Add only equipment with a company or manufacturer check, calibration, inspection, or service requirement. Dates must come from the current instruction or company schedule.";
