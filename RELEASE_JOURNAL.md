@@ -2005,3 +2005,38 @@ Status: published August 26, 2026 as GitHub commit `a2a421d19cf4b951f283537eae17
 
 - Restore GitHub `main` to `91e9c8289988d54c8836286891b5bd17c22dce4d` to keep Builds 1–52 and remove only the achievement empty-state explanation.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 90 release-quality checkpoint
+
+Status: passed August 26, 2026 against the local and public Build 90 release.
+
+#### Validation record
+
+- Checked all 34 unique external guidance destinations used by the app. Thirty-three returned a successful automated response; the Scout 3-Pro Plus page rejects automated probes but was opened and verified in a normal browser at its current redirected product URL. No destination returned a missing-page response.
+- Opened every one of the 13 app screens at eight representative layouts: 320, 360, 375, 390, and 430-pixel phones; phone landscape; tablet portrait; and tablet landscape. All 104 screen/layout checks remained free of clipped controls and horizontal overflow.
+- Deliberately replaced all 17 JSON-backed phone records with invalid saved data, then reopened every app screen. The app discarded the unusable records safely, restored default progress, kept Job Companion available, and accepted new form input without an app-owned error.
+- The only browser-console notice was Google’s expected refusal to place its protected sign-in page inside a third-party frame. Build 90 already provides the secure open-profile route, so no credential or training-account workaround was added.
+
+### Build 54 — Make field controls easier to follow without touch
+
+Status: published August 26, 2026 as GitHub commit `1ca376b3a726b3960ef1cb623cad6f2e8f1c32da` (app Build 91).
+
+#### Additions
+
+1. Added one consistent, high-contrast keyboard and switch-control focus treatment to every app-owned link, button, input, menu, writing field, and disclosure control.
+   - The indicator uses a white inner outline and MPI bright-blue outer ring so it remains visible on both the navy and white app surfaces.
+   - It appears only while navigating without touch, so the normal company-phone layout remains unchanged.
+   - External Google and InterNACHI frames retain their own protected document behavior; the app’s secure open links remain available as ordinary, clearly focused controls.
+
+2. Updated the visible build, version file, and offline cache identifier to Build 91.
+
+#### Validation record
+
+- Walked the keyboard path across all 13 app screens and confirmed every reached app-owned control displayed the focus indicator with no failed route.
+- Re-ran all 104 phone/tablet layout checks, the zero-small-target audit, all 64 exact Tool Guide / Field Procedure / refresher links, the full structural and accessible-name audit, and the installable-app manifest/icon/cache audit.
+- Inline JavaScript syntax passed, no app route clipped or overflowed, no unsafe or unnamed control was introduced, and no email was sent.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `a2a421d19cf4b951f283537eae17466cb58b74f7` to keep Builds 1–53 and remove only the accessible focus treatment.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
