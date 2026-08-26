@@ -296,7 +296,7 @@ Status: published August 26, 2026 as GitHub commit `b51d6fdc57f301bcf9960ee6f5cc
 
 ### Build 7 — Start-of-day readiness
 
-Status: implemented locally; publication pending validation.
+Status: published August 26, 2026 as GitHub commit `23f4732b1bc59235cd98ba0500cac952c9e40498`.
 
 #### Additions
 
