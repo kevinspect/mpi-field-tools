@@ -69,6 +69,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Company Tool Guides now includes a first-use commissioning record and explicit ready/hold decision for new or replacement equipment. **Implemented in Build 48.**
 - Training Center now includes a 20-milestone new-inspector pathway with local progress and a deliberate email review to Kevin. **Implemented in Build 49.**
 - The home screen now shows a one-tap resume/directions banner for the active Job Companion property. **Implemented in Build 50.**
+- The app now shows its build number and provides a small, safe, inspector-controlled update checker. **Implemented in Build 51.**
 - Job Companion shows only the forms still needed for the current job.
 - Training coaching links to the exact lesson or InterNACHI course.
 

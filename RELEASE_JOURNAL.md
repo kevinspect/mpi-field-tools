@@ -579,3 +579,39 @@ Status: published August 26, 2026 as GitHub commit `fbe72654e02a184100ebf0696898
 
 - Restore GitHub `main` to `18c4d43cedf4e14e8013200963c9ee22a15bed62` to keep Builds 1–12 but remove the active-job banner.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 14 — App version and safe update checker
+
+Status: ready to publish as Build 51.
+
+#### Additions
+
+1. Added a visible app build number at the bottom of the home screen.
+   - Inspectors and management can now confirm exactly which published version is open.
+   - A **Check for updates** button checks a small version file instead of downloading the full app again.
+
+2. Added a safe newer-version notice.
+   - If a newer build exists, the app shows the new build number and a clear Load update button.
+   - The notice tells the inspector to finish any unsent form first.
+   - The app never reloads automatically, protecting typed notes and selected photographs.
+   - Returning to the app checks again only after a five-minute interval, limiting unnecessary phone data use.
+
+3. Added a cache-busting update load.
+   - The Load update action keeps the inspector on the current app section and requests a fresh published copy.
+   - Offline users receive a reconnect message instead of a broken page.
+   - Updated the offline cache identifier to Build 51.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- `version.json`: valid JSON.
+- Current-build check: reported Build 51 is current and kept the update notice hidden.
+- Newer-build simulation: showed Build 52 available, the unsent-form warning, and Load Build 52.
+- 390-pixel phone layout: version row and update notice stayed within the viewport; the Load update control remained 44 pixels high.
+- Update remains inspector-controlled; no automatic reload occurs.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `c90144931a6b3ecb69bc7f2277c064f38ad66f9c` to keep Builds 1–13 but remove the update checker.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
