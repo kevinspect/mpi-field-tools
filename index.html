@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="52">
+  <meta name="app-build" content="53">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3634,6 +3634,36 @@
 
     .job-phases { display: grid; gap: 12px; }
 
+    .job-next-action {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      margin: 0 0 16px;
+      padding: 15px;
+      color: var(--ink-2);
+      background: #eef4fa;
+      border: 1px solid #cbddec;
+      border-left: 4px solid var(--bright-blue);
+      border-radius: 12px;
+    }
+
+    .job-next-action span {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--bright-blue);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .job-next-action strong { display: block; color: var(--forest); font-size: 14px; line-height: 1.35; }
+    .job-next-action p { margin: 5px 0 0; color: var(--ink-2); font-size: 10px; line-height: 1.5; }
+    .job-next-action button { min-width: 112px; min-height: 44px; }
+    .job-next-action.is-complete { background: #edf7f4; border-color: #bddfd3; border-left-color: #2f846b; }
+    .job-next-action.is-complete span { color: #2f846b; }
+
     .job-phase {
       overflow: hidden;
       color: var(--ink-2);
@@ -3768,6 +3798,8 @@
       .job-context-actions,
       .job-shortcuts,
       .daily-readiness-actions { grid-template-columns: 1fr; }
+      .job-next-action { align-items: stretch; grid-template-columns: 1fr; }
+      .job-next-action button { width: 100%; }
       .tool-commissioning-panel .damage-form { padding: 20px 16px 22px; }
       .onboarding-stage-grid { grid-template-columns: 1fr; }
       .onboarding-body { padding: 18px 15px 20px; }
@@ -3905,7 +3937,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">52</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">53</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -3998,6 +4030,14 @@
           <div class="panel-heading">
             <div><h2 id="job-stages-title">Four-stage job check</h2><p>Use the prompts as a final safety net, not a substitute for the MPI SOP.</p></div>
             <span class="step-count">Offline</span>
+          </div>
+          <div class="job-next-action" id="jobNextAction" aria-live="polite">
+            <div>
+              <span>Next useful action</span>
+              <strong id="jobNextActionTitle">Start the current job</strong>
+              <p id="jobNextActionDetail">Enter the inspector and property above so this phone can guide the current inspection.</p>
+            </div>
+            <button class="job-secondary-action" id="jobNextActionBtn" type="button" hidden>Open</button>
           </div>
           <div class="job-phases" id="jobPhases">
             <details class="job-phase" open>
@@ -6085,6 +6125,10 @@
       const jobProgressFill = document.getElementById("jobProgressFill");
       const jobProgressText = document.getElementById("jobProgressText");
       const jobPhases = [...document.querySelectorAll(".job-phase")];
+      const jobNextAction = document.getElementById("jobNextAction");
+      const jobNextActionTitle = document.getElementById("jobNextActionTitle");
+      const jobNextActionDetail = document.getElementById("jobNextActionDetail");
+      const jobNextActionBtn = document.getElementById("jobNextActionBtn");
       const dailyReadiness = document.getElementById("dailyReadiness");
       const dailyReadinessStatus = document.getElementById("dailyReadinessStatus");
       const dailyReadinessReadyBtn = document.getElementById("dailyReadinessReadyBtn");
@@ -10659,6 +10703,20 @@
 
       const ACTIVE_JOB_STORAGE_KEY = "mpiActiveJobV1";
       const DAILY_READINESS_STORAGE_KEY = "mpiDailyReadinessV1";
+      const JOB_STEP_GUIDANCE = {
+        scope: { title: "Confirm today’s inspection scope", detail: "Check the property, services ordered, access notes, and special instructions before travel.", route: "#today-jobs", button: "Open today’s jobs" },
+        schedule: { title: "Review timing, weather, and route", detail: "Confirm the appointment timing and safe travel or exterior-inspection conditions.", route: "#today-jobs", button: "Open today’s jobs" },
+        equipment: { title: "Confirm the field kit is ready", detail: "Check charged devices, meters, cameras, ladders, PPE, batteries, and required forms.", route: "#tool-guides", button: "Open tool guides" },
+        property: { title: "Verify the property and report", detail: "Confirm the address and correct report template before beginning the inspection.", local: "step", button: "Open this stage" },
+        conditions: { title: "Record arrival conditions", detail: "Document weather, occupancy, utilities, and visible access or safety limitations.", local: "step", button: "Open this stage" },
+        "before-photos": { title: "Take required Before photographs", detail: "Photograph controls and equipment before changing settings or opening covers.", route: "#equipment-record", button: "Open photo record" },
+        restore: { title: "Restore every operated item", detail: "Return thermostats, covers, fixtures, windows, doors, appliances, and access panels to their original safe condition.", route: "#equipment-record", button: "Open photo record" },
+        "wet-check": { title: "Complete the final wet-area check", detail: "Recheck for leakage, confirm water is off, and reset tested GFCIs before leaving.", route: "#sop-guide", button: "Open field procedures" },
+        "after-photos": { title: "Take required After photographs", detail: "Document restored controls and closed equipment before leaving the property.", route: "#equipment-record", button: "Open photo record" },
+        tools: { title: "Account for the complete field kit", detail: "Confirm all tools, ladders, meters, loose hardware, and PPE are back in the company vehicle.", route: "#tool-check", button: "Open tool closeout" },
+        communicate: { title: "Complete required communication", detail: "Report urgent hazards or property concerns and record who was informed.", route: "#team-messages", button: "Open communication" },
+        report: { title: "Complete and synchronize the report", detail: "Confirm every applicable section, limitation, photograph, and summary item is complete.", local: "step", button: "Open this stage" }
+      };
 
       function localDateKey(date = new Date()) {
         const year = date.getFullYear();
@@ -10747,6 +10805,73 @@
         });
       }
 
+      function renderNextJobAction(job = loadActiveJob()) {
+        jobNextAction.classList.remove("is-complete");
+        jobNextActionBtn.hidden = true;
+        jobNextActionBtn.dataset.route = "";
+        jobNextActionBtn.dataset.localTarget = "";
+        jobNextActionBtn.dataset.step = "";
+
+        if (!job?.property) {
+          jobNextActionTitle.textContent = "Start the current job";
+          jobNextActionDetail.textContent = "Enter the inspector and property above so this phone can guide the current inspection.";
+          return;
+        }
+
+        const completedSteps = new Set(job.steps || []);
+        const nextStep = jobSteps.find(step => !completedSteps.has(step.dataset.jobStep));
+        let guidance;
+
+        if (nextStep) {
+          guidance = JOB_STEP_GUIDANCE[nextStep.dataset.jobStep];
+          jobNextActionBtn.dataset.step = nextStep.dataset.jobStep;
+        } else {
+          const completedQuality = new Set(job.quality || []);
+          const qualityComplete = reportQualityChecks.length > 0 && completedQuality.size === reportQualityChecks.length;
+          if (qualityComplete) {
+            jobNextAction.classList.add("is-complete");
+            jobNextActionTitle.textContent = "Job closeout checks complete";
+            jobNextActionDetail.textContent = "All 12 field steps and the report release check are complete on this phone.";
+            return;
+          }
+          guidance = {
+            title: "Complete the report release check",
+            detail: "Use the 60-second check below before the report is released.",
+            local: "quality",
+            button: "Open release check"
+          };
+        }
+
+        jobNextActionTitle.textContent = guidance.title;
+        jobNextActionDetail.textContent = guidance.detail;
+        jobNextActionBtn.textContent = guidance.button;
+        jobNextActionBtn.dataset.route = guidance.route || "";
+        jobNextActionBtn.dataset.localTarget = guidance.local || "";
+        jobNextActionBtn.hidden = false;
+      }
+
+      function openNextJobAction() {
+        const route = jobNextActionBtn.dataset.route;
+        if (route) {
+          window.location.hash = route;
+          return;
+        }
+
+        if (jobNextActionBtn.dataset.localTarget === "quality") {
+          reportQualityCard.open = true;
+          reportQualityCard.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+
+        const stepKey = jobNextActionBtn.dataset.step;
+        const step = jobSteps.find(item => item.dataset.jobStep === stepKey);
+        const phase = step?.closest(".job-phase");
+        if (phase) {
+          phase.open = true;
+          phase.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+
       function updateJobProgress(job = loadActiveJob()) {
         const completed = new Set(job?.steps || []);
         jobSteps.forEach(step => { step.checked = completed.has(step.dataset.jobStep); });
@@ -10774,6 +10899,7 @@
         reportQualityStatus.classList.toggle("is-ready", complete);
         reportQualityCard.classList.toggle("is-complete", complete);
         if (job?.property) homeActiveJobProgress.textContent = `${new Set(job.steps || []).size} of ${jobSteps.length} closeout steps${complete ? " · Release check complete" : ""}`;
+        renderNextJobAction(job);
       }
 
       function renderActiveJob(job = loadActiveJob()) {
@@ -12296,6 +12422,7 @@
 
       jobContextForm.addEventListener("submit", saveActiveJob);
       clearActiveJobBtn.addEventListener("click", clearActiveJob);
+      jobNextActionBtn.addEventListener("click", openNextJobAction);
       dailyReadinessReadyBtn.addEventListener("click", confirmDailyReadiness);
       dailyReadinessIssueBtn.addEventListener("click", openReadinessIssueRequest);
       jobSteps.forEach(step => step.addEventListener("change", () => updateActiveJobStep(step)));
