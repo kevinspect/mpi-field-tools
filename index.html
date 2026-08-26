@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="56">
+  <meta name="app-build" content="57">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3581,6 +3581,22 @@
     .report-quality-list { display: grid; gap: 8px; }
     .report-quality-note { margin: 13px 0 0; color: var(--ink-2); font-size: 10px; line-height: 1.5; }
 
+    .temp-diff-card { margin: 0 0 18px; }
+    .temp-diff-body { padding-top: 18px; }
+    .temp-diff-actions { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 9px; }
+    .temp-diff-actions .decode-btn { margin: 0; min-height: 46px; }
+    .temp-diff-result {
+      margin-top: 14px;
+      padding: 14px;
+      color: var(--ink-2);
+      background: #eef4fa;
+      border-left: 4px solid var(--bright-blue);
+      border-radius: 10px;
+      font-size: 11px;
+      line-height: 1.55;
+    }
+    .temp-diff-result strong { display: block; margin-bottom: 4px; color: var(--forest); font-size: 14px; }
+
     .job-context-card {
       display: grid;
       gap: 16px;
@@ -3797,7 +3813,8 @@
       .external-training-actions { min-width: 0; }
       .job-context-actions,
       .job-shortcuts,
-      .daily-readiness-actions { grid-template-columns: 1fr; }
+      .daily-readiness-actions,
+      .temp-diff-actions { grid-template-columns: 1fr; }
       .job-next-action { align-items: stretch; grid-template-columns: 1fr; }
       .job-next-action button { width: 100%; }
       .tool-commissioning-panel .damage-form { padding: 20px 16px 22px; }
@@ -3937,7 +3954,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">56</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">57</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4780,6 +4797,34 @@
         <span><strong>Quick field prompts</strong> · Based on MPI Residential Inspector SOP Version 1.3 · Effective August 17, 2026</span>
         <span class="sop-offline-badge">Available offline</span>
       </div>
+
+      <details class="panel report-quality-card temp-diff-card" id="tempDifferenceCard">
+        <summary>
+          <span><strong>Temperature difference calculator</strong><small>Calculate cooling split or furnace temperature rise without leaving the app.</small></span>
+          <span class="daily-readiness-status">Offline</span>
+        </summary>
+        <div class="report-quality-body temp-diff-body">
+          <div class="field">
+            <label for="tempDifferenceMode">System mode</label>
+            <div class="select-wrap">
+              <select class="damage-input" id="tempDifferenceMode">
+                <option value="cooling">Cooling — return minus supply</option>
+                <option value="heating">Heating — supply minus return</option>
+              </select>
+            </div>
+          </div>
+          <div class="damage-field-row">
+            <div class="field"><label for="tempReturnReading">Return-air temperature °F</label><input class="damage-input" id="tempReturnReading" type="number" inputmode="decimal" min="-50" max="200" step="0.1" placeholder="Example: 74.0"></div>
+            <div class="field"><label for="tempSupplyReading">Supply-air temperature °F</label><input class="damage-input" id="tempSupplyReading" type="number" inputmode="decimal" min="-50" max="200" step="0.1" placeholder="Example: 56.5"></div>
+          </div>
+          <div class="temp-diff-actions">
+            <button class="decode-btn" id="calculateTempDifferenceBtn" type="button">Calculate difference</button>
+            <button class="job-secondary-action" id="copyTempDifferenceBtn" type="button" hidden>Copy readings</button>
+          </div>
+          <div class="temp-diff-result" id="tempDifferenceResult" role="status" aria-live="polite" hidden></div>
+          <p class="report-quality-note">Use representative locations, one verified thermometer, and the required run time. Cooling difference is a field screen—not a refrigerant or capacity diagnosis. Heating rise must be compared with the equipment nameplate range.</p>
+        </div>
+      </details>
 
       <div class="sop-shell">
         <aside class="sop-browser" aria-label="SOP procedure browser">
@@ -6148,6 +6193,12 @@
       const reportQualityChecks = [...document.querySelectorAll("[data-report-quality]")];
       const reportQualityStatus = document.getElementById("reportQualityStatus");
       const reportQualityProgressFill = document.getElementById("reportQualityProgressFill");
+      const tempDifferenceMode = document.getElementById("tempDifferenceMode");
+      const tempReturnReading = document.getElementById("tempReturnReading");
+      const tempSupplyReading = document.getElementById("tempSupplyReading");
+      const calculateTempDifferenceBtn = document.getElementById("calculateTempDifferenceBtn");
+      const copyTempDifferenceBtn = document.getElementById("copyTempDifferenceBtn");
+      const tempDifferenceResult = document.getElementById("tempDifferenceResult");
       const manufacturer = document.getElementById("manufacturer");
       const serialInput = document.getElementById("serial");
       const resultContent = document.getElementById("resultContent");
@@ -11073,6 +11124,39 @@
         if (job.quality.length === reportQualityChecks.length) showToast("Report release check complete");
       }
 
+      function calculateTemperatureDifference() {
+        const returnAir = Number.parseFloat(tempReturnReading.value);
+        const supplyAir = Number.parseFloat(tempSupplyReading.value);
+        if (!Number.isFinite(returnAir) || !Number.isFinite(supplyAir)) {
+          tempDifferenceResult.hidden = false;
+          tempDifferenceResult.innerHTML = "<strong>Enter both readings</strong>Use the measured return-air and supply-air temperatures in degrees Fahrenheit.";
+          copyTempDifferenceBtn.hidden = true;
+          return;
+        }
+
+        const cooling = tempDifferenceMode.value === "cooling";
+        const difference = cooling ? returnAir - supplyAir : supplyAir - returnAir;
+        const rounded = Math.round(difference * 10) / 10;
+        let interpretation;
+        if (cooling && difference <= 0) {
+          interpretation = "The measured supply air was not cooler than the return air. Verify system mode, run time, measurement locations, and thermometer operation before reporting the result.";
+        } else if (cooling && difference >= 14 && difference <= 22) {
+          interpretation = "This falls within MPI’s usual 14–22°F cooling field-screen range under typical conditions. Record the actual readings and test conditions; this result alone does not establish system capacity or refrigerant condition.";
+        } else if (cooling) {
+          interpretation = "This is outside MPI’s usual 14–22°F cooling field-screen range. Record the actual readings, conditions, and run time, and recommend qualified HVAC evaluation without diagnosing refrigerant charge or capacity.";
+        } else if (difference <= 0) {
+          interpretation = "The measured supply air was not warmer than the return air. Verify system mode, run time, measurement locations, and thermometer operation before reporting the result.";
+        } else {
+          interpretation = "Compare this actual temperature rise with the manufacturer’s nameplate temperature-rise range. Do not apply a generic heating pass/fail range.";
+        }
+
+        const label = cooling ? "Cooling temperature difference" : "Heating temperature rise";
+        tempDifferenceResult.hidden = false;
+        tempDifferenceResult.innerHTML = `<strong>${label}: ${rounded.toFixed(1)}°F</strong>${interpretation}`;
+        tempDifferenceResult.dataset.copyText = `${label}: Return air ${returnAir.toFixed(1)}°F; supply air ${supplyAir.toFixed(1)}°F; calculated difference ${rounded.toFixed(1)}°F.`;
+        copyTempDifferenceBtn.hidden = false;
+      }
+
       function clearActiveJob() {
         const job = loadActiveJob();
         if (job?.property && !window.confirm(`Clear the finished job at ${job.property} from this phone?`)) return;
@@ -12544,6 +12628,8 @@
       dailyReadinessIssueBtn.addEventListener("click", openReadinessIssueRequest);
       jobSteps.forEach(step => step.addEventListener("change", () => updateActiveJobStep(step)));
       reportQualityChecks.forEach(check => check.addEventListener("change", () => updateReportQualityCheck(check)));
+      calculateTempDifferenceBtn.addEventListener("click", calculateTemperatureDifference);
+      copyTempDifferenceBtn.addEventListener("click", () => copyText(tempDifferenceResult.dataset.copyText || "", "Temperature readings copied"));
       damagePhoto1.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto1, damagePhotoPreview1, damagePhotoCard1));
       damagePhoto2.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto2, damagePhotoPreview2, damagePhotoCard2));
       damageInformedOptions.forEach(option => option.addEventListener("change", event => updateDamageInformedSelection(event.currentTarget)));
