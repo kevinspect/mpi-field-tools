@@ -1,5 +1,5 @@
-const CACHE_NAME = "mpi-field-tools-shell-v20";
-const APP_SHELL = ["./", "./index.html", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./tool-thumbnails.png"];
+const CACHE_NAME = "mpi-field-tools-shell-v22";
+const APP_SHELL = ["./", "./index.html", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./mpi-logo.png", "./tool-thumbnails.png"];
 
 async function fetchFresh(resource) {
   return fetch(resource, { cache: "no-store" });
