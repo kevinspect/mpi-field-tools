@@ -690,3 +690,40 @@ Status: published August 26, 2026 as GitHub commit `a002a82347353bd7f3c6742f39be
 
 - Restore GitHub `main` to `f994b5f79ed3fbdc7c2bede9700d6a8f2030f454` to keep Builds 1–15 but remove the next-action guide.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 17 — Field reference reliability audit
+
+Status: published August 26, 2026 as GitHub commit `da3d7b23bffbfb29e6eeb43e143e8276cbf210c1`.
+
+#### Additions
+
+1. Audited the complete static app structure.
+   - All 41 internal hash links resolve to an existing destination.
+   - All 13 app screens open correctly in the phone router.
+   - Every text field has an associated label.
+   - Every outgoing company form is addressed only to Kevin.
+
+2. Refreshed manufacturer references.
+   - Replaced the stale Trane eLibrary path with Trane’s current accessible factory serial-label guide.
+   - Replaced the Bradford White lookup page with the factory’s dedicated date-code article.
+   - Replaced the blocked direct Scout 3-Pro Plus PDF with the manufacturer’s current product/manual page.
+   - Added the factory-reference review date to the Age Finder notes.
+
+3. Updated the visible build, version file, and offline cache identifier to Build 54.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Internal routes: 41 links checked; no missing destination.
+- Form recipients: nine online company forms checked; all point only to `kev@michiganpropertyinspections.com`.
+- Field labels: no unlabeled text, date, select, or textarea control detected.
+- Phone navigation: all 13 app screens opened at 390 by 844 pixels.
+- Phone overflow: none detected on any app screen.
+- Runtime errors: none during the 13-screen phone-navigation pass.
+- Replacement Trane factory document: direct HTTP 200 response.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `380271577756339489a4129bd52d86c2d753c46f` to keep Builds 1–16 but restore the previous reference links.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

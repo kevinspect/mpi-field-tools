@@ -72,6 +72,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - The home screen now shows a one-tap resume/directions banner for the active Job Companion property. **Implemented in Build 50.**
 - The app now shows its build number and provides a small, safe, inspector-controlled update checker. **Implemented in Build 51.**
 - Job Companion identifies the single next incomplete field or report-release action and opens the relevant app screen or checklist stage. **Implemented in Build 53.** Showing only required forms by inspection type remains future work.
+- All internal destinations, phone screens, form recipients, labels, and field-reference links received a complete reliability audit; stale Trane, Bradford White, and sewer-camera references were refreshed. **Implemented in Build 54.**
 - Training coaching links to the exact lesson or InterNACHI course.
 
 ## Low-cost improvements
