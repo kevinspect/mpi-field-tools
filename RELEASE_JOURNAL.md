@@ -1898,3 +1898,57 @@ Status: published August 26, 2026 as GitHub commit `aab516642a36fc7abe577992ecef
 
 - Restore GitHub `main` to `6f0aa2cf7c63dae7a87481b25ce9c6b185db7d2b` to keep Builds 1–49 and restore the retired hidden comment payload.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Field-workflow checkpoint — Job Companion lifecycle and tool guidance
+
+Status: passed August 26, 2026 against app Build 87.
+
+#### Validation record
+
+- Completed all 12 Job Companion closeout checks and all six release checks in a two-service test job containing sewer-scope and roof-drone work, one completed room, and one saved reading.
+- Confirmed the copied status summary identified the inspector and property, named both services, and reported the exact progress counts.
+- Cleared the current job, confirmed that the app retained one recoverable backup, restored it, and verified that the services, room, reading, and completion state all returned exactly.
+- Audited every one of the 22 purchased-tool guides. Each guide contains the tool/model identity, purpose, field sequence, records to capture before moving on, care-and-return steps, a stop/get-direction boundary, a direct support route, and a working exact-link entry point.
+- Confirmed all 15 external manual or product links are secure links. The ten guides without an external manual are the app setup workflow or basic hand tools rather than manufacturer-dependent devices.
+- Confirmed the 390-pixel phone layout remained free of horizontal overflow throughout both audits.
+
+### Phone-install and signal-loss checkpoint
+
+Status: passed August 26, 2026 against app Build 87.
+
+#### Validation record
+
+- Confirmed the install manifest uses the full Michigan Property Inspections app name, launches at Home in standalone mode, and retains the company navy and white launch colors.
+- Confirmed the Apple Home Screen icon is exactly 180 by 180 pixels and the standard install icons are exactly 192 by 192 and 512 by 512 pixels.
+- Opened each of the four manifest shortcuts on a 390-pixel phone viewport and confirmed it reached the exact Age Finder, Damaged Item Notice, Equipment Photo Record, or Field Procedures screen without horizontal overflow.
+- Confirmed the Build 87 offline shell contains the manifest and all three phone-icon assets.
+- Confirmed a push-notification tap is still routed to Team Messages.
+- Filled an inspector field question, put the phone browser offline, and attempted submission. The app blocked the send with a reconnect message, left the button usable, stayed on the correct screen, retained the unsent draft, and restored every field exactly after an offline reload.
+
+### Build 51 — Make every direct link land cleanly
+
+Status: published August 26, 2026 as GitHub commit `52c59217fc4057e4b1b44f6053914c7ca3a39ba2` (app Build 88).
+
+#### Additions
+
+1. Corrected initial section-link positioning on company phones.
+   - A direct link to any of the 12 field-tool screens now settles at the true top of the app instead of allowing the browser’s fragment jump to partly clip the centered section title.
+   - Removed automatic smooth movement from ordinary page anchors so a field screen opens immediately and predictably; intentional in-app moves to a selected result still use their explicit guided motion.
+
+2. Strengthened the copied management-guidance links.
+   - A copied Company Tool Guide link now lands on the exact selected tool card.
+   - A copied Field Procedure link now lands on the exact selected procedure.
+   - A copied MPI refresher link now opens and lands on the exact selected lesson.
+
+3. Updated the visible build, version file, and offline cache identifier to Build 88.
+
+#### Validation record
+
+- Opened all 12 non-Home screens through a fresh direct URL on a 390-pixel phone viewport; every screen finished at the top with its centered title visible and no horizontal overflow.
+- Opened representative direct links for the moisture meter, cooling-temperature-difference procedure, and Before/After photo lesson; each selected the correct content and placed it at the top of the phone viewport.
+- Re-ran all 64 exact guidance links, the complete 13-screen structural audit, the 21-family Equipment Age Finder suite, the offline field-question recovery test, and the installable-app manifest/icon audit with no failures.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `137f0c65c8da4b449a28b3fa6123a14dfe889bc2` to keep Builds 1–50 and restore the previous direct-link movement.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
