@@ -582,7 +582,7 @@ Status: published August 26, 2026 as GitHub commit `fbe72654e02a184100ebf0696898
 
 ### Build 14 — App version and safe update checker
 
-Status: ready to publish as Build 51.
+Status: published August 26, 2026 as GitHub commit `75a8b04d76f21ff968397ddc0d454b00e721c88e`.
 
 #### Additions
 
