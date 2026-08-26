@@ -2077,3 +2077,14 @@ Status: published August 26, 2026 as GitHub commit `5ac905aa0f7298b32c84b21c4172
 
 - Restore GitHub `main` to `8739604ebedbcc1a775890bb927f1a41ede4a500` to keep Builds 1–54 and remove only the future-date guard.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+## Improvement-cycle release sign-off
+
+Status: accepted for field trial on August 26, 2026 at public app Build 92.
+
+- GitHub Pages completed successfully and the public version file, app document, and service worker all report Build 92.
+- The public app opened under service-worker control with no horizontal overflow, then reopened the exact roof-drone Tool Guide, water-test/COC Field Procedure, and water-sampling refresher after the test browser was disconnected from the network.
+- The protected fallback remains `fallback/pre-six-hour-review-2026-08-26` at baseline commit `f522e534b8d8123c1880e24a0d5eb1ad6311924d`.
+- No paid service, purchase, background location tracking, new data recipient, hidden email, or automatic inspector submission was added during the cycle.
+- Field-trial recommendation: use Build 92 with a small inspector group before adding another workflow. Record unclear labels, repeated support questions, and any step inspectors skip; improve only the evidence-backed friction points so the app remains calm.
+- Intentionally deferred: the controlled online MPI Comment Builder, centralized manager dashboards/digests, role-based device enrollment, and deeper Spectora integration. These require a deliberate service and privacy decision rather than another static-page feature.
