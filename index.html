@@ -2268,6 +2268,59 @@
 
     .sop-stop-list li::before { content: "!"; background: #9d3b2f; }
 
+    .water-package-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .water-package-card {
+      padding: 16px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--orange);
+      border-radius: 12px;
+      box-shadow: 0 6px 17px rgba(17,24,106,.06);
+    }
+
+    .water-package-card h5 {
+      margin: 0;
+      color: var(--forest);
+      font-size: 14px;
+      line-height: 1.3;
+    }
+
+    .water-package-note {
+      margin: 5px 0 0;
+      color: var(--orange-dark);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .07em;
+      line-height: 1.4;
+      text-transform: uppercase;
+    }
+
+    .water-parameter-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .water-parameter-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 27px;
+      padding: 5px 9px;
+      color: var(--forest);
+      background: #eef5fa;
+      border: 1px solid #cbddea;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 850;
+      line-height: 1.2;
+    }
+
     .coverage { padding: 74px 0 26px; }
 
     .section-heading {
@@ -2614,6 +2667,7 @@
       .sop-controls { padding: 16px; }
       .sop-detail-head { padding: 24px 19px 20px; }
       .sop-detail-content { padding: 22px 18px 28px; }
+      .water-package-grid { grid-template-columns: 1fr; }
       .coverage { padding-top: 52px; }
       .coverage-grid { grid-template-columns: 1fr; }
       .section-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
@@ -2786,7 +2840,7 @@
       </aside>
     </section>
 
-    <p class="offline-setup-note app-screen-view" data-app-screen="age-finder"><strong>Offline setup:</strong> Open this site once while connected and wait for “Offline access is now ready.” Then add it to the phone’s Home Screen. The age finder, SOP prompts, training, and published company messages will reopen without cell service. Email forms wait until the phone is online.</p>
+    <p class="offline-setup-note app-screen-view" data-app-screen="age-finder"><strong>Offline setup:</strong> Open this site once while connected and wait for “Offline access is now ready.” Then add it to the phone’s Home Screen. The age finder, SOP prompts, training, and published company messages will reopen without cell service. Submission forms wait until the phone is online.</p>
 
     <section class="comment-builder" id="comment-builder" aria-labelledby="comment-builder-title" hidden>
       <div class="comment-heading">
@@ -2861,7 +2915,7 @@
           <p class="eyebrow">MPI equipment notice</p>
           <h2 id="damage-report-title">Report a damaged item.</h2>
         </div>
-        <p>Photograph damaged inspection equipment or access components, add the essential field details, and email the notice directly to Kevin.</p>
+        <p>Photograph damaged inspection equipment or access components, add the essential field details, and submit the notice to MPI management.</p>
       </div>
 
       <div class="damage-grid">
@@ -2963,15 +3017,15 @@
             <p class="damage-file-note">Both photos are required. The app combines them into one attachment labeled BEFORE and AFTER so both arrive together.</p>
           </div>
 
-          <button class="decode-btn" id="damageSubmitBtn" type="submit">Email damaged item notice</button>
+          <button class="decode-btn" id="damageSubmitBtn" type="submit">Submit damaged item notice</button>
           <p class="damage-submit-status" id="damageSubmitStatus" role="status" aria-live="polite"></p>
-        <p class="privacy-note">This feature requires internet access. The information and photos are sent through FormSubmit only to kev@michiganpropertyinspections.com. They are not stored by this website.</p>
+        <p class="privacy-note">Internet access is required to submit this record. The information and photos are not stored by the app.</p>
         </form>
 
         <aside class="panel damage-info-panel" aria-labelledby="damage-info-title">
           <span class="damage-online-badge">Online submission</span>
           <h3 id="damage-info-title">One notice. Everything attached.</h3>
-          <p>The administrative email includes the inspector, property, damaged item, location, description, everyone who was informed, action taken, submission time, and uploaded photos.</p>
+          <p>The submitted notice includes the inspector, property, damaged item, location, description, everyone who was informed, action taken, submission time, and uploaded photos.</p>
           <ul class="damage-checklist">
             <li>Use for damaged access hatches, ladders, tools, covers, panels, or other inspection-related items.</li>
             <li>Take a clear Before photo and an After photo showing how the item was left.</li>
@@ -2980,7 +3034,7 @@
           </ul>
           <div class="damage-success-box" id="damageSuccessBox" hidden>
             <strong>Damage notice submitted.</strong>
-          The form was sent only to Kevin. If this is the first submission, Kevin must open the FormSubmit activation email once.
+          The damaged item notice and labeled photos were submitted successfully.
           </div>
         </aside>
       </div>
@@ -3057,12 +3111,12 @@
               </div>
             </div>
             <input type="hidden" name="Photo record" value="Thermostat Before/After and furnace Before Opening/After Closing — System Restored photo sheet attached">
-            <p class="damage-file-note">All four photos are combined into one attachment with permanent labels so the record is clear in the email.</p>
+            <p class="damage-file-note">All four photos are combined into one attachment with permanent labels so the submitted record remains clear.</p>
           </div>
 
-          <button class="decode-btn" id="equipmentSubmitBtn" type="submit">Email photo record</button>
+          <button class="decode-btn" id="equipmentSubmitBtn" type="submit">Submit photo record</button>
           <p class="damage-submit-status" id="equipmentSubmitStatus" role="status" aria-live="polite"></p>
-          <p class="privacy-note">This online form emails the record only to Kevin. The website does not keep a photo database.</p>
+          <p class="privacy-note">Internet access is required to submit this record. The photos are not stored by the app.</p>
         </form>
 
         <aside class="panel damage-info-panel" aria-labelledby="equipment-info-title">
@@ -3077,7 +3131,7 @@
           </ul>
           <div class="form-success-box" id="equipmentSuccessBox" hidden>
             <strong>Equipment record submitted.</strong>
-            The labeled thermostat and furnace photo record was emailed only to Kevin.
+            The labeled thermostat and furnace photo record was submitted successfully.
           </div>
         </aside>
       </div>
@@ -3115,6 +3169,7 @@
               <button class="sop-chip" type="button" data-sop-query="water pressure">Water pressure</button>
               <button class="sop-chip" type="button" data-sop-query="hot cold fixture water">Fixture water test</button>
               <button class="sop-chip" type="button" data-sop-query="private well">Private well</button>
+              <button class="sop-chip" type="button" data-sop-query="water test parameters">Water test parameters</button>
               <button class="sop-chip" type="button" data-sop-query="panel cover">Panel cover</button>
               <button class="sop-chip" type="button" data-sop-query="carbon monoxide">CO screening</button>
             </div>
@@ -3297,7 +3352,7 @@
           <p class="eyebrow">MPI team connection</p>
           <h2 id="team-messages-title">Keep the whole team aligned.</h2>
         </div>
-        <p>Receive company push notifications, read published reminders offline, and email a field question or support request when connected.</p>
+        <p>Receive company push notifications, read published reminders offline, and submit a field question or support request when connected.</p>
       </div>
 
       <div class="message-board">
@@ -3306,21 +3361,6 @@
             <div><h2 id="announcement-title">Company messages</h2><p>Current notices included with this app release.</p></div>
             <span class="step-count">Offline</span>
           </div>
-          <section class="push-setup-card" aria-labelledby="push-setup-title">
-            <div class="push-setup-topline">
-              <span class="push-setup-badge">MPI true push</span>
-              <span class="push-status" id="pushStatus">Not enabled</span>
-            </div>
-            <h3 id="push-setup-title">MPI app notifications</h3>
-            <p>Receive company reminders on this phone even when MPI Field Tools is closed. Notifications open directly to Team Messages.</p>
-            <button class="push-enable-btn" id="enablePushBtn" type="button">Enable MPI notifications</button>
-            <div class="push-setup-code" id="pushSetupCode" hidden>
-              <span>This phone's setup code</span>
-              <code id="pushTokenValue"></code>
-              <button class="push-copy-btn" id="copyPushTokenBtn" type="button">Copy setup code</button>
-            </div>
-            <p class="push-setup-help" id="pushSetupHelp">On iPhone or iPad, first add MPI Field Tools to the Home Screen, then open it from the MPI icon and tap Enable.</p>
-          </section>
           <div class="announcement-list">
             <article class="announcement-card required">
               <span>Required reminder · August 25, 2026</span>
@@ -3371,11 +3411,26 @@
             </div>
           </div>
           <div class="field"><label for="teamQuestionText">Question or support needed *</label><textarea id="teamQuestionText" name="Question or support needed" maxlength="1200" placeholder="Include the system, visible condition, what you have already checked, and the decision you need help with." required></textarea></div>
-          <button class="decode-btn" id="teamQuestionSubmitBtn" type="submit">Email question to management</button>
+          <button class="decode-btn" id="teamQuestionSubmitBtn" type="submit">Submit field question</button>
           <p class="damage-submit-status" id="teamQuestionStatus" role="status" aria-live="polite"></p>
-          <div class="form-success-box" id="teamQuestionSuccess" hidden><strong>Question sent.</strong>Management received the field question by email.</div>
+          <div class="form-success-box" id="teamQuestionSuccess" hidden><strong>Question submitted.</strong>The field question was delivered to MPI management.</div>
         </form>
       </div>
+      <section class="push-setup-card" aria-labelledby="push-setup-title">
+        <div class="push-setup-topline">
+          <span class="push-setup-badge">MPI true push</span>
+          <span class="push-status" id="pushStatus">Not enabled</span>
+        </div>
+        <h3 id="push-setup-title">MPI app notifications</h3>
+        <p>Receive company reminders on this phone even when MPI Field Tools is closed. Notifications open directly to Team Messages.</p>
+        <button class="push-enable-btn" id="enablePushBtn" type="button">Enable MPI notifications</button>
+        <div class="push-setup-code" id="pushSetupCode" hidden>
+          <span>This phone's setup code</span>
+          <code id="pushTokenValue"></code>
+          <button class="push-copy-btn" id="copyPushTokenBtn" type="button">Copy setup code</button>
+        </div>
+        <p class="push-setup-help" id="pushSetupHelp">On iPhone or iPad, first add MPI Field Tools to the Home Screen, then open it from the MPI icon and tap Enable.</p>
+      </section>
       <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
     </section>
 
@@ -3385,7 +3440,7 @@
           <p class="eyebrow">MPI inspector request form</p>
           <h2 id="requests-feedback-title">Tell us what you need.</h2>
         </div>
-        <p>Request tools, uniforms, supplies, training, or another type of support. Each request arrives as a structured management email rather than getting lost in a text chain.</p>
+        <p>Request tools, uniforms, supplies, training, or another type of support using a consistent company form.</p>
       </div>
 
       <div class="workflow-grid">
@@ -3442,9 +3497,9 @@
           </div>
           <div class="field"><label for="requestDetails">Details / reason *</label><textarea id="requestDetails" name="Details and reason" maxlength="1200" placeholder="Explain the size, quantity, current problem, training topic, or reason for the request." required></textarea></div>
           <div class="field"><label for="requestSuggestion">Suggested solution or supplier</label><textarea class="damage-action-input" id="requestSuggestion" name="Suggested solution or supplier" maxlength="700" placeholder="Optional: Add a link, product name, supplier, or idea that may help."></textarea></div>
-          <button class="decode-btn" id="requestSubmitBtn" type="submit">Email request to management</button>
+          <button class="decode-btn" id="requestSubmitBtn" type="submit">Submit request</button>
           <p class="damage-submit-status" id="requestSubmitStatus" role="status" aria-live="polite"></p>
-          <p class="privacy-note">The request is emailed to management. This free version does not create an employee database or order history.</p>
+          <p class="privacy-note">Submitted requests are delivered to MPI management. The app does not maintain an employee order history.</p>
         </form>
 
         <aside class="panel damage-info-panel" aria-labelledby="request-info-title">
@@ -3457,7 +3512,7 @@
             <li>Training: name the system, procedure, or report-writing skill you want covered.</li>
             <li>Feedback: explain the current friction and the improvement you recommend.</li>
           </ul>
-          <div class="form-success-box" id="requestSuccessBox" hidden><strong>Request submitted.</strong>Management received the structured request by email.</div>
+          <div class="form-success-box" id="requestSuccessBox" hidden><strong>Request submitted.</strong>The structured request was delivered to MPI management.</div>
         </aside>
       </div>
       <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
@@ -4229,6 +4284,34 @@
           stop: [
             "Do not open the pressure switch, well cap, or sealed components; alter settings; operate questionable shutoffs; or exceed electrical authorization.",
             "Well-yield testing and water-quality sampling require a separate approved procedure, contracted scope, and inspector authorization."
+          ]
+        },
+        {
+          id: "quick-water-test-parameters",
+          category: "Ancillary services",
+          title: "Water test parameters / COC guide",
+          aliases: "water test parameters coc chain of custody lab basic essential complete comprehensive fha va coliform e coli nitrate nitrite lead arsenic iron hardness sodium chloride fluoride sulfate",
+          source: "Current MPI water-testing package definitions",
+          sourceNote: "Source: Current MPI water-testing package definitions reviewed August 25, 2026. This card identifies the ordered lab parameters; the current laboratory chain-of-custody requirements, contracted scope, and company training govern sampling and submission.",
+          purpose: "Match the ordered MPI water-test package to the parameters marked on the laboratory chain-of-custody form. Mark only the package and parameters shown on the inspection order.",
+          packages: [
+            { name: "Basic Water Test", parameters: ["Coliform", "Nitrate", "Arsenic"] },
+            { name: "Essential Water Test", note: "FHA & VA loan requirement", parameters: ["Coliform", "E. coli", "Nitrate", "Nitrite", "Lead"] },
+            { name: "Complete Water Test", parameters: ["Coliform", "Nitrate", "Arsenic", "Lead"] },
+            { name: "Comprehensive Water Test", note: "Current booking notice: 21-day turnaround", parameters: ["Coliform", "Nitrate", "Arsenic", "Lead", "Iron", "Hardness", "Sodium", "Chloride", "Fluoride", "Sulfate"] }
+          ],
+          recordHeading: "Complete the laboratory COC form",
+          record: [
+            "Confirm the ordered package name before marking any parameter boxes.",
+            "Mark every parameter included in that package and do not add parameters from another package.",
+            "Complete all laboratory-required property, sample-source, sample-ID, collection date/time, and collector information.",
+            "Match the COC sample identification to every bottle and verify the package, parameters, labels, and custody details before submission."
+          ],
+          stopHeading: "Stop and confirm with management when",
+          stop: [
+            "The inspection order and COC form show different packages or parameter names.",
+            "A required bottle, preservative, temperature control, label, signature, or collection field is missing or uncertain.",
+            "The requested test is outside the contracted scope or the inspector's current water-sampling authorization."
           ]
         },
         {
@@ -7367,28 +7450,28 @@
         if (params.get("damage-sent") === "1") {
           damageSuccessBox.hidden = false;
           damageSubmitStatus.className = "damage-submit-status success";
-          damageSubmitStatus.textContent = "Damage notice submitted only to Kevin.";
+          damageSubmitStatus.textContent = "Damage notice submitted successfully.";
           params.delete("damage-sent");
           targetHash = "#damage-report";
         }
         if (params.get("equipment-sent") === "1") {
           equipmentSuccessBox.hidden = false;
           equipmentSubmitStatus.className = "damage-submit-status success";
-          equipmentSubmitStatus.textContent = "Thermostat and furnace photo record submitted only to Kevin.";
+          equipmentSubmitStatus.textContent = "Thermostat and furnace photo record submitted successfully.";
           params.delete("equipment-sent");
           targetHash = "#equipment-record";
         }
         if (params.get("question-sent") === "1") {
           teamQuestionSuccess.hidden = false;
           teamQuestionStatus.className = "damage-submit-status success";
-          teamQuestionStatus.textContent = "Field question emailed to management.";
+          teamQuestionStatus.textContent = "Field question submitted successfully.";
           params.delete("question-sent");
           targetHash = "#team-messages";
         }
         if (params.get("request-sent") === "1") {
           requestSuccessBox.hidden = false;
           requestSubmitStatus.className = "damage-submit-status success";
-          requestSubmitStatus.textContent = "Inspector request emailed to management.";
+          requestSubmitStatus.textContent = "Inspector request submitted successfully.";
           params.delete("request-sent");
           targetHash = "#requests-feedback";
         }
@@ -7546,7 +7629,7 @@
         }
         if (!navigator.onLine) {
           damageSubmitStatus.className = "damage-submit-status error";
-          damageSubmitStatus.textContent = "Internet access is required to email the notice. Reconnect and submit again.";
+          damageSubmitStatus.textContent = "Internet access is required to submit the notice. Reconnect and try again.";
           showToast("Reconnect before sending the damage notice");
           return;
         }
@@ -7576,7 +7659,7 @@
           HTMLFormElement.prototype.submit.call(damageForm);
         } catch (error) {
           damageSubmitBtn.disabled = false;
-          damageSubmitBtn.textContent = "Email damaged item notice";
+          damageSubmitBtn.textContent = "Submit damaged item notice";
           damageSubmitStatus.className = "damage-submit-status error";
           damageSubmitStatus.textContent = error.message || "The photo sheet could not be prepared. Choose the photos again and retry.";
         }
@@ -7593,7 +7676,7 @@
         }
         if (!navigator.onLine) {
           equipmentSubmitStatus.className = "damage-submit-status error";
-          equipmentSubmitStatus.textContent = "Reconnect to the internet before emailing this record.";
+          equipmentSubmitStatus.textContent = "Reconnect to the internet before submitting this record.";
           showToast("Reconnect before sending the equipment record");
           return;
         }
@@ -7621,7 +7704,7 @@
           HTMLFormElement.prototype.submit.call(equipmentForm);
         } catch (error) {
           equipmentSubmitBtn.disabled = false;
-          equipmentSubmitBtn.textContent = "Email photo record";
+          equipmentSubmitBtn.textContent = "Submit photo record";
           equipmentSubmitStatus.className = "damage-submit-status error";
           equipmentSubmitStatus.textContent = error.message || "The four-photo sheet could not be prepared. Choose the photos again and retry.";
         }
@@ -7698,7 +7781,7 @@
         saveInspectorName(config.inspector.value);
         config.submitButton.disabled = true;
         config.submitButton.textContent = config.pendingText;
-        config.status.textContent = "Sending the form to management. Keep this page open.";
+        config.status.textContent = "Submitting the form. Keep this page open.";
       }
 
       function validateTeamQuestionSubmission(event) {
@@ -7882,7 +7965,8 @@
             procedure.aliases,
             procedure.purpose,
             procedure.source,
-            ...procedure.steps,
+            ...(procedure.steps || []),
+            ...(procedure.packages || []).flatMap(packageItem => [packageItem.name, packageItem.note || "", ...(packageItem.parameters || [])]),
             ...procedure.record,
             ...procedure.stop
           ].join(" "))
@@ -8075,12 +8159,13 @@
         purpose.className = "sop-purpose-line";
         purpose.textContent = record.purpose;
         content.appendChild(purpose);
-        appendQuickSopList(content, "Step by step", record.steps, "sop-quick-step-list");
-        appendQuickSopList(content, "Record in the report", record.record, "sop-quick-check-list");
-        appendQuickSopList(content, "Stop or limit the test when", record.stop, "sop-quick-check-list sop-stop-list");
+        if (record.packages?.length) appendWaterPackages(content, record.packages);
+        else appendQuickSopList(content, record.stepsHeading || "Step by step", record.steps, "sop-quick-step-list");
+        appendQuickSopList(content, record.recordHeading || "Record in the report", record.record, "sop-quick-check-list");
+        appendQuickSopList(content, record.stopHeading || "Stop or limit the test when", record.stop, "sop-quick-check-list sop-stop-list");
         const source = document.createElement("p");
         source.className = "sop-detail-source";
-        source.textContent = `Source: MPI SOP ${record.source} · Version ${SOP_DATA.meta.version} · Effective ${SOP_DATA.meta.effective}. This prompt is a condensed field aid; the controlled company SOP and current training govern.`;
+        source.textContent = record.sourceNote || `Source: MPI SOP ${record.source} · Version ${SOP_DATA.meta.version} · Effective ${SOP_DATA.meta.effective}. This prompt is a condensed field aid; the controlled company SOP and current training govern.`;
         content.appendChild(source);
         sopDetail.append(head, content);
       }
@@ -8099,6 +8184,40 @@
           list.appendChild(row);
         }
         group.append(heading, list);
+        parent.appendChild(group);
+      }
+
+      function appendWaterPackages(parent, packages) {
+        const group = document.createElement("section");
+        group.className = "sop-group";
+        const heading = document.createElement("h4");
+        heading.textContent = "Water test packages";
+        const grid = document.createElement("div");
+        grid.className = "water-package-grid";
+        for (const packageItem of packages) {
+          const card = document.createElement("article");
+          card.className = "water-package-card";
+          const name = document.createElement("h5");
+          name.textContent = packageItem.name;
+          card.appendChild(name);
+          if (packageItem.note) {
+            const note = document.createElement("p");
+            note.className = "water-package-note";
+            note.textContent = packageItem.note;
+            card.appendChild(note);
+          }
+          const parameters = document.createElement("div");
+          parameters.className = "water-parameter-list";
+          for (const parameter of packageItem.parameters || []) {
+            const chip = document.createElement("span");
+            chip.className = "water-parameter-chip";
+            chip.textContent = parameter;
+            parameters.appendChild(chip);
+          }
+          card.appendChild(parameters);
+          grid.appendChild(card);
+        }
+        group.append(heading, grid);
         parent.appendChild(group);
       }
 
@@ -8281,13 +8400,13 @@
       requestForm.addEventListener("submit", validateRequestSubmission);
       window.addEventListener("pageshow", () => {
         damageSubmitBtn.disabled = false;
-        damageSubmitBtn.textContent = "Email damaged item notice";
+        damageSubmitBtn.textContent = "Submit damaged item notice";
         equipmentSubmitBtn.disabled = false;
-        equipmentSubmitBtn.textContent = "Email photo record";
+        equipmentSubmitBtn.textContent = "Submit photo record";
         teamQuestionSubmitBtn.disabled = false;
-        teamQuestionSubmitBtn.textContent = "Email question to management";
+        teamQuestionSubmitBtn.textContent = "Submit field question";
         requestSubmitBtn.disabled = false;
-        requestSubmitBtn.textContent = "Email request to management";
+        requestSubmitBtn.textContent = "Submit request";
       });
 
       window.addEventListener("resize", sizeCommentOutput);
