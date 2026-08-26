@@ -1607,3 +1607,34 @@ Status: published August 26, 2026 as GitHub commit `036c4cf326f86dae28a6400252c8
 
 - Restore GitHub `main` to `3978bc4f6e5ba1a94f4d7905728457713da42f2b` to keep Builds 1–40 but remove cleared-job recovery.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 42 — Inspector-initiated MPI refresher progress snapshot
+
+Status: published August 26, 2026 as GitHub commit `255474f1fc6fae19851569c5011465970bd122a1` (app Build 79).
+
+#### Additions
+
+1. Added **Share MPI refresher progress** to Training Center.
+   - The control stays collapsed during normal training and sends nothing in the background.
+   - When requested by management, the inspector can deliberately email one snapshot containing their name, timestamp, exact completion total, completed MPI lesson titles, and remaining MPI lesson titles.
+   - The snapshot uses the existing no-cost form route and is addressed only to Kevin.
+   - The app distinguishes this phone-local MPI refresher snapshot from the private training profile, InterNACHI credentials, competency approval, and ancillary-service authorization.
+
+2. Added clear submission confirmation.
+   - A successful redirect returns to Training Center, opens the progress card, and shows that the snapshot was sent.
+   - Updated the visible build, version file, and offline cache identifier to Build 79.
+
+#### Validation record
+
+- Seeded two completed lessons: **Before/After photo records** and **Ambient CO screening and response**.
+- Confirmed the generated progress was exactly **2 of 16 MPI refreshers complete**.
+- Confirmed both completed titles appeared and all 14 other lesson titles appeared in the remaining list, without duplicating the completed lessons.
+- Confirmed the email subject included the inspector and total, and the record included the local America/Detroit timestamp.
+- Intercepted the submit in the browser and confirmed zero outbound test emails.
+- 390-pixel phone layout: no horizontal overflow.
+- Browser script errors: none detected.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `b72695619366901186945585cbd127d6f5fd7b68` to keep Builds 1–41 but remove MPI refresher progress sharing.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
