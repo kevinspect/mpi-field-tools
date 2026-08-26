@@ -1236,3 +1236,33 @@ Status: published August 26, 2026 as GitHub commit `769af264eb091814af0eb71da22e
 
 - Restore GitHub `main` to `34cc94a3642a381c32dfa6e9bd7d7a973c9a86da` to keep Builds 1–30 but remove the expanded copied result.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 32 — Special-service packing check
+
+Status: published August 26, 2026 as GitHub commit `d7265810891421e49d27624677d960f1737d61f1` (app Build 69).
+
+#### Additions
+
+1. Added a collapsed **Special-service pack check** inside Company Tool Guides.
+   - The inspector chooses Standard home inspection, Sewer scope, Mold / IAQ sampling, Well / septic / water service, Drone roof inspection, or Crawlspace robot inspection.
+   - The result shows only the high-use or extra equipment, consumables, records, and setup checks that apply to that selection.
+   - Every listed company tool has a direct **Open guide** action that opens its exact instruction card.
+
+2. Kept packing separate from authorization.
+   - Every specialist pack states that the contracted scope, current inspector authorization, approved field procedure, and applicable external requirements must be confirmed separately.
+   - The check does not record completion, authorize a service, make a report conclusion, or email management.
+   - Updated the visible build, version file, and offline cache identifier to Build 69.
+
+#### Validation record
+
+- All six choices rendered the intended number of equipment links: Standard 4, Sewer 3, Mold 3, Well/septic/water 4, Drone 1, Crawlspace robot 3.
+- The Sewer scope pack’s **Open guide** action opened the exact Sewer scope company card.
+- 390-pixel phone layout: no horizontal overflow.
+- Every new action was at least 42 pixels high.
+- Duplicate HTML IDs: none detected.
+- Browser script errors: none detected.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `1d7aaa7118eb3d3ea3a7e058f1c3f810d0364850` to keep Builds 1–31 but remove the special-service packing check.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

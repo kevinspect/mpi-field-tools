@@ -87,6 +87,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - The Trane/American Standard decoder now follows the current factory equipment-date table, including L = 1996 and the short accessory/coil date block, with an official no-match verification route. **Implemented in Build 66.**
 - HTP and Ariston are now supported through four manufacturer-documented serial formats spanning HTP equipment from 1994 onward and current Ariston products. **Implemented in Build 67.**
 - Copied Age Finder results now carry the equipment family, serial, manufacture result, date-code explanation, and the same approximate age shown on screen. **Implemented in Build 68.**
+- Company Tool Guides now includes a collapsed, service-specific packing check with direct links to the exact tool cards for standard, sewer, mold/IAQ, well/septic/water, drone, and crawlspace-robot work. **Implemented in Build 69.**
 
 ## Low-cost improvements
 
