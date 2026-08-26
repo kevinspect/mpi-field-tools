@@ -1435,3 +1435,34 @@ Status: published August 26, 2026 as GitHub commit `7949971e8b8947371bca10560a1c
 
 - Restore GitHub `main` to `bbf6d2dc0b9cb6ba76ff36a0e9edfbdc972ddd72` to keep Builds 1–36 but remove the update note and explicit link hardening.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 38 — Direct links for every company tool guide
+
+Status: published August 26, 2026 as GitHub commit `6daa53bed72b71b31843b945c501e6d5722ee5a9` (app Build 75).
+
+#### Additions
+
+1. Added **Copy direct link to this guide** to every company tool instruction card.
+   - A copied URL includes the stable company tool ID and opens the app directly to that exact card.
+   - Kevin can use the link in an individual training assignment, a team message, an equipment record, or a future printed QR label on a tool or case.
+   - This requires no new account, subscription, service, or exposed key.
+
+2. Added safe link handling.
+   - A recognized tool ID selects and displays only the intended guide.
+   - An invalid or retired ID falls back to the normal Moisture meter starting card rather than breaking the Tool Guides screen.
+   - Updated the Company Tool Guides release description and the visible build, version file, and offline cache identifier to Build 75.
+
+#### Validation record
+
+- `?tool=roof-drone#tool-guides` opened **Roof inspection drone — DJI Mini 4 Pro** as the single selected result.
+- The copied URL reopened the exact same guide.
+- An invalid tool ID fell back safely to **Moisture meter**.
+- The copy action was increased to a 44-pixel phone target after the first test identified a 39-pixel control.
+- 390-pixel phone layout: no horizontal overflow.
+- Duplicate HTML IDs: none detected.
+- Browser script errors: none detected.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `3e8ae320c516dc9b98ef6e786de64775b1d3c970` to keep Builds 1–37 but remove direct tool-guide links.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
