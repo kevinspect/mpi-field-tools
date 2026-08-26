@@ -84,6 +84,8 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Every water-test package in the COC guide now provides one-tap copying of its exact MPI package name and visible parameter list. **Implemented in Build 63.**
 - Job Companion now includes a property-specific, offline factual readings notebook with edit/remove controls and exact copy output; it does not interpret measurements. **Implemented in Build 64.**
 - Current Job now creates an inspector-initiated factual status handoff with exact closeout, next-action, room-photo, reading, and release-check progress. **Implemented in Build 65.**
+- The Trane/American Standard decoder now follows the current factory equipment-date table, including L = 1996 and the short accessory/coil date block, with an official no-match verification route. **Implemented in Build 66.**
+- HTP and Ariston are now supported through four manufacturer-documented serial formats spanning HTP equipment from 1994 onward and current Ariston products. **Implemented in Build 67.**
 
 ## Low-cost improvements
 

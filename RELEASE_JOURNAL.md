@@ -1175,3 +1175,40 @@ Status: published August 26, 2026 as GitHub commit `9c75647fce45dde88ae0ad1218a8
 
 - Restore GitHub `main` to `88973b393e9cb569db9abca5d6fc1d83b0094a9d` to keep Builds 1–28 but remove the Trane age-finder changes.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 30 — HTP and Ariston factory age formats
+
+Status: published August 26, 2026 as GitHub commit `9e9f87f8cfa3083a7c9ad5df02ef575238e70653`.
+
+#### Additions
+
+1. Added **HTP / Ariston** as the twenty-first manufacturer/equipment choice in the Age Finder.
+   - HTP letter-month/day/letter-year serials used from 1994 through 2011.
+   - HTP MMDDYY serials used from 2011 through September 2021.
+   - The current 21-character HTP/Ariston year-plus-calendar-day format used since September 2021, including the Hybrid Heat Pump Water Heater layout.
+   - The current shorter Ariston month-letter/year format used on non-hybrid products.
+
+2. Kept the decoder date-safe.
+   - Calendar dates and day-of-year values are validated before a result is shown.
+   - Future dates and malformed formats are refused.
+   - The result highlights only the characters that carry the date and states the exact factory format that matched.
+   - Added the HTP/Ariston manufacturer serial guide to the in-app source list.
+   - Updated the visible build, version file, and offline cache identifier to Build 67.
+
+#### Validation record
+
+- HTP `I22M28666` decoded as **September 22, 2006**.
+- HTP `112116E2054485` decoded as **November 21, 2016**.
+- Current 21-character `3251200U4220450000188` decoded as calendar day 45, **February 14, 2022**.
+- Ariston `J21-6869` decoded as **September 2021**.
+- An invalid serial produced **No reliable match** and no guessed date.
+- All **21** built-in manufacturer examples decoded successfully.
+- 390-pixel phone layout: no horizontal overflow.
+- Duplicate HTML IDs: none detected.
+- Browser script errors: none detected.
+- Technical source: HTP / Ariston, *Understand Serial Numbers*, factory guide revised February 2024.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `df336fc8e2c842893da46e65a58305bd1b65443e` to keep Builds 1–29 but remove the HTP/Ariston expansion.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
