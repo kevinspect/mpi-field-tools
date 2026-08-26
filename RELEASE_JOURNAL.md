@@ -1063,3 +1063,41 @@ Status: published August 26, 2026 as GitHub commit `5a24e5e9cfc0ef4d4598be665534
 
 - Restore GitHub `main` to `bb2b6f935ae4b48afa6762ff55f3c74ae04ee9e2` to keep Builds 1–25 but remove the water-package copy controls.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 27 — Active-job factual readings notebook
+
+Status: published August 26, 2026 as GitHub commit `91e9a5d2713eab8f7102a4a475dc9eb61a3f348f`.
+
+#### Additions
+
+1. Added a collapsed **Field readings notebook** inside Job Companion.
+   - Records the reading type, exact location/component, exact value with unit, and optional conditions or instrument note.
+   - Supports water pressure, temperature, temperature difference, carbon monoxide, moisture, electrical, and other factual field measurements.
+   - Allows an entry to be updated or removed before it is copied.
+
+2. Connected readings to the active property.
+   - Entries persist with the active job on that phone through reloads.
+   - Updating the same property preserves its readings; starting a different property begins a clean notebook.
+   - Clearing the finished active job removes its reading scratchpad from the phone.
+
+3. Added factual report transfer without interpretation.
+   - One button copies the property and all current readings in a clean line-by-line format.
+   - The app does not decide whether a reading passes or fails, diagnose a system, recommend a repair, or replace the applicable MPI procedure and report item.
+   - No reading is emailed or uploaded.
+   - Updated the visible build, version file, and offline cache identifier to Build 64.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- No-job state displayed **Start job** and linked entries to a newly started property.
+- Two readings persisted after reload; editing changed a CO entry from 0 ppm to 1 ppm.
+- Copied output exactly preserved the property, type, location, reading/unit, and entered conditions without adding interpretation.
+- Removing one entry changed **2 readings** to **1 reading**; starting a new property changed the card to **No readings**.
+- 390-pixel phone layout: no horizontal overflow; Update, Remove, and Copy controls remained 44 pixels high.
+- No email, network submission, background monitoring, or diagnostic logic was added.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `3d50856e88654110ccb41cf5f560f0417ec0a0dc` to keep Builds 1–26 but remove the field readings notebook.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
