@@ -314,6 +314,30 @@
     .home-tool-icon.icon-requests { background-position: 66.667% 100%; }
     .home-tool-icon.icon-ai { background-position: 100% 100%; }
 
+    .home-tool-icon.icon-tool-check {
+      position: relative;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background-image: none;
+      background: linear-gradient(145deg, #11186A, #2F75B5);
+      border-color: #fff;
+    }
+
+    .home-tool-icon.icon-tool-check::before {
+      content: "✓";
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      color: #11186A;
+      background: #fff;
+      border-radius: 50%;
+      font-size: 23px;
+      font-weight: 950;
+      box-shadow: 0 0 0 4px rgba(180, 135, 32, .42);
+    }
+
     .home-tool-copy strong { display: block; font-size: 17px; line-height: 1.25; }
     .home-tool-copy small { display: block; margin-top: 4px; color: var(--ink-2); font-size: 12px; line-height: 1.35; }
     .home-tool-arrow { color: var(--orange); font-size: 28px; font-weight: 700; line-height: 1; }
@@ -1323,6 +1347,24 @@
       border-style: dashed;
     }
 
+    .damage-other-informed {
+      margin-top: 10px;
+      padding: 13px;
+      border: 1px solid #d8e1ec;
+      border-radius: 14px;
+      background: #f5f8fc;
+    }
+
+    .damage-other-informed[hidden] { display: none; }
+
+    .damage-other-informed label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--forest);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
     .damage-input:focus,
     .damage-form textarea:focus {
       border-color: var(--bright-blue);
@@ -1566,6 +1608,123 @@
       grid-template-columns: minmax(0, 1.12fr) minmax(320px, .88fr);
       gap: 22px;
       align-items: stretch;
+    }
+
+    .tool-check-progress {
+      margin: 2px 0 18px;
+      padding: 15px;
+      background: #eef4fa;
+      border: 1px solid #d7e3ef;
+      border-radius: 14px;
+    }
+
+    .tool-check-progress-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--forest);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .tool-check-progress-track {
+      height: 8px;
+      margin-top: 10px;
+      overflow: hidden;
+      background: #d8e1eb;
+      border-radius: 999px;
+    }
+
+    .tool-check-progress-fill {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--bright-blue), var(--orange));
+      border-radius: inherit;
+      transition: width .2s ease;
+    }
+
+    .tool-check-groups { display: grid; gap: 12px; }
+
+    .tool-check-group {
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid #dfe4ef;
+      border-radius: 15px;
+    }
+
+    .tool-check-group summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 54px;
+      padding: 12px 15px;
+      color: var(--forest);
+      background: #f7f9fc;
+      cursor: pointer;
+      list-style: none;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .tool-check-group summary::-webkit-details-marker { display: none; }
+    .tool-check-group summary::after { content: "+"; color: var(--orange-dark); font-size: 22px; }
+    .tool-check-group[open] summary::after { content: "−"; }
+    .tool-check-group summary span { color: var(--ink-2); font-size: 11px; font-weight: 750; }
+
+    .tool-check-list {
+      display: grid;
+      gap: 0;
+      padding: 2px 14px 8px;
+      border-top: 1px solid #e6e9f0;
+    }
+
+    .tool-check-item {
+      display: grid;
+      grid-template-columns: 23px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 11px 2px;
+      color: var(--forest);
+      border-bottom: 1px solid #eceff4;
+      cursor: pointer;
+    }
+
+    .tool-check-item:last-child { border-bottom: 0; }
+
+    .tool-check-item input {
+      width: 21px;
+      height: 21px;
+      margin: 0;
+      accent-color: var(--bright-blue);
+    }
+
+    .tool-check-item strong { display: block; font-size: 12px; line-height: 1.35; }
+    .tool-check-item small { display: block; margin-top: 2px; color: var(--ink-2); font-size: 10.5px; line-height: 1.35; }
+
+    .tool-check-result { margin-top: 18px; }
+
+    .tool-check-confirmation {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 16px 0 4px;
+      padding: 14px;
+      color: var(--forest);
+      background: #f7f4ec;
+      border: 1px solid #e6d9bc;
+      border-radius: 13px;
+      font-size: 11.5px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .tool-check-confirmation input {
+      flex: none;
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      accent-color: var(--bright-blue);
     }
 
     .form-success-box {
@@ -2904,6 +3063,11 @@
         <span class="home-tool-copy"><strong>Equipment Photo Record</strong><small>Document thermostat settings and furnace access before and after inspection.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
+      <a class="home-tool-card" href="#tool-check">
+        <span class="home-tool-icon icon-tool-check" aria-hidden="true"></span>
+        <span class="home-tool-copy"><strong>End-of-Job Tool Check</strong><small>Confirm inspection tools are accounted for and secured before leaving.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
       <a class="home-tool-card" href="#sop-guide">
         <span class="home-tool-icon icon-sop" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>Field Procedures</strong><small>Open short, step-by-step prompts from the MPI handbook.</small></span>
@@ -3149,27 +3313,34 @@
               <p class="damage-action-help">Choose every person who was notified.</p>
               <div class="damage-informed-list">
                 <label class="damage-informed-option">
-                  <input id="damageRealtorInformed" type="checkbox" data-damage-informed="Realtor">
+                  <input id="damageRealtorInformed" name="People informed" value="Realtor" type="checkbox" data-damage-informed="Realtor">
                   <span>Realtor</span>
                 </label>
                 <label class="damage-informed-option">
-                  <input id="damageHomeownerInformed" type="checkbox" data-damage-informed="Homeowner">
+                  <input id="damageHomeownerInformed" name="People informed" value="Homeowner" type="checkbox" data-damage-informed="Homeowner">
                   <span>Homeowner</span>
                 </label>
                 <label class="damage-informed-option">
-                  <input id="damageManagerInformed" type="checkbox" data-damage-informed="Building manager">
+                  <input id="damageManagerInformed" name="People informed" value="Building manager" type="checkbox" data-damage-informed="Building manager">
                   <span>Building manager</span>
                 </label>
                 <label class="damage-informed-option">
-                  <input id="damageTenantInformed" type="checkbox" data-damage-informed="Tenant">
+                  <input id="damageTenantInformed" name="People informed" value="Tenant" type="checkbox" data-damage-informed="Tenant">
                   <span>Tenant</span>
                 </label>
+                <label class="damage-informed-option">
+                  <input id="damageOtherInformed" name="People informed" value="Other" type="checkbox" data-damage-informed="Other">
+                  <span>Other</span>
+                </label>
                 <label class="damage-informed-option damage-none-option">
-                  <input id="damageNoneInformed" type="checkbox" data-damage-informed="No one informed">
+                  <input id="damageNoneInformed" name="People informed" value="No one informed" type="checkbox" data-damage-informed="No one informed">
                   <span>No one informed</span>
                 </label>
               </div>
-              <input id="damagePeopleInformed" type="hidden" name="People informed" value="">
+              <div class="damage-other-informed" id="damageOtherInformedField" hidden>
+                <label for="damageOtherInformedName">Who else was informed? *</label>
+                <input class="damage-input" id="damageOtherInformedName" name="Other person informed" type="text" maxlength="120" placeholder="Enter the person's name or role">
+              </div>
             </fieldset>
             <div class="field">
               <label id="damageActionLabel" for="damageAction">Action taken *</label>
@@ -3312,6 +3483,133 @@
             <strong>Equipment record submitted.</strong>
             The labeled thermostat and furnace photo record was submitted successfully.
           </div>
+        </aside>
+      </div>
+      <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
+    </section>
+
+    <section class="field-app-section app-screen-view" id="tool-check" data-app-screen="tool-check" aria-labelledby="tool-check-title">
+      <div class="field-section-heading">
+        <div>
+          <p class="eyebrow">MPI vehicle closeout</p>
+          <h2 id="tool-check-title">Account for every tool.</h2>
+        </div>
+        <p>Complete this checklist at the end of each job before leaving the property. The submitted record is emailed to MPI management.</p>
+      </div>
+
+      <div class="workflow-grid">
+        <form class="panel damage-form" id="toolCheckForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+          <input type="hidden" name="_subject" id="toolCheckEmailSubject" value="MPI End-of-Job Tool Check">
+          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_captcha" value="false">
+          <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?tool-check-sent=1#tool-check">
+          <input type="hidden" name="Submitted at" id="toolCheckSubmittedAt" value="">
+          <textarea name="Checklist completion" id="toolCheckCompletion" hidden></textarea>
+          <textarea name="Unchecked items" id="toolCheckUnchecked" hidden></textarea>
+          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
+
+          <div class="panel-heading">
+            <div><h2>End-of-job checklist</h2><p>Check each item that is accounted for and secured.</p></div>
+            <span class="step-count">Online submission</span>
+          </div>
+
+          <div class="damage-field-row">
+            <div class="field">
+              <label for="toolCheckInspector">Inspector name *</label>
+              <input class="damage-input" id="toolCheckInspector" name="Inspector" type="text" autocomplete="name" maxlength="80" required>
+            </div>
+            <div class="field">
+              <label for="toolCheckProperty">Property address *</label>
+              <input class="damage-input" id="toolCheckProperty" name="Property address" type="text" autocomplete="street-address" maxlength="180" required>
+            </div>
+          </div>
+
+          <div class="tool-check-progress" aria-live="polite">
+            <div class="tool-check-progress-row"><span>Tool checklist</span><span id="toolCheckProgressCount">0 of 21 checked</span></div>
+            <div class="tool-check-progress-track" aria-hidden="true"><div class="tool-check-progress-fill" id="toolCheckProgressFill"></div></div>
+          </div>
+
+          <div class="tool-check-groups" id="toolCheckGroups">
+            <details class="tool-check-group" open>
+              <summary>Basic / Daily <span>11 items</span></summary>
+              <div class="tool-check-list">
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Electrical tester kit" data-tool-check="Electrical tester kit"><span><strong>Electrical tester kit</strong><small>Milwaukee 3203-20-2224-20</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="IR thermometer / secondary voltage detector" data-tool-check="IR thermometer / secondary voltage detector"><span><strong>IR thermometer / secondary voltage detector</strong><small>Milwaukee 2225-20</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Main multi-bit screwdriver" data-tool-check="Main multi-bit screwdriver"><span><strong>Main multi-bit screwdriver</strong><small>Milwaukee 48-22-2761</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Compact ratcheting screwdriver" data-tool-check="Compact ratcheting screwdriver"><span><strong>Compact ratcheting screwdriver</strong><small>Milwaukee 48-22-2913</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Rechargeable headlamp" data-tool-check="Rechargeable headlamp"><span><strong>Rechargeable headlamp</strong><small>Milwaukee 2012R</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Rechargeable pocket flood light" data-tool-check="Rechargeable pocket flood light"><span><strong>Rechargeable pocket flood light</strong><small>Milwaukee 2112-21</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Tool pouch" data-tool-check="Tool pouch"><span><strong>Tool pouch</strong><small>Milwaukee 48-22-8118</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Moisture meter" data-tool-check="Moisture meter"><span><strong>Moisture meter</strong><small>General Tools MM19</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Amp clamp / HVAC electrical meter" data-tool-check="Amp clamp / HVAC electrical meter"><span><strong>Amp clamp / HVAC electrical meter</strong><small>Milwaukee 2236-20</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Combustible gas detector" data-tool-check="Combustible gas detector"><span><strong>Combustible gas detector</strong><small>TOPTES PT210S</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Carbon monoxide detector" data-tool-check="Carbon monoxide detector"><span><strong>Carbon monoxide detector</strong><small>TOPTES CT-580</small></span></label>
+              </div>
+            </details>
+
+            <details class="tool-check-group">
+              <summary>Field / General <span>5 items</span></summary>
+              <div class="tool-check-list">
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Dead blow hammer" data-tool-check="Dead blow hammer"><span><strong>Dead blow hammer</strong><small>Milwaukee 48-22-9151</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Digging shovel" data-tool-check="Digging shovel"><span><strong>Digging shovel</strong><small>Husky 77416-944</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Pry bar" data-tool-check="Pry bar"><span><strong>Pry bar</strong><small>PITTSBURGH 39700</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Soil probe" data-tool-check="Soil probe"><span><strong>Soil probe</strong><small>Bully Tools 99203</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Pick axe / mattock" data-tool-check="Pick axe / mattock"><span><strong>Pick axe / mattock</strong><small>CENTRAL FORGE 94797</small></span></label>
+              </div>
+            </details>
+
+            <details class="tool-check-group">
+              <summary>Specialist / Company <span>5 items</span></summary>
+              <div class="tool-check-list">
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Mold / IAQ sampling pump" data-tool-check="Mold / IAQ sampling pump"><span><strong>Mold / IAQ sampling pump</strong><small>Environmental Express Bio-Pump IAQ Lite Pro</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Telescoping ladder" data-tool-check="Telescoping ladder"><span><strong>Telescoping ladder</strong><small>Xtend+Climb PSE155+/300</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Sewer scope" data-tool-check="Sewer scope"><span><strong>Sewer scope</strong><small>Inspector Cameras Scout 3-Pro Plus Red AHD</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Crawlspace inspection robot" data-tool-check="Crawlspace inspection robot"><span><strong>Crawlspace inspection robot</strong><small>UplinkRobotics Wombat</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Roof inspection drone" data-tool-check="Roof inspection drone"><span><strong>Roof inspection drone</strong><small>DJI Mini 4 Pro</small></span></label>
+              </div>
+            </details>
+          </div>
+
+          <fieldset class="field damage-choice-field tool-check-result">
+            <legend>Closeout result *</legend>
+            <p class="damage-action-help">Choose the result after reviewing the assigned and used tools.</p>
+            <div class="damage-informed-list">
+              <label class="damage-informed-option"><input id="toolCheckAllAccounted" type="radio" name="Closeout result" value="All assigned and used tools accounted for" required><span>All assigned and used tools accounted for</span></label>
+              <label class="damage-informed-option"><input id="toolCheckIssue" type="radio" name="Closeout result" value="Issue found — missing, damaged, or not secured" required><span>Issue found — missing, damaged, or not secured</span></label>
+            </div>
+          </fieldset>
+
+          <div class="damage-other-informed" id="toolCheckIssueField" hidden>
+            <label for="toolCheckIssueNotes">Describe the missing, damaged, or unsecured item *</label>
+            <textarea id="toolCheckIssueNotes" name="Tool issue or exception" maxlength="900" placeholder="Identify the item, what happened, where it was last seen, and any action already taken."></textarea>
+          </div>
+
+          <div class="field">
+            <label for="toolCheckNotes">Additional notes</label>
+            <textarea class="damage-action-input" id="toolCheckNotes" name="Additional notes" maxlength="700" placeholder="Optional: Note tools not assigned, specialist equipment not used, charging needs, or supply concerns."></textarea>
+          </div>
+
+          <label class="tool-check-confirmation">
+            <input id="toolCheckConfirmation" name="Inspector confirmation" value="Checklist completed before departure" type="checkbox" required>
+            <span>I reviewed every tool assigned to or used by me at this job and recorded any exception before leaving the property.</span>
+          </label>
+
+          <button class="decode-btn" id="toolCheckSubmitBtn" type="submit">Email completed tool check</button>
+          <p class="damage-submit-status" id="toolCheckSubmitStatus" role="status" aria-live="polite"></p>
+          <p class="privacy-note">Internet access is required to email the record. The app does not store submitted checklists.</p>
+        </form>
+
+        <aside class="panel damage-info-panel" aria-labelledby="tool-check-info-title">
+          <span class="damage-online-badge">End-of-job record</span>
+          <h3 id="tool-check-info-title">Check the vehicle before departure.</h3>
+          <p>This checklist is populated from the Michigan Property Inspections Inspector Tool Master List. Check every item assigned to you or used during the job.</p>
+          <ul class="damage-checklist">
+            <li>Complete the checklist while still at the property.</li>
+            <li>Open each section and verify the vehicle, tool pouch, ladder storage, and charging area.</li>
+            <li>If anything is missing, damaged, or unsecured, select Issue found and explain it.</li>
+            <li>The completed record is emailed directly to MPI management.</li>
+          </ul>
+          <div class="form-success-box" id="toolCheckSuccessBox" hidden><strong>Tool check submitted.</strong>The completed end-of-job checklist was emailed successfully.</div>
         </aside>
       </div>
       <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
@@ -3762,6 +4060,7 @@
         "age-finder": "Equipment Age Finder",
         "damage-report": "Damaged Item Notice",
         "equipment-record": "Equipment Photo Record",
+        "tool-check": "End-of-Job Tool Check",
         "sop-guide": "Field Procedures",
         "training-center": "Training Center",
         "team-messages": "Team Messages",
@@ -4276,8 +4575,10 @@
       const damageItem = document.getElementById("damageItem");
       const damageLocation = document.getElementById("damageLocation");
       const damageInformedOptions = [...document.querySelectorAll("[data-damage-informed]")];
+      const damageOtherInformed = document.getElementById("damageOtherInformed");
+      const damageOtherInformedField = document.getElementById("damageOtherInformedField");
+      const damageOtherInformedName = document.getElementById("damageOtherInformedName");
       const damageNoneInformed = document.getElementById("damageNoneInformed");
-      const damagePeopleInformed = document.getElementById("damagePeopleInformed");
       const damageAction = document.getElementById("damageAction");
       const damageActionLabel = document.getElementById("damageActionLabel");
       const damageActionHelp = document.getElementById("damageActionHelp");
@@ -4314,6 +4615,23 @@
       const equipmentSubmitBtn = document.getElementById("equipmentSubmitBtn");
       const equipmentSubmitStatus = document.getElementById("equipmentSubmitStatus");
       const equipmentSuccessBox = document.getElementById("equipmentSuccessBox");
+      const toolCheckForm = document.getElementById("toolCheckForm");
+      const toolCheckInspector = document.getElementById("toolCheckInspector");
+      const toolCheckProperty = document.getElementById("toolCheckProperty");
+      const toolCheckOptions = [...document.querySelectorAll("[data-tool-check]")];
+      const toolCheckProgressCount = document.getElementById("toolCheckProgressCount");
+      const toolCheckProgressFill = document.getElementById("toolCheckProgressFill");
+      const toolCheckResultOptions = [...toolCheckForm.querySelectorAll('input[name="Closeout result"]')];
+      const toolCheckIssue = document.getElementById("toolCheckIssue");
+      const toolCheckIssueField = document.getElementById("toolCheckIssueField");
+      const toolCheckIssueNotes = document.getElementById("toolCheckIssueNotes");
+      const toolCheckCompletion = document.getElementById("toolCheckCompletion");
+      const toolCheckUnchecked = document.getElementById("toolCheckUnchecked");
+      const toolCheckEmailSubject = document.getElementById("toolCheckEmailSubject");
+      const toolCheckSubmittedAt = document.getElementById("toolCheckSubmittedAt");
+      const toolCheckSubmitBtn = document.getElementById("toolCheckSubmitBtn");
+      const toolCheckSubmitStatus = document.getElementById("toolCheckSubmitStatus");
+      const toolCheckSuccessBox = document.getElementById("toolCheckSuccessBox");
       const trainingModules = [...document.querySelectorAll("[data-training-module]")];
       const trainingProgressCount = document.getElementById("trainingProgressCount");
       const trainingProgressFill = document.getElementById("trainingProgressFill");
@@ -7620,7 +7938,7 @@
 
       function initializeFieldForms() {
         const rememberedInspector = loadRememberedInspector();
-        [damageInspector, equipmentInspector, teamQuestionInspector, requestInspector].forEach(input => {
+        [damageInspector, equipmentInspector, toolCheckInspector, teamQuestionInspector, requestInspector].forEach(input => {
           if (input && !input.value) input.value = rememberedInspector;
         });
 
@@ -7639,6 +7957,13 @@
           equipmentSubmitStatus.textContent = "Thermostat and furnace photo record submitted successfully.";
           params.delete("equipment-sent");
           targetHash = "#equipment-record";
+        }
+        if (params.get("tool-check-sent") === "1") {
+          toolCheckSuccessBox.hidden = false;
+          toolCheckSubmitStatus.className = "damage-submit-status success";
+          toolCheckSubmitStatus.textContent = "End-of-job tool check submitted successfully.";
+          params.delete("tool-check-sent");
+          targetHash = "#tool-check";
         }
         if (params.get("question-sent") === "1") {
           teamQuestionSuccess.hidden = false;
@@ -7667,10 +7992,10 @@
           damageNoneInformed.checked = false;
         }
 
-        const selected = damageInformedOptions
-          .filter(option => option.checked)
-          .map(option => option.dataset.damageInformed);
-        damagePeopleInformed.value = selected.join(", ");
+        const otherSelected = damageOtherInformed.checked;
+        damageOtherInformedField.hidden = !otherSelected;
+        damageOtherInformedName.required = otherSelected;
+        if (!otherSelected) damageOtherInformedName.value = "";
 
         const noOneInformed = damageNoneInformed.checked;
         damageActionLabel.textContent = noOneInformed
@@ -7801,6 +8126,7 @@
         event.preventDefault();
         damageSubmitStatus.className = "damage-submit-status";
         damageSubmitStatus.textContent = "";
+        updateDamageInformedSelection();
         if (!damageForm.reportValidity()) {
           damageSubmitStatus.className = "damage-submit-status error";
           damageSubmitStatus.textContent = "Complete the required fields and add both Before and After photos before submitting.";
@@ -7812,8 +8138,7 @@
           showToast("Reconnect before sending the damage notice");
           return;
         }
-        updateDamageInformedSelection();
-        if (!damagePeopleInformed.value) {
+        if (!damageInformedOptions.some(option => option.checked)) {
           damageSubmitStatus.className = "damage-submit-status error";
           damageSubmitStatus.textContent = "Choose everyone who was informed, or select No one informed.";
           damageInformedOptions[0]?.focus();
@@ -7937,6 +8262,44 @@
         try { localStorage.setItem(TRAINING_STORAGE_KEY, JSON.stringify([...completedTraining])); } catch (_) {}
         updateTrainingProgress();
         showToast("Training module completed");
+      }
+
+      function updateToolCheckProgress() {
+        const checked = toolCheckOptions.filter(option => option.checked);
+        const unchecked = toolCheckOptions.filter(option => !option.checked).map(option => option.dataset.toolCheck);
+        toolCheckProgressCount.textContent = `${checked.length} of ${toolCheckOptions.length} checked`;
+        toolCheckProgressFill.style.width = `${toolCheckOptions.length ? (checked.length / toolCheckOptions.length) * 100 : 0}%`;
+        toolCheckCompletion.value = `${checked.length} of ${toolCheckOptions.length} tools checked`;
+        toolCheckUnchecked.value = unchecked.length ? unchecked.join("; ") : "None";
+      }
+
+      function updateToolCheckResult() {
+        const issueFound = toolCheckIssue.checked;
+        toolCheckIssueField.hidden = !issueFound;
+        toolCheckIssueNotes.required = issueFound;
+        if (!issueFound) toolCheckIssueNotes.value = "";
+      }
+
+      function validateToolCheckSubmission(event) {
+        updateToolCheckProgress();
+        updateToolCheckResult();
+        if (!toolCheckOptions.some(option => option.checked)) {
+          event.preventDefault();
+          toolCheckSubmitStatus.className = "damage-submit-status error";
+          toolCheckSubmitStatus.textContent = "Check each tool that is accounted for before submitting the closeout record.";
+          toolCheckOptions[0]?.focus();
+          return;
+        }
+        validateSimpleEmailForm(event, {
+          form: toolCheckForm,
+          status: toolCheckSubmitStatus,
+          submittedAt: toolCheckSubmittedAt,
+          subject: toolCheckEmailSubject,
+          inspector: toolCheckInspector,
+          submitButton: toolCheckSubmitBtn,
+          pendingText: "Emailing completed tool check…",
+          subjectText: () => `MPI End-of-Job Tool Check — ${toolCheckProperty.value.trim()} — ${toolCheckInspector.value.trim()}`.slice(0, 180)
+        });
       }
 
       function validateSimpleEmailForm(event, config) {
@@ -8560,12 +8923,16 @@
       damagePhoto1.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto1, damagePhotoPreview1, damagePhotoCard1));
       damagePhoto2.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto2, damagePhotoPreview2, damagePhotoCard2));
       damageInformedOptions.forEach(option => option.addEventListener("change", event => updateDamageInformedSelection(event.currentTarget)));
+      damageOtherInformedName.addEventListener("input", () => updateDamageInformedSelection());
       damageForm.addEventListener("submit", validateDamageSubmission);
       equipmentPhoto1.addEventListener("change", () => updateDamagePhotoPreview(equipmentPhoto1, equipmentPhotoPreview1, equipmentPhotoCard1, equipmentSubmitStatus));
       equipmentPhoto2.addEventListener("change", () => updateDamagePhotoPreview(equipmentPhoto2, equipmentPhotoPreview2, equipmentPhotoCard2, equipmentSubmitStatus));
       equipmentPhoto3.addEventListener("change", () => updateDamagePhotoPreview(equipmentPhoto3, equipmentPhotoPreview3, equipmentPhotoCard3, equipmentSubmitStatus));
       equipmentPhoto4.addEventListener("change", () => updateDamagePhotoPreview(equipmentPhoto4, equipmentPhotoPreview4, equipmentPhotoCard4, equipmentSubmitStatus));
       equipmentForm.addEventListener("submit", validateEquipmentSubmission);
+      toolCheckOptions.forEach(option => option.addEventListener("change", updateToolCheckProgress));
+      toolCheckResultOptions.forEach(option => option.addEventListener("change", updateToolCheckResult));
+      toolCheckForm.addEventListener("submit", validateToolCheckSubmission);
       document.getElementById("trainingGrid").addEventListener("click", event => {
         const button = event.target.closest("[data-complete-training]");
         if (button) completeTrainingModule(button);
@@ -8582,6 +8949,8 @@
         damageSubmitBtn.textContent = "Submit damaged item notice";
         equipmentSubmitBtn.disabled = false;
         equipmentSubmitBtn.textContent = "Submit photo record";
+        toolCheckSubmitBtn.disabled = false;
+        toolCheckSubmitBtn.textContent = "Email completed tool check";
         teamQuestionSubmitBtn.disabled = false;
         teamQuestionSubmitBtn.textContent = "Submit field question";
         requestSubmitBtn.disabled = false;
@@ -8624,6 +8993,8 @@
       setCommentType("defect");
       populateReportItems();
       initializeFieldForms();
+      updateToolCheckProgress();
+      updateToolCheckResult();
       initializeTraining();
       initializeSopGuide();
       initializePushStatus();
