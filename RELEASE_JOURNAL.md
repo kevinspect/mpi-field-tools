@@ -20,6 +20,32 @@
 
 ## Change log
 
+### Build 61 — Timed field workflow and departure alerts (App Build 99)
+
+Status: published August 26, 2026.
+
+#### Changes
+
+1. Changed `START INSPECTION` into a timestamp-only workflow action. It records the inspector, job, property, date/time, and Inspection In Progress status without opening Spectora, Safari, or another app.
+2. Added the current start time, next appointment, estimated drive, and calculated leave-by time to the in-progress job screen.
+3. Added a 30-minute departure warning and a leave-now alert with in-app alarm sound, vibration where supported, a prominent acknowledgement dialog, web notification where permission/support allow, and hidden management logging.
+4. Replaced the visible 14-step well-test click-through with one configurable timed test, durable elapsed timer, target-reached state, early-stop reason, totalizer calculation, and explicit `COMPLETE WELL TEST` action.
+5. Added separate hidden management events for well-test start, target reached, actual completion, total elapsed time, departure calculation, departure warnings, and alert acknowledgement.
+6. Preserved the one-action per-job used-tools confirmation and the detailed equipment checklist only at end of day.
+
+#### Technical limits documented
+
+- Apple Maps opens for navigation, but live MapKit traffic estimates require a configured MapKit service/token. Until that protected integration is supplied, the app uses a drive time supplied in the company schedule or a 30-minute planning estimate.
+- A Home Screen web app can show web push notifications, but a static site cannot guarantee a newly scheduled alarm after iOS fully suspends or closes the app without a server scheduling and sending the push. The app catches elapsed alerts immediately when it remains active or is reopened.
+
+#### Validation
+
+- JavaScript parsing, mobile workflow testing, timer persistence, calculations, alert state, offline cache version, and live deployment were checked before publication.
+
+#### Rollback
+
+- Restore App Build 98 to return to the Spectora dashboard handoff and detailed visible well-test procedure.
+
 ### Build 60 — Simplified inspector workflow V2 (App Build 98)
 
 Status: staged August 26, 2026 for owner review and publication.

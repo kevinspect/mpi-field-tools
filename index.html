@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="98">
+  <meta name="app-build" content="99">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3720,6 +3720,15 @@
     .well-timer-display { display: block; margin-top: 2px; color: #fff; font-size: 25px; font-weight: 900; letter-spacing: .03em; }
     .well-timer-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 14px; }
     .well-timer-actions button { min-height: 44px; }
+    .well-simple-panel { display: grid; gap: 13px; }
+    .well-simple-status { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+    .well-simple-metric { padding: 12px; background: #eef4fa; border: 1px solid #d6e2ee; border-radius: 11px; }
+    .well-simple-metric span { display: block; color: var(--ink-2); font-size: 8.5px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+    .well-simple-metric strong { display: block; margin-top: 4px; color: var(--forest); font-size: 14px; line-height: 1.3; }
+    .well-alert-note { margin: 0; padding: 12px 14px; color: var(--ink-2); background: #fff8e7; border-left: 4px solid var(--orange); border-radius: 10px; font-size: 10px; line-height: 1.5; }
+    .well-test-complete { padding: 16px; color: #fff; background: var(--forest); border-radius: 13px; text-align: center; }
+    .well-test-complete h4 { margin: 0 0 5px; font-size: 18px; }
+    .well-test-complete p { margin: 0; color: rgba(255,255,255,.78); font-size: 10px; line-height: 1.5; }
     .well-step-list { display: grid; gap: 9px; }
     .well-step {
       overflow: hidden;
@@ -3813,6 +3822,7 @@
       .well-yield-body { padding: 14px 12px 15px; }
       .well-yield-toolbar { grid-template-columns: 1fr; }
       .well-timer-box { text-align: left; }
+      .well-simple-status { grid-template-columns: 1fr; }
       .well-entry-grid,
       .well-entry-grid.three,
       .well-monitor-grid { grid-template-columns: 1fr; }
@@ -4282,6 +4292,21 @@
     .workflow-job-detail { display: grid; gap: 6px; margin-bottom: 18px; padding: 15px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); border-radius: 13px; }
     .workflow-job-detail span { color: rgba(255,255,255,.65); font-size: 10px; font-weight: 850; letter-spacing: .05em; text-transform: uppercase; }
     .workflow-job-detail strong { color: #fff; font-size: 14px; line-height: 1.4; }
+    .workflow-departure-panel {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 0 0 18px;
+      padding: 14px;
+      color: #fff;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 14px;
+    }
+    .workflow-departure-item { display: grid; gap: 4px; }
+    .workflow-departure-item span { color: rgba(255,255,255,.68); font-size: 9px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+    .workflow-departure-item strong { color: #fff; font-size: 14px; line-height: 1.35; }
+    .workflow-departure-source { grid-column: 1 / -1; margin: 2px 0 0; color: rgba(255,255,255,.72); font-size: 9.5px; line-height: 1.45; }
     .workflow-job-screen .workflow-action.secondary { color: #fff; background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.22); }
     .workflow-job-screen .workflow-action.primary { color: var(--forest); background: var(--orange); }
     .workflow-job-screen .workflow-action { background: var(--bright-blue); }
@@ -4335,6 +4360,12 @@
 
     .workflow-integration-note { margin: 18px auto 0; padding: 14px 16px; color: #5f6480; background: #f7f9fc; border: 1px solid #e0e5ef; border-radius: 13px; font-size: 10.5px; line-height: 1.55; }
     .workflow-integration-note strong { color: var(--forest); }
+    .timed-alert-dialog { width: min(92vw, 460px); padding: 0; overflow: hidden; border: 0; border-radius: 20px; box-shadow: 0 28px 80px rgba(7,12,56,.34); }
+    .timed-alert-dialog::backdrop { background: rgba(7,12,56,.72); }
+    .timed-alert-inner { padding: 26px 22px; color: #fff; background: linear-gradient(145deg, #11186a, #222a83); text-align: center; }
+    .timed-alert-icon { display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto 13px; color: var(--forest); background: var(--orange); border-radius: 50%; font-size: 30px; font-weight: 950; }
+    .timed-alert-inner h3 { margin: 0; font-size: 25px; line-height: 1.12; }
+    .timed-alert-inner p { margin: 10px 0 18px; color: rgba(255,255,255,.84); font-size: 13px; line-height: 1.55; white-space: pre-line; }
 
     @media (max-width: 560px) {
       .workflow-shell { gap: 13px; }
@@ -4343,6 +4374,8 @@
       .workflow-action-grid { grid-template-columns: 1fr; }
       .workflow-form-grid .field-wide,
       .workflow-action-grid .full { grid-column: auto; }
+      .workflow-departure-panel { grid-template-columns: 1fr; }
+      .workflow-departure-source { grid-column: auto; }
       .workflow-action,
       .workflow-button { min-height: 58px; font-size: 13px; }
       .workflow-job-row { grid-template-columns: 57px minmax(0, 1fr); }
@@ -4420,7 +4453,7 @@
         <div class="home-tool-group-list">
           <a class="home-tool-card" href="#job-companion">
             <span class="home-tool-icon icon-job" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>Today’s Workflow</strong><small>Morning readiness, next job, client contact, Spectora handoff, and equipment closeout.</small></span>
+            <span class="home-tool-copy"><strong>Today’s Workflow</strong><small>Morning readiness, next job, client contact, inspection timing, and equipment closeout.</small></span>
             <span class="home-tool-arrow" aria-hidden="true">→</span>
           </a>
           <a class="home-tool-card" href="#age-finder">
@@ -4486,7 +4519,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">98</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">99</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4580,6 +4613,13 @@
           <div class="workflow-job-detail"><span>Property</span><strong id="workflowJobAddress"></strong></div>
           <div class="workflow-job-detail" id="workflowJobClientBlock"><span>Client</span><strong id="workflowJobClient">Not listed</strong></div>
           <div class="workflow-job-detail"><span>Inspection services</span><strong id="workflowJobServices">Inspection</strong></div>
+          <div class="workflow-departure-panel" id="workflowDeparturePanel" hidden>
+            <div class="workflow-departure-item"><span>Started</span><strong id="workflowInspectionStarted">—</strong></div>
+            <div class="workflow-departure-item"><span>Next appointment</span><strong id="workflowNextAppointment">—</strong></div>
+            <div class="workflow-departure-item"><span>Estimated drive</span><strong id="workflowEstimatedDrive">—</strong></div>
+            <div class="workflow-departure-item"><span>Leave by</span><strong id="workflowLeaveBy">—</strong></div>
+            <p class="workflow-departure-source" id="workflowDepartureSource"></p>
+          </div>
           <div class="workflow-action-grid" id="workflowJobActions">
             <a class="workflow-action primary" id="workflowDirectionsBtn" href="https://maps.apple.com/" target="_blank" rel="noopener">DIRECTIONS</a>
             <button class="workflow-action" id="workflowOnMyWayBtn" type="button">ON MY WAY</button>
@@ -4589,7 +4629,7 @@
             <button class="workflow-action primary full" id="workflowStartInspectionBtn" type="button">START INSPECTION</button>
             <button class="workflow-action primary full" id="workflowJobCompleteBtn" type="button">JOB COMPLETE</button>
           </div>
-          <p class="workflow-integration-note" id="workflowSpectoraNote"><strong>Spectora V10:</strong> Start Inspection records the exact time, then opens the installed Spectora app at its dashboard.</p>
+          <p class="workflow-integration-note" id="workflowSpectoraNote" hidden><strong>Workflow:</strong> Start Inspection records the exact time and keeps this app on the current job.</p>
           <button class="workflow-job-back" id="workflowBackToJobs" type="button">← Back to today’s jobs</button>
         </section>
 
@@ -4664,6 +4704,15 @@
             <button class="workflow-secondary" id="workflowCancelMessage" type="button">Cancel</button>
             <button class="workflow-button" id="workflowOpenMessages" type="button" disabled>OPEN MESSAGES</button>
           </div>
+        </div>
+      </dialog>
+
+      <dialog class="timed-alert-dialog" id="timedAlertDialog">
+        <div class="timed-alert-inner">
+          <div class="timed-alert-icon" aria-hidden="true">!</div>
+          <h3 id="timedAlertTitle">Timed alert</h3>
+          <p id="timedAlertBody"></p>
+          <button class="workflow-button" id="timedAlertAcknowledge" type="button">ACKNOWLEDGE</button>
         </div>
       </dialog>
 
@@ -5628,19 +5677,43 @@
 
       <details class="panel report-quality-card well-yield-card" id="wellYieldWorkflowCard">
         <summary>
-          <span><strong>100-minute well inspection &amp; yield test</strong><small>The standard MPI field workflow, timer, monitoring record, and yield calculation.</small></span>
+          <span><strong>Well inspection &amp; yield test timer</strong><small>Start once, keep working, and complete the record when the timed test is finished.</small></span>
           <span class="daily-readiness-status" id="wellYieldStatus">Not started</span>
         </summary>
         <div class="well-yield-body">
-          <p class="well-yield-intro"><strong>Use only for a contracted well inspection/yield test.</strong> Follow these 14 steps in order. This practical functional/yield test is not a hydrogeological drawdown or recovery test. Stop whenever continued operation could damage equipment or create an unsafe condition.</p>
+          <p class="well-yield-intro"><strong>Use only for a contracted well inspection/yield test.</strong> Set up the equipment safely, confirm no water is being used elsewhere, then start the timer. This is a practical functional/yield test—not a hydrogeological drawdown or recovery test.</p>
           <div class="well-yield-toolbar" aria-live="polite">
-            <div class="well-progress-copy"><strong id="wellYieldProgressText">0 of 14 steps complete</strong><div class="well-progress-track" aria-hidden="true"><div class="well-progress-fill" id="wellYieldProgressFill"></div></div><span>Entries save on this phone. Add required photographs to the inspection report as prompted.</span></div>
-            <div class="well-timer-box"><span>100-minute timer</span><output class="well-timer-display" id="wellYieldTimerDisplay">100:00</output></div>
+            <div class="well-progress-copy"><strong id="wellYieldProgressText">Ready to start</strong><div class="well-progress-track" aria-hidden="true"><div class="well-progress-fill" id="wellYieldProgressFill"></div></div><span>The timer and record stay saved on this company phone.</span></div>
+            <div class="well-timer-box"><span>Elapsed time</span><output class="well-timer-display" id="wellYieldTimerDisplay">00:00:00</output></div>
           </div>
-          <div class="well-timer-actions"><button class="decode-btn" id="wellYieldStartTimer" type="button">Start 100-minute timer</button><button class="job-secondary-action" id="wellYieldResetTimer" type="button">Reset timer</button></div>
+          <div class="well-timer-actions"><button class="decode-btn" id="wellYieldStartTimer" type="button">START WELL TEST</button><button class="job-secondary-action" id="wellYieldResetTimer" type="button">Reset test</button></div>
 
           <form id="wellYieldForm" novalidate>
-            <div class="well-step-list">
+            <div class="well-simple-panel">
+              <div class="well-entry-grid three">
+                <div class="field"><label for="wellTargetMinutes">Target test duration (minutes)</label><input class="damage-input" id="wellTargetMinutes" data-well-field type="number" inputmode="numeric" min="1" max="240" step="1" value="100"></div>
+                <div class="field"><label for="wellQuickInitialTotalizer">Initial totalizer (gallons)</label><input class="damage-input" id="wellQuickInitialTotalizer" data-well-field type="number" inputmode="decimal" min="0" step="0.1"></div>
+                <div class="field"><label for="wellQuickFinalTotalizer">Final totalizer (gallons)</label><input class="damage-input" id="wellQuickFinalTotalizer" data-well-field type="number" inputmode="decimal" min="0" step="0.1"></div>
+              </div>
+              <div class="well-simple-status">
+                <div class="well-simple-metric"><span>Start time</span><strong id="wellTestStartTime">Not started</strong></div>
+                <div class="well-simple-metric"><span>Target duration</span><strong id="wellTargetDurationDisplay">100 minutes</strong></div>
+                <div class="well-simple-metric"><span>Target reached</span><strong id="wellTargetReachedTime">Not reached</strong></div>
+              </div>
+              <div class="well-calc-panel">
+                <div class="well-calc-value"><span>Total gallons produced</span><output id="wellQuickTotalGallons">—</output></div>
+                <div class="well-calc-value"><span>Average yield</span><output id="wellQuickAverageGpm">—</output></div>
+                <p class="well-calc-note" id="wellQuickCalculationNote">Enter the initial and final totalizer readings. Average GPM uses the configured test duration.</p>
+              </div>
+              <p class="well-alert-note" id="wellAlertReadiness">Starting the test will request notification permission. While the app remains active, completion uses an alarm sound, vibration where supported, and a prominent notification.</p>
+              <div class="well-early-fields" id="wellQuickEarlyFields" hidden>
+                <div class="well-entry-grid"><div class="field"><label for="wellQuickStopReason">Reason test ended early</label><input class="damage-input" id="wellQuickStopReason" data-well-field type="text" maxlength="220" placeholder="Describe the unsafe or abnormal condition"></div><div class="field"><label for="wellQuickStopConditions">Conditions observed</label><textarea class="damage-action-input" id="wellQuickStopConditions" data-well-field maxlength="500"></textarea></div></div>
+              </div>
+              <div class="well-test-complete" id="wellTestCompletePanel" hidden><h4>WELL TEST COMPLETE</h4><p id="wellTestCompleteMessage">The well test has reached the required test duration.</p></div>
+              <div class="well-final-actions"><button class="decode-btn" id="wellYieldCompleteTest" type="button" hidden>COMPLETE WELL TEST</button><button class="job-secondary-action" id="wellYieldStopEarly" type="button" hidden>END TEST EARLY</button></div>
+              <div class="well-final-actions"><button class="decode-btn" id="copyWellYieldSummaryQuick" type="button">Copy well test summary</button><button class="job-secondary-action" id="resetWellYieldRecordQuick" type="button">Clear well record</button></div>
+            </div>
+            <div class="well-step-list" hidden aria-hidden="true">
               <details class="well-step" data-well-step="1" open>
                 <summary><span class="well-step-number">1</span><span class="well-step-title"><strong>Inform client and occupants before testing</strong><small>Establish the no-water-use rule before starting.</small></span><span class="well-step-state">Pending</span></summary>
                 <div class="well-step-body">
@@ -7381,6 +7454,12 @@
       const workflowJobClient = document.getElementById("workflowJobClient");
       const workflowJobClientBlock = document.getElementById("workflowJobClientBlock");
       const workflowJobServices = document.getElementById("workflowJobServices");
+      const workflowDeparturePanel = document.getElementById("workflowDeparturePanel");
+      const workflowInspectionStarted = document.getElementById("workflowInspectionStarted");
+      const workflowNextAppointment = document.getElementById("workflowNextAppointment");
+      const workflowEstimatedDrive = document.getElementById("workflowEstimatedDrive");
+      const workflowLeaveBy = document.getElementById("workflowLeaveBy");
+      const workflowDepartureSource = document.getElementById("workflowDepartureSource");
       const workflowDirectionsBtn = document.getElementById("workflowDirectionsBtn");
       const workflowOnMyWayBtn = document.getElementById("workflowOnMyWayBtn");
       const workflowCallClientBtn = document.getElementById("workflowCallClientBtn");
@@ -7415,6 +7494,10 @@
       const workflowMessagePreview = document.getElementById("workflowMessagePreview");
       const workflowCancelMessage = document.getElementById("workflowCancelMessage");
       const workflowOpenMessages = document.getElementById("workflowOpenMessages");
+      const timedAlertDialog = document.getElementById("timedAlertDialog");
+      const timedAlertTitle = document.getElementById("timedAlertTitle");
+      const timedAlertBody = document.getElementById("timedAlertBody");
+      const timedAlertAcknowledge = document.getElementById("timedAlertAcknowledge");
       const roomCoverageCard = document.getElementById("roomCoverageCard");
       const roomCoverageStatus = document.getElementById("roomCoverageStatus");
       const roomCoverageForm = document.getElementById("roomCoverageForm");
@@ -7462,16 +7545,24 @@
       const wellYieldTimerDisplay = document.getElementById("wellYieldTimerDisplay");
       const wellYieldStartTimer = document.getElementById("wellYieldStartTimer");
       const wellYieldResetTimer = document.getElementById("wellYieldResetTimer");
-      const wellInitialTotalizer = document.getElementById("wellInitialTotalizer");
-      const wellFinalTotalizer = document.getElementById("wellFinalTotalizer");
-      const wellTotalGallons = document.getElementById("wellTotalGallons");
-      const wellAverageGpm = document.getElementById("wellAverageGpm");
-      const wellCalculationNote = document.getElementById("wellCalculationNote");
-      const wellTerminatedEarly = document.getElementById("wellTerminatedEarly");
-      const wellEarlyTerminationFields = document.getElementById("wellEarlyTerminationFields");
-      const wellTestDuration = document.getElementById("wellTestDuration");
-      const copyWellYieldSummary = document.getElementById("copyWellYieldSummary");
-      const resetWellYieldRecord = document.getElementById("resetWellYieldRecord");
+      const wellTargetMinutes = document.getElementById("wellTargetMinutes");
+      const wellTestStartTime = document.getElementById("wellTestStartTime");
+      const wellTargetDurationDisplay = document.getElementById("wellTargetDurationDisplay");
+      const wellTargetReachedTime = document.getElementById("wellTargetReachedTime");
+      const wellInitialTotalizer = document.getElementById("wellQuickInitialTotalizer");
+      const wellFinalTotalizer = document.getElementById("wellQuickFinalTotalizer");
+      const wellTotalGallons = document.getElementById("wellQuickTotalGallons");
+      const wellAverageGpm = document.getElementById("wellQuickAverageGpm");
+      const wellCalculationNote = document.getElementById("wellQuickCalculationNote");
+      const wellEarlyTerminationFields = document.getElementById("wellQuickEarlyFields");
+      const wellStopReason = document.getElementById("wellQuickStopReason");
+      const wellStopConditions = document.getElementById("wellQuickStopConditions");
+      const wellTestCompletePanel = document.getElementById("wellTestCompletePanel");
+      const wellTestCompleteMessage = document.getElementById("wellTestCompleteMessage");
+      const wellYieldCompleteTest = document.getElementById("wellYieldCompleteTest");
+      const wellYieldStopEarly = document.getElementById("wellYieldStopEarly");
+      const copyWellYieldSummary = document.getElementById("copyWellYieldSummaryQuick");
+      const resetWellYieldRecord = document.getElementById("resetWellYieldRecordQuick");
       const manufacturer = document.getElementById("manufacturer");
       const serialInput = document.getElementById("serial");
       const resultContent = document.getElementById("resultContent");
@@ -7729,7 +7820,7 @@
       const CALENDAR_CACHE_KEY = "mpiTodayJobsCacheV1";
       const WELL_YIELD_STORAGE_KEY = "mpiWellYieldRecordV1";
       const WELL_YIELD_TIMER_KEY = "mpiWellYieldTimerV1";
-      const WELL_YIELD_SECONDS = 100 * 60;
+      const WORKFLOW_DEFAULT_DRIVE_MINUTES = 30;
       let commentType = "defect";
       let copyPayload = "";
       let toastTimer;
@@ -7737,6 +7828,10 @@
       let activeToolGuideId = "";
       let availableScheduleCalendars = [];
       let wellYieldTimerInterval = 0;
+      let workflowDepartureInterval = 0;
+      let timedAlertRepeatInterval = 0;
+      let activeTimedAlert = null;
+      let timedAlertAudioContext = null;
 
       const TOOL_GUIDES = [
         {
@@ -12220,6 +12315,9 @@
           serviceNames: Array.isArray(job.serviceNames) ? job.serviceNames.map(String) : [],
           spectoraJobId: String(job.spectoraJobId || ""),
           spectoraLink: String(job.spectoraLink || ""),
+          estimatedDriveMinutes: Number(job.estimatedDriveMinutes) || 0,
+          departurePlan: null,
+          workflowAlerts: {},
           steps: [],
           quality: [],
           services: Array.isArray(job.serviceCodes) ? job.serviceCodes.filter(service => JOB_SERVICE_LABELS[service]) : [],
@@ -12315,6 +12413,8 @@
           || spectoraLink.match(/(?:inspections?|jobs?|reports?)\/(\d+)/i)?.[1]
           || "";
         const servicesField = calendarField(description, ["Services", "Inspection services", "Add-ons", "Service"]);
+        const driveField = calendarField(description, ["Estimated drive", "Drive time", "Travel time", "Drive minutes"]);
+        const estimatedDriveMinutes = Number.parseInt(String(driveField || "").match(/\d{1,3}/)?.[0] || "", 10);
         const serviceDetails = inferServiceDetails(`${summary} ${servicesField}`, description);
         return {
           description,
@@ -12325,7 +12425,8 @@
           serviceNames: serviceDetails.names,
           serviceCodes: serviceDetails.codes,
           spectoraJobId,
-          spectoraLink
+          spectoraLink,
+          estimatedDriveMinutes: Number.isFinite(estimatedDriveMinutes) && estimatedDriveMinutes > 0 ? estimatedDriveMinutes : 0
         };
       }
 
@@ -12912,6 +13013,186 @@
         return job;
       }
 
+      function workflowClock(value) {
+        const date = value instanceof Date ? value : new Date(value);
+        return Number.isNaN(date.getTime()) ? "—" : date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+      }
+
+      function nextWorkflowAppointment(job) {
+        const jobs = workflowScheduleJobs().slice().sort((a, b) => scheduleJobTimestamp(a, "start") - scheduleJobTimestamp(b, "start"));
+        const index = jobs.findIndex(item => String(item.id || "") === String(job?.calendarEventId || ""));
+        if (index >= 0) return jobs[index + 1] || null;
+        const currentStart = new Date(job?.scheduledStart || 0).getTime();
+        return jobs.find(item => scheduleJobTimestamp(item, "start") > currentStart) || null;
+      }
+
+      function calculateWorkflowDeparturePlan(job) {
+        const next = nextWorkflowAppointment(job);
+        const nextStart = scheduleJobTimestamp(next, "start");
+        if (!next?.location || !nextStart) return null;
+        const scheduledMinutes = Number(next.estimatedDriveMinutes || job?.estimatedDriveMinutes) || 0;
+        const estimatedDriveMinutes = Math.max(1, scheduledMinutes || WORKFLOW_DEFAULT_DRIVE_MINUTES);
+        const leaveBy = nextStart - estimatedDriveMinutes * 60000;
+        return {
+          nextJobId: String(next.id || ""),
+          nextProperty: String(next.location || next.summary || "Next appointment"),
+          nextAppointment: new Date(nextStart).toISOString(),
+          estimatedDriveMinutes,
+          leaveBy: new Date(leaveBy).toISOString(),
+          warningAt: new Date(leaveBy - 30 * 60000).toISOString(),
+          source: scheduledMinutes ? "Company schedule drive estimate" : "30-minute planning estimate",
+          refreshedAt: new Date().toISOString()
+        };
+      }
+
+      function refreshWorkflowDeparturePlan(job, { logChanges = false } = {}) {
+        if (!job?.property || job.workflowStatus !== "in-progress") return null;
+        const previous = job.departurePlan;
+        const plan = calculateWorkflowDeparturePlan(job);
+        job.departurePlan = plan;
+        if (plan) {
+          const previousLeave = new Date(previous?.leaveBy || 0).getTime();
+          const currentLeave = new Date(plan.leaveBy).getTime();
+          const materialChange = previousLeave && Math.abs(currentLeave - previousLeave) >= 5 * 60000;
+          if (logChanges && materialChange) {
+            appendWorkflowEvent("Departure estimate updated", {
+              nextAppointment: plan.nextAppointment,
+              estimatedDriveMinutes: plan.estimatedDriveMinutes,
+              leaveBy: plan.leaveBy,
+              previousLeaveBy: previous.leaveBy
+            }, job);
+          }
+        }
+        storeActiveJob(job);
+        return plan;
+      }
+
+      function renderWorkflowDeparturePlan(job) {
+        const visible = job?.workflowStatus === "in-progress";
+        workflowDeparturePanel.hidden = !visible;
+        if (!visible) return;
+        const plan = refreshWorkflowDeparturePlan(job);
+        workflowInspectionStarted.textContent = workflowClock(job.startedAt || job.workflowTimestamps?.["in-progress"]);
+        workflowNextAppointment.textContent = plan ? workflowClock(plan.nextAppointment) : "Final appointment";
+        workflowEstimatedDrive.textContent = plan ? `${plan.estimatedDriveMinutes} min` : "—";
+        workflowLeaveBy.textContent = plan ? workflowClock(plan.leaveBy) : "Not applicable";
+        workflowDepartureSource.textContent = plan
+          ? `${plan.source}. Open Directions for Apple Maps navigation and current road conditions.`
+          : "No later appointment is scheduled today.";
+      }
+
+      async function prepareTimedAlerts() {
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass && !timedAlertAudioContext) timedAlertAudioContext = new AudioContextClass();
+          if (timedAlertAudioContext?.state === "suspended") await timedAlertAudioContext.resume();
+        } catch (_) {}
+        try {
+          if ("Notification" in window && Notification.permission === "default") await Notification.requestPermission();
+        } catch (_) {}
+      }
+
+      function playTimedAlertSound() {
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return;
+          if (!timedAlertAudioContext) timedAlertAudioContext = new AudioContextClass();
+          const context = timedAlertAudioContext;
+          context.resume?.();
+          [0, .32, .64, .96].forEach((delay, index) => {
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+            oscillator.type = index % 2 ? "square" : "sawtooth";
+            oscillator.frequency.value = index % 2 ? 740 : 1040;
+            gain.gain.setValueAtTime(.0001, context.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(.42, context.currentTime + delay + .02);
+            gain.gain.exponentialRampToValueAtTime(.0001, context.currentTime + delay + .24);
+            oscillator.connect(gain).connect(context.destination);
+            oscillator.start(context.currentTime + delay);
+            oscillator.stop(context.currentTime + delay + .26);
+          });
+        } catch (_) {}
+      }
+
+      async function postTimedNotification(alert) {
+        if (!("Notification" in window) || Notification.permission !== "granted" || !("serviceWorker" in navigator)) return;
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          await registration.showNotification(alert.title, {
+            body: alert.body,
+            icon: "./icon-192.png",
+            badge: "./icon-192.png",
+            tag: `mpi-timed-${alert.id}`,
+            renotify: true,
+            requireInteraction: true,
+            vibrate: [500, 180, 500, 180, 900],
+            data: { url: alert.url || "./#job-companion", timedAlertId: alert.id }
+          });
+        } catch (_) {}
+      }
+
+      function repeatTimedAlert() {
+        if (!activeTimedAlert) return;
+        playTimedAlertSound();
+        try { navigator.vibrate?.([500, 180, 500, 180, 900]); } catch (_) {}
+        postTimedNotification(activeTimedAlert);
+      }
+
+      function showTimedAlert(alert) {
+        if (timedAlertRepeatInterval) window.clearInterval(timedAlertRepeatInterval);
+        activeTimedAlert = alert;
+        timedAlertTitle.textContent = alert.title;
+        timedAlertBody.textContent = alert.body;
+        if (typeof timedAlertDialog.showModal === "function" && !timedAlertDialog.open) timedAlertDialog.showModal();
+        else timedAlertDialog.setAttribute("open", "");
+        repeatTimedAlert();
+        timedAlertRepeatInterval = window.setInterval(repeatTimedAlert, 60000);
+      }
+
+      function acknowledgeTimedAlert() {
+        if (activeTimedAlert) appendWorkflowEvent("Timed alert acknowledged", { alertId: activeTimedAlert.id, title: activeTimedAlert.title }, activeTimedAlert.job || loadActiveJob());
+        activeTimedAlert = null;
+        if (timedAlertRepeatInterval) window.clearInterval(timedAlertRepeatInterval);
+        timedAlertRepeatInterval = 0;
+        timedAlertDialog.close?.();
+      }
+
+      function monitorWorkflowDeparture() {
+        let job = loadActiveJob();
+        if (!job?.property || job.workflowStatus !== "in-progress") return;
+        const plan = refreshWorkflowDeparturePlan(job, { logChanges: true });
+        if (!plan) return;
+        job = loadActiveJob() || job;
+        const now = Date.now();
+        const warningAt = new Date(plan.warningAt).getTime();
+        const leaveBy = new Date(plan.leaveBy).getTime();
+        job.workflowAlerts = { ...(job.workflowAlerts || {}) };
+        if (now >= leaveBy && !job.workflowAlerts.leaveNow) {
+          job.workflowAlerts.leaveNow = new Date().toISOString();
+          storeActiveJob(job);
+          appendWorkflowEvent("Leave-now warning issued", plan, job);
+          showTimedAlert({
+            id: `leave-now-${job.calendarEventId || job.property}`,
+            title: "LEAVE FOR NEXT JOB",
+            body: `Next Appointment: ${workflowClock(plan.nextAppointment)}\nEstimated Drive: ${plan.estimatedDriveMinutes} min\nYou should leave now.`,
+            url: "./#job-companion",
+            job
+          });
+        } else if (now >= warningAt && now < leaveBy && !job.workflowAlerts.departure30) {
+          job.workflowAlerts.departure30 = new Date().toISOString();
+          storeActiveJob(job);
+          appendWorkflowEvent("30-minute departure warning issued", plan, job);
+          showTimedAlert({
+            id: `departure-30-${job.calendarEventId || job.property}`,
+            title: "30 MINUTES UNTIL YOU NEED TO LEAVE",
+            body: `Next Appointment: ${workflowClock(plan.nextAppointment)}\nEstimated Drive: ${plan.estimatedDriveMinutes} min\nLeave By: ${workflowClock(plan.leaveBy)}`,
+            url: "./#job-companion",
+            job
+          });
+        }
+        if (!workflowJobCard.hidden) renderWorkflowDeparturePlan(job);
+      }
+
       function renderWorkflowJob(job = loadActiveJob()) {
         if (!job?.property) {
           renderWorkflowApp();
@@ -12961,8 +13242,8 @@
         workflowCallClientBtn.hidden = !["scheduled", "on-my-way", "arrived"].includes(status);
         workflowMessageClientBtn.hidden = !["scheduled", "on-my-way"].includes(status);
         workflowOnMyWayBtn.textContent = "ON MY WAY";
-        workflowSpectoraNote.hidden = status !== "arrived";
-        workflowSpectoraNote.innerHTML = "<strong>Spectora V10:</strong> Start Inspection records the exact time, then opens the installed Spectora app at its dashboard.";
+        workflowSpectoraNote.hidden = true;
+        renderWorkflowDeparturePlan(job);
         homeActiveJob.hidden = false;
         homeActiveJobProperty.textContent = job.property;
         homeActiveJobProgress.textContent = WORKFLOW_STAGE_LABELS[status];
@@ -12992,10 +13273,16 @@
       function startWorkflowInspection() {
         let job = loadActiveJob();
         if (!job?.property) return;
-        job = updateWorkflowStage(job, "in-progress", "Inspection started", { spectoraJobId: job.spectoraJobId || "" });
-        appendWorkflowEvent("Spectora V10 dashboard launch requested", { appLink: "spectora://" }, job);
-        showToast("Inspection start saved — opening Spectora V10");
-        window.location.href = "spectora://";
+        job = updateWorkflowStage(job, "in-progress", "Inspection started", {
+          property: job.property,
+          scheduledStart: job.scheduledStart || "",
+          spectoraJobId: job.spectoraJobId || ""
+        });
+        const departurePlan = refreshWorkflowDeparturePlan(job);
+        if (departurePlan) appendWorkflowEvent("Departure time calculated", departurePlan, job);
+        prepareTimedAlerts();
+        monitorWorkflowDeparture();
+        showToast("Inspection start time recorded");
       }
 
       function selectWorkflowJobComplete() {
@@ -13350,6 +13637,7 @@
       }
 
       function initializeWorkflowApp() {
+        document.body.appendChild(timedAlertDialog);
         workflowIdentityForm.addEventListener("submit", saveWorkflowProfile);
         workflowReadinessChecks.forEach(check => check.addEventListener("change", updateWorkflowReadinessButton));
         workflowReadyBtn.addEventListener("click", completeWorkflowReadiness);
@@ -13377,6 +13665,7 @@
         workflowEtaTime.addEventListener("input", selectWorkflowEta);
         workflowCancelMessage.addEventListener("click", cancelWorkflowMessage);
         workflowOpenMessages.addEventListener("click", openWorkflowMessagesComposer);
+        timedAlertAcknowledge.addEventListener("click", acknowledgeTimedAlert);
         workflowAdminFilters.addEventListener("click", event => {
           const button = event.target.closest("[data-workflow-log-filter]");
           if (!button) return;
@@ -13387,8 +13676,13 @@
         workflowAdminJobFilter.addEventListener("change", renderWorkflowAdmin);
         workflowCopySummary.addEventListener("click", () => copyText(workflowSummaryText(false), "Daily activity summary copied"));
         workflowExportLog.addEventListener("click", () => copyText(workflowSummaryText(true), "Full activity log copied"));
+        if (!workflowDepartureInterval) workflowDepartureInterval = window.setInterval(monitorWorkflowDeparture, 30000);
+        document.addEventListener("visibilitychange", () => { if (!document.hidden) monitorWorkflowDeparture(); });
+        window.addEventListener("pageshow", monitorWorkflowDeparture);
+        window.addEventListener("focus", monitorWorkflowDeparture);
         renderWorkflowApp();
         renderWorkflowAdmin();
+        monitorWorkflowDeparture();
       }
 
       function loadDailyReadiness() {
@@ -13506,6 +13800,9 @@
             serviceNames: Array.isArray(saved.serviceNames) ? saved.serviceNames.map(String).filter(Boolean).slice(0, 20) : [],
             spectoraJobId: String(saved.spectoraJobId || "").trim().slice(0, 120),
             spectoraLink: String(saved.spectoraLink || "").trim().slice(0, 500),
+            estimatedDriveMinutes: Number(saved.estimatedDriveMinutes) || 0,
+            departurePlan: saved.departurePlan && typeof saved.departurePlan === "object" ? { ...saved.departurePlan } : null,
+            workflowAlerts: saved.workflowAlerts && typeof saved.workflowAlerts === "object" ? { ...saved.workflowAlerts } : {},
             steps: simpleSteps,
             quality: Array.isArray(saved.quality) ? saved.quality.map(String) : [],
             services: Array.isArray(saved.services) ? saved.services.map(String).filter(service => JOB_SERVICE_LABELS[service]) : [],
@@ -14965,7 +15262,7 @@
 
       function getHomeSearchEntries() {
         const screens = [
-          { title: "Today’s Workflow", detail: "Morning Ready, today’s jobs, client contact, Spectora handoff, and equipment accountability", route: "#job-companion", aliases: "calendar job companion property closeout current inspection address route navigation maps" },
+          { title: "Today’s Workflow", detail: "Morning Ready, today’s jobs, client contact, inspection timing, and equipment accountability", route: "#job-companion", aliases: "calendar job companion property closeout current inspection address route navigation maps" },
           { title: "Equipment Age Finder", detail: "HVAC, furnace, boiler, and water-heater serial numbers", route: "#age-finder", aliases: "serial date manufacturer manufacture age trane ducane" },
           { title: "Damaged Item Notice", detail: "Property damage, photographs, action, and people informed", route: "#damage-report", aliases: "broken damage incident attic hatch" },
           { title: "Equipment Photo Record", detail: "Thermostat and furnace Before/After documentation", route: "#equipment-record", aliases: "before after restored cover photo" },
@@ -15856,40 +16153,42 @@
 
       function formatWellTimer(seconds) {
         const safe = Math.max(0, Math.round(seconds));
-        const minutes = Math.floor(safe / 60);
+        const hours = Math.floor(safe / 3600);
+        const minutes = Math.floor((safe % 3600) / 60);
         const remainder = safe % 60;
-        return `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
       }
 
       function updateWellYieldProgress() {
-        const complete = wellYieldStepChecks.filter(check => check.checked).length;
-        wellYieldProgressText.textContent = `${complete} of ${wellYieldStepChecks.length} steps complete`;
-        wellYieldProgressFill.style.width = `${wellYieldStepChecks.length ? (complete / wellYieldStepChecks.length) * 100 : 0}%`;
-        for (const check of wellYieldStepChecks) {
-          const step = document.querySelector(`[data-well-step="${check.dataset.wellStepComplete}"]`);
-          if (!step) continue;
-          step.classList.toggle("is-complete", check.checked);
-          const state = step.querySelector(".well-step-state");
-          if (state) state.textContent = check.checked ? "Complete" : "Pending";
-        }
         const timer = loadWellYieldTimer();
-        if (complete === wellYieldStepChecks.length) {
+        const targetMinutes = Math.max(1, Number(timer?.targetMinutes || wellTargetMinutes.value) || 100);
+        wellTargetDurationDisplay.textContent = `${targetMinutes} ${targetMinutes === 1 ? "minute" : "minutes"}`;
+        if (!timer) {
+          wellYieldProgressText.textContent = "Ready to start";
+          wellYieldProgressFill.style.width = "0%";
+          wellYieldStatus.textContent = "Not started";
+          wellYieldStatus.classList.remove("is-ready");
+          return;
+        }
+        const endTime = Number(timer.actualCompletedAt || timer.stoppedAt || Date.now());
+        const elapsed = Math.max(0, Math.floor((endTime - Number(timer.startedAt)) / 1000));
+        const targetSeconds = targetMinutes * 60;
+        wellYieldProgressFill.style.width = `${Math.min(100, (elapsed / targetSeconds) * 100)}%`;
+        if (timer.actualCompletedAt) {
+          wellYieldProgressText.textContent = "Well test record complete";
           wellYieldStatus.textContent = "Complete";
           wellYieldStatus.classList.add("is-ready");
-        } else if (wellTerminatedEarly.checked) {
+        } else if (timer.stoppedAt && !timer.targetReachedAt) {
+          wellYieldProgressText.textContent = "Test ended early — complete the record";
           wellYieldStatus.textContent = "Stopped early";
           wellYieldStatus.classList.remove("is-ready");
-        } else if (timer?.completedAt) {
-          wellYieldStatus.textContent = "Timer complete";
-          wellYieldStatus.classList.remove("is-ready");
-        } else if (timer?.startedAt) {
-          wellYieldStatus.textContent = "In progress";
-          wellYieldStatus.classList.remove("is-ready");
-        } else if (complete) {
-          wellYieldStatus.textContent = `${complete} of 14`;
-          wellYieldStatus.classList.remove("is-ready");
+        } else if (timer.targetReachedAt) {
+          wellYieldProgressText.textContent = "Target duration reached — complete the record";
+          wellYieldStatus.textContent = "Target reached";
+          wellYieldStatus.classList.add("is-ready");
         } else {
-          wellYieldStatus.textContent = "Not started";
+          wellYieldProgressText.textContent = "WELL TEST IN PROGRESS";
+          wellYieldStatus.textContent = "In progress";
           wellYieldStatus.classList.remove("is-ready");
         }
       }
@@ -15900,7 +16199,7 @@
         if (!Number.isFinite(initial) || !Number.isFinite(final)) {
           wellTotalGallons.textContent = "—";
           wellAverageGpm.textContent = "—";
-          wellCalculationNote.textContent = "Enter the initial and final totalizer readings. Average GPM is calculated only for a completed 100-minute test.";
+          wellCalculationNote.textContent = "Enter the initial and final totalizer readings. Average GPM uses the configured target duration.";
           return;
         }
         const total = final - initial;
@@ -15912,62 +16211,100 @@
         }
         const totalText = Number.isInteger(total) ? total.toFixed(0) : total.toFixed(1);
         wellTotalGallons.textContent = `${totalText} gal`;
-        if (wellTerminatedEarly.checked) {
+        const timer = loadWellYieldTimer();
+        if (timer?.stoppedAt && !timer.targetReachedAt) {
           wellAverageGpm.textContent = "Incomplete";
-          wellCalculationNote.textContent = "The test ended early. Do not report a 100-minute average GPM; document the completed duration, total gallons, and reason for stopping.";
+          wellCalculationNote.textContent = "The test ended early. Document the elapsed duration, gallons produced, and reason for stopping.";
           return;
         }
-        wellAverageGpm.textContent = `${(total / 100).toFixed(2)} GPM`;
-        wellCalculationNote.textContent = `${totalText} gallons ÷ 100 minutes = ${(total / 100).toFixed(2)} GPM.`;
+        const targetMinutes = Math.max(1, Number(timer?.targetMinutes || wellTargetMinutes.value) || 100);
+        wellAverageGpm.textContent = `${(total / targetMinutes).toFixed(2)} GPM`;
+        wellCalculationNote.textContent = `${totalText} gallons ÷ ${targetMinutes} ${targetMinutes === 1 ? "minute" : "minutes"} = ${(total / targetMinutes).toFixed(2)} GPM.`;
       }
 
       function updateWellYieldTimer() {
         const timer = loadWellYieldTimer();
         if (!timer) {
-          wellYieldTimerDisplay.textContent = "100:00";
+          wellYieldTimerDisplay.textContent = "00:00:00";
           wellYieldStartTimer.disabled = false;
-          wellYieldStartTimer.textContent = "Start 100-minute timer";
+          wellYieldStartTimer.textContent = "START WELL TEST";
+          wellTargetMinutes.disabled = false;
+          wellTestStartTime.textContent = "Not started";
+          wellTargetReachedTime.textContent = "Not reached";
+          wellYieldStopEarly.hidden = true;
+          wellYieldCompleteTest.hidden = true;
+          wellTestCompletePanel.hidden = true;
+          wellEarlyTerminationFields.hidden = true;
           updateWellYieldProgress();
           return;
         }
-        const endTime = Number(timer.stoppedAt || Date.now());
+        const endTime = Number(timer.actualCompletedAt || timer.stoppedAt || Date.now());
         const elapsed = Math.max(0, Math.floor((endTime - Number(timer.startedAt)) / 1000));
-        const remaining = WELL_YIELD_SECONDS - elapsed;
-        if (remaining <= 0 && !timer.completedAt) {
-          timer.completedAt = Date.now();
+        const targetSeconds = Math.max(1, Number(timer.targetMinutes) || 100) * 60;
+        wellYieldTimerDisplay.textContent = formatWellTimer(elapsed);
+        wellTestStartTime.textContent = workflowClock(timer.startedAt);
+        wellTargetMinutes.value = String(timer.targetMinutes || 100);
+        wellTargetMinutes.disabled = true;
+        if (elapsed >= targetSeconds && !timer.targetReachedAt) {
+          timer.targetReachedAt = Date.now();
           storeWellYieldTimer(timer);
+          appendWorkflowEvent("Well test target duration reached", {
+            startedAt: new Date(timer.startedAt).toISOString(),
+            targetMinutes: timer.targetMinutes,
+            targetReachedAt: new Date(timer.targetReachedAt).toISOString()
+          }, loadActiveJob());
+          showTimedAlert({
+            id: `well-test-${timer.startedAt}`,
+            title: "WELL TEST COMPLETE",
+            body: `The well test has reached the required ${timer.targetMinutes}-minute test duration. Return to MPI Field Tools and complete the well test record.`,
+            url: "./#sop-guide",
+            job: loadActiveJob()
+          });
         }
-        if (timer.stoppedAt && remaining > 0) {
-          wellYieldTimerDisplay.textContent = `${formatWellTimer(elapsed)} elapsed`;
-          wellYieldStartTimer.disabled = true;
-          wellYieldStartTimer.textContent = "Test stopped early";
-        } else if (remaining <= 0) {
-          wellYieldTimerDisplay.textContent = "00:00";
-          wellYieldStartTimer.disabled = true;
-          wellYieldStartTimer.textContent = "100 minutes complete";
+        wellYieldStartTimer.disabled = true;
+        wellYieldStartTimer.textContent = timer.actualCompletedAt ? "TEST RECORDED COMPLETE" : timer.targetReachedAt ? "TARGET DURATION REACHED" : timer.stoppedAt ? "TEST ENDED EARLY" : "WELL TEST IN PROGRESS";
+        wellTargetReachedTime.textContent = timer.targetReachedAt ? workflowClock(timer.targetReachedAt) : "Not reached";
+        wellYieldStopEarly.hidden = Boolean(timer.stoppedAt || timer.targetReachedAt || timer.actualCompletedAt);
+        wellYieldCompleteTest.hidden = !timer.targetReachedAt && !timer.stoppedAt || Boolean(timer.actualCompletedAt);
+        wellTestCompletePanel.hidden = !timer.targetReachedAt && !timer.stoppedAt;
+        wellTestCompleteMessage.textContent = timer.stoppedAt && !timer.targetReachedAt
+          ? "The test ended early. Record the reason before completing the test record."
+          : "The well test has reached the required test duration.";
+        wellEarlyTerminationFields.hidden = !(timer.stoppedAt && !timer.targetReachedAt);
+        if (timer.actualCompletedAt) {
           if (wellYieldTimerInterval) window.clearInterval(wellYieldTimerInterval);
-        } else {
-          wellYieldTimerDisplay.textContent = formatWellTimer(remaining);
-          wellYieldStartTimer.disabled = true;
-          wellYieldStartTimer.textContent = "Timer running";
+          wellYieldTimerInterval = 0;
         }
         updateWellYieldProgress();
+        updateWellYieldCalculations();
       }
 
       function startWellYieldTimer() {
         if (loadWellYieldTimer()) return;
-        if (wellTerminatedEarly.checked) {
-          showToast("Clear the early-termination selection before starting a new test");
-          return;
-        }
-        storeWellYieldTimer({ startedAt: Date.now(), stoppedAt: 0, completedAt: 0 });
+        const targetMinutes = Math.min(240, Math.max(1, Number(wellTargetMinutes.value) || 100));
+        const startedAt = Date.now();
+        const profile = loadWorkflowProfile();
+        const job = loadActiveJob();
+        storeWellYieldTimer({
+          startedAt,
+          targetMinutes,
+          targetReachedAt: 0,
+          stoppedAt: 0,
+          actualCompletedAt: 0,
+          inspector: profile?.name || job?.inspector || loadRememberedInspector() || "Unknown inspector",
+          inspectorId: profile?.id || "",
+          jobId: job?.calendarEventId || job?.spectoraJobId || "",
+          property: job?.property || ""
+        });
+        appendWorkflowEvent("Well test started", { startedAt: new Date(startedAt).toISOString(), targetMinutes }, job);
+        prepareTimedAlerts();
         wellYieldTimerInterval = window.setInterval(updateWellYieldTimer, 1000);
         updateWellYieldTimer();
-        showToast("100-minute well timer started");
+        showToast(`${targetMinutes}-minute well test started`);
       }
 
       function resetWellYieldTimerOnly() {
-        if (!window.confirm("Reset the 100-minute well timer? The inspection entries will remain.")) return;
+        if (!window.confirm("Reset the well-test timer? The inspection entries will remain.")) return;
         if (wellYieldTimerInterval) window.clearInterval(wellYieldTimerInterval);
         wellYieldTimerInterval = 0;
         storeWellYieldTimer(null);
@@ -15975,20 +16312,41 @@
         showToast("Well timer reset");
       }
 
-      function handleWellEarlyTermination() {
-        wellEarlyTerminationFields.hidden = !wellTerminatedEarly.checked;
+      function stopWellYieldEarly() {
         const timer = loadWellYieldTimer();
-        if (wellTerminatedEarly.checked && timer?.startedAt && !timer.stoppedAt && !timer.completedAt) {
-          timer.stoppedAt = Date.now();
-          storeWellYieldTimer(timer);
-          const duration = Math.min(100, Math.max(0, Math.floor((timer.stoppedAt - timer.startedAt) / 60000)));
-          if (!wellTestDuration.value) wellTestDuration.value = String(duration);
-          const stopTime = document.getElementById("wellStopTime");
-          if (stopTime && !stopTime.value) stopTime.value = new Date(timer.stoppedAt).toTimeString().slice(0, 5);
-        }
+        if (!timer?.startedAt || timer.stoppedAt || timer.targetReachedAt || timer.actualCompletedAt) return;
+        timer.stoppedAt = Date.now();
+        storeWellYieldTimer(timer);
+        appendWorkflowEvent("Well test stopped early", { stoppedAt: new Date(timer.stoppedAt).toISOString(), elapsedSeconds: Math.floor((timer.stoppedAt - timer.startedAt) / 1000) }, loadActiveJob());
         storeWellYieldRecord();
         updateWellYieldTimer();
         updateWellYieldCalculations();
+        showToast("Well test stopped — record the reason");
+      }
+
+      function completeWellYieldTest() {
+        const timer = loadWellYieldTimer();
+        if (!timer?.startedAt || timer.actualCompletedAt || (!timer.targetReachedAt && !timer.stoppedAt)) return;
+        if (timer.stoppedAt && !timer.targetReachedAt && !wellStopReason.value.trim()) {
+          wellStopReason.focus();
+          showToast("Enter the reason the test ended early");
+          return;
+        }
+        timer.actualCompletedAt = Date.now();
+        const elapsedSeconds = Math.max(0, Math.floor((timer.actualCompletedAt - timer.startedAt) / 1000));
+        storeWellYieldTimer(timer);
+        storeWellYieldRecord();
+        appendWorkflowEvent("Well test completed", {
+          startedAt: new Date(timer.startedAt).toISOString(),
+          targetReachedAt: timer.targetReachedAt ? new Date(timer.targetReachedAt).toISOString() : "",
+          actualCompletedAt: new Date(timer.actualCompletedAt).toISOString(),
+          targetMinutes: timer.targetMinutes,
+          elapsedSeconds,
+          stoppedEarly: Boolean(timer.stoppedAt && !timer.targetReachedAt),
+          stopReason: wellStopReason.value.trim()
+        }, loadActiveJob());
+        updateWellYieldTimer();
+        showToast("Well test completion recorded");
       }
 
       function wellValue(id, fallback = "Not recorded") {
@@ -15998,48 +16356,29 @@
       }
 
       function buildWellYieldSummary() {
-        const intervals = [15, 30, 45, 60, 75, 90].map(minutes => {
-          const values = [
-            wellValue(`well${minutes}Gpm`, "—") + " GPM",
-            wellValue(`well${minutes}Amps`, "—") + " A",
-            wellValue(`well${minutes}Psi`, "—") + " PSI",
-            wellValue(`well${minutes}Condition`, "Condition not recorded")
-          ];
-          const note = wellValue(`well${minutes}Note`, "");
-          return `${minutes} min: ${values.join(" · ")}${note ? ` · ${note}` : ""}`;
-        });
+        const timer = loadWellYieldTimer();
+        const endTime = Number(timer?.actualCompletedAt || timer?.stoppedAt || Date.now());
+        const elapsedSeconds = timer?.startedAt ? Math.max(0, Math.floor((endTime - Number(timer.startedAt)) / 1000)) : 0;
+        const stoppedEarly = Boolean(timer?.stoppedAt && !timer?.targetReachedAt);
         return [
-          "100-MINUTE WELL INSPECTION / YIELD TEST",
+          "WELL INSPECTION / YIELD TEST",
           "",
-          `Test status: ${wellTerminatedEarly.checked ? "Terminated early" : "Completed / not marked early"}`,
-          `Test spigot: ${wellValue("wellTestSpigot")}`,
-          `Discharge location: ${wellValue("wellDischargeLocation")}`,
-          `Pressure tank: ${wellValue("wellTankManufacturer")} · Model ${wellValue("wellTankModel")} · ${wellValue("wellTankCapacity")} gal`,
-          `Visible plumbing: ${wellValue("wellPlumbingMaterial")}`,
-          `Equipment condition: ${wellValue("wellEquipmentCondition")}`,
-          `Pressure switch: ${wellValue("wellPressureSetting")} · Actual cut-in ${wellValue("wellCutInPressure")} PSI · Actual cut-out ${wellValue("wellCutOutPressure")} PSI`,
-          `Gauge/pressure observations: ${wellValue("wellGaugeResponse")} · ${wellValue("wellPressureNotes")}`,
-          `Pump running amperage: ${wellValue("wellRunningAmps")} A`,
-          `Initial flow: ${wellValue("wellInitialFlow")} GPM`,
-          "",
-          "MONITORING",
-          ...intervals,
-          "",
-          `Initial totalizer: ${wellValue("wellInitialTotalizer")} gal`,
-          `Final totalizer: ${wellValue("wellFinalTotalizer")} gal`,
+          `Inspector: ${timer?.inspector || loadWorkflowProfile()?.name || loadRememberedInspector() || "Not recorded"}`,
+          `Property: ${timer?.property || loadActiveJob()?.property || "Not recorded"}`,
+          `Status: ${timer?.actualCompletedAt ? "Completed" : stoppedEarly ? "Ended early — record not completed" : timer?.targetReachedAt ? "Target reached — awaiting completion" : timer?.startedAt ? "In progress" : "Not started"}`,
+          `Start time: ${timer?.startedAt ? new Date(timer.startedAt).toLocaleString("en-US") : "Not recorded"}`,
+          `Target duration: ${timer?.targetMinutes || wellTargetMinutes.value || 100} minutes`,
+          `Target reached: ${timer?.targetReachedAt ? new Date(timer.targetReachedAt).toLocaleString("en-US") : "Not reached"}`,
+          `Actual completion: ${timer?.actualCompletedAt ? new Date(timer.actualCompletedAt).toLocaleString("en-US") : "Not completed"}`,
+          `Total elapsed: ${formatWellTimer(elapsedSeconds)}`,
+          `Initial totalizer: ${wellInitialTotalizer.value || "Not recorded"} gal`,
+          `Final totalizer: ${wellFinalTotalizer.value || "Not recorded"} gal`,
           `Total gallons produced: ${wellTotalGallons.textContent}`,
           `Average yield: ${wellAverageGpm.textContent}`,
-          ...(wellTerminatedEarly.checked ? [
-            `Stopped at: ${wellValue("wellStopTime")}`,
-            `Duration completed: ${wellValue("wellTestDuration")} minutes`,
-            `Reason stopped: ${wellValue("wellStopReason")}`,
-            `Conditions when stopped: ${wellValue("wellStopConditions")}`
+          ...(stoppedEarly ? [
+            `Reason stopped: ${wellStopReason.value.trim() || "Not recorded"}`,
+            `Conditions when stopped: ${wellStopConditions.value.trim() || "Not recorded"}`
           ] : []),
-          "",
-          `Recovery/cut-out: ${wellValue("wellRecoveryCutOut")} PSI · ${wellValue("wellRecoveryNotes")}`,
-          `Wellhead: Casing — ${wellValue("wellCasingCondition")}; Cap — ${wellValue("wellCapCondition")}; Grade — ${wellValue("wellGradeCondition")}`,
-          `Wellhead notes: ${wellValue("wellWellheadNotes")}`,
-          `Overall functional assessment: ${wellValue("wellOverallAssessment")}`,
           "",
           "This was a practical functional/yield inspection and not a hydrogeological drawdown or recovery test."
         ].join("\n");
@@ -16052,7 +16391,7 @@
         storeWellYieldTimer(null);
         if (wellYieldTimerInterval) window.clearInterval(wellYieldTimerInterval);
         wellYieldTimerInterval = 0;
-        handleWellEarlyTermination();
+        wellTargetMinutes.value = "100";
         updateWellYieldCalculations();
         updateWellYieldProgress();
         updateWellYieldTimer();
@@ -16067,12 +16406,12 @@
       function initializeWellYieldWorkflow() {
         wellYieldFields.forEach(wellYieldFieldKey);
         loadWellYieldRecord();
-        wellEarlyTerminationFields.hidden = !wellTerminatedEarly.checked;
+        if (!wellTargetMinutes.value) wellTargetMinutes.value = "100";
         updateWellYieldCalculations();
         updateWellYieldProgress();
         updateWellYieldTimer();
         const timer = loadWellYieldTimer();
-        if (timer?.startedAt && !timer.stoppedAt && !timer.completedAt) wellYieldTimerInterval = window.setInterval(updateWellYieldTimer, 1000);
+        if (timer?.startedAt && !timer.actualCompletedAt && !timer.stoppedAt) wellYieldTimerInterval = window.setInterval(updateWellYieldTimer, 1000);
       }
 
       function sizeCommentOutput() {
@@ -16495,16 +16834,15 @@
         updateWellYieldCalculations();
         updateWellYieldProgress();
       });
-      wellYieldForm.addEventListener("change", event => {
-        if (event.target === wellTerminatedEarly) handleWellEarlyTermination();
-        else {
-          storeWellYieldRecord();
-          updateWellYieldCalculations();
-          updateWellYieldProgress();
-        }
+      wellYieldForm.addEventListener("change", () => {
+        storeWellYieldRecord();
+        updateWellYieldCalculations();
+        updateWellYieldProgress();
       });
       wellYieldStartTimer.addEventListener("click", startWellYieldTimer);
       wellYieldResetTimer.addEventListener("click", resetWellYieldTimerOnly);
+      wellYieldStopEarly.addEventListener("click", stopWellYieldEarly);
+      wellYieldCompleteTest.addEventListener("click", completeWellYieldTest);
       copyWellYieldSummary.addEventListener("click", () => copyText(buildWellYieldSummary(), "Well inspection summary copied"));
       resetWellYieldRecord.addEventListener("click", clearWellYieldRecord);
 
