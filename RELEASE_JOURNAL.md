@@ -463,3 +463,46 @@ Status: published August 26, 2026 as GitHub commit `050c0c8532a59254b1911f28c904
 
 - Restore GitHub `main` to `312c193c44ef078517a4b8c271d06b115eda794b` to keep Builds 1–9 but remove the manufacturer expansion.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 11 — New-tool commissioning record
+
+Status: ready to publish as Build 48.
+
+#### Additions
+
+1. Added a collapsed **Put a new or replacement tool into service** workflow inside Company Tool Guides.
+   - Opens the existing seven-step first-use setup guide with one tap.
+   - Records the person completing setup, received date, brand, exact model, serial/asset number, and assigned inspector/vehicle/storage.
+   - Records official-manual/quick-guide status, controlled function-check result, training/authorization status, and the next service or calibration date.
+   - Records accessories, storage position, restrictions, missing items, and follow-up.
+   - Requires an explicit Ready for approved company use or Hold out of service decision.
+
+2. Kept management communication simple.
+   - One professional commissioning record is emailed only to Kevin.
+   - No email is sent merely for opening, completing, or saving the form.
+   - The form is collapsed by default and no additional home-screen item was added.
+   - A failed function check, missing instructions, or incomplete authorization can be clearly recorded as Hold out of service.
+
+3. Updated the offline cache identifier to Build 48.
+
+#### Source control
+
+- MPI company tool master list.
+- MPI Residential Inspector Field Operations Handbook v1.3 equipment-readiness, safe-operation, property-protection, and competency requirements.
+- Current manufacturer instructions remain controlling for exact model setup and operation.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Required commissioning controls: 12.
+- Empty-form safeguard: passed with a clear required-field message.
+- First-use link: correctly opened **Newly purchased tool — first-use setup**.
+- Recipient: only `kev@michiganpropertyinspections.com`.
+- 390-pixel phone layout: opened form stayed within the viewport with no horizontal overflow.
+- No test email was sent.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `7f5228ca05ab87cd45ec3db4727a384ea60ccc6a` to keep Builds 1–10 but remove the commissioning record.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

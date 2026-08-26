@@ -3639,6 +3639,19 @@
       line-height: 1.55;
     }
 
+    .tool-commissioning-panel { margin: 18px 0; overflow: hidden; }
+    .tool-commissioning-panel > summary { background: #f8f9fd; }
+    .tool-commissioning-panel .damage-form {
+      padding: 24px;
+      background: #fff;
+      border: 0;
+      border-top: 1px solid var(--line);
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .tool-readiness-options { display: grid; gap: 9px; }
+    .tool-readiness-options .damage-informed-option { margin: 0; }
+
     @media (max-width: 560px) {
       .today-jobs-toolbar { align-items: stretch; flex-direction: column; }
       .calendar-action { width: 100%; }
@@ -3652,6 +3665,7 @@
       .job-context-actions,
       .job-shortcuts,
       .daily-readiness-actions { grid-template-columns: 1fr; }
+      .tool-commissioning-panel .damage-form { padding: 20px 16px 22px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -4465,6 +4479,92 @@
         <span><strong>21 inventory tool cards + first-use setup</strong> · Model-specific links are included where exact controls matter.</span>
         <span class="sop-offline-badge">Cards work offline</span>
       </div>
+
+      <details class="panel escalation-guide tool-commissioning-panel" id="toolCommissioningPanel">
+        <summary>
+          <span><strong>Put a new or replacement tool into service</strong><small>Follow the first-use guide, record the exact equipment, and email one commissioning record to Kevin.</small></span>
+        </summary>
+        <form class="damage-form" id="toolCommissionForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+          <input type="hidden" name="_subject" id="toolCommissionSubject" value="MPI New Tool Commissioning Record">
+          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_captcha" value="false">
+          <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?tool-commission-sent=1#tool-guides">
+          <input type="hidden" name="Submitted at" id="toolCommissionSubmittedAt" value="">
+          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
+
+          <div class="panel-heading">
+            <div><h2>New tool commissioning record</h2><p>Complete once before independent field use. Required fields are marked with an asterisk.</p></div>
+            <span class="step-count">Online submit</span>
+          </div>
+          <button class="tool-manual-link related-procedure-link" id="openFirstUseGuideBtn" type="button">Open the first-use setup steps</button>
+
+          <div class="damage-field-row">
+            <div class="field"><label for="toolCommissionInspector">Completed by *</label><input class="damage-input" id="toolCommissionInspector" name="Completed by" type="text" autocomplete="name" maxlength="80" required></div>
+            <div class="field"><label for="toolCommissionDate">Date received *</label><input class="damage-input" id="toolCommissionDate" name="Date received" type="date" required></div>
+          </div>
+
+          <div class="damage-field-row">
+            <div class="field"><label for="toolCommissionBrand">Brand *</label><input class="damage-input" id="toolCommissionBrand" name="Brand" type="text" maxlength="100" placeholder="Example: Milwaukee" required></div>
+            <div class="field"><label for="toolCommissionModel">Exact model *</label><input class="damage-input" id="toolCommissionModel" name="Exact model" type="text" maxlength="120" placeholder="Copy the model label" required></div>
+          </div>
+
+          <div class="damage-field-row">
+            <div class="field"><label for="toolCommissionSerial">Serial or MPI asset number</label><input class="damage-input" id="toolCommissionSerial" name="Serial or asset number" type="text" maxlength="120" placeholder="Enter the number or write Not shown"></div>
+            <div class="field"><label for="toolCommissionAssignment">Assigned inspector, vehicle, or storage *</label><input class="damage-input" id="toolCommissionAssignment" name="Assignment or storage" type="text" maxlength="140" placeholder="Example: Inspector 2 / Truck 2" required></div>
+          </div>
+
+          <div class="damage-field-row">
+            <div class="field">
+              <label for="toolCommissionManual">Official manual / quick guide *</label>
+              <div class="select-wrap"><select class="damage-input" id="toolCommissionManual" name="Manual and guide status" required>
+                <option value="">Choose status…</option>
+                <option>Official manual saved and correct quick guide confirmed</option>
+                <option>Official manual saved; model-specific quick guide requested</option>
+                <option>Manual or instructions not confirmed — keep out of service</option>
+              </select></div>
+            </div>
+            <div class="field">
+              <label for="toolCommissionFunction">Startup / function check *</label>
+              <div class="select-wrap"><select class="damage-input" id="toolCommissionFunction" name="Startup and function check" required>
+                <option value="">Choose result…</option>
+                <option>Passed in a controlled known condition</option>
+                <option>Failed or abnormal — keep out of service</option>
+                <option>Not completed — keep out of service</option>
+              </select></div>
+            </div>
+          </div>
+
+          <div class="damage-field-row">
+            <div class="field">
+              <label for="toolCommissionTraining">Training / authorization *</label>
+              <div class="select-wrap"><select class="damage-input" id="toolCommissionTraining" name="Training and authorization status" required>
+                <option value="">Choose status…</option>
+                <option>Simple familiarization completed</option>
+                <option>Operation demonstrated and supervised practice completed</option>
+                <option>Supervised competency sign-off still required</option>
+                <option>Inspector not yet authorized — keep out of service</option>
+              </select></div>
+            </div>
+            <div class="field"><label for="toolCommissionService">Next service / calibration due</label><input class="damage-input" id="toolCommissionService" name="Next service or calibration due" type="date"></div>
+          </div>
+
+          <div class="field"><label for="toolCommissionAccessories">Accessories and storage position *</label><textarea class="damage-action-input" id="toolCommissionAccessories" name="Accessories and storage position" maxlength="700" placeholder="List the case, charger, batteries, probes, leads, protective parts, and exact vehicle or office location." required></textarea></div>
+          <div class="field"><label for="toolCommissionNotes">Restrictions, missing items, or follow-up</label><textarea class="damage-action-input" id="toolCommissionNotes" name="Restrictions and follow-up" maxlength="700" placeholder="Record anything missing, damaged, pending, restricted, or requiring a guide update."></textarea></div>
+
+          <fieldset class="field">
+            <legend>Release status *</legend>
+            <div class="tool-readiness-options">
+              <label class="damage-informed-option"><input id="toolCommissionReady" type="radio" name="Release status" value="Ready for approved company use" required><span>Ready for approved company use</span></label>
+              <label class="damage-informed-option"><input id="toolCommissionHold" type="radio" name="Release status" value="Hold out of service until follow-up is complete" required><span>Hold out of service until follow-up is complete</span></label>
+            </div>
+          </fieldset>
+
+          <label class="damage-confirmation"><input id="toolCommissionConfirmed" type="checkbox" required><span>I matched the exact equipment and current manufacturer instructions, completed the applicable readiness checks, and accurately recorded anything still preventing field use.</span></label>
+          <button class="decode-btn" id="toolCommissionSubmitBtn" type="submit">Email commissioning record</button>
+          <p class="damage-submit-status" id="toolCommissionStatus" role="status" aria-live="polite"></p>
+          <div class="damage-success" id="toolCommissionSuccess" hidden><strong>Commissioning record sent.</strong><span>Kevin received the equipment identity, setup result, assignment, and release status.</span></div>
+        </form>
+      </details>
 
       <div class="sop-shell tool-guide-shell">
         <aside class="sop-browser" aria-label="Company tool guide browser">
@@ -5855,6 +5955,17 @@
       const toolGuideResultCount = document.getElementById("toolGuideResultCount");
       const toolGuideResults = document.getElementById("toolGuideResults");
       const toolGuideDetail = document.getElementById("toolGuideDetail");
+      const toolCommissionForm = document.getElementById("toolCommissionForm");
+      const toolCommissionInspector = document.getElementById("toolCommissionInspector");
+      const toolCommissionDate = document.getElementById("toolCommissionDate");
+      const toolCommissionBrand = document.getElementById("toolCommissionBrand");
+      const toolCommissionModel = document.getElementById("toolCommissionModel");
+      const toolCommissionSubject = document.getElementById("toolCommissionSubject");
+      const toolCommissionSubmittedAt = document.getElementById("toolCommissionSubmittedAt");
+      const toolCommissionSubmitBtn = document.getElementById("toolCommissionSubmitBtn");
+      const toolCommissionStatus = document.getElementById("toolCommissionStatus");
+      const toolCommissionSuccess = document.getElementById("toolCommissionSuccess");
+      const openFirstUseGuideBtn = document.getElementById("openFirstUseGuideBtn");
       const trainingModules = [...document.querySelectorAll("[data-training-module]")];
       const trainingProgressCount = document.getElementById("trainingProgressCount");
       const trainingProgressFill = document.getElementById("trainingProgressFill");
@@ -10358,7 +10469,7 @@
 
       function syncActiveJobToForms(job, force = false) {
         if (!job) return;
-        const inspectorInputs = [damageInspector, equipmentInspector, toolCheckInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector];
+        const inspectorInputs = [damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector];
         const propertyInputs = [damageProperty, equipmentProperty, toolCheckProperty, teamQuestionProperty, safetyNoticeProperty];
         inspectorInputs.forEach(input => {
           if (input && (force || !input.value)) input.value = job.inspector;
@@ -10482,11 +10593,13 @@
 
       function initializeFieldForms() {
         const rememberedInspector = loadRememberedInspector();
-        [activeJobInspector, damageInspector, equipmentInspector, toolCheckInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector].forEach(input => {
+        [activeJobInspector, damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector].forEach(input => {
           if (input && !input.value) input.value = rememberedInspector;
         });
         syncActiveJobToForms(loadActiveJob());
         renderDailyReadiness();
+
+        if (!toolCommissionDate.value) toolCommissionDate.value = new Date().toISOString().slice(0, 10);
 
         if (!safetyNoticeOccurredAt.value) {
           const now = new Date();
@@ -10516,6 +10629,14 @@
           toolCheckSubmitStatus.textContent = "End-of-job tool check submitted successfully.";
           params.delete("tool-check-sent");
           targetHash = "#tool-check";
+        }
+        if (params.get("tool-commission-sent") === "1") {
+          toolCommissionSuccess.hidden = false;
+          toolCommissionStatus.className = "damage-submit-status success";
+          toolCommissionStatus.textContent = "Commissioning record submitted successfully.";
+          document.getElementById("toolCommissioningPanel").open = true;
+          params.delete("tool-commission-sent");
+          targetHash = "#tool-guides";
         }
         if (params.get("question-sent") === "1") {
           teamQuestionSuccess.hidden = false;
@@ -10958,6 +11079,20 @@
           submitButton: requestSubmitBtn,
           pendingText: "Sending inspector request…",
           subjectText: () => `MPI Inspector Request — ${requestType.value} — ${requestItem.value.trim()}`.slice(0, 180)
+        });
+      }
+
+      function validateToolCommissionSubmission(event) {
+        const release = toolCommissionForm.querySelector('input[name="Release status"]:checked');
+        validateSimpleEmailForm(event, {
+          form: toolCommissionForm,
+          status: toolCommissionStatus,
+          submittedAt: toolCommissionSubmittedAt,
+          subject: toolCommissionSubject,
+          inspector: toolCommissionInspector,
+          submitButton: toolCommissionSubmitBtn,
+          pendingText: "Sending commissioning record…",
+          subjectText: () => `MPI New Tool Record — ${toolCommissionBrand.value.trim()} ${toolCommissionModel.value.trim()} — ${release?.value || "Status required"}`.slice(0, 180)
         });
       }
 
@@ -11736,6 +11871,13 @@
       toolCheckNotUsedOptions.forEach(option => option.addEventListener("change", () => updateToolSectionNotUsed(option)));
       toolCheckResultOptions.forEach(option => option.addEventListener("change", updateToolCheckResult));
       toolCheckForm.addEventListener("submit", validateToolCheckSubmission);
+      toolCommissionForm.addEventListener("submit", validateToolCommissionSubmission);
+      openFirstUseGuideBtn.addEventListener("click", () => {
+        toolGuideSearch.value = "newly purchased tool";
+        toolGuideCategory.value = "";
+        renderToolGuideResults({ selectFirst: true });
+        toolGuideDetail.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
       document.getElementById("trainingGrid").addEventListener("click", event => {
         const button = event.target.closest("[data-complete-training]");
         if (button) completeTrainingModule(button);
@@ -11758,6 +11900,8 @@
         equipmentSubmitBtn.textContent = "Submit photo record";
         toolCheckSubmitBtn.disabled = false;
         toolCheckSubmitBtn.textContent = "Email completed tool check";
+        toolCommissionSubmitBtn.disabled = false;
+        toolCommissionSubmitBtn.textContent = "Email commissioning record";
         teamQuestionSubmitBtn.disabled = false;
         teamQuestionSubmitBtn.textContent = "Submit field question";
         safetyNoticeSubmitBtn.disabled = false;
