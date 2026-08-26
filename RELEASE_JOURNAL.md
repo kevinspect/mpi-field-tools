@@ -2153,3 +2153,42 @@ Status: prepared August 26, 2026 as app Build 94.
 
 - Restore GitHub `main` to `327b072268dcd3be23240a39e51713df658fbb5a` to restore public Build 93.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire improvement cycle.
+
+### Build 58 — Standard 100-minute well inspection and yield test
+
+Status: prepared August 26, 2026 as app Build 96.
+
+#### Additions
+
+1. Added the approved well workflow to Field Procedures in the exact 14-step inspection order.
+   - Client/occupant no-water-use briefing.
+   - Safe discharge selection.
+   - Well equipment, pressure controls, clamp-meter setup, and yield-equipment setup.
+   - Test start, pump-operation record, six quick 15-minute monitoring checkpoints, early-stop control, final recovery, yield calculation, wellhead inspection, and final documentation.
+
+2. Added field-focused record controls.
+   - Numeric PSI, amperage, gallon, capacity, and GPM entries.
+   - Adjacent report-photo prompts at the applicable steps.
+   - Compact 15-, 30-, 45-, 60-, 75-, and 90-minute monitoring cards.
+   - Early-termination time, completed duration, reason, and observed-condition fields.
+   - Saved progress and measurements on the company phone.
+
+3. Added 100-minute test support.
+   - A persistent 100-minute countdown timer.
+   - Automatic total-gallons calculation from final minus initial totalizer.
+   - Automatic average GPM calculation using total gallons divided by 100 for a completed test.
+   - The app suppresses the 100-minute average when the test is marked as terminated early.
+   - A copyable final well-inspection summary for report completion.
+
+4. Added a searchable quick procedure and direct 100-minute well-test chip while retaining the separate standard home-inspection private-well equipment check.
+
+#### Safety and scope controls
+
+- The workflow states that it applies only to a contracted service performed by a trained and authorized inspector.
+- Stop conditions include significant flow loss, substantial amperage change, rapid cycling, significant air, abnormal pump operation, leakage, and other unsafe conditions.
+- The workflow is explicitly described as a practical functional/yield inspection rather than a hydrogeological drawdown or recovery test.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to public Build 94 to remove only the 100-minute well workflow.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire improvement cycle.

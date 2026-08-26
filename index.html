@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="94">
+  <meta name="app-build" content="96">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3685,6 +3685,140 @@
     }
     .temp-diff-result strong { display: block; margin-bottom: 4px; color: var(--forest); font-size: 14px; }
 
+    .well-yield-card { margin: 0 0 18px; border: 1px solid #d6c38e; }
+    .well-yield-card > summary { background: linear-gradient(135deg, #fffdf6, #f4f7fb); }
+    .well-yield-body { padding: 18px 20px 20px; border-top: 1px solid var(--line); }
+    .well-yield-intro {
+      margin: 0 0 15px;
+      padding: 13px 14px;
+      color: var(--ink-2);
+      background: #eef4fa;
+      border-left: 4px solid var(--bright-blue);
+      border-radius: 10px;
+      font-size: 11px;
+      line-height: 1.55;
+    }
+    .well-yield-intro strong { color: var(--forest); }
+    .well-yield-toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+      padding: 14px;
+      color: #fff;
+      background: var(--forest);
+      border-radius: 13px;
+    }
+    .well-progress-copy { display: grid; gap: 6px; }
+    .well-progress-copy strong { font-size: 13px; }
+    .well-progress-copy span { color: rgba(255,255,255,.72); font-size: 10px; }
+    .well-progress-track { height: 7px; overflow: hidden; background: rgba(255,255,255,.18); border-radius: 999px; }
+    .well-progress-fill { width: 0; height: 100%; background: var(--orange); transition: width .2s ease; }
+    .well-timer-box { min-width: 125px; text-align: right; }
+    .well-timer-box span { display: block; color: #d7e6f5; font-size: 9px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .well-timer-display { display: block; margin-top: 2px; color: #fff; font-size: 25px; font-weight: 900; letter-spacing: .03em; }
+    .well-timer-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 14px; }
+    .well-timer-actions button { min-height: 44px; }
+    .well-step-list { display: grid; gap: 9px; }
+    .well-step {
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .well-step[open] { border-color: #b9d1e5; box-shadow: 0 8px 20px rgba(17,24,106,.07); }
+    .well-step > summary {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 13px;
+      color: var(--forest);
+      cursor: pointer;
+      list-style: none;
+    }
+    .well-step > summary::-webkit-details-marker { display: none; }
+    .well-step-number {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      color: #fff;
+      background: var(--forest);
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .well-step-title strong { display: block; font-size: 12px; line-height: 1.3; }
+    .well-step-title small { display: block; margin-top: 3px; color: var(--ink-2); font-size: 9px; line-height: 1.35; }
+    .well-step-state { color: var(--ink-2); font-size: 9px; font-weight: 850; white-space: nowrap; }
+    .well-step.is-complete .well-step-number { color: var(--forest); background: var(--orange); }
+    .well-step.is-complete .well-step-state { color: #276a55; }
+    .well-step-body { padding: 0 14px 15px; border-top: 1px solid var(--line); }
+    .well-step-instructions { display: grid; gap: 6px; margin: 12px 0; padding-left: 18px; color: var(--ink-2); font-size: 10px; line-height: 1.45; }
+    .well-entry-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 11px; }
+    .well-entry-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .well-entry-grid .field { margin: 0; }
+    .well-photo-prompt,
+    .well-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      min-height: 44px;
+      padding: 11px;
+      color: var(--forest);
+      background: #f4f7fa;
+      border: 1px solid #dde5ed;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 750;
+      line-height: 1.4;
+    }
+    .well-photo-prompt { background: #fff8e7; border-color: #ead7a3; }
+    .well-photo-prompt input,
+    .well-check input { flex: 0 0 auto; margin-top: 1px; accent-color: var(--bright-blue); }
+    .well-step-complete {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 13px;
+      padding: 11px 12px;
+      color: #fff;
+      background: var(--forest);
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 850;
+    }
+    .well-step-complete input { accent-color: var(--orange); }
+    .well-monitor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+    .well-monitor-row { margin: 0; padding: 11px; border: 1px solid var(--line); border-radius: 10px; }
+    .well-monitor-row legend { padding: 0 5px; color: var(--forest); font-size: 10px; font-weight: 900; }
+    .well-monitor-values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+    .well-monitor-values label { color: var(--ink-2); font-size: 8px; font-weight: 800; }
+    .well-monitor-values input { width: 100%; min-height: 40px; margin-top: 4px; padding: 0 8px; color: var(--forest); border: 1px solid #c6c3b8; border-radius: 8px; font-size: 12px; }
+    .well-monitor-condition { display: grid; grid-template-columns: .8fr 1.2fr; gap: 6px; margin-top: 7px; }
+    .well-monitor-condition select,
+    .well-monitor-condition input { min-height: 40px; width: 100%; padding: 0 8px; color: var(--forest); background: #fff; border: 1px solid #c6c3b8; border-radius: 8px; font-size: 9px; }
+    .well-early-fields { margin-top: 10px; padding: 12px; background: #fff4f1; border-left: 4px solid #bd4734; border-radius: 9px; }
+    .well-calc-panel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 12px; }
+    .well-calc-value { padding: 13px; color: var(--ink-2); background: #eef4fa; border-radius: 10px; }
+    .well-calc-value span { display: block; font-size: 9px; font-weight: 850; text-transform: uppercase; letter-spacing: .06em; }
+    .well-calc-value output { display: block; margin-top: 5px; color: var(--forest); font-size: 22px; font-weight: 900; }
+    .well-calc-note { grid-column: 1 / -1; margin: 0; color: var(--ink-2); font-size: 9px; line-height: 1.45; }
+    .well-final-actions { display: grid; grid-template-columns: 1.3fr 1fr; gap: 8px; margin-top: 13px; }
+    .well-final-actions .decode-btn { margin: 0; min-height: 46px; }
+
+    @media (max-width: 680px) {
+      .well-yield-body { padding: 14px 12px 15px; }
+      .well-yield-toolbar { grid-template-columns: 1fr; }
+      .well-timer-box { text-align: left; }
+      .well-entry-grid,
+      .well-entry-grid.three,
+      .well-monitor-grid { grid-template-columns: 1fr; }
+      .well-final-actions { grid-template-columns: 1fr; }
+    }
+
     .job-context-card {
       display: grid;
       gap: 16px;
@@ -5112,7 +5246,7 @@
       </div>
 
       <div class="sop-version-bar">
-        <span><strong>26 quick field prompts</strong> · Offline, searchable, and available by copyable direct link · SOP Version 1.3</span>
+        <span><strong>27 quick field prompts</strong> · Offline, searchable, and available by copyable direct link · SOP Version 1.3</span>
         <span class="sop-offline-badge">Available offline</span>
       </div>
 
@@ -5144,6 +5278,126 @@
         </div>
       </details>
 
+      <details class="panel report-quality-card well-yield-card" id="wellYieldWorkflowCard">
+        <summary>
+          <span><strong>100-minute well inspection &amp; yield test</strong><small>The standard MPI field workflow, timer, monitoring record, and yield calculation.</small></span>
+          <span class="daily-readiness-status" id="wellYieldStatus">Not started</span>
+        </summary>
+        <div class="well-yield-body">
+          <p class="well-yield-intro"><strong>Use only for a contracted well inspection/yield test.</strong> Follow these 14 steps in order. This practical functional/yield test is not a hydrogeological drawdown or recovery test. Stop whenever continued operation could damage equipment or create an unsafe condition.</p>
+          <div class="well-yield-toolbar" aria-live="polite">
+            <div class="well-progress-copy"><strong id="wellYieldProgressText">0 of 14 steps complete</strong><div class="well-progress-track" aria-hidden="true"><div class="well-progress-fill" id="wellYieldProgressFill"></div></div><span>Entries save on this phone. Add required photographs to the inspection report as prompted.</span></div>
+            <div class="well-timer-box"><span>100-minute timer</span><output class="well-timer-display" id="wellYieldTimerDisplay">100:00</output></div>
+          </div>
+          <div class="well-timer-actions"><button class="decode-btn" id="wellYieldStartTimer" type="button">Start 100-minute timer</button><button class="job-secondary-action" id="wellYieldResetTimer" type="button">Reset timer</button></div>
+
+          <form id="wellYieldForm" novalidate>
+            <div class="well-step-list">
+              <details class="well-step" data-well-step="1" open>
+                <summary><span class="well-step-number">1</span><span class="well-step-title"><strong>Inform client and occupants before testing</strong><small>Establish the no-water-use rule before starting.</small></span><span class="well-step-state">Pending</span></summary>
+                <div class="well-step-body">
+                  <ul class="well-step-instructions"><li>Speak with the client and every occupant, contractor, agent, or other person present before beginning.</li><li>Advise everyone that no water may be used anywhere on the property for the full 100-minute test.</li><li>This includes toilets, sinks, showers, bathtubs, washing machines, dishwashers, exterior faucets, and every other water-using fixture or appliance.</li><li>Confirm that everyone understands before starting.</li></ul>
+                  <label class="well-check"><input id="wellNoWaterConfirmed" data-well-field type="checkbox"><span>Everyone present was informed and confirmed the no-water-use requirement.</span></label>
+                  <label class="well-step-complete"><input data-well-field data-well-step-complete="1" type="checkbox">Step 1 complete</label>
+                </div>
+              </details>
+
+              <details class="well-step" data-well-step="2">
+                <summary><span class="well-step-number">2</span><span class="well-step-title"><strong>Identify water discharge location</strong><small>Select a safe spigot and discharge route.</small></span><span class="well-step-state">Pending</span></summary>
+                <div class="well-step-body">
+                  <ul class="well-step-instructions"><li>Locate an operational exterior hose bib/spigot suitable for testing.</li><li>If a suitable spigot is available at the well equipment, determine whether the discharge hose can be routed safely outside.</li><li>Confirm the discharge will not cause flooding, erosion, water intrusion, or another unsafe condition.</li></ul>
+                  <div class="well-entry-grid"><div class="field"><label for="wellTestSpigot">Test spigot/location</label><input class="damage-input" id="wellTestSpigot" data-well-field type="text" maxlength="160" placeholder="Example: Rear exterior hose bib"></div><div class="field"><label for="wellDischargeLocation">Safe discharge location</label><input class="damage-input" id="wellDischargeLocation" data-well-field type="text" maxlength="180" placeholder="Example: Downhill lawn area"></div></div>
+                  <label class="well-check"><input id="wellDischargeSafe" data-well-field type="checkbox"><span>Discharge route checked for flooding, erosion, water intrusion, and other hazards.</span></label>
+                  <label class="well-step-complete"><input data-well-field data-well-step-complete="2" type="checkbox">Step 2 complete</label>
+                </div>
+              </details>
+
+              <details class="well-step" data-well-step="3">
+                <summary><span class="well-step-number">3</span><span class="well-step-title"><strong>Locate and inspect well equipment</strong><small>Document the pressure tank, plumbing, and visible condition.</small></span><span class="well-step-state">Pending</span></summary>
+                <div class="well-step-body">
+                  <ul class="well-step-instructions"><li>Locate the accessible well equipment in the basement, crawlspace, utility room, well house, well pit, or other location.</li><li>Photograph the pressure tank and its manufacturer label.</li><li>Record the pressure tank manufacturer, model, and capacity where available.</li><li>Identify the visible plumbing material and check the tank, piping, fittings, and related equipment for leakage, corrosion, damage, or abnormal conditions.</li></ul>
+                  <div class="well-entry-grid"><label class="well-photo-prompt"><input data-well-field type="checkbox"><span>Pressure tank photograph added to the report.</span></label><label class="well-photo-prompt"><input data-well-field type="checkbox"><span>Pressure tank manufacturer-label photograph added to the report.</span></label></div>
+                  <div class="well-entry-grid three"><div class="field"><label for="wellTankManufacturer">Tank manufacturer</label><input class="damage-input" id="wellTankManufacturer" data-well-field type="text" maxlength="100"></div><div class="field"><label for="wellTankModel">Tank model</label><input class="damage-input" id="wellTankModel" data-well-field type="text" maxlength="100"></div><div class="field"><label for="wellTankCapacity">Tank capacity (gallons)</label><input class="damage-input" id="wellTankCapacity" data-well-field type="number" inputmode="decimal" min="0" step="0.1"></div></div>
+                  <div class="well-entry-grid"><div class="field"><label for="wellPlumbingMaterial">Visible plumbing material</label><div class="select-wrap"><select class="damage-input" id="wellPlumbingMaterial" data-well-field><option value="">Choose…</option><option>Copper</option><option>PEX</option><option>PVC</option><option>Polyethylene</option><option>Galvanized steel</option><option>Other / mixed</option></select></div></div><div class="field"><label for="wellEquipmentCondition">Visible equipment condition</label><textarea class="damage-action-input" id="wellEquipmentCondition" data-well-field maxlength="500" placeholder="Leakage, corrosion, damage, or None observed."></textarea></div></div>
+                  <label class="well-step-complete"><input data-well-field data-well-step-complete="3" type="checkbox">Step 3 complete</label>
+                </div>
+              </details>
+
+              <details class="well-step" data-well-step="4">
+                <summary><span class="well-step-number">4</span><span class="well-step-title"><strong>Inspect pressure controls</strong><small>Record switch range, actual pressures, and gauge response.</small></span><span class="well-step-state">Pending</span></summary>
+                <div class="well-step-body">
+                  <ul class="well-step-instructions"><li>Locate the pressure switch and pressure gauge.</li><li>Identify the pressure-switch operating range where possible, such as 20/40, 30/50, or 40/60 PSI.</li><li>Photograph the pressure switch and record its setting.</li><li>Record actual pump cut-in and cut-out pressures and confirm the gauge responds as pressure changes.</li><li>Document abnormal pressure fluctuation or rapid cycling.</li></ul>
+                  <label class="well-photo-prompt"><input data-well-field type="checkbox"><span>Pressure-switch photograph added to the report.</span></label>
+                  <div class="well-entry-grid three"><div class="field"><label for="wellPressureSetting">Switch setting</label><div class="select-wrap"><select class="damage-input" id="wellPressureSetting" data-well-field><option value="">Choose…</option><option>20/40 PSI</option><option>30/50 PSI</option><option>40/60 PSI</option><option>Other / unreadable</option></select></div></div><div class="field"><label for="wellCutInPressure">Actual cut-in (PSI)</label><input class="damage-input" id="wellCutInPressure" data-well-field type="number" inputmode="decimal" min="0" max="200" step="0.1"></div><div class="field"><label for="wellCutOutPressure">Actual cut-out (PSI)</label><input class="damage-input" id="wellCutOutPressure" data-well-field type="number" inputmode="decimal" min="0" max="200" step="0.1"></div></div>
+                  <div class="well-entry-grid"><div class="field"><label for="wellGaugeResponse">Pressure-gauge response</label><div class="select-wrap"><select class="damage-input" id="wellGaugeResponse" data-well-field><option value="">Choose…</option><option>Responded appropriately</option><option>Did not respond appropriately</option><option>Could not determine</option></select></div></div><div class="field"><label for="wellPressureNotes">Pressure/cycling observations</label><textarea class="damage-action-input" id="wellPressureNotes" data-well-field maxlength="400" placeholder="Fluctuation, rapid cycling, or None observed."></textarea></div></div>
+                  <label class="well-step-complete"><input data-well-field data-well-step-complete="4" type="checkbox">Step 4 complete</label>
+                </div>
+              </details>
+
+              <details class="well-step" data-well-step="5">
+                <summary><span class="well-step-number">5</span><span class="well-step-title"><strong>Set up pump amperage monitoring</strong><small>Position the clamp meter safely on one energized conductor.</small></span><span class="well-step-state">Pending</span></summary>
+                <div class="well-step-body"><ul class="well-step-instructions"><li>Set the clamp meter to the appropriate AC amperage setting.</li><li>Clamp around one individual energized conductor supplying the well pump.</li><li>Position the meter so running amperage can be observed safely during testing.</li><li>Avoid contact with exposed energized electrical components.</li></ul><label class="well-check"><input data-well-field type="checkbox"><span>Clamp meter safely configured and positioned; no contact with exposed energized components.</span></label><label class="well-step-complete"><input data-well-field data-well-step-complete="5" type="checkbox">Step 5 complete</label></div>
+              </details>
+
+              <details class="well-step" data-well-step="6">
+                <summary><span class="well-step-number">6</span><span class="well-step-title"><strong>Set up yield-test equipment</strong><small>Connect, route, photograph, and record the initial totalizer.</small></span><span class="well-step-state">Pending</span></summary>
+                <div class="well-step-body"><ul class="well-step-instructions"><li>Connect the well-yield equipment to the selected spigot and route the discharge hose safely outside.</li><li>Confirm all connections are secure.</li><li>Photograph the totalizing/yield meter before starting and record the initial reading.</li><li>Confirm again that no water is being used anywhere on the property.</li></ul><div class="well-entry-grid"><label class="well-photo-prompt"><input data-well-field type="checkbox"><span>Initial totalizing/yield-meter photograph added to the report.</span></label><div class="field"><label for="wellInitialTotalizer">Initial totalizer (gallons)</label><input class="damage-input" id="wellInitialTotalizer" data-well-field type="number" inputmode="decimal" min="0" step="0.1"></div></div><div class="well-entry-grid"><label class="well-check"><input data-well-field type="checkbox"><span>Connections secure and discharge hose safely routed outside.</span></label><label class="well-check"><input data-well-field type="checkbox"><span>No-water-use requirement reconfirmed immediately before testing.</span></label></div><label class="well-step-complete"><input data-well-field data-well-step-complete="6" type="checkbox">Step 6 complete</label></div>
+              </details>
+
+              <details class="well-step" data-well-step="7">
+                <summary><span class="well-step-number">7</span><span class="well-step-title"><strong>Begin the 100-minute test</strong><small>Open the spigot, start the timer, and record initial flow.</small></span><span class="well-step-state">Pending</span></summary>
+                <div class="well-step-body"><ul class="well-step-instructions"><li>Fully open the test spigot and immediately start the 100-minute timer.</li><li>Confirm water is flowing through the flow meter.</li><li>Photograph the operating flow meter and record the initial flow rate in GPM.</li></ul><div class="well-entry-grid"><label class="well-photo-prompt"><input data-well-field type="checkbox"><span>Operating flow-meter photograph added to the report.</span></label><div class="field"><label for="wellInitialFlow">Initial flow rate (GPM)</label><input class="damage-input" id="wellInitialFlow" data-well-field type="number" inputmode="decimal" min="0" step="0.1"></div></div><label class="well-check"><input data-well-field type="checkbox"><span>Spigot fully open, water flowing through meter, and 100-minute timer started.</span></label><label class="well-step-complete"><input data-well-field data-well-step-complete="7" type="checkbox">Step 7 complete</label></div>
+              </details>
+
+              <details class="well-step" data-well-step="8">
+                <summary><span class="well-step-number">8</span><span class="well-step-title"><strong>Record pump operation</strong><small>Capture cut-in, amperage, and operating behavior.</small></span><span class="well-step-state">Pending</span></summary>
+                <div class="well-step-body"><ul class="well-step-instructions"><li>Observe pressure falling until the pressure switch activates the pump and record cut-in pressure.</li><li>Once the pump is operating steadily, record running amperage and photograph the reading.</li><li>Observe for excessive cycling, pressure fluctuation, vibration, unusual noise, air, bubbles, or other abnormal operation.</li></ul><div class="well-entry-grid three"><div class="field"><label for="wellOperatingCutIn">Pump cut-in (PSI)</label><input class="damage-input" id="wellOperatingCutIn" data-well-field type="number" inputmode="decimal" min="0" max="200" step="0.1"></div><div class="field"><label for="wellRunningAmps">Running amperage (A)</label><input class="damage-input" id="wellRunningAmps" data-well-field type="number" inputmode="decimal" min="0" step="0.1"></div><label class="well-photo-prompt"><input data-well-field type="checkbox"><span>Running-amperage photograph added to the report.</span></label></div><div class="field"><label for="wellPumpOperationNotes">Pump operation observations</label><textarea class="damage-action-input" id="wellPumpOperationNotes" data-well-field maxlength="500" placeholder="Cycling, pressure, vibration, noise, air/bubbles, or None observed."></textarea></div><label class="well-step-complete"><input data-well-field data-well-step-complete="8" type="checkbox">Step 8 complete</label></div>
+              </details>
+
+              <details class="well-step" data-well-step="9">
+                <summary><span class="well-step-number">9</span><span class="well-step-title"><strong>Monitor during the test</strong><small>Quick checks at approximately 15-minute intervals.</small></span><span class="well-step-state">Pending</span></summary>
+                <div class="well-step-body"><ul class="well-step-instructions"><li>At each interval check flow rate, pump amperage, system pressure, cycling, and overall operation.</li><li>Observe discharged water for air, bubbles, sediment, discoloration, or loss of flow.</li><li>Record significant changes and remain alert for unauthorized water use inside the property.</li></ul>
+                  <div class="well-monitor-grid" id="wellMonitorGrid">
+                    <fieldset class="well-monitor-row"><legend>15 minutes</legend><div class="well-monitor-values"><label>GPM<input data-well-field id="well15Gpm" type="number" inputmode="decimal" min="0" step="0.1"></label><label>Amps<input data-well-field id="well15Amps" type="number" inputmode="decimal" min="0" step="0.1"></label><label>PSI<input data-well-field id="well15Psi" type="number" inputmode="decimal" min="0" step="0.1"></label></div><div class="well-monitor-condition"><select data-well-field id="well15Condition"><option value="">Condition…</option><option>Normal / stable</option><option>Change noted</option></select><input data-well-field id="well15Note" type="text" maxlength="120" placeholder="Brief note"></div></fieldset>
+                    <fieldset class="well-monitor-row"><legend>30 minutes</legend><div class="well-monitor-values"><label>GPM<input data-well-field id="well30Gpm" type="number" inputmode="decimal" min="0" step="0.1"></label><label>Amps<input data-well-field id="well30Amps" type="number" inputmode="decimal" min="0" step="0.1"></label><label>PSI<input data-well-field id="well30Psi" type="number" inputmode="decimal" min="0" step="0.1"></label></div><div class="well-monitor-condition"><select data-well-field id="well30Condition"><option value="">Condition…</option><option>Normal / stable</option><option>Change noted</option></select><input data-well-field id="well30Note" type="text" maxlength="120" placeholder="Brief note"></div></fieldset>
+                    <fieldset class="well-monitor-row"><legend>45 minutes</legend><div class="well-monitor-values"><label>GPM<input data-well-field id="well45Gpm" type="number" inputmode="decimal" min="0" step="0.1"></label><label>Amps<input data-well-field id="well45Amps" type="number" inputmode="decimal" min="0" step="0.1"></label><label>PSI<input data-well-field id="well45Psi" type="number" inputmode="decimal" min="0" step="0.1"></label></div><div class="well-monitor-condition"><select data-well-field id="well45Condition"><option value="">Condition…</option><option>Normal / stable</option><option>Change noted</option></select><input data-well-field id="well45Note" type="text" maxlength="120" placeholder="Brief note"></div></fieldset>
+                    <fieldset class="well-monitor-row"><legend>60 minutes</legend><div class="well-monitor-values"><label>GPM<input data-well-field id="well60Gpm" type="number" inputmode="decimal" min="0" step="0.1"></label><label>Amps<input data-well-field id="well60Amps" type="number" inputmode="decimal" min="0" step="0.1"></label><label>PSI<input data-well-field id="well60Psi" type="number" inputmode="decimal" min="0" step="0.1"></label></div><div class="well-monitor-condition"><select data-well-field id="well60Condition"><option value="">Condition…</option><option>Normal / stable</option><option>Change noted</option></select><input data-well-field id="well60Note" type="text" maxlength="120" placeholder="Brief note"></div></fieldset>
+                    <fieldset class="well-monitor-row"><legend>75 minutes</legend><div class="well-monitor-values"><label>GPM<input data-well-field id="well75Gpm" type="number" inputmode="decimal" min="0" step="0.1"></label><label>Amps<input data-well-field id="well75Amps" type="number" inputmode="decimal" min="0" step="0.1"></label><label>PSI<input data-well-field id="well75Psi" type="number" inputmode="decimal" min="0" step="0.1"></label></div><div class="well-monitor-condition"><select data-well-field id="well75Condition"><option value="">Condition…</option><option>Normal / stable</option><option>Change noted</option></select><input data-well-field id="well75Note" type="text" maxlength="120" placeholder="Brief note"></div></fieldset>
+                    <fieldset class="well-monitor-row"><legend>90 minutes</legend><div class="well-monitor-values"><label>GPM<input data-well-field id="well90Gpm" type="number" inputmode="decimal" min="0" step="0.1"></label><label>Amps<input data-well-field id="well90Amps" type="number" inputmode="decimal" min="0" step="0.1"></label><label>PSI<input data-well-field id="well90Psi" type="number" inputmode="decimal" min="0" step="0.1"></label></div><div class="well-monitor-condition"><select data-well-field id="well90Condition"><option value="">Condition…</option><option>Normal / stable</option><option>Change noted</option></select><input data-well-field id="well90Note" type="text" maxlength="120" placeholder="Brief note"></div></fieldset>
+                  </div>
+                  <label class="well-check"><input data-well-field type="checkbox"><span>No unauthorized water use was observed or reported during the test.</span></label><label class="well-step-complete"><input data-well-field data-well-step-complete="9" type="checkbox">Step 9 complete</label>
+                </div>
+              </details>
+
+              <details class="well-step" data-well-step="10">
+                <summary><span class="well-step-number">10</span><span class="well-step-title"><strong>Stop the test if necessary</strong><small>Protect the pump and document every early termination.</small></span><span class="well-step-state">Pending</span></summary>
+                <div class="well-step-body"><ul class="well-step-instructions"><li>Terminate early if flow deteriorates significantly or reaches zero, amperage changes substantially, rapid cycling begins, significant air enters the supply, abnormal pump noise develops, or leakage/another unsafe condition occurs.</li><li>If stopped, document the stop time, completed duration, reason, and observed conditions.</li></ul><label class="well-check"><input id="wellTerminatedEarly" data-well-field type="checkbox"><span>The test was terminated early.</span></label><div class="well-early-fields" id="wellEarlyTerminationFields" hidden><div class="well-entry-grid three"><div class="field"><label for="wellStopTime">Time stopped</label><input class="damage-input" id="wellStopTime" data-well-field type="time"></div><div class="field"><label for="wellTestDuration">Duration completed (minutes)</label><input class="damage-input" id="wellTestDuration" data-well-field type="number" inputmode="numeric" min="0" max="100" step="1"></div><div class="field"><label for="wellStopReason">Primary reason</label><div class="select-wrap"><select class="damage-input" id="wellStopReason" data-well-field><option value="">Choose…</option><option>Flow deteriorated or stopped</option><option>Amperage changed substantially</option><option>Rapid cycling</option><option>Significant air entered supply</option><option>Abnormal pump noise or operation</option><option>Leakage or unsafe condition</option><option>Other</option></select></div></div></div><div class="field"><label for="wellStopConditions">Conditions observed when stopped</label><textarea class="damage-action-input" id="wellStopConditions" data-well-field maxlength="600"></textarea></div></div><label class="well-step-complete"><input data-well-field data-well-step-complete="10" type="checkbox">Step 10 reviewed and complete</label></div>
+              </details>
+
+              <details class="well-step" data-well-step="11">
+                <summary><span class="well-step-number">11</span><span class="well-step-title"><strong>Complete the 100-minute test</strong><small>Stop flow, record final totalizer, and observe recovery.</small></span><span class="well-step-state">Pending</span></summary>
+                <div class="well-step-body"><ul class="well-step-instructions"><li>At 100 minutes, turn off the test spigot.</li><li>Photograph and record the final totalizer reading.</li><li>Observe pressure recovery and confirm the switch reaches expected cut-out pressure and shuts the pump off normally.</li><li>Record abnormal recovery, cycling, or pressure behavior.</li></ul><div class="well-entry-grid three"><label class="well-photo-prompt"><input data-well-field type="checkbox"><span>Final totalizer photograph added to the report.</span></label><div class="field"><label for="wellFinalTotalizer">Final totalizer (gallons)</label><input class="damage-input" id="wellFinalTotalizer" data-well-field type="number" inputmode="decimal" min="0" step="0.1"></div><div class="field"><label for="wellRecoveryCutOut">Recovery cut-out (PSI)</label><input class="damage-input" id="wellRecoveryCutOut" data-well-field type="number" inputmode="decimal" min="0" max="200" step="0.1"></div></div><div class="field"><label for="wellRecoveryNotes">Recovery/cycling/pressure observations</label><textarea class="damage-action-input" id="wellRecoveryNotes" data-well-field maxlength="500" placeholder="Normal recovery or describe abnormal behavior."></textarea></div><label class="well-step-complete"><input data-well-field data-well-step-complete="11" type="checkbox">Step 11 complete</label></div>
+              </details>
+
+              <details class="well-step" data-well-step="12">
+                <summary><span class="well-step-number">12</span><span class="well-step-title"><strong>Calculate total well yield</strong><small>Final minus initial; total gallons divided by 100 minutes.</small></span><span class="well-step-state">Pending</span></summary>
+                <div class="well-step-body"><ul class="well-step-instructions"><li>Total gallons produced = final totalizer reading minus initial totalizer reading.</li><li>Average GPM = total gallons produced divided by 100 minutes.</li><li>Record the initial reading, final reading, total gallons, and average GPM.</li></ul><div class="well-calc-panel" aria-live="polite"><div class="well-calc-value"><span>Total gallons produced</span><output id="wellTotalGallons">—</output></div><div class="well-calc-value"><span>Average yield</span><output id="wellAverageGpm">—</output></div><p class="well-calc-note" id="wellCalculationNote">Enter the initial and final totalizer readings. Average GPM is calculated only for a completed 100-minute test.</p></div><label class="well-step-complete"><input data-well-field data-well-step-complete="12" type="checkbox">Step 12 complete</label></div>
+              </details>
+
+              <details class="well-step" data-well-step="13">
+                <summary><span class="well-step-number">13</span><span class="well-step-title"><strong>Exterior wellhead inspection</strong><small>Photograph and inspect the accessible casing, cap, and grade.</small></span><span class="well-step-state">Pending</span></summary>
+                <div class="well-step-body"><ul class="well-step-instructions"><li>Locate the accessible well casing/wellhead and photograph it.</li><li>Check the visible casing for damage or deterioration.</li><li>Check the cap for damage, looseness, openings, or other contamination pathways.</li><li>Observe surrounding grade and confirm the wellhead is not in an obvious low area where surface water collects.</li><li>Document visible deficiencies.</li></ul><label class="well-photo-prompt"><input data-well-field type="checkbox"><span>Wellhead photograph added to the report.</span></label><div class="well-entry-grid three"><div class="field"><label for="wellCasingCondition">Visible casing</label><div class="select-wrap"><select class="damage-input" id="wellCasingCondition" data-well-field><option value="">Choose…</option><option>No visible deficiency</option><option>Damage/deterioration observed</option><option>Not accessible</option></select></div></div><div class="field"><label for="wellCapCondition">Well cap</label><div class="select-wrap"><select class="damage-input" id="wellCapCondition" data-well-field><option value="">Choose…</option><option>No visible deficiency</option><option>Loose/damaged/opening observed</option><option>Not accessible</option></select></div></div><div class="field"><label for="wellGradeCondition">Surrounding grade</label><div class="select-wrap"><select class="damage-input" id="wellGradeCondition" data-well-field><option value="">Choose…</option><option>No obvious low-area concern</option><option>Low area/surface-water concern</option><option>Could not determine</option></select></div></div></div><div class="field"><label for="wellWellheadNotes">Wellhead deficiencies/limitations</label><textarea class="damage-action-input" id="wellWellheadNotes" data-well-field maxlength="500"></textarea></div><label class="well-step-complete"><input data-well-field data-well-step-complete="13" type="checkbox">Step 13 complete</label></div>
+              </details>
+
+              <details class="well-step" data-well-step="14">
+                <summary><span class="well-step-number">14</span><span class="well-step-title"><strong>Final well inspection documentation</strong><small>Review the complete functional/yield inspection record.</small></span><span class="well-step-state">Pending</span></summary>
+                <div class="well-step-body"><ul class="well-step-instructions"><li>Confirm the record includes available tank photos/details, plumbing material, pressure-switch setting, actual cut-in/cut-out, running amperage, initial flow, interval observations, initial/final totalizer, total gallons, average GPM, and wellhead/casing/cap condition.</li><li>Document pressure fluctuations, rapid cycling, air/bubbles, sediment/discoloration, loss of flow, abnormal pump operation, and any early termination.</li><li>State the overall functional assessment observed during this inspection without presenting the test as a hydrogeological analysis.</li></ul><div class="field"><label for="wellOverallAssessment">Overall functional assessment</label><textarea class="damage-action-input" id="wellOverallAssessment" data-well-field maxlength="900" placeholder="Summarize the actual system operation and material findings observed during the test."></textarea></div><label class="well-check"><input data-well-field type="checkbox"><span>All required photographs and available measurements were added to the inspection report.</span></label><label class="well-step-complete"><input data-well-field data-well-step-complete="14" type="checkbox">Step 14 complete — record reviewed</label><div class="well-final-actions"><button class="decode-btn" id="copyWellYieldSummary" type="button">Copy well inspection summary</button><button class="job-secondary-action" id="resetWellYieldRecord" type="button">Clear well record</button></div></div>
+              </details>
+            </div>
+          </form>
+        </div>
+      </details>
+
       <div class="sop-shell">
         <aside class="sop-browser" aria-label="SOP procedure browser">
           <div class="sop-controls">
@@ -5161,6 +5415,7 @@
               <button class="sop-chip" type="button" data-sop-query="water pressure">Water pressure</button>
               <button class="sop-chip" type="button" data-sop-query="hot cold fixture water">Fixture water test</button>
               <button class="sop-chip" type="button" data-sop-query="private well">Private well</button>
+              <button class="sop-chip" type="button" data-open-well-yield>100-minute well test</button>
               <button class="sop-chip" type="button" data-sop-query="water test parameters">Water test parameters</button>
               <button class="sop-chip" type="button" data-sop-query="panel cover">Panel cover</button>
               <button class="sop-chip" type="button" data-sop-query="carbon monoxide">CO screening</button>
@@ -5170,8 +5425,8 @@
               <button class="sop-chip" type="button" data-sop-query="garage vehicle door">Garage door</button>
             </div>
             <div class="sop-boundary-notice" id="sopBoundaryNotice" hidden>
-              <strong>Separate procedure and authorization required</strong>
-              This handbook does not authorize septic evaluation, well-yield testing, or water-quality testing. Use only the separately approved procedure for those ancillary services.
+              <strong>Ancillary-service authorization required</strong>
+              Use the approved 100-minute well workflow only when the service is contracted and the inspector is trained and authorized. Septic evaluation and water-quality sampling remain separate procedures.
             </div>
           </div>
           <div class="sop-result-count" id="sopResultCount" role="status">
@@ -6787,6 +7042,26 @@
       const calculateTempDifferenceBtn = document.getElementById("calculateTempDifferenceBtn");
       const copyTempDifferenceBtn = document.getElementById("copyTempDifferenceBtn");
       const tempDifferenceResult = document.getElementById("tempDifferenceResult");
+      const wellYieldWorkflowCard = document.getElementById("wellYieldWorkflowCard");
+      const wellYieldForm = document.getElementById("wellYieldForm");
+      const wellYieldFields = [...document.querySelectorAll("[data-well-field]")];
+      const wellYieldStepChecks = [...document.querySelectorAll("[data-well-step-complete]")];
+      const wellYieldStatus = document.getElementById("wellYieldStatus");
+      const wellYieldProgressText = document.getElementById("wellYieldProgressText");
+      const wellYieldProgressFill = document.getElementById("wellYieldProgressFill");
+      const wellYieldTimerDisplay = document.getElementById("wellYieldTimerDisplay");
+      const wellYieldStartTimer = document.getElementById("wellYieldStartTimer");
+      const wellYieldResetTimer = document.getElementById("wellYieldResetTimer");
+      const wellInitialTotalizer = document.getElementById("wellInitialTotalizer");
+      const wellFinalTotalizer = document.getElementById("wellFinalTotalizer");
+      const wellTotalGallons = document.getElementById("wellTotalGallons");
+      const wellAverageGpm = document.getElementById("wellAverageGpm");
+      const wellCalculationNote = document.getElementById("wellCalculationNote");
+      const wellTerminatedEarly = document.getElementById("wellTerminatedEarly");
+      const wellEarlyTerminationFields = document.getElementById("wellEarlyTerminationFields");
+      const wellTestDuration = document.getElementById("wellTestDuration");
+      const copyWellYieldSummary = document.getElementById("copyWellYieldSummary");
+      const resetWellYieldRecord = document.getElementById("resetWellYieldRecord");
       const manufacturer = document.getElementById("manufacturer");
       const serialInput = document.getElementById("serial");
       const resultContent = document.getElementById("resultContent");
@@ -7042,12 +7317,16 @@
       const CALENDAR_ID_KEY = "mpiScheduleCalendarIdV1";
       const CALENDAR_NAME_KEY = "mpiScheduleCalendarNameV1";
       const CALENDAR_CACHE_KEY = "mpiTodayJobsCacheV1";
+      const WELL_YIELD_STORAGE_KEY = "mpiWellYieldRecordV1";
+      const WELL_YIELD_TIMER_KEY = "mpiWellYieldTimerV1";
+      const WELL_YIELD_SECONDS = 100 * 60;
       let commentType = "defect";
       let copyPayload = "";
       let toastTimer;
       let activeSopId = "";
       let activeToolGuideId = "";
       let availableScheduleCalendars = [];
+      let wellYieldTimerInterval = 0;
 
       const TOOL_GUIDES = [
         {
@@ -7563,6 +7842,43 @@
           stop: [
             "Do not open the pressure switch, well cap, or sealed components; alter settings; operate questionable shutoffs; or exceed electrical authorization.",
             "Well-yield testing and water-quality sampling require a separate approved procedure, contracted scope, and inspector authorization."
+          ]
+        },
+        {
+          id: "quick-well-yield-100",
+          category: "Ancillary services",
+          title: "100-minute well inspection and yield test",
+          aliases: "well yield 100 minute flow totalizer pump amperage pressure tank cut in cut out wellhead",
+          source: "MPI 100-Minute Well Inspection and Yield Test Procedure",
+          sourceNote: "Source: MPI standard 100-minute well inspection and yield-test procedure. Use only for a contracted service by a trained and authorized inspector. This is a practical functional/yield workflow, not a hydrogeological drawdown or recovery test.",
+          purpose: "Complete the contracted 100-minute functional and yield inspection in the required order while recording pressure, amperage, flow, totalizer readings, operating conditions, and wellhead observations.",
+          steps: [
+            "Inform the client and everyone present that no water may be used anywhere on the property for the entire 100-minute test; confirm understanding.",
+            "Identify an operational test spigot and a safe discharge route that will not cause flooding, erosion, water intrusion, or another hazard.",
+            "Locate and inspect the accessible well equipment; photograph the pressure tank and label; record tank details, plumbing material, and visible condition.",
+            "Inspect the pressure switch and gauge; photograph the switch; record the setting, actual cut-in/cut-out pressures, gauge response, fluctuation, and cycling.",
+            "Set the clamp meter to AC amperage and position it safely around one individual energized pump conductor without contacting exposed energized parts.",
+            "Connect the yield equipment, route and secure the discharge, photograph the meter, record the initial totalizer, and reconfirm no water use.",
+            "Fully open the test spigot, immediately start the 100-minute timer, confirm metered flow, photograph the operating flow meter, and record initial GPM.",
+            "Observe pump activation; record cut-in pressure and steady running amperage; photograph the amperage and note cycling, pressure, vibration, noise, air, or bubbles.",
+            "At approximately 15-minute intervals, quickly record flow, amperage, pressure, overall condition, water appearance, and any unauthorized water use.",
+            "Stop early when flow, amperage, cycling, air, noise, leakage, or another unsafe condition indicates possible equipment damage; record stop time, duration, reason, and conditions.",
+            "At 100 minutes, close the spigot, photograph and record the final totalizer, and observe normal pressure recovery and pump cut-out.",
+            "Calculate total gallons as final minus initial totalizer; calculate average GPM as total gallons divided by 100 for a completed test.",
+            "Inspect and photograph the accessible wellhead; evaluate the visible casing, cap, openings, surrounding grade, and surface-water exposure.",
+            "Complete the final record with all available photographs, measurements, interval observations, abnormalities, limitations, and the overall functional assessment."
+          ],
+          recordHeading: "Required final record",
+          record: [
+            "Pressure-tank photographs and available manufacturer, model, capacity, and plumbing material.",
+            "Pressure-switch setting, actual cut-in/cut-out, running amperage, initial flow, interval readings, and operating observations.",
+            "Initial/final totalizer, total gallons, completed-test average GPM, wellhead/casing/cap/grade condition, and overall functional assessment.",
+            "Any early termination, pressure fluctuation, rapid cycling, air/bubbles, sediment/discoloration, loss of flow, or abnormal pump operation."
+          ],
+          stopHeading: "Terminate early when",
+          stop: [
+            "Flow deteriorates significantly or reaches zero; amperage changes substantially; rapid cycling, significant air, abnormal noise, leakage, or another unsafe condition develops.",
+            "Continued operation could potentially damage the pump or related equipment. Record the completed duration and exact reason rather than presenting an incomplete test as a completed 100-minute result."
           ]
         },
         {
@@ -14160,6 +14476,14 @@
           actions.append(safetyLink, questionLink);
           content.appendChild(actions);
         }
+        if (record.id === "quick-well-yield-100") {
+          const openRecord = document.createElement("button");
+          openRecord.type = "button";
+          openRecord.className = "decode-btn";
+          openRecord.dataset.openWellYieldRecord = "true";
+          openRecord.textContent = "Open 100-minute field record";
+          content.appendChild(openRecord);
+        }
         const copyProcedureLink = document.createElement("button");
         copyProcedureLink.type = "button";
         copyProcedureLink.className = "tool-manual-link tool-guide-copy-link";
@@ -14248,6 +14572,268 @@
         url.searchParams.set("procedure", procedureId);
         url.hash = "sop-guide";
         copyText(url.href, "Direct field-procedure link copied");
+      }
+
+      function wellYieldFieldKey(field, index) {
+        if (!field.dataset.wellKey) {
+          field.dataset.wellKey = field.id || (field.dataset.wellStepComplete ? `step-${field.dataset.wellStepComplete}` : `field-${index}`);
+        }
+        return field.dataset.wellKey;
+      }
+
+      function loadWellYieldRecord() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(WELL_YIELD_STORAGE_KEY) || "{}");
+          wellYieldFields.forEach((field, index) => {
+            const value = saved[wellYieldFieldKey(field, index)];
+            if (value === undefined) return;
+            if (field.type === "checkbox") field.checked = Boolean(value);
+            else field.value = String(value);
+          });
+        } catch (_) {}
+      }
+
+      function storeWellYieldRecord() {
+        const record = {};
+        wellYieldFields.forEach((field, index) => {
+          record[wellYieldFieldKey(field, index)] = field.type === "checkbox" ? field.checked : field.value;
+        });
+        try { localStorage.setItem(WELL_YIELD_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
+      }
+
+      function loadWellYieldTimer() {
+        try {
+          const timer = JSON.parse(localStorage.getItem(WELL_YIELD_TIMER_KEY) || "null");
+          return timer && Number.isFinite(Number(timer.startedAt)) ? timer : null;
+        } catch (_) { return null; }
+      }
+
+      function storeWellYieldTimer(timer) {
+        try {
+          if (timer) localStorage.setItem(WELL_YIELD_TIMER_KEY, JSON.stringify(timer));
+          else localStorage.removeItem(WELL_YIELD_TIMER_KEY);
+        } catch (_) {}
+      }
+
+      function formatWellTimer(seconds) {
+        const safe = Math.max(0, Math.round(seconds));
+        const minutes = Math.floor(safe / 60);
+        const remainder = safe % 60;
+        return `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+      }
+
+      function updateWellYieldProgress() {
+        const complete = wellYieldStepChecks.filter(check => check.checked).length;
+        wellYieldProgressText.textContent = `${complete} of ${wellYieldStepChecks.length} steps complete`;
+        wellYieldProgressFill.style.width = `${wellYieldStepChecks.length ? (complete / wellYieldStepChecks.length) * 100 : 0}%`;
+        for (const check of wellYieldStepChecks) {
+          const step = document.querySelector(`[data-well-step="${check.dataset.wellStepComplete}"]`);
+          if (!step) continue;
+          step.classList.toggle("is-complete", check.checked);
+          const state = step.querySelector(".well-step-state");
+          if (state) state.textContent = check.checked ? "Complete" : "Pending";
+        }
+        const timer = loadWellYieldTimer();
+        if (complete === wellYieldStepChecks.length) {
+          wellYieldStatus.textContent = "Complete";
+          wellYieldStatus.classList.add("is-ready");
+        } else if (wellTerminatedEarly.checked) {
+          wellYieldStatus.textContent = "Stopped early";
+          wellYieldStatus.classList.remove("is-ready");
+        } else if (timer?.completedAt) {
+          wellYieldStatus.textContent = "Timer complete";
+          wellYieldStatus.classList.remove("is-ready");
+        } else if (timer?.startedAt) {
+          wellYieldStatus.textContent = "In progress";
+          wellYieldStatus.classList.remove("is-ready");
+        } else if (complete) {
+          wellYieldStatus.textContent = `${complete} of 14`;
+          wellYieldStatus.classList.remove("is-ready");
+        } else {
+          wellYieldStatus.textContent = "Not started";
+          wellYieldStatus.classList.remove("is-ready");
+        }
+      }
+
+      function updateWellYieldCalculations() {
+        const initial = Number.parseFloat(wellInitialTotalizer.value);
+        const final = Number.parseFloat(wellFinalTotalizer.value);
+        if (!Number.isFinite(initial) || !Number.isFinite(final)) {
+          wellTotalGallons.textContent = "—";
+          wellAverageGpm.textContent = "—";
+          wellCalculationNote.textContent = "Enter the initial and final totalizer readings. Average GPM is calculated only for a completed 100-minute test.";
+          return;
+        }
+        const total = final - initial;
+        if (total < 0) {
+          wellTotalGallons.textContent = "Check readings";
+          wellAverageGpm.textContent = "—";
+          wellCalculationNote.textContent = "The final totalizer must be equal to or greater than the initial reading.";
+          return;
+        }
+        const totalText = Number.isInteger(total) ? total.toFixed(0) : total.toFixed(1);
+        wellTotalGallons.textContent = `${totalText} gal`;
+        if (wellTerminatedEarly.checked) {
+          wellAverageGpm.textContent = "Incomplete";
+          wellCalculationNote.textContent = "The test ended early. Do not report a 100-minute average GPM; document the completed duration, total gallons, and reason for stopping.";
+          return;
+        }
+        wellAverageGpm.textContent = `${(total / 100).toFixed(2)} GPM`;
+        wellCalculationNote.textContent = `${totalText} gallons ÷ 100 minutes = ${(total / 100).toFixed(2)} GPM.`;
+      }
+
+      function updateWellYieldTimer() {
+        const timer = loadWellYieldTimer();
+        if (!timer) {
+          wellYieldTimerDisplay.textContent = "100:00";
+          wellYieldStartTimer.disabled = false;
+          wellYieldStartTimer.textContent = "Start 100-minute timer";
+          updateWellYieldProgress();
+          return;
+        }
+        const endTime = Number(timer.stoppedAt || Date.now());
+        const elapsed = Math.max(0, Math.floor((endTime - Number(timer.startedAt)) / 1000));
+        const remaining = WELL_YIELD_SECONDS - elapsed;
+        if (remaining <= 0 && !timer.completedAt) {
+          timer.completedAt = Date.now();
+          storeWellYieldTimer(timer);
+        }
+        if (timer.stoppedAt && remaining > 0) {
+          wellYieldTimerDisplay.textContent = `${formatWellTimer(elapsed)} elapsed`;
+          wellYieldStartTimer.disabled = true;
+          wellYieldStartTimer.textContent = "Test stopped early";
+        } else if (remaining <= 0) {
+          wellYieldTimerDisplay.textContent = "00:00";
+          wellYieldStartTimer.disabled = true;
+          wellYieldStartTimer.textContent = "100 minutes complete";
+          if (wellYieldTimerInterval) window.clearInterval(wellYieldTimerInterval);
+        } else {
+          wellYieldTimerDisplay.textContent = formatWellTimer(remaining);
+          wellYieldStartTimer.disabled = true;
+          wellYieldStartTimer.textContent = "Timer running";
+        }
+        updateWellYieldProgress();
+      }
+
+      function startWellYieldTimer() {
+        if (loadWellYieldTimer()) return;
+        if (wellTerminatedEarly.checked) {
+          showToast("Clear the early-termination selection before starting a new test");
+          return;
+        }
+        storeWellYieldTimer({ startedAt: Date.now(), stoppedAt: 0, completedAt: 0 });
+        wellYieldTimerInterval = window.setInterval(updateWellYieldTimer, 1000);
+        updateWellYieldTimer();
+        showToast("100-minute well timer started");
+      }
+
+      function resetWellYieldTimerOnly() {
+        if (!window.confirm("Reset the 100-minute well timer? The inspection entries will remain.")) return;
+        if (wellYieldTimerInterval) window.clearInterval(wellYieldTimerInterval);
+        wellYieldTimerInterval = 0;
+        storeWellYieldTimer(null);
+        updateWellYieldTimer();
+        showToast("Well timer reset");
+      }
+
+      function handleWellEarlyTermination() {
+        wellEarlyTerminationFields.hidden = !wellTerminatedEarly.checked;
+        const timer = loadWellYieldTimer();
+        if (wellTerminatedEarly.checked && timer?.startedAt && !timer.stoppedAt && !timer.completedAt) {
+          timer.stoppedAt = Date.now();
+          storeWellYieldTimer(timer);
+          const duration = Math.min(100, Math.max(0, Math.floor((timer.stoppedAt - timer.startedAt) / 60000)));
+          if (!wellTestDuration.value) wellTestDuration.value = String(duration);
+          const stopTime = document.getElementById("wellStopTime");
+          if (stopTime && !stopTime.value) stopTime.value = new Date(timer.stoppedAt).toTimeString().slice(0, 5);
+        }
+        storeWellYieldRecord();
+        updateWellYieldTimer();
+        updateWellYieldCalculations();
+      }
+
+      function wellValue(id, fallback = "Not recorded") {
+        const field = document.getElementById(id);
+        const value = field?.value?.trim();
+        return value || fallback;
+      }
+
+      function buildWellYieldSummary() {
+        const intervals = [15, 30, 45, 60, 75, 90].map(minutes => {
+          const values = [
+            wellValue(`well${minutes}Gpm`, "—") + " GPM",
+            wellValue(`well${minutes}Amps`, "—") + " A",
+            wellValue(`well${minutes}Psi`, "—") + " PSI",
+            wellValue(`well${minutes}Condition`, "Condition not recorded")
+          ];
+          const note = wellValue(`well${minutes}Note`, "");
+          return `${minutes} min: ${values.join(" · ")}${note ? ` · ${note}` : ""}`;
+        });
+        return [
+          "100-MINUTE WELL INSPECTION / YIELD TEST",
+          "",
+          `Test status: ${wellTerminatedEarly.checked ? "Terminated early" : "Completed / not marked early"}`,
+          `Test spigot: ${wellValue("wellTestSpigot")}`,
+          `Discharge location: ${wellValue("wellDischargeLocation")}`,
+          `Pressure tank: ${wellValue("wellTankManufacturer")} · Model ${wellValue("wellTankModel")} · ${wellValue("wellTankCapacity")} gal`,
+          `Visible plumbing: ${wellValue("wellPlumbingMaterial")}`,
+          `Equipment condition: ${wellValue("wellEquipmentCondition")}`,
+          `Pressure switch: ${wellValue("wellPressureSetting")} · Actual cut-in ${wellValue("wellCutInPressure")} PSI · Actual cut-out ${wellValue("wellCutOutPressure")} PSI`,
+          `Gauge/pressure observations: ${wellValue("wellGaugeResponse")} · ${wellValue("wellPressureNotes")}`,
+          `Pump running amperage: ${wellValue("wellRunningAmps")} A`,
+          `Initial flow: ${wellValue("wellInitialFlow")} GPM`,
+          "",
+          "MONITORING",
+          ...intervals,
+          "",
+          `Initial totalizer: ${wellValue("wellInitialTotalizer")} gal`,
+          `Final totalizer: ${wellValue("wellFinalTotalizer")} gal`,
+          `Total gallons produced: ${wellTotalGallons.textContent}`,
+          `Average yield: ${wellAverageGpm.textContent}`,
+          ...(wellTerminatedEarly.checked ? [
+            `Stopped at: ${wellValue("wellStopTime")}`,
+            `Duration completed: ${wellValue("wellTestDuration")} minutes`,
+            `Reason stopped: ${wellValue("wellStopReason")}`,
+            `Conditions when stopped: ${wellValue("wellStopConditions")}`
+          ] : []),
+          "",
+          `Recovery/cut-out: ${wellValue("wellRecoveryCutOut")} PSI · ${wellValue("wellRecoveryNotes")}`,
+          `Wellhead: Casing — ${wellValue("wellCasingCondition")}; Cap — ${wellValue("wellCapCondition")}; Grade — ${wellValue("wellGradeCondition")}`,
+          `Wellhead notes: ${wellValue("wellWellheadNotes")}`,
+          `Overall functional assessment: ${wellValue("wellOverallAssessment")}`,
+          "",
+          "This was a practical functional/yield inspection and not a hydrogeological drawdown or recovery test."
+        ].join("\n");
+      }
+
+      function clearWellYieldRecord() {
+        if (!window.confirm("Clear the saved well inspection record and timer from this phone?")) return;
+        wellYieldForm.reset();
+        try { localStorage.removeItem(WELL_YIELD_STORAGE_KEY); } catch (_) {}
+        storeWellYieldTimer(null);
+        if (wellYieldTimerInterval) window.clearInterval(wellYieldTimerInterval);
+        wellYieldTimerInterval = 0;
+        handleWellEarlyTermination();
+        updateWellYieldCalculations();
+        updateWellYieldProgress();
+        updateWellYieldTimer();
+        showToast("Well inspection record cleared");
+      }
+
+      function openWellYieldWorkflow() {
+        wellYieldWorkflowCard.open = true;
+        wellYieldWorkflowCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function initializeWellYieldWorkflow() {
+        wellYieldFields.forEach(wellYieldFieldKey);
+        loadWellYieldRecord();
+        wellEarlyTerminationFields.hidden = !wellTerminatedEarly.checked;
+        updateWellYieldCalculations();
+        updateWellYieldProgress();
+        updateWellYieldTimer();
+        const timer = loadWellYieldTimer();
+        if (timer?.startedAt && !timer.stoppedAt && !timer.completedAt) wellYieldTimerInterval = window.setInterval(updateWellYieldTimer, 1000);
       }
 
       function sizeCommentOutput() {
@@ -14625,6 +15211,11 @@
       });
 
       sopQuickChips.addEventListener("click", event => {
+        const wellWorkflowButton = event.target.closest("[data-open-well-yield]");
+        if (wellWorkflowButton) {
+          openWellYieldWorkflow();
+          return;
+        }
         const button = event.target.closest("[data-sop-query]");
         if (!button) return;
         sopSearch.value = button.dataset.sopQuery;
@@ -14646,6 +15237,11 @@
         if (window.innerWidth < 861) sopDetail.scrollIntoView({ behavior: "smooth", block: "start" });
       });
       sopDetail.addEventListener("click", event => {
+        const openWellRecord = event.target.closest("[data-open-well-yield-record]");
+        if (openWellRecord) {
+          openWellYieldWorkflow();
+          return;
+        }
         const procedureLink = event.target.closest("[data-copy-sop-procedure]");
         if (procedureLink) {
           copySopProcedureLink(procedureLink.dataset.copySopProcedure);
@@ -14654,6 +15250,24 @@
         const copyButton = event.target.closest("[data-water-package-copy]");
         if (copyButton) copyText(copyButton.dataset.waterPackageCopy || "", "COC parameter list copied");
       });
+
+      wellYieldForm.addEventListener("input", () => {
+        storeWellYieldRecord();
+        updateWellYieldCalculations();
+        updateWellYieldProgress();
+      });
+      wellYieldForm.addEventListener("change", event => {
+        if (event.target === wellTerminatedEarly) handleWellEarlyTermination();
+        else {
+          storeWellYieldRecord();
+          updateWellYieldCalculations();
+          updateWellYieldProgress();
+        }
+      });
+      wellYieldStartTimer.addEventListener("click", startWellYieldTimer);
+      wellYieldResetTimer.addEventListener("click", resetWellYieldTimerOnly);
+      copyWellYieldSummary.addEventListener("click", () => copyText(buildWellYieldSummary(), "Well inspection summary copied"));
+      resetWellYieldRecord.addEventListener("click", clearWellYieldRecord);
 
       setCommentType("defect");
       populateReportItems();
@@ -14668,6 +15282,7 @@
       initializeMessageAcknowledgements();
       initializeToolGuides();
       initializeSopGuide();
+      initializeWellYieldWorkflow();
       initializePushStatus();
       initializeOfflineAccess();
       initializeAppUpdates();
