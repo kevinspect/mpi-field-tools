@@ -102,6 +102,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - An unresolved Equipment Age Finder result now opens a prefilled, reload-protected management question for verification before report release; the inspector remains in control of submission. **Implemented in Build 81.**
 - Older inspector-facing submission wording now consistently uses professional MPI-management language while preserving Kevin as the only recipient and keeping every send deliberate. **Implemented in Build 82.**
 - Narrow-phone section navigation now uses a large back arrow and centered section title without crowding, while desktop retains the full back label. **Implemented in Build 83.**
+- Home search now finds and opens all 16 MPI refresher lessons alongside app screens, Field Procedures, and Company Tool Guides. **Implemented in Build 84.**
 
 ## Low-cost improvements
 

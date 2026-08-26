@@ -1760,3 +1760,27 @@ Status: published August 26, 2026 as GitHub commit `699040bf188030ef53cd06857343
 
 - Restore GitHub `main` to `e48442aad9ef7334a5d7c325ad1bd02cfc2a4ad5` to keep Builds 1–45 but restore the earlier mobile secondary header.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 47 — Find MPI refresher lessons from Home
+
+Status: published August 26, 2026 as GitHub commit `38a68aaf3c795dac0b9875d6db31944d14d7a0ec` (app Build 84).
+
+#### Additions
+
+1. Expanded the existing Home search without adding another card.
+   - Home now searches all 16 MPI refresher lessons in addition to principal screens, 26 Field Procedures, and 22 Company Tool Guides.
+   - Lesson results show the refresher title and focus, then open the exact module in Training Center.
+   - Updated the search label, example, empty-state message, and accessibility description to include lessons.
+
+2. Updated the visible build, version file, and offline cache identifier to Build 84.
+
+#### Validation record
+
+- Confirmed **photo records**, **chain custody**, **roof ladder**, and **panel cover boundary** each returned and opened the exact intended lesson.
+- Confirmed existing **moisture meter** tool-guide and **water pressure** field-procedure searches still open the correct sections.
+- Re-ran the complete 13-screen structural and phone-width audit with no failures.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `6d96358fd7f90469201f237d23544eb7afd17db8` to keep Builds 1–46 but remove lesson results from Home search.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
