@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="94">
+  <meta name="app-build" content="95">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3702,6 +3702,78 @@
     .job-context-status strong { display: block; font-size: 14px; }
     .job-context-status span { display: block; margin-top: 4px; color: var(--ink-2); font-size: 11px; line-height: 1.45; }
 
+    .job-contact-panel {
+      overflow: hidden;
+      background: #f8fafc;
+      border: 1px solid #d7e3ef;
+      border-radius: 13px;
+    }
+
+    .job-contact-panel > summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      min-height: 56px;
+      padding: 13px 14px;
+      color: var(--forest);
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .job-contact-panel > summary::-webkit-details-marker { display: none; }
+    .job-contact-panel > summary strong { display: block; font-size: 13px; }
+    .job-contact-panel > summary small { display: block; margin-top: 3px; color: var(--ink-2); font-size: 10px; line-height: 1.4; }
+
+    .job-contact-body {
+      display: grid;
+      gap: 13px;
+      padding: 15px;
+      background: #fff;
+      border-top: 1px solid #d7e3ef;
+    }
+
+    .job-contact-actions,
+    .job-eta-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .job-contact-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 10px 12px;
+      color: #fff;
+      background: var(--bright-blue);
+      border: 0;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 900;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .job-contact-action.gold { color: var(--forest); background: var(--orange); }
+    .job-contact-action[aria-disabled="true"], .job-contact-action:disabled { opacity: .48; pointer-events: none; }
+    .job-client-message { min-height: 150px; resize: none; }
+    .job-client-message[readonly] { color: var(--forest); background: #f7f9fc; }
+    .job-contact-note { margin: 0; color: var(--ink-2); font-size: 9.5px; line-height: 1.5; }
+
+    .job-eta-result {
+      padding: 12px 13px;
+      color: var(--forest);
+      background: #eef4fa;
+      border-left: 4px solid var(--bright-blue);
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 850;
+      line-height: 1.45;
+    }
+
     .job-progress-track {
       height: 9px;
       overflow: hidden;
@@ -3995,6 +4067,8 @@
       .external-training-card { grid-template-columns: 1fr; }
       .external-training-actions { min-width: 0; }
       .job-context-actions,
+      .job-contact-actions,
+      .job-eta-actions,
       .job-shortcuts,
       .daily-readiness-actions,
       .temp-diff-actions { grid-template-columns: 1fr; }
@@ -4158,7 +4232,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">94</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">95</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4268,6 +4342,10 @@
             <label for="activeJobProperty">Property address *</label>
             <input class="damage-input" id="activeJobProperty" type="text" autocomplete="street-address" maxlength="180" placeholder="Street, city, state" required>
           </div>
+          <div class="field">
+            <label for="activeJobClientPhone">Client phone</label>
+            <input class="damage-input" id="activeJobClientPhone" type="text" autocomplete="off" inputmode="tel" maxlength="40" placeholder="Loads from calendar when listed">
+          </div>
 
           <details class="job-service-panel" id="jobServicePanel">
             <summary>
@@ -4293,6 +4371,48 @@
             <strong>No active job on this phone</strong>
             <span>Enter the inspector and property to begin.</span>
           </div>
+
+          <details class="job-contact-panel" id="jobContactPanel">
+            <summary>
+              <span><strong>Contact client</strong><small>Call or send an approved MPI message through Nextiva.</small></span>
+              <span class="daily-readiness-status" id="jobContactStatus">Start job</span>
+            </summary>
+            <div class="job-contact-body">
+              <div class="job-contact-actions">
+                <a class="job-contact-action" id="jobCallClientBtn" href="#" aria-disabled="true">Call client</a>
+                <a class="job-contact-action gold" id="jobOpenMapsEtaBtn" href="https://maps.apple.com/" target="_blank" rel="noreferrer" aria-disabled="true">Get live ETA in Maps</a>
+              </div>
+
+              <div class="field">
+                <label for="jobClientMessagePreset">Message</label>
+                <div class="select-wrap"><select class="damage-input" id="jobClientMessagePreset">
+                  <option value="on-my-way">On my way</option>
+                  <option value="arrived">Arrived</option>
+                  <option value="running-late">Running late</option>
+                  <option value="inspection-complete">Inspection complete</option>
+                  <option value="access-needed">Access needed</option>
+                </select></div>
+              </div>
+
+              <div class="field">
+                <label for="jobEtaMinutes">Travel time shown in Maps</label>
+                <div class="job-eta-actions">
+                  <input class="damage-input" id="jobEtaMinutes" type="number" inputmode="numeric" min="1" max="180" step="1" placeholder="Minutes">
+                  <button class="job-contact-action" id="jobUseEtaBtn" type="button">Add ETA to message</button>
+                </div>
+              </div>
+
+              <div class="job-eta-result" id="jobEtaResult" aria-live="polite" hidden></div>
+
+              <div class="field">
+                <label for="jobClientMessage">MPI message preview</label>
+                <textarea class="damage-textarea job-client-message" id="jobClientMessage" readonly></textarea>
+              </div>
+
+              <button class="decode-btn" id="jobOpenNextivaBtn" type="button">Copy message &amp; open Nextiva</button>
+              <p class="job-contact-note">Maps supplies the live travel time from the phone’s current location. Return here, enter the minutes shown, and review the expected arrival before opening Nextiva. Nothing is sent automatically.</p>
+            </div>
+          </details>
         </form>
 
         <section class="panel" aria-labelledby="job-stages-title">
@@ -6723,6 +6843,17 @@
       const jobContextForm = document.getElementById("jobContextForm");
       const activeJobInspector = document.getElementById("activeJobInspector");
       const activeJobProperty = document.getElementById("activeJobProperty");
+      const activeJobClientPhone = document.getElementById("activeJobClientPhone");
+      const jobContactPanel = document.getElementById("jobContactPanel");
+      const jobContactStatus = document.getElementById("jobContactStatus");
+      const jobCallClientBtn = document.getElementById("jobCallClientBtn");
+      const jobOpenMapsEtaBtn = document.getElementById("jobOpenMapsEtaBtn");
+      const jobClientMessagePreset = document.getElementById("jobClientMessagePreset");
+      const jobEtaMinutes = document.getElementById("jobEtaMinutes");
+      const jobUseEtaBtn = document.getElementById("jobUseEtaBtn");
+      const jobEtaResult = document.getElementById("jobEtaResult");
+      const jobClientMessage = document.getElementById("jobClientMessage");
+      const jobOpenNextivaBtn = document.getElementById("jobOpenNextivaBtn");
       const jobServicePanel = document.getElementById("jobServicePanel");
       const jobServiceOptions = [...document.querySelectorAll("[data-job-service]")];
       const jobServiceStatus = document.getElementById("jobServiceStatus");
@@ -7042,6 +7173,7 @@
       const CALENDAR_ID_KEY = "mpiScheduleCalendarIdV1";
       const CALENDAR_NAME_KEY = "mpiScheduleCalendarNameV1";
       const CALENDAR_CACHE_KEY = "mpiTodayJobsCacheV1";
+      const NEXTIVA_APP_URL = "https://app.nextiva.com/";
       let commentType = "defect";
       let copyPayload = "";
       let toastTimer;
@@ -11365,6 +11497,16 @@
         return { time, end: endText };
       }
 
+      function extractClientPhone(...values) {
+        const text = values
+          .map(value => String(value || ""))
+          .join(" ")
+          .replace(/<[^>]*>/g, " ")
+          .replace(/&nbsp;/gi, " ");
+        const match = text.match(/(?:\+?1[\s.()-]*)?(?:\(?\d{3}\)?[\s.-]*)\d{3}[\s.-]*\d{4}/);
+        return match ? match[0].trim() : "";
+      }
+
       function renderTodayJobs(jobs, calendarName, { cached = false } = {}) {
         todayJobsList.replaceChildren();
         todayCalendarName.textContent = calendarName || "Company schedule";
@@ -11463,6 +11605,10 @@
           || existing.property.toLowerCase() === job.location.toLowerCase()
         );
         if (sameJob) {
+          if (!existing.clientPhone) {
+            existing.clientPhone = String(job.clientPhone || extractClientPhone(job.description, job.summary) || "").trim();
+            storeActiveJob(existing);
+          }
           renderActiveJob(existing);
           return true;
         }
@@ -11478,6 +11624,10 @@
         const active = {
           inspector,
           property: job.location,
+          clientPhone: String(job.clientPhone || extractClientPhone(job.description, job.summary) || "").trim(),
+          clientMessagePreset: "on-my-way",
+          clientEtaMinutes: "",
+          clientEtaCapturedAt: "",
           calendarEventId: String(job.id || ""),
           calendarSummary: String(job.summary || "Inspection appointment"),
           scheduledStart: String(job.start?.dateTime || job.start?.date || ""),
@@ -11542,6 +11692,8 @@
             id: event.id || "",
             summary: String(event.summary || "Inspection appointment").trim(),
             location: String(event.location || "").trim(),
+            description: String(event.description || "").trim(),
+            clientPhone: extractClientPhone(event.description, event.summary),
             start: event.start || {},
             end: event.end || {}
           }));
@@ -11945,6 +12097,10 @@
           return {
             inspector: String(saved.inspector || "").trim(),
             property: String(saved.property || "").trim(),
+            clientPhone: String(saved.clientPhone || "").trim().slice(0, 40),
+            clientMessagePreset: ["on-my-way", "arrived", "running-late", "inspection-complete", "access-needed"].includes(saved.clientMessagePreset) ? saved.clientMessagePreset : "on-my-way",
+            clientEtaMinutes: String(saved.clientEtaMinutes || "").replace(/[^0-9]/g, "").slice(0, 3),
+            clientEtaCapturedAt: String(saved.clientEtaCapturedAt || ""),
             calendarEventId: String(saved.calendarEventId || ""),
             calendarSummary: String(saved.calendarSummary || ""),
             scheduledStart: String(saved.scheduledStart || ""),
@@ -11973,6 +12129,140 @@
 
       function storeActiveJob(job) {
         try { localStorage.setItem(ACTIVE_JOB_STORAGE_KEY, JSON.stringify(job)); } catch (_) {}
+      }
+
+      function clientPhoneHref(value) {
+        const digits = String(value || "").replace(/\D/g, "");
+        return digits.length >= 10 ? `tel:${digits}` : "";
+      }
+
+      function freshClientEta(job) {
+        const minutes = Number.parseInt(job?.clientEtaMinutes, 10);
+        const capturedAt = new Date(job?.clientEtaCapturedAt || "").getTime();
+        const age = Date.now() - capturedAt;
+        if (!Number.isFinite(minutes) || minutes < 1 || minutes > 180 || !Number.isFinite(capturedAt) || age < -300000 || age > 7200000) return null;
+        const arrival = new Date(capturedAt + minutes * 60000);
+        return {
+          minutes,
+          arrival,
+          time: arrival.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+        };
+      }
+
+      function buildClientContactMessage(job) {
+        if (!job?.property) return "Start or choose the current job to prepare a client message.";
+        const inspector = String(job.inspector || "").trim().split(/\s+/)[0] || "your inspector";
+        const introduction = `Hello, this is ${inspector} with Michigan Property Inspections.`;
+        const eta = freshClientEta(job);
+        switch (job.clientMessagePreset) {
+          case "arrived":
+            return `${introduction} I have arrived for the inspection at ${job.property}.`;
+          case "running-late":
+            return eta
+              ? `${introduction} I am running behind schedule and now expect to arrive at approximately ${eta.time}. I apologize for the delay.`
+              : "Open Maps and enter the live travel time above to prepare the running-late message.";
+          case "inspection-complete":
+            return `${introduction} The inspection at ${job.property} is complete. Thank you.`;
+          case "access-needed":
+            return `${introduction} I am at ${job.property} and need assistance with access before I can begin the inspection. Please contact me as soon as possible.`;
+          case "on-my-way":
+          default:
+            return eta
+              ? `${introduction} I am on my way to the inspection at ${job.property} and expect to arrive at approximately ${eta.time}.`
+              : "Open Maps and enter the live travel time above to prepare the on-my-way message.";
+        }
+      }
+
+      function renderClientContact(job = loadActiveJob()) {
+        const hasJob = Boolean(job?.property);
+        const phoneHref = clientPhoneHref(job?.clientPhone);
+        const eta = freshClientEta(job);
+        const requiresEta = ["on-my-way", "running-late"].includes(job?.clientMessagePreset || "on-my-way");
+
+        if (hasJob) {
+          activeJobClientPhone.value = job.clientPhone || "";
+          activeJobClientPhone.defaultValue = job.clientPhone || "";
+          activeJobClientPhone.setAttribute("value", job.clientPhone || "");
+          jobClientMessagePreset.value = job.clientMessagePreset || "on-my-way";
+          jobEtaMinutes.value = job.clientEtaMinutes || "";
+          jobOpenMapsEtaBtn.href = `https://maps.apple.com/?daddr=${encodeURIComponent(job.property)}&dirflg=d`;
+          jobOpenMapsEtaBtn.removeAttribute("aria-disabled");
+        } else {
+          activeJobClientPhone.value = "";
+          activeJobClientPhone.defaultValue = "";
+          activeJobClientPhone.removeAttribute("value");
+          jobClientMessagePreset.value = "on-my-way";
+          jobEtaMinutes.value = "";
+          jobOpenMapsEtaBtn.href = "https://maps.apple.com/";
+          jobOpenMapsEtaBtn.setAttribute("aria-disabled", "true");
+        }
+
+        if (phoneHref) {
+          jobCallClientBtn.href = phoneHref;
+          jobCallClientBtn.removeAttribute("aria-disabled");
+        } else {
+          jobCallClientBtn.href = "#";
+          jobCallClientBtn.setAttribute("aria-disabled", "true");
+        }
+
+        jobContactStatus.textContent = !hasJob ? "Start job" : phoneHref ? "Ready" : "Add phone";
+        jobContactStatus.classList.toggle("is-ready", Boolean(hasJob && phoneHref));
+        jobEtaResult.hidden = !eta;
+        jobEtaResult.textContent = eta ? `${eta.minutes} minute drive · Expected arrival ${eta.time}` : "";
+        jobClientMessage.value = buildClientContactMessage(job);
+        jobOpenNextivaBtn.disabled = !hasJob || (requiresEta && !eta);
+      }
+
+      function saveClientContactDraft({ refreshEta = false } = {}) {
+        const job = loadActiveJob();
+        if (!job?.property) return null;
+        job.clientPhone = activeJobClientPhone.value.trim();
+        job.clientMessagePreset = jobClientMessagePreset.value;
+        if (refreshEta) {
+          const minutes = Number.parseInt(jobEtaMinutes.value, 10);
+          if (!Number.isFinite(minutes) || minutes < 1 || minutes > 180) {
+            showToast("Enter the travel minutes shown in Maps");
+            jobEtaMinutes.focus();
+            return null;
+          }
+          job.clientEtaMinutes = String(minutes);
+          job.clientEtaCapturedAt = new Date().toISOString();
+        }
+        storeActiveJob(job);
+        renderClientContact(job);
+        return job;
+      }
+
+      function applyClientEta() {
+        const job = loadActiveJob();
+        if (!job?.property) {
+          showToast("Start the current job first");
+          activeJobProperty.focus();
+          return;
+        }
+        if (saveClientContactDraft({ refreshEta: true })) showToast("Expected arrival added to the message");
+      }
+
+      function updateClientMessagePreset() {
+        const job = loadActiveJob();
+        if (!job?.property) {
+          renderClientContact(null);
+          return;
+        }
+        job.clientPhone = activeJobClientPhone.value.trim();
+        job.clientMessagePreset = jobClientMessagePreset.value;
+        storeActiveJob(job);
+        renderClientContact(job);
+      }
+
+      function copyClientMessageAndOpenNextiva() {
+        const message = jobClientMessage.value.trim();
+        if (!message || jobOpenNextivaBtn.disabled) {
+          showToast("Complete the current job and ETA first");
+          return;
+        }
+        void copyText(message, "MPI message copied — opening Nextiva");
+        window.open(NEXTIVA_APP_URL, "_blank", "noopener,noreferrer");
       }
 
       function loadLastClearedJob() {
@@ -12344,6 +12634,7 @@
           homeActiveJobProgress.textContent = "";
           activeJobInspector.value = loadRememberedInspector();
           activeJobProperty.value = "";
+          activeJobClientPhone.value = "";
           title.textContent = "No active job on this phone";
           detail.textContent = "Enter the inspector and property to begin.";
           if (activeJobMapLink) {
@@ -12352,12 +12643,14 @@
           }
           updateJobProgress(null);
           renderJobServices(null);
+          renderClientContact(null);
           renderRoomCoverage(null);
           renderFieldReadings(null);
           return;
         }
         activeJobInspector.value = job.inspector;
         activeJobProperty.value = job.property;
+        activeJobClientPhone.value = job.clientPhone || "";
         title.textContent = job.property;
         detail.textContent = job.scheduledStart
           ? `${job.calendarSummary || "Inspection appointment"} · ${new Date(job.scheduledStart).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })} · Saved on this phone.`
@@ -12375,6 +12668,7 @@
         homeActiveJobMap.href = `https://maps.apple.com/?q=${encodeURIComponent(job.property)}`;
         updateJobProgress(job);
         renderJobServices(job);
+        renderClientContact(job);
         renderRoomCoverage(job);
         renderFieldReadings(job);
         syncActiveJobToForms(job);
@@ -12390,6 +12684,10 @@
         const job = {
           inspector,
           property,
+          clientPhone: activeJobClientPhone.value.trim(),
+          clientMessagePreset: sameJob ? existing.clientMessagePreset || "on-my-way" : "on-my-way",
+          clientEtaMinutes: sameJob ? existing.clientEtaMinutes || "" : "",
+          clientEtaCapturedAt: sameJob ? existing.clientEtaCapturedAt || "" : "",
           calendarEventId: sameJob ? existing.calendarEventId || "" : "",
           calendarSummary: sameJob ? existing.calendarSummary || "" : "",
           scheduledStart: sameJob ? existing.scheduledStart || "" : "",
@@ -14420,6 +14718,10 @@
       });
 
       jobContextForm.addEventListener("submit", saveActiveJob);
+      activeJobClientPhone.addEventListener("change", () => saveClientContactDraft());
+      jobClientMessagePreset.addEventListener("change", updateClientMessagePreset);
+      jobUseEtaBtn.addEventListener("click", applyClientEta);
+      jobOpenNextivaBtn.addEventListener("click", copyClientMessageAndOpenNextiva);
       todayJobsList.addEventListener("click", useCalendarJob);
       calendarConnectBtn.addEventListener("click", connectCompanyCalendar);
       calendarRefreshBtn.addEventListener("click", refreshCompanyCalendar);

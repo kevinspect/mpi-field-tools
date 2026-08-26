@@ -2153,3 +2153,43 @@ Status: prepared August 26, 2026 as app Build 94.
 
 - Restore GitHub `main` to `327b072268dcd3be23240a39e51713df658fbb5a` to restore public Build 93.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire improvement cycle.
+
+### Build 58 — Client contact and live Maps ETA
+
+Status: prepared August 26, 2026 as app Build 95.
+
+#### Additions
+
+1. Added a calm Contact Client panel inside the Current Job card.
+   - Stores the client phone with the active job on the company phone.
+   - Pulls the first client phone number from the Google Calendar event description when one is listed.
+   - Provides a direct Call Client button.
+   - Provides approved MPI presets for On my way, Arrived, Running late, Inspection complete, and Access needed.
+
+2. Added a no-cost ETA-assisted message workflow.
+   - Get live ETA in Maps opens Apple Maps directions from the phone’s current location to the active property.
+   - The inspector returns to MPI Field Tools and enters the live travel minutes shown by Maps.
+   - The app calculates and displays the expected arrival time and inserts it into the locked MPI message.
+   - ETA values older than two hours are rejected so a stale arrival time is not reused.
+
+3. Added the Nextiva handoff.
+   - Copy Message & Open Nextiva copies the approved message and opens Nextiva in a new window.
+   - Nothing is sent automatically; the inspector reviews the recipient and presses Send in Nextiva.
+
+4. Kept the workflow within the no-payment boundary.
+   - No paid routing API, billing account, background location tracking, or automatic message sending was enabled.
+   - A future traffic-aware automatic ETA can replace the Maps handoff after a routing service and secure credential host are approved.
+
+#### Validation record
+
+- Confirm client details survive active-job reloads.
+- Confirm calendar phone extraction does not alter the event or calendar.
+- Confirm Maps directions use the current job address.
+- Confirm ETA arrival time and each message preset use only the saved current-job information.
+- Confirm Nextiva opens only after the message is ready and the app never sends the message itself.
+- Confirm inline JavaScript syntax, unique element IDs, phone-width layout, and offline shell version.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `5f2f627b2f84460b4422de0ed86085394e1b3c16` to restore public Build 94.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire improvement cycle.
