@@ -108,6 +108,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - The retired hidden generic comment library has been removed from the phone payload, reducing the main document by 40.6% while preserving MPI Comment Builder as a future controlled online feature. **Implemented in Build 87.**
 - Direct screen URLs now preserve the centered mobile header, while copied Tool Guide, Field Procedure, and refresher links land on the exact selected content. **Implemented in Build 88.**
 - Compact filters, training answers, guide links, escalation actions, and other field controls now meet the app’s phone tap-target standard across every screen. **Implemented in Build 89.**
+- The InterNACHI-issued achievement marquee now has a clear, correctly bounded profile route when the signed-in account has no achievement data to display. **Implemented in Build 90.**
 
 ## Low-cost improvements
 

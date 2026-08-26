@@ -1980,3 +1980,28 @@ Status: published August 26, 2026 as GitHub commit `45b6c55d123b657dd03043db0616
 
 - Restore GitHub `main` to `d665697d00039a5308a56072bc804ba068c65f5b` to keep Builds 1–51 and restore the earlier compact tap areas.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 53 — Clarify an empty InterNACHI achievement strip
+
+Status: published August 26, 2026 as GitHub commit `a2a421d19cf4b951f283537eae17466cb58b74f7` (app Build 90).
+
+#### Additions
+
+1. Added a clear empty-state path beneath the InterNACHI-issued achievement marquee.
+   - The existing profile-fed marquee remains in place and can continue showing approved achievement data.
+   - When no achievement is returned for the current company Google account, the inspector now sees a concise explanation instead of interpreting the empty strip as a broken app.
+   - The explanation preserves the correct boundary that InterNACHI issues and controls the credentials and provides a phone-sized link to the inspector’s MPI training profile.
+
+2. Updated the visible build, version file, and offline cache identifier to Build 90.
+
+#### Validation record
+
+- Opened the current Training Center in the signed-in company browser and inspected the InterNACHI-issued achievement strip at the bottom of the page.
+- Confirmed the profile frame loaded its branded heading but had no achievement entry for that signed-in account, establishing the real empty-state condition.
+- Re-ran the complete 13-screen structural audit, zero-small-target audit, 16-lesson completion and persistence test, direct-link landing test, and installable-app audit.
+- All app-owned tests passed. The external profile remains behind the company Google sign-in boundary and no training record was changed.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `91e9c8289988d54c8836286891b5bd17c22dce4d` to keep Builds 1–52 and remove only the achievement empty-state explanation.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
