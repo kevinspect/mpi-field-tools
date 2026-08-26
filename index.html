@@ -1692,6 +1692,21 @@
 
     .tool-check-item:last-child { border-bottom: 0; }
 
+    .tool-check-not-used {
+      margin: 6px 0 3px;
+      padding: 12px 10px;
+      background: #f7f4ec;
+      border: 1px solid #e6d9bc;
+      border-radius: 11px;
+    }
+
+    .tool-check-not-used strong { color: var(--forest); }
+
+    .tool-check-group.is-not-used .tool-check-item:not(.tool-check-not-used) {
+      opacity: .42;
+      cursor: default;
+    }
+
     .tool-check-item input {
       width: 21px;
       height: 21px;
@@ -3547,25 +3562,27 @@
               </div>
             </details>
 
-            <details class="tool-check-group">
+            <details class="tool-check-group" data-tool-group="field-general">
               <summary>Field / General <span>5 items</span></summary>
               <div class="tool-check-list">
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Dead blow hammer" data-tool-check="Dead blow hammer"><span><strong>Dead blow hammer</strong><small>Milwaukee 48-22-9151</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Digging shovel" data-tool-check="Digging shovel"><span><strong>Digging shovel</strong><small>Husky 77416-944</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Pry bar" data-tool-check="Pry bar"><span><strong>Pry bar</strong><small>PITTSBURGH 39700</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Soil probe" data-tool-check="Soil probe"><span><strong>Soil probe</strong><small>Bully Tools 99203</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Pick axe / mattock" data-tool-check="Pick axe / mattock"><span><strong>Pick axe / mattock</strong><small>CENTRAL FORGE 94797</small></span></label>
+                <label class="tool-check-item tool-check-not-used"><input type="checkbox" name="Sections not used" value="Field / General" data-tool-section-not-used="field-general"><span><strong>Not used on this job</strong><small>Skip every item in this section.</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Dead blow hammer" data-tool-check="Dead blow hammer" data-tool-section="field-general"><span><strong>Dead blow hammer</strong><small>Milwaukee 48-22-9151</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Digging shovel" data-tool-check="Digging shovel" data-tool-section="field-general"><span><strong>Digging shovel</strong><small>Husky 77416-944</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Pry bar" data-tool-check="Pry bar" data-tool-section="field-general"><span><strong>Pry bar</strong><small>PITTSBURGH 39700</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Soil probe" data-tool-check="Soil probe" data-tool-section="field-general"><span><strong>Soil probe</strong><small>Bully Tools 99203</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Pick axe / mattock" data-tool-check="Pick axe / mattock" data-tool-section="field-general"><span><strong>Pick axe / mattock</strong><small>CENTRAL FORGE 94797</small></span></label>
               </div>
             </details>
 
-            <details class="tool-check-group">
+            <details class="tool-check-group" data-tool-group="specialist-company">
               <summary>Specialist / Company <span>5 items</span></summary>
               <div class="tool-check-list">
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Mold / IAQ sampling pump" data-tool-check="Mold / IAQ sampling pump"><span><strong>Mold / IAQ sampling pump</strong><small>Environmental Express Bio-Pump IAQ Lite Pro</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Telescoping ladder" data-tool-check="Telescoping ladder"><span><strong>Telescoping ladder</strong><small>Xtend+Climb PSE155+/300</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Sewer scope" data-tool-check="Sewer scope"><span><strong>Sewer scope</strong><small>Inspector Cameras Scout 3-Pro Plus Red AHD</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Crawlspace inspection robot" data-tool-check="Crawlspace inspection robot"><span><strong>Crawlspace inspection robot</strong><small>UplinkRobotics Wombat</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Roof inspection drone" data-tool-check="Roof inspection drone"><span><strong>Roof inspection drone</strong><small>DJI Mini 4 Pro</small></span></label>
+                <label class="tool-check-item tool-check-not-used"><input type="checkbox" name="Sections not used" value="Specialist / Company" data-tool-section-not-used="specialist-company"><span><strong>Not used on this job</strong><small>Skip every item in this section.</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Mold / IAQ sampling pump" data-tool-check="Mold / IAQ sampling pump" data-tool-section="specialist-company"><span><strong>Mold / IAQ sampling pump</strong><small>Environmental Express Bio-Pump IAQ Lite Pro</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Telescoping ladder" data-tool-check="Telescoping ladder" data-tool-section="specialist-company"><span><strong>Telescoping ladder</strong><small>Xtend+Climb PSE155+/300</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Sewer scope" data-tool-check="Sewer scope" data-tool-section="specialist-company"><span><strong>Sewer scope</strong><small>Inspector Cameras Scout 3-Pro Plus Red AHD</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Crawlspace inspection robot" data-tool-check="Crawlspace inspection robot" data-tool-section="specialist-company"><span><strong>Crawlspace inspection robot</strong><small>UplinkRobotics Wombat</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Roof inspection drone" data-tool-check="Roof inspection drone" data-tool-section="specialist-company"><span><strong>Roof inspection drone</strong><small>DJI Mini 4 Pro</small></span></label>
               </div>
             </details>
           </div>
@@ -4619,6 +4636,7 @@
       const toolCheckInspector = document.getElementById("toolCheckInspector");
       const toolCheckProperty = document.getElementById("toolCheckProperty");
       const toolCheckOptions = [...document.querySelectorAll("[data-tool-check]")];
+      const toolCheckNotUsedOptions = [...document.querySelectorAll("[data-tool-section-not-used]")];
       const toolCheckProgressCount = document.getElementById("toolCheckProgressCount");
       const toolCheckProgressFill = document.getElementById("toolCheckProgressFill");
       const toolCheckResultOptions = [...toolCheckForm.querySelectorAll('input[name="Closeout result"]')];
@@ -8265,12 +8283,27 @@
       }
 
       function updateToolCheckProgress() {
-        const checked = toolCheckOptions.filter(option => option.checked);
-        const unchecked = toolCheckOptions.filter(option => !option.checked).map(option => option.dataset.toolCheck);
-        toolCheckProgressCount.textContent = `${checked.length} of ${toolCheckOptions.length} checked`;
-        toolCheckProgressFill.style.width = `${toolCheckOptions.length ? (checked.length / toolCheckOptions.length) * 100 : 0}%`;
-        toolCheckCompletion.value = `${checked.length} of ${toolCheckOptions.length} tools checked`;
+        const sectionsNotUsed = new Set(toolCheckNotUsedOptions.filter(option => option.checked).map(option => option.dataset.toolSectionNotUsed));
+        const applicable = toolCheckOptions.filter(option => !sectionsNotUsed.has(option.dataset.toolSection));
+        const checked = applicable.filter(option => option.checked);
+        const unchecked = applicable.filter(option => !option.checked).map(option => option.dataset.toolCheck);
+        const skipped = toolCheckOptions.length - applicable.length;
+        toolCheckProgressCount.textContent = `${checked.length} of ${applicable.length} applicable checked${skipped ? ` · ${skipped} not used` : ""}`;
+        toolCheckProgressFill.style.width = `${toolCheckOptions.length ? ((checked.length + skipped) / toolCheckOptions.length) * 100 : 0}%`;
+        toolCheckCompletion.value = `${checked.length} of ${applicable.length} applicable tools checked${skipped ? `; ${skipped} tools in sections marked not used` : ""}`;
         toolCheckUnchecked.value = unchecked.length ? unchecked.join("; ") : "None";
+      }
+
+      function updateToolSectionNotUsed(option) {
+        const sectionId = option.dataset.toolSectionNotUsed;
+        const group = option.closest(".tool-check-group");
+        const sectionTools = toolCheckOptions.filter(tool => tool.dataset.toolSection === sectionId);
+        group?.classList.toggle("is-not-used", option.checked);
+        sectionTools.forEach(tool => {
+          if (option.checked) tool.checked = false;
+          tool.disabled = option.checked;
+        });
+        updateToolCheckProgress();
       }
 
       function updateToolCheckResult() {
@@ -8931,6 +8964,7 @@
       equipmentPhoto4.addEventListener("change", () => updateDamagePhotoPreview(equipmentPhoto4, equipmentPhotoPreview4, equipmentPhotoCard4, equipmentSubmitStatus));
       equipmentForm.addEventListener("submit", validateEquipmentSubmission);
       toolCheckOptions.forEach(option => option.addEventListener("change", updateToolCheckProgress));
+      toolCheckNotUsedOptions.forEach(option => option.addEventListener("change", () => updateToolSectionNotUsed(option)));
       toolCheckResultOptions.forEach(option => option.addEventListener("change", updateToolCheckResult));
       toolCheckForm.addEventListener("submit", validateToolCheckSubmission);
       document.getElementById("trainingGrid").addEventListener("click", event => {
