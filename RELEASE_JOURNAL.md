@@ -1403,3 +1403,35 @@ Status: published August 26, 2026 as GitHub commit `4670f78e50cc1ee3f0c957c03c74
 
 - Restore GitHub `main` to `9a95c37e96abf9418bceaf405a3e9a1b86b213ff` to keep Builds 1–35 but return the Training Center to 10 refresher lessons.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 37 — Inspector-visible update note and structural hardening
+
+Status: published August 26, 2026 as GitHub commit `7949971e8b8947371bca10560a1c2c6ace48d9cd` (app Build 74).
+
+#### Additions
+
+1. Added an offline Company Messages card for the current rollout.
+   - It tells inspectors where to find the job-linked service packs, focused packing checks, end-of-day reset, and six new training refreshers.
+   - The notice is informational and does not create another required acknowledgement or email.
+
+2. Made every Age Finder manufacturer/source link explicitly use both opener and referrer protection when it opens a new tab.
+   - The same protection now applies to dynamically generated manufacturer verification links.
+   - Updated the visible build, version file, and offline cache identifier to Build 74.
+
+#### Full structural validation record
+
+- All 13 principal screens had valid named destinations.
+- Broken internal hash links: none.
+- Duplicate HTML IDs: none.
+- Missing label targets or `aria-labelledby` targets: none.
+- Visible form controls without an accessible name: none.
+- Unnamed buttons or links: none.
+- New-tab links missing explicit opener protection: none.
+- All nine online forms use POST and point only to `kev@michiganpropertyinspections.com` through the existing form service.
+- All six required offline/app-icon assets were present.
+- Browser script errors: none detected.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `bbf6d2dc0b9cb6ba76ff36a0e9edfbdc972ddd72` to keep Builds 1–36 but remove the update note and explicit link hardening.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

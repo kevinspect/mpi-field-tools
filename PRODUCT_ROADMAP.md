@@ -92,6 +92,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Current Job now saves booked specialist equipment packs with the active property, includes them in copied job status, and opens the exact service checklist in one tap. **Implemented in Build 71.**
 - Job Companion now includes a quiet, device-only end-of-day reset for reports, samples, charging, equipment security, restocking, tomorrow’s schedule, and any exception that requires management attention. **Implemented in Build 72.**
 - Training Center now has 16 offline MPI refreshers, adding electrical-panel, carbon-monoxide, roof/ladder, water-sampling/COC, sewer-scope, and mold/IAQ lessons with tested knowledge checks. **Implemented in Build 73.**
+- Company Messages now includes an offline inspector-facing rollout note for the new workday and training tools, and the complete app passed a structural routing, accessibility-name, link-safety, recipient, asset, and script audit. **Implemented in Build 74.**
 
 ## Low-cost improvements
 
