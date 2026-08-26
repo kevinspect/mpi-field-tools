@@ -104,6 +104,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Narrow-phone section navigation now uses a large back arrow and centered section title without crowding, while desktop retains the full back label. **Implemented in Build 83.**
 - Home search now finds and opens all 16 MPI refresher lessons alongside app screens, Field Procedures, and Company Tool Guides. **Implemented in Build 84.**
 - The End-of-Job Tool Check now accepts a truthful zero-tool record when both tool sections are marked not used, while still requiring applicable-tool confirmation in every other case. **Implemented in Build 85.**
+- Unfinished End-of-Job Tool Checks, new-tool commissioning records, and new-inspector coaching reviews now survive an iPhone reload and clear after successful submission. **Implemented in Build 86.**
 
 ## Low-cost improvements
 

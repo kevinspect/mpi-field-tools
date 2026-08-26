@@ -1823,3 +1823,47 @@ Status: published August 26, 2026 as GitHub commit `ccc579797a44c221725871c29e5f
 
 - Restore GitHub `main` to `8bc160c7df0485b3afabe2981f2b2d20f1721072` to keep Builds 1–47 but restore the earlier tool-check rule.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Training regression checkpoint — refresher and new-inspector progress
+
+Status: passed August 26, 2026 against app Build 85.
+
+#### Validation record
+
+- Confirmed an incorrect answer does not complete an MPI refresher lesson.
+- Completed all 16 refreshers with correct answers and confirmed **16 of 16 complete** before and after a reload.
+- Confirmed all 16 completed markers persisted, the next-action card changed to the all-complete state, and the 390-pixel layout remained stable.
+- Completed all 20 new-inspector pathway milestones and confirmed **20 of 20 complete** before and after reload.
+- Confirmed the management review summary contained all 20 milestone titles, no remaining items, the correct subject, and local America/Detroit timestamp.
+- Intercepted the review-summary submit boundary; no email was sent.
+
+### Build 49 — Recover unfinished long-form work
+
+Status: published August 26, 2026 as GitHub commit `98b91aba555a22de6aa4acf7cc129c8c08bae0d5` (app Build 86).
+
+#### Additions
+
+1. Added phone-local draft recovery to three longer inspector workflows.
+   - End-of-Job Tool Check entries and selections now return after a reload.
+   - New-tool commissioning fields, decisions, restrictions, and confirmation now return after a reload.
+   - New-inspector review names, dates, and coaching focus now return after a reload; the 20 pathway milestones continue using their separate progress record.
+   - Each draft is cleared after the app receives its successful-submission return marker.
+
+2. Strengthened the new-tool management record.
+   - The required inspector confirmation is now included as a named item in the submitted commissioning record.
+   - Clarified that only an unfinished tool checklist is retained and that submitted checklists are not kept in the app.
+
+3. Updated the visible build, version file, and offline cache identifier to Build 86.
+
+#### Validation record
+
+- Saved and reloaded a partial tool closeout with two accounted tools, one not-used section, the result, note, and inspector confirmation; every value returned exactly.
+- Saved and reloaded a commissioning record with brand, model, asset number, assignment, decisions, release state, confirmation, and restriction; every value returned exactly.
+- Saved and reloaded an onboarding review with inspector, reviewer, coaching focus, and next-review date; every value returned exactly.
+- Confirmed all three draft keys clear after their respective simulated successful-submission return.
+- Re-ran all eight non-photo submission paths and the complete 13-screen structural audit with no failures or outbound test emails.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `522ede58895371f8cb57ebdae9d58c89a4ca974d` to keep Builds 1–48 but remove the additional draft recovery.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
