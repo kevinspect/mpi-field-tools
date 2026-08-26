@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="76">
+  <meta name="app-build" content="77">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4103,7 +4103,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">76</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">77</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -5186,7 +5186,7 @@
           <p class="eyebrow">MPI training center</p>
           <h2 id="training-center-title">Learn it. Practice it. Use it.</h2>
         </div>
-        <p>Open assigned InterNACHI training, track InterNACHI-issued credentials, and use short MPI lessons to turn the handbook into repeatable field habits.</p>
+        <p>Open assigned InterNACHI training, track InterNACHI-issued credentials, and use or share direct links to short MPI lessons that turn the handbook into repeatable field habits.</p>
       </div>
 
       <div class="training-overview">
@@ -12651,7 +12651,30 @@
         } catch (_) {
           completedTraining = new Set();
         }
+        const requestedLessonId = new URL(window.location.href).searchParams.get("lesson") || "";
+        trainingModules.forEach(module => {
+          const lessonId = module.dataset.trainingModule;
+          const body = module.querySelector(".training-module-body");
+          if (body && !body.querySelector("[data-copy-training-lesson]")) {
+            const copyLink = document.createElement("button");
+            copyLink.type = "button";
+            copyLink.className = "tool-manual-link tool-guide-copy-link";
+            copyLink.dataset.copyTrainingLesson = lessonId;
+            copyLink.textContent = "Copy direct link to this lesson";
+            body.appendChild(copyLink);
+          }
+          if (lessonId === requestedLessonId) module.open = true;
+        });
         updateTrainingProgress();
+      }
+
+      function copyTrainingLessonLink(lessonId) {
+        if (!trainingModules.some(module => module.dataset.trainingModule === lessonId)) return;
+        const url = new URL(window.location.href);
+        url.search = "";
+        url.searchParams.set("lesson", lessonId);
+        url.hash = "training-center";
+        copyText(url.href, "Direct MPI lesson link copied");
       }
 
       function updateOnboardingProgress() {
@@ -14150,6 +14173,11 @@
         toolGuideDetail.scrollIntoView({ behavior: "smooth", block: "start" });
       });
       document.getElementById("trainingGrid").addEventListener("click", event => {
+        const copyLink = event.target.closest("[data-copy-training-lesson]");
+        if (copyLink) {
+          copyTrainingLessonLink(copyLink.dataset.copyTrainingLesson);
+          return;
+        }
         const button = event.target.closest("[data-complete-training]");
         if (button) completeTrainingModule(button);
       });
