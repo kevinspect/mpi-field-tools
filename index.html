@@ -1755,6 +1755,83 @@
       line-height: 1.55;
     }
 
+    .push-setup-card {
+      margin: 20px 0 18px;
+      padding: 18px;
+      background: linear-gradient(145deg, #11186a 0%, #090e4a 100%);
+      border: 1px solid rgba(180,135,32,.55);
+      border-radius: 14px;
+      box-shadow: 0 13px 28px rgba(17,24,106,.16);
+    }
+
+    .push-setup-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .push-setup-badge {
+      color: #f1d98e;
+      font-size: 9px;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .push-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 850;
+    }
+
+    .push-status::before {
+      width: 8px;
+      height: 8px;
+      background: #d7a33a;
+      border-radius: 50%;
+      content: "";
+    }
+
+    .push-status.enabled::before { background: #61d3a7; }
+    .push-status.blocked::before { background: #ee8a78; }
+    .push-setup-card h3 { margin: 14px 0 0; color: #fff; font-size: 20px; letter-spacing: -.02em; }
+    .push-setup-card > p { margin: 8px 0 0; color: rgba(255,255,255,.75); font-size: 11.5px; line-height: 1.55; }
+
+    .push-enable-btn,
+    .push-copy-btn {
+      width: 100%;
+      min-height: 46px;
+      margin-top: 15px;
+      color: #11186a;
+      background: #d1a33a;
+      border: 0;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .push-enable-btn:hover,
+    .push-copy-btn:hover { background: #dfb74f; }
+    .push-enable-btn:disabled { cursor: not-allowed; opacity: .65; }
+
+    .push-setup-code {
+      margin-top: 14px;
+      padding: 13px;
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 10px;
+    }
+
+    .push-setup-code span { color: #f1d98e; font-size: 9px; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; }
+    .push-setup-code code { display: block; overflow-wrap: anywhere; margin-top: 7px; color: #fff; font-size: 10px; line-height: 1.45; }
+    .push-copy-btn { min-height: 40px; margin-top: 11px; background: #fff; }
+    .push-setup-help { color: rgba(255,255,255,.62) !important; font-size: 10.5px !important; }
+
     .request-type-help {
       margin: 8px 0 0;
       color: var(--ink-2);
@@ -2606,7 +2683,7 @@
       </a>
       <a class="home-tool-card" href="#team-messages">
         <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Team Messages</strong><small>Read company updates and email a field question to management.</small></span>
+        <span class="home-tool-copy"><strong>Team Messages</strong><small>Receive MPI notifications, read updates, and ask management.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
       <a class="home-tool-card" href="#requests-feedback">
@@ -2614,9 +2691,9 @@
         <span class="home-tool-copy"><strong>Requests &amp; Feedback</strong><small>Request tools, uniforms, supplies or training and share feedback.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
-      <div class="home-tool-card phase-two" role="note" aria-label="AI Comment Builder is planned for phase two">
+      <div class="home-tool-card phase-two" role="note" aria-label="MPI Comment Builder is planned for phase two">
         <span class="home-tool-icon icon-ai" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>AI Comment Builder</strong><small>Online MPI commentary will be added after the free tools are complete.</small></span>
+        <span class="home-tool-copy"><strong>MPI Comment Builder</strong><small>Online MPI commentary will be added after the free tools are complete.</small></span>
         <span class="home-tool-arrow">Phase 2</span>
       </div>
     </nav>
@@ -3308,7 +3385,7 @@
           <p class="eyebrow">MPI team connection</p>
           <h2 id="team-messages-title">Keep the whole team aligned.</h2>
         </div>
-        <p>Read company reminders offline, then email a field question or support request when connected. Questions go to management without creating a paid messaging system.</p>
+        <p>Receive company push notifications, read published reminders offline, and email a field question or support request when connected.</p>
       </div>
 
       <div class="message-board">
@@ -3317,6 +3394,21 @@
             <div><h2 id="announcement-title">Company messages</h2><p>Current notices included with this app release.</p></div>
             <span class="step-count">Offline</span>
           </div>
+          <section class="push-setup-card" aria-labelledby="push-setup-title">
+            <div class="push-setup-topline">
+              <span class="push-setup-badge">MPI true push</span>
+              <span class="push-status" id="pushStatus">Not enabled</span>
+            </div>
+            <h3 id="push-setup-title">MPI app notifications</h3>
+            <p>Receive company reminders on this phone even when MPI Field Tools is closed. Notifications open directly to Team Messages.</p>
+            <button class="push-enable-btn" id="enablePushBtn" type="button">Enable MPI notifications</button>
+            <div class="push-setup-code" id="pushSetupCode" hidden>
+              <span>This phone's setup code</span>
+              <code id="pushTokenValue"></code>
+              <button class="push-copy-btn" id="copyPushTokenBtn" type="button">Copy setup code</button>
+            </div>
+            <p class="push-setup-help" id="pushSetupHelp">On iPhone or iPad, first add MPI Field Tools to the Home Screen, then open it from the MPI icon and tap Enable.</p>
+          </section>
           <div class="announcement-list">
             <article class="announcement-card required">
               <span>Required reminder · August 25, 2026</span>
@@ -3334,7 +3426,7 @@
               <p>Septic evaluation, well-yield testing, and water-quality sampling require an approved procedure, contracted scope, training, and authorization.</p>
             </article>
           </div>
-          <p class="free-tool-note">Management messages are published with app updates. They remain on the phone after the latest version has been opened online once.</p>
+          <p class="free-tool-note">Published messages remain on the phone for offline use. New push alerts require an internet connection and notification permission.</p>
         </section>
 
         <form class="panel damage-form support-panel" id="teamQuestionForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
@@ -3515,6 +3607,8 @@
 
   <div class="toast" id="toast" role="status">Copied</div>
 
+  <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
   <script>
     (() => {
       "use strict";
@@ -4087,6 +4181,12 @@
       const teamQuestionSubmitBtn = document.getElementById("teamQuestionSubmitBtn");
       const teamQuestionStatus = document.getElementById("teamQuestionStatus");
       const teamQuestionSuccess = document.getElementById("teamQuestionSuccess");
+      const enablePushBtn = document.getElementById("enablePushBtn");
+      const pushStatus = document.getElementById("pushStatus");
+      const pushSetupCode = document.getElementById("pushSetupCode");
+      const pushTokenValue = document.getElementById("pushTokenValue");
+      const copyPushTokenBtn = document.getElementById("copyPushTokenBtn");
+      const pushSetupHelp = document.getElementById("pushSetupHelp");
       const requestForm = document.getElementById("requestForm");
       const requestInspector = document.getElementById("requestInspector");
       const requestType = document.getElementById("requestType");
@@ -7691,6 +7791,113 @@
         }
       }
 
+      const FIREBASE_CONFIG = {
+        apiKey: "AIzaSyBH37lEcQdExd0JRTRWCYlZHWNevIJrmPk",
+        authDomain: "mpi-field-notifications.firebaseapp.com",
+        projectId: "mpi-field-notifications",
+        storageBucket: "mpi-field-notifications.firebasestorage.app",
+        messagingSenderId: "574980684703",
+        appId: "1:574980684703:web:b0d2e4491fd09b78729baa"
+      };
+      const FIREBASE_VAPID_KEY = "BFk0G1S4lILqk9x_sIDPRCUmPgzTOwyHocHWXG_SDgw6WOrlxiMB-eS4mPBEAPhI93I2mMB3zFxzoZaHKsudR6k";
+      const PUSH_TOKEN_STORAGE_KEY = "mpiPushTokenV1";
+      let mpiMessaging = null;
+
+      function isIosDevice() {
+        return /iphone|ipad|ipod/i.test(navigator.userAgent);
+      }
+
+      function isStandaloneApp() {
+        return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+      }
+
+      function setPushState(label, state = "") {
+        pushStatus.textContent = label;
+        pushStatus.className = `push-status${state ? ` ${state}` : ""}`;
+      }
+
+      function revealPushToken(token) {
+        if (!token) return;
+        pushTokenValue.textContent = token;
+        pushSetupCode.hidden = false;
+        try { localStorage.setItem(PUSH_TOKEN_STORAGE_KEY, token); } catch (_) {}
+      }
+
+      async function initializeMessagingClient() {
+        if (!window.firebase?.initializeApp || !window.firebase?.messaging) throw new Error("Firebase messaging did not load");
+        if (!window.firebase.apps.length) window.firebase.initializeApp(FIREBASE_CONFIG);
+        if (!mpiMessaging) {
+          mpiMessaging = window.firebase.messaging();
+          mpiMessaging.onMessage(payload => {
+            const title = payload?.notification?.title || payload?.data?.title || "New MPI team message";
+            showToast(title);
+          });
+        }
+        return mpiMessaging;
+      }
+
+      async function enablePushNotifications() {
+        if (isIosDevice() && !isStandaloneApp()) {
+          setPushState("Add to Home Screen", "blocked");
+          pushSetupHelp.textContent = "In Safari, tap Share, choose Add to Home Screen, then open MPI Field Tools from its MPI icon and tap Enable again.";
+          showToast("Add the app to your Home Screen first");
+          return;
+        }
+        if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+          setPushState("Not supported", "blocked");
+          pushSetupHelp.textContent = "This browser cannot receive app notifications. Use the Home Screen app on iPhone/iPad or current Chrome on Android.";
+          return;
+        }
+        enablePushBtn.disabled = true;
+        enablePushBtn.textContent = "Enabling notifications…";
+        try {
+          const permission = await Notification.requestPermission();
+          if (permission !== "granted") {
+            setPushState(permission === "denied" ? "Blocked in phone settings" : "Not enabled", "blocked");
+            pushSetupHelp.textContent = permission === "denied"
+              ? "Notifications are blocked. Allow notifications for MPI Field Tools in the phone's settings, then return here."
+              : "Notification permission was not granted. Tap Enable when you are ready.";
+            return;
+          }
+          const registration = await navigator.serviceWorker.ready;
+          const messaging = await initializeMessagingClient();
+          const token = await messaging.getToken({ vapidKey: FIREBASE_VAPID_KEY, serviceWorkerRegistration: registration });
+          if (!token) throw new Error("No notification setup code was returned");
+          revealPushToken(token);
+          setPushState("Enabled on this phone", "enabled");
+          enablePushBtn.textContent = "Notifications enabled ✓";
+          pushSetupHelp.textContent = "Copy this phone's setup code and send it to management once. It is used only to send MPI notifications to this device.";
+          showToast("MPI notifications are enabled");
+        } catch (error) {
+          setPushState("Setup needs attention", "blocked");
+          pushSetupHelp.textContent = navigator.onLine
+            ? "Notification setup did not finish. Reload the app and try once more."
+            : "Reconnect to the internet to finish notification setup.";
+          console.warn("MPI push setup failed", error);
+        } finally {
+          if (pushStatus.textContent !== "Enabled on this phone") {
+            enablePushBtn.disabled = false;
+            enablePushBtn.textContent = "Try enabling again";
+          }
+        }
+      }
+
+      function initializePushStatus() {
+        let savedToken = "";
+        try { savedToken = localStorage.getItem(PUSH_TOKEN_STORAGE_KEY) || ""; } catch (_) {}
+        if (savedToken && window.Notification?.permission === "granted") {
+          revealPushToken(savedToken);
+          setPushState("Enabled on this phone", "enabled");
+          enablePushBtn.textContent = "Notifications enabled ✓";
+          return;
+        }
+        if (window.Notification?.permission === "denied") {
+          setPushState("Blocked in phone settings", "blocked");
+        } else if (isIosDevice() && !isStandaloneApp()) {
+          setPushState("Home Screen required");
+        }
+      }
+
       function normalizeSopText(value) {
         return String(value || "")
           .normalize("NFKD")
@@ -8107,6 +8314,11 @@
         if (button) completeTrainingModule(button);
       });
       teamQuestionForm.addEventListener("submit", validateTeamQuestionSubmission);
+      enablePushBtn.addEventListener("click", enablePushNotifications);
+      copyPushTokenBtn.addEventListener("click", () => {
+        const token = pushTokenValue.textContent.trim();
+        if (token) copyText(token, "Phone setup code copied");
+      });
       requestForm.addEventListener("submit", validateRequestSubmission);
       window.addEventListener("pageshow", () => {
         damageSubmitBtn.disabled = false;
@@ -8157,6 +8369,7 @@
       initializeFieldForms();
       initializeTraining();
       initializeSopGuide();
+      initializePushStatus();
       initializeOfflineAccess();
       updateConfig();
     })();
