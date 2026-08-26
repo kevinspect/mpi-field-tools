@@ -3505,6 +3505,14 @@
 
     .tool-manual-link.related-procedure-link::after { content: "→"; }
 
+    .tool-manual-link.tool-support-link {
+      color: var(--bright-blue);
+      background: #fff;
+      border: 1px solid rgba(47, 117, 181, .34);
+    }
+
+    .tool-manual-link.tool-support-link::after { content: "→"; }
+
     .tool-guide-source-note {
       margin: 22px 0 0;
       padding-top: 15px;
@@ -4290,7 +4298,7 @@
       </div>
 
       <div class="sop-version-bar">
-        <span><strong>21 company tool cards</strong> · Model-specific links are included where exact controls matter.</span>
+        <span><strong>21 inventory tool cards + first-use setup</strong> · Model-specific links are included where exact controls matter.</span>
         <span class="sop-offline-badge">Cards work offline</span>
       </div>
 
@@ -4802,6 +4810,7 @@
                   </optgroup>
                   <optgroup label="Improvements and feedback">
                     <option>Field app improvement</option>
+                    <option>Company tool guide addition or update</option>
                     <option>Report template or comment request</option>
                     <option>New equipment manufacturer for Age Finder</option>
                     <option>General feedback or suggestion</option>
@@ -5575,6 +5584,40 @@
       let availableScheduleCalendars = [];
 
       const TOOL_GUIDES = [
+        {
+          id: "new-tool-setup",
+          category: "Company process",
+          title: "Newly purchased tool — first-use setup",
+          model: "MPI commissioning checklist",
+          aliases: "new purchase setup commissioning asset inventory manual training calibration warranty",
+          purpose: "Put a newly purchased or replacement tool into MPI service only after its identity, instructions, condition, readiness, storage, maintenance needs, and assigned-user training are established.",
+          steps: [
+            "Match the exact brand, model, serial number, included parts, power source, rating, and ordered purpose to the purchase record before discarding packaging.",
+            "Download the current manufacturer manual from the official source. Record the purchase date, supplier, serial number, warranty information, and receipt location in the company equipment record.",
+            "Inspect the tool and accessories for shipping damage. Install or charge only the specified batteries, update firmware when the manufacturer requires it, and apply the MPI asset/owner label without covering safety markings.",
+            "Complete the manufacturer startup and function check in a controlled condition. For meters, detectors, cameras, ladders, drones, sampling equipment, or other higher-risk equipment, document the known-condition check and any required calibration, registration, certification, or service interval.",
+            "Assign the tool, accessories, protective case, charger, vehicle/storage position, cleaning method, and end-of-job accountability requirement.",
+            "Add or update the item in the MPI Tool Master List and request a model-specific quick guide before independent field use.",
+            "Demonstrate the complete operating, stop, documentation, cleaning, and return sequence. Record supervised competency when the tool requires more than simple familiarization."
+          ],
+          record: [
+            "Brand, exact model, serial/asset number, purchase date, supplier, warranty/receipt location, and assigned inspector or vehicle.",
+            "Manual link, included accessories, storage position, service/calibration due date, and completed function-check evidence.",
+            "Trainer, inspector, training date, permitted use, and any supervision or authorization restriction."
+          ],
+          care: [
+            "Keep the manual, accessories, charger, case, spare parts, and service information together in the company record.",
+            "Review the quick card whenever the manufacturer updates the manual, the tool is repaired/replaced, or MPI changes the approved procedure."
+          ],
+          stop: [
+            "Do not place a tool in service when its model/rating is wrong, parts are missing, it is damaged, the function check fails, or required calibration/registration/training is incomplete.",
+            "Do not assume a replacement model operates like the previous version; verify the current manual and controls."
+          ],
+          supportLabel: "Request a guide for a new purchase",
+          supportType: "Company tool guide addition or update",
+          supportItem: "Newly purchased tool — guide needed",
+          links: []
+        },
         {
           id: "electrical-tester-kit",
           category: "Electrical & diagnostic",
@@ -10308,6 +10351,13 @@
           anchor.textContent = link.label;
           content.appendChild(anchor);
         });
+        const supportLink = document.createElement("a");
+        supportLink.className = "tool-manual-link tool-support-link";
+        supportLink.href = "#requests-feedback";
+        supportLink.dataset.toolSupportType = guide.supportType || "Tool or equipment repair";
+        supportLink.dataset.toolSupportItem = guide.supportItem || `${guide.title} — ${guide.model}`;
+        supportLink.textContent = guide.supportLabel || "Report a problem with this tool";
+        content.appendChild(supportLink);
         const sourceNote = document.createElement("p");
         sourceNote.className = "tool-guide-source-note";
         sourceNote.textContent = "Quick card prepared from the MPI field SOP, company tool master list, and available manufacturer instructions. Confirm the model label and current manual before first use or whenever controls, accessories, or procedures change.";
@@ -10884,11 +10934,17 @@
         if (window.innerWidth < 861) toolGuideDetail.scrollIntoView({ behavior: "smooth", block: "start" });
       });
       toolGuideDetail.addEventListener("click", event => {
-        const link = event.target.closest("[data-related-sop-query]");
-        if (!link) return;
-        sopSearch.value = link.dataset.relatedSopQuery;
-        sopChapter.value = "";
-        renderSopResults({ selectFirst: true });
+        const procedureLink = event.target.closest("[data-related-sop-query]");
+        if (procedureLink) {
+          sopSearch.value = procedureLink.dataset.relatedSopQuery;
+          sopChapter.value = "";
+          renderSopResults({ selectFirst: true });
+          return;
+        }
+        const supportLink = event.target.closest("[data-tool-support-item]");
+        if (!supportLink) return;
+        requestType.value = supportLink.dataset.toolSupportType;
+        requestItem.value = supportLink.dataset.toolSupportItem;
       });
 
       sopSearch.addEventListener("input", () => renderSopResults({ selectFirst: true }));

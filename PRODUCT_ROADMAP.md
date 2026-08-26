@@ -19,6 +19,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Track high-risk equipment readiness: charged, function checked, calibration/service due, damaged, or removed from service.
 - Show the inspector only their assigned equipment.
 - Email Kevin only when an item needs attention or misses a due date, not after every normal check.
+- **Build 41 now establishes the first-use commissioning process and routes tool problems to management; a central readiness board remains future work.**
 
 ### 3. Inspection quality coaching
 

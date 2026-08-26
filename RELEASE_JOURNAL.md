@@ -114,7 +114,7 @@ Status: published August 26, 2026 as GitHub commit `43875547513bbe3e684ce3956232
 
 ### Build 3 — Safety and near-miss communication
 
-Status: implemented locally; publication pending validation.
+Status: published August 26, 2026 as GitHub commit `bb54dcdb70beddd6d58a265671ca8e97783d8b02`.
 
 #### Additions
 
@@ -151,4 +151,43 @@ Status: implemented locally; publication pending validation.
 #### Rollback for this build
 
 - Restore GitHub `main` to `43875547513bbe3e684ce3956232de696354854d` to keep Builds 1–2 but remove the Safety Notice.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 4 — Purchased-tool onboarding and support routing
+
+Status: implemented locally; publication pending validation.
+
+#### Additions
+
+1. Added **Newly purchased tool — first-use setup** to Company Tool Guides.
+   - Verifies the exact model, serial number, parts, rating, and intended purchase before packaging is discarded.
+   - Requires the current manufacturer manual, receipt/warranty record, asset label, condition inspection, startup/function check, and any required calibration, registration, certification, or service interval.
+   - Establishes accessories, charger/case, storage position, cleaning method, assignment, and end-of-job accountability.
+   - Requires the Tool Master List and model-specific quick guide to be updated before independent field use.
+   - Records who trained the inspector and any supervision or authorization restriction.
+
+2. Added a support route to every operating card.
+   - Every physical tool card now includes **Report a problem with this tool**.
+   - The Inspector Request opens with Tool or equipment repair and the exact company tool/model already filled in.
+   - The first-use setup card includes **Request a guide for a new purchase** and opens a new Company tool guide addition or update request type.
+
+3. Clarified the guide inventory.
+   - The browser contains the 21 current inventory tools plus one company first-use setup checklist.
+   - The end-of-job physical tool count remains 21 and was not changed.
+
+4. Updated the offline cache identifier to Build 41.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Tool Guide browser count: 22 total cards (21 inventory + 1 setup).
+- Newly purchased tool search: returned the commissioning checklist.
+- New-guide request shortcut: correct request type and item were filled automatically.
+- Moisture-meter problem shortcut: correct repair type and exact model were filled automatically.
+- No request was submitted during testing.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `bb54dcdb70beddd6d58a265671ca8e97783d8b02` to keep Builds 1–3 but remove purchased-tool onboarding.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
