@@ -3224,6 +3224,63 @@
       text-align: center;
     }
 
+    .secure-schedule-intro {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 18px;
+      padding: 18px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--forest), #090e4a);
+      border-radius: 16px;
+    }
+
+    .secure-schedule-intro strong { font-size: 18px; }
+    .secure-schedule-intro p { margin: 0; color: #dfe4ff; font-size: 12px; line-height: 1.55; }
+    .secure-schedule-intro .calendar-action {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--forest);
+      background: var(--orange);
+      text-decoration: none;
+    }
+
+    .secure-schedule-frame {
+      width: 100%;
+      min-height: 620px;
+      background: #f7f9fc;
+      border: 1px solid #dfe4ef;
+      border-radius: 16px;
+    }
+
+    .external-training-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 18px;
+      margin: 0 0 18px;
+      padding: 20px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--forest), #090e4a);
+      border-radius: 16px;
+    }
+
+    .external-training-card h3 { margin: 0 0 6px; color: #fff; }
+    .external-training-card p { margin: 0; color: #dfe4ff; font-size: 12px; line-height: 1.5; }
+    .external-training-actions { display: grid; gap: 8px; min-width: 190px; }
+    .external-training-actions a {
+      display: block;
+      padding: 12px 14px;
+      color: var(--forest);
+      background: var(--orange);
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 900;
+      text-align: center;
+      text-decoration: none;
+    }
+    .external-training-actions a:last-child { color: var(--forest); background: #fff; }
+
     @media (max-width: 560px) {
       .today-jobs-toolbar { align-items: stretch; flex-direction: column; }
       .calendar-action { width: 100%; }
@@ -3231,6 +3288,9 @@
       .today-job-map { grid-column: 1 / -1; width: 100%; }
       .today-jobs-actions { align-items: stretch; flex-direction: column; }
       .today-jobs-actions .calendar-action { order: -1; }
+      .secure-schedule-frame { min-height: 680px; }
+      .external-training-card { grid-template-columns: 1fr; }
+      .external-training-actions { min-width: 0; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -3344,34 +3404,17 @@
           <p class="eyebrow">MPI daily schedule</p>
           <h2 id="today-jobs-title">Today’s Jobs.</h2>
         </div>
-        <p>Connect the company calendar, choose the MPI schedule once, and open turn-by-turn directions for each inspection.</p>
+        <p>Your company schedule stays linked to your MPI Google account. Open each job for turn-by-turn Apple Maps directions.</p>
       </div>
 
-      <section class="panel today-jobs-panel" aria-labelledby="todayCalendarName">
-        <div class="today-jobs-toolbar">
-          <div>
-            <span class="today-jobs-date" id="todayJobsDate"></span>
-            <strong class="today-jobs-calendar-name" id="todayCalendarName">Company schedule</strong>
-            <p class="today-jobs-status" id="todayJobsStatus" role="status" aria-live="polite">Connect with your MPI company account to load today’s inspections.</p>
-          </div>
-          <button class="calendar-action" id="calendarConnectBtn" type="button">Connect schedule</button>
+      <section class="panel today-jobs-panel" aria-label="Secure company schedule">
+        <div class="secure-schedule-intro">
+          <strong>Company account connection</strong>
+          <p>The first time only, tap the button and approve read-only calendar access with your MPI company account. Google remembers that authorization on your account.</p>
+          <a class="calendar-action" href="https://script.google.com/a/macros/michiganpropertyinspections.com/s/AKfycbxPXDbrf0NDveWG8D9YxkUeBh837wNNMb6Y3rcG9ElZ12Awo8aqDYHrRjkKep2Uzw7c1A/exec" target="_blank" rel="noopener">Open secure schedule <span>→</span></a>
         </div>
-
-        <div class="calendar-selector-wrap" id="calendarSelectorWrap" hidden>
-          <label for="calendarSelector">Schedule calendar</label>
-          <select id="calendarSelector" aria-describedby="calendarSelectorHelp"></select>
-          <p class="damage-file-note" id="calendarSelectorHelp">Choose the calendar that holds inspection appointments. This choice stays on this company phone.</p>
-        </div>
-
-        <div class="today-jobs-list" id="todayJobsList">
-          <div class="today-jobs-empty">No schedule has been loaded on this phone yet.</div>
-        </div>
-
-        <div class="today-jobs-actions">
-          <button class="calendar-link-button" id="calendarChangeBtn" type="button" hidden>Change schedule calendar</button>
-          <button class="calendar-action" id="calendarRefreshBtn" type="button" hidden>Refresh today’s jobs</button>
-        </div>
-        <p class="calendar-readonly-note">View-only connection. MPI Field Tools cannot add, change, or delete calendar events. The last loaded schedule remains available if cell service is lost.</p>
+        <iframe class="secure-schedule-frame" title="MPI Today’s Jobs secure company schedule" src="https://script.google.com/a/macros/michiganpropertyinspections.com/s/AKfycbxPXDbrf0NDveWG8D9YxkUeBh837wNNMb6Y3rcG9ElZ12Awo8aqDYHrRjkKep2Uzw7c1A/exec" loading="lazy"></iframe>
+        <p class="calendar-readonly-note">Company accounts only · View-only calendar access · MPI Field Tools cannot add, change, or delete calendar events.</p>
       </section>
     </section>
 
@@ -3961,6 +4004,17 @@
         </aside>
       </div>
 
+      <aside class="external-training-card" aria-label="InterNACHI member training">
+        <div>
+          <h3>InterNACHI member training</h3>
+          <p>Each inspector uses their own InterNACHI account. The account normally stays signed in on that company phone, and InterNACHI keeps the employee’s course progress and certificates.</p>
+        </div>
+        <div class="external-training-actions">
+          <a href="https://www.nachi.org/Account/Login.htm" target="_blank" rel="noopener">Open member account</a>
+          <a href="https://www.nachi.org/education/" target="_blank" rel="noopener">Browse training courses</a>
+        </div>
+      </aside>
+
       <div class="training-grid" id="trainingGrid">
         <details class="training-module" data-training-module="photo-records">
           <summary>
@@ -4315,7 +4369,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
       "use strict";
@@ -9570,28 +9623,6 @@
         const token = pushTokenValue.textContent.trim();
         if (token) copyText(token, "Phone setup code copied");
       });
-      calendarConnectBtn.addEventListener("click", connectCompanyCalendar);
-      calendarRefreshBtn.addEventListener("click", refreshCompanyCalendar);
-      calendarChangeBtn.addEventListener("click", () => {
-        calendarSelectorWrap.hidden = !calendarSelectorWrap.hidden;
-        if (!calendarSelectorWrap.hidden) calendarSelector.focus();
-      });
-      calendarSelector.addEventListener("change", async () => {
-        const selected = availableScheduleCalendars.find(calendar => calendar.id === calendarSelector.value);
-        if (!selected) return;
-        saveScheduleCalendar(selected);
-        calendarSelectorWrap.hidden = true;
-        try {
-          await fetchTodaySchedule(selected);
-        } catch (error) {
-          todayJobsStatus.textContent = error.message === "RECONNECT"
-            ? "The calendar connection expired. Tap Connect schedule again."
-            : "That schedule could not be loaded. Choose another calendar or try again.";
-        }
-      });
-      window.addEventListener("hashchange", () => {
-        if (window.location.hash === "#today-jobs" && savedCalendarToken() && navigator.onLine) refreshCompanyCalendar();
-      });
       requestForm.addEventListener("submit", validateRequestSubmission);
       window.addEventListener("pageshow", () => {
         damageSubmitBtn.disabled = false;
@@ -9647,7 +9678,6 @@
       initializeTraining();
       initializeSopGuide();
       initializePushStatus();
-      initializeTodayJobs();
       initializeOfflineAccess();
       updateConfig();
     })();
