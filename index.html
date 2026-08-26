@@ -3361,6 +3361,64 @@
       overflow: hidden;
     }
 
+    .daily-readiness {
+      margin-bottom: 18px;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .daily-readiness summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 18px 20px;
+      color: var(--forest);
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .daily-readiness summary::-webkit-details-marker { display: none; }
+    .daily-readiness summary strong { display: block; font-size: 15px; }
+    .daily-readiness summary small { display: block; margin-top: 4px; color: var(--ink-2); font-size: 11px; line-height: 1.4; }
+
+    .daily-readiness-status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 6px 10px;
+      color: #7b570b;
+      background: #fff5d8;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .daily-readiness-status.is-ready { color: #276a55; background: #e1f2eb; }
+
+    .daily-readiness-body {
+      padding: 0 20px 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .daily-readiness-list {
+      display: grid;
+      gap: 7px;
+      margin: 16px 0;
+      padding: 0;
+      color: var(--ink-2);
+      font-size: 11px;
+      line-height: 1.45;
+      list-style: none;
+    }
+
+    .daily-readiness-list li { position: relative; padding-left: 22px; }
+    .daily-readiness-list li::before { content: "✓"; position: absolute; left: 0; color: var(--bright-blue); font-weight: 900; }
+    .daily-readiness-actions { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 9px; }
+    .daily-readiness-actions .decode-btn { margin: 0; min-height: 46px; }
+    .daily-readiness-note { margin: 11px 0 0; color: var(--ink-2); font-size: 10px; line-height: 1.45; }
+
     .job-context-card {
       display: grid;
       gap: 16px;
@@ -3533,7 +3591,8 @@
       .external-training-card { grid-template-columns: 1fr; }
       .external-training-actions { min-width: 0; }
       .job-context-actions,
-      .job-shortcuts { grid-template-columns: 1fr; }
+      .job-shortcuts,
+      .daily-readiness-actions { grid-template-columns: 1fr; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -3679,6 +3738,27 @@
         </div>
         <p>Enter the property once. MPI Field Tools remembers it on this phone, fills the field forms, and keeps the job closeout steps together.</p>
       </div>
+
+      <details class="panel daily-readiness" id="dailyReadiness">
+        <summary>
+          <span><strong>Start-of-day readiness</strong><small>One 30-second check before the first job.</small></span>
+          <span class="daily-readiness-status" id="dailyReadinessStatus">Not checked today</span>
+        </summary>
+        <div class="daily-readiness-body">
+          <ul class="daily-readiness-list">
+            <li>Schedule, route, weather, special services, and access notes reviewed.</li>
+            <li>Company phone, cameras, and required apps charged and ready.</li>
+            <li>Meters, testers, pumps, and detectors present, functional, and within required service or calibration.</li>
+            <li>Ladders, PPE, vehicle supplies, forms, batteries, and consumables ready.</li>
+            <li>No missing or damaged item will prevent safe completion of today’s assigned work.</li>
+          </ul>
+          <div class="daily-readiness-actions">
+            <button class="decode-btn" id="dailyReadinessReadyBtn" type="button">Everything is ready</button>
+            <a class="job-secondary-action" id="dailyReadinessIssueBtn" href="#requests-feedback">Something needs attention</a>
+          </div>
+          <p class="daily-readiness-note">A normal readiness check stays on this phone and does not send an email. Use the issue button only when management action is needed.</p>
+        </div>
+      </details>
 
       <div class="workflow-grid">
         <form class="panel job-context-card" id="jobContextForm" novalidate>
@@ -5537,6 +5617,10 @@
       const jobProgressFill = document.getElementById("jobProgressFill");
       const jobProgressText = document.getElementById("jobProgressText");
       const jobPhases = [...document.querySelectorAll(".job-phase")];
+      const dailyReadiness = document.getElementById("dailyReadiness");
+      const dailyReadinessStatus = document.getElementById("dailyReadinessStatus");
+      const dailyReadinessReadyBtn = document.getElementById("dailyReadinessReadyBtn");
+      const dailyReadinessIssueBtn = document.getElementById("dailyReadinessIssueBtn");
       const manufacturer = document.getElementById("manufacturer");
       const serialInput = document.getElementById("serial");
       const resultContent = document.getElementById("resultContent");
@@ -5674,6 +5758,8 @@
       const requestInspector = document.getElementById("requestInspector");
       const requestType = document.getElementById("requestType");
       const requestItem = document.getElementById("requestItem");
+      const requestNeededBy = document.getElementById("requestNeededBy");
+      const requestDetails = document.getElementById("requestDetails");
       const requestEmailSubject = document.getElementById("requestEmailSubject");
       const requestSubmittedAt = document.getElementById("requestSubmittedAt");
       const requestSubmitBtn = document.getElementById("requestSubmitBtn");
@@ -9887,6 +9973,47 @@
       }
 
       const ACTIVE_JOB_STORAGE_KEY = "mpiActiveJobV1";
+      const DAILY_READINESS_STORAGE_KEY = "mpiDailyReadinessV1";
+
+      function localDateKey(date = new Date()) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function loadDailyReadiness() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(DAILY_READINESS_STORAGE_KEY) || "null");
+          return saved && saved.date === localDateKey() ? saved : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function renderDailyReadiness() {
+        const saved = loadDailyReadiness();
+        dailyReadinessStatus.classList.toggle("is-ready", Boolean(saved));
+        dailyReadinessStatus.textContent = saved?.completedAt
+          ? `Ready · ${new Date(saved.completedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
+          : "Not checked today";
+        dailyReadinessReadyBtn.textContent = saved ? "Readiness confirmed" : "Everything is ready";
+      }
+
+      function confirmDailyReadiness() {
+        const record = { date: localDateKey(), completedAt: new Date().toISOString() };
+        try { localStorage.setItem(DAILY_READINESS_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
+        renderDailyReadiness();
+        dailyReadiness.open = false;
+        showToast("Today’s readiness check saved on this phone");
+      }
+
+      function openReadinessIssueRequest() {
+        requestType.value = "Scheduling or operational support";
+        requestItem.value = "Start-of-day readiness issue";
+        if (!requestDetails.value.trim()) requestDetails.value = "Readiness item needing attention: ";
+        if (!requestNeededBy.value) requestNeededBy.value = localDateKey();
+      }
 
       function loadActiveJob() {
         try {
@@ -10007,6 +10134,7 @@
           if (input && !input.value) input.value = rememberedInspector;
         });
         syncActiveJobToForms(loadActiveJob());
+        renderDailyReadiness();
 
         if (!safetyNoticeOccurredAt.value) {
           const now = new Date();
@@ -11238,6 +11366,8 @@
 
       jobContextForm.addEventListener("submit", saveActiveJob);
       clearActiveJobBtn.addEventListener("click", clearActiveJob);
+      dailyReadinessReadyBtn.addEventListener("click", confirmDailyReadiness);
+      dailyReadinessIssueBtn.addEventListener("click", openReadinessIssueRequest);
       jobSteps.forEach(step => step.addEventListener("change", () => updateActiveJobStep(step)));
       damagePhoto1.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto1, damagePhotoPreview1, damagePhotoCard1));
       damagePhoto2.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto2, damagePhotoPreview2, damagePhotoCard2));

@@ -14,6 +14,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Safety & Near-Miss initial notice.
 - 26 condensed field prompts traceable to the controlled MPI SOP.
 - 10 short offline knowledge checks that reinforce the MPI field sequence and safety boundaries.
+- A one-tap, phone-local start-of-day readiness check with exception-only support routing.
 
 ### 1. Manager coaching and competency matrix
 
@@ -48,6 +49,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - A 30-second start-of-day screen for phone charge, meters, ladders, PPE, assignments, and weather.
 - Only exceptions are sent to management.
 - The normal state should take one tap, not a full checklist.
+- **Implemented in Build 44 inside Job Companion; normal checks remain on the phone and issues open the existing management-request workflow.**
 
 ### 6. Company updates with acknowledgement
 

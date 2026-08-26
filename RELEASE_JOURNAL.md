@@ -293,3 +293,42 @@ Status: published August 26, 2026 as GitHub commit `b51d6fdc57f301bcf9960ee6f5cc
 
 - Restore GitHub `main` to `11f11585eced2c7837f28b638910c6e37139a548` to keep Builds 1–5 but remove the five new lessons.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 7 — Start-of-day readiness
+
+Status: implemented locally; publication pending validation.
+
+#### Additions
+
+1. Added a 30-second **Start-of-day readiness** check inside Job Companion.
+   - Reviews the schedule, route, weather, special services, and access notes.
+   - Confirms the company phone, cameras, apps, tools, meters, detectors, ladders, PPE, vehicle supplies, forms, batteries, and consumables are ready.
+   - Confirms no missing or damaged item will prevent safe completion of assigned work.
+   - Records a one-tap “Ready” status for the current date on that company phone.
+
+2. Kept normal operation quiet and private.
+   - A normal readiness confirmation does not send an email.
+   - The next calendar day automatically starts as Not checked.
+   - The check lives inside Job Companion and does not add another home-screen button.
+
+3. Added exception routing.
+   - **Something needs attention** opens the existing Inspector Request form.
+   - The request is automatically categorized as Scheduling or operational support.
+   - The item, requested date, and details prompt are filled automatically; the inspector reviews and submits it intentionally.
+   - No test request was submitted.
+
+4. Updated the offline cache identifier to Build 44.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Initial state: Not checked today.
+- One-tap result: status changed to Ready with the local completion time.
+- Issue route: opened Inspector Request with the correct request type, item, date, and details prompt.
+- Browser error log during the test: 0 errors.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `39cb091424372bc761ebb335639f56af14f5e31d` to keep Builds 1–6 but remove Start-of-day readiness.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
