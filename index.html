@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="51">
+  <meta name="app-build" content="52">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -2097,6 +2097,18 @@
     .announcement-card span { color: var(--orange-dark); font-size: 9px; font-weight: 950; letter-spacing: .1em; text-transform: uppercase; }
     .announcement-card h4 { margin: 5px 0 0; color: var(--forest); font-size: 14px; }
     .announcement-card p { margin: 7px 0 0; color: var(--ink-2); font-size: 11.5px; line-height: 1.5; }
+    .announcement-ack-status { display: inline-flex; margin-top: 10px; padding: 5px 7px; color: #5f667d; background: #eef1f6; border-radius: 7px; font-size: 9px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
+    .announcement-card.is-acknowledged { background: #edf7f4; border-left-color: #2f8067; }
+    .announcement-card.is-acknowledged .announcement-ack-status { color: #276a55; background: #d9eee7; }
+    .message-acknowledgement { margin-top: 16px; overflow: hidden; background: #fff; border: 1px solid #dfe3ec; border-radius: 11px; }
+    .message-acknowledgement > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 58px; padding: 13px 14px; color: var(--forest); cursor: pointer; list-style: none; font-size: 11.5px; font-weight: 900; }
+    .message-acknowledgement > summary::-webkit-details-marker { display: none; }
+    .message-acknowledgement > summary::after { content: "+"; color: var(--orange-dark); font-size: 20px; }
+    .message-acknowledgement[open] > summary::after { content: "−"; }
+    .message-ack-form { padding: 15px; background: #f8fafc; border-top: 1px solid #e1e5ed; }
+    .message-ack-form .damage-confirmation { margin: 12px 0; }
+    .message-ack-form .decode-btn { min-height: 48px; margin-top: 8px; }
+    .message-ack-complete { padding: 14px; color: #276a55; background: #edf7f4; border-top: 1px solid #cfe7df; font-size: 11px; line-height: 1.5; }
 
     .escalation-guide {
       margin-bottom: 18px;
@@ -3893,7 +3905,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">51</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">52</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -5199,10 +5211,11 @@
             <span class="step-count">Offline</span>
           </div>
           <div class="announcement-list">
-            <article class="announcement-card required">
+            <article class="announcement-card required" id="requiredMessagePhotoRestoration" data-required-message-id="photo-restoration-2026-08-25">
               <span>Required reminder · August 25, 2026</span>
               <h4>Use Before and After photos</h4>
               <p>Photograph thermostats, access hatches, equipment covers, appliance controls, and similar components before handling them and again after they are restored.</p>
+              <strong class="announcement-ack-status" id="requiredMessagePhotoStatus">Acknowledgement required</strong>
             </article>
             <article class="announcement-card">
               <span>Field tools update · August 25, 2026</span>
@@ -5215,6 +5228,24 @@
               <p>Septic evaluation, well-yield testing, and water-quality sampling require an approved procedure, contracted scope, training, and authorization.</p>
             </article>
           </div>
+          <details class="message-acknowledgement" id="messageAckPanel">
+            <summary id="messageAckSummary">Acknowledge the required message</summary>
+            <form class="message-ack-form" id="messageAckForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+              <input type="hidden" name="_subject" id="messageAckSubject" value="MPI Required Message Acknowledgement">
+              <input type="hidden" name="_template" value="table">
+              <input type="hidden" name="_captcha" value="false">
+              <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?message-ack-sent=photo-restoration-2026-08-25#team-messages">
+              <input type="hidden" name="Submitted at" id="messageAckSubmittedAt" value="">
+              <input type="hidden" name="Message ID" value="photo-restoration-2026-08-25">
+              <input type="hidden" name="Required message" value="Use Before and After photos">
+              <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
+              <div class="field"><label for="messageAckInspector">Inspector name *</label><input class="damage-input" id="messageAckInspector" name="Inspector" type="text" autocomplete="name" maxlength="80" required></div>
+              <label class="damage-confirmation"><input id="messageAckConfirmed" type="checkbox" required><span>I read and understand the required Before and After photo reminder and will follow it on applicable inspections.</span></label>
+              <button class="decode-btn" id="messageAckSubmitBtn" type="submit">Send acknowledgement</button>
+              <p class="damage-submit-status" id="messageAckStatus" role="status" aria-live="polite"></p>
+            </form>
+            <div class="message-ack-complete" id="messageAckComplete" hidden><strong>Acknowledged on this phone.</strong> Kevin received the acknowledgement when this record was submitted.</div>
+          </details>
           <p class="free-tool-note">Published messages remain on the phone for offline use. New push alerts require an internet connection and notification permission.</p>
         </section>
 
@@ -6191,6 +6222,18 @@
       const onboardingStatus = document.getElementById("onboardingStatus");
       const onboardingSuccess = document.getElementById("onboardingSuccess");
       const escalationGuide = document.getElementById("escalationGuide");
+      const messageAckPanel = document.getElementById("messageAckPanel");
+      const messageAckSummary = document.getElementById("messageAckSummary");
+      const messageAckForm = document.getElementById("messageAckForm");
+      const messageAckInspector = document.getElementById("messageAckInspector");
+      const messageAckConfirmed = document.getElementById("messageAckConfirmed");
+      const messageAckSubject = document.getElementById("messageAckSubject");
+      const messageAckSubmittedAt = document.getElementById("messageAckSubmittedAt");
+      const messageAckSubmitBtn = document.getElementById("messageAckSubmitBtn");
+      const messageAckStatus = document.getElementById("messageAckStatus");
+      const messageAckComplete = document.getElementById("messageAckComplete");
+      const requiredMessagePhotoRestoration = document.getElementById("requiredMessagePhotoRestoration");
+      const requiredMessagePhotoStatus = document.getElementById("requiredMessagePhotoStatus");
       const teamQuestionForm = document.getElementById("teamQuestionForm");
       const teamQuestionInspector = document.getElementById("teamQuestionInspector");
       const teamQuestionProperty = document.getElementById("teamQuestionProperty");
@@ -10694,7 +10737,7 @@
 
       function syncActiveJobToForms(job, force = false) {
         if (!job) return;
-        const inspectorInputs = [damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, onboardingInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector];
+        const inspectorInputs = [damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, onboardingInspector, messageAckInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector];
         const propertyInputs = [damageProperty, equipmentProperty, toolCheckProperty, teamQuestionProperty, safetyNoticeProperty];
         inspectorInputs.forEach(input => {
           if (input && (force || !input.value)) input.value = job.inspector;
@@ -10832,7 +10875,7 @@
 
       function initializeFieldForms() {
         const rememberedInspector = loadRememberedInspector();
-        [activeJobInspector, damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, onboardingInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector].forEach(input => {
+        [activeJobInspector, damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, onboardingInspector, messageAckInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector].forEach(input => {
           if (input && !input.value) input.value = rememberedInspector;
         });
         syncActiveJobToForms(loadActiveJob());
@@ -10885,6 +10928,14 @@
           document.getElementById("onboardingProgram").open = true;
           params.delete("onboarding-sent");
           targetHash = "#training-center";
+        }
+        if (params.get("message-ack-sent") === REQUIRED_PHOTO_MESSAGE_ID) {
+          saveMessageAcknowledgement(REQUIRED_PHOTO_MESSAGE_ID);
+          renderMessageAcknowledgement();
+          messageAckStatus.className = "damage-submit-status success";
+          messageAckStatus.textContent = "Required message acknowledgement submitted successfully.";
+          params.delete("message-ack-sent");
+          targetHash = "#team-messages";
         }
         if (params.get("question-sent") === "1") {
           teamQuestionSuccess.hidden = false;
@@ -11158,6 +11209,8 @@
 
       const TRAINING_STORAGE_KEY = "mpiTrainingProgressV1";
       const ONBOARDING_STORAGE_KEY = "mpiOnboardingProgressV1";
+      const MESSAGE_ACK_STORAGE_KEY = "mpiRequiredMessageAcknowledgementsV1";
+      const REQUIRED_PHOTO_MESSAGE_ID = "photo-restoration-2026-08-25";
       let completedTraining = new Set();
       let completedOnboarding = new Set();
 
@@ -11216,6 +11269,35 @@
         else completedOnboarding.delete(check.dataset.onboardingId);
         try { localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify([...completedOnboarding])); } catch (_) {}
         updateOnboardingProgress();
+      }
+
+      function loadMessageAcknowledgements() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(MESSAGE_ACK_STORAGE_KEY) || "[]");
+          return new Set(Array.isArray(saved) ? saved.map(String) : []);
+        } catch (_) {
+          return new Set();
+        }
+      }
+
+      function saveMessageAcknowledgement(messageId) {
+        const acknowledgements = loadMessageAcknowledgements();
+        acknowledgements.add(messageId);
+        try { localStorage.setItem(MESSAGE_ACK_STORAGE_KEY, JSON.stringify([...acknowledgements])); } catch (_) {}
+      }
+
+      function renderMessageAcknowledgement() {
+        const acknowledged = loadMessageAcknowledgements().has(REQUIRED_PHOTO_MESSAGE_ID);
+        requiredMessagePhotoRestoration.classList.toggle("is-acknowledged", acknowledged);
+        requiredMessagePhotoStatus.textContent = acknowledged ? "Acknowledged on this phone" : "Acknowledgement required";
+        messageAckSummary.textContent = acknowledged ? "Required message acknowledged" : "Acknowledge the required message";
+        messageAckForm.hidden = acknowledged;
+        messageAckComplete.hidden = !acknowledged;
+        if (acknowledged) messageAckPanel.open = false;
+      }
+
+      function initializeMessageAcknowledgements() {
+        renderMessageAcknowledgement();
       }
 
       function completeTrainingModule(button) {
@@ -11389,6 +11471,19 @@
           submitButton: onboardingSubmitBtn,
           pendingText: "Sending progress summary…",
           subjectText: () => `MPI Onboarding Progress — ${onboardingInspector.value.trim()} — ${onboardingProgressValue.value}`.slice(0, 180)
+        });
+      }
+
+      function validateMessageAcknowledgement(event) {
+        validateSimpleEmailForm(event, {
+          form: messageAckForm,
+          status: messageAckStatus,
+          submittedAt: messageAckSubmittedAt,
+          subject: messageAckSubject,
+          inspector: messageAckInspector,
+          submitButton: messageAckSubmitBtn,
+          pendingText: "Sending acknowledgement…",
+          subjectText: () => `MPI Required Message Acknowledgement — Before and After Photos — ${messageAckInspector.value.trim()}`.slice(0, 180)
         });
       }
 
@@ -12232,6 +12327,7 @@
       });
       onboardingChecks.forEach(check => check.addEventListener("change", () => updateOnboardingMilestone(check)));
       onboardingForm.addEventListener("submit", validateOnboardingSubmission);
+      messageAckForm.addEventListener("submit", validateMessageAcknowledgement);
       teamQuestionForm.addEventListener("submit", validateTeamQuestionSubmission);
       escalationGuide.addEventListener("click", routeEscalation);
       safetyInformedOptions.forEach(option => option.addEventListener("change", event => updateSafetyInformedSelection(event.currentTarget)));
@@ -12259,6 +12355,8 @@
         toolCommissionSubmitBtn.textContent = "Email commissioning record";
         onboardingSubmitBtn.disabled = false;
         onboardingSubmitBtn.textContent = "Email progress summary";
+        messageAckSubmitBtn.disabled = false;
+        messageAckSubmitBtn.textContent = "Send acknowledgement";
         teamQuestionSubmitBtn.disabled = false;
         teamQuestionSubmitBtn.textContent = "Submit field question";
         safetyNoticeSubmitBtn.disabled = false;
@@ -12349,6 +12447,7 @@
       updateToolCheckResult();
       initializeTraining();
       initializeOnboarding();
+      initializeMessageAcknowledgements();
       initializeToolGuides();
       initializeSopGuide();
       initializePushStatus();

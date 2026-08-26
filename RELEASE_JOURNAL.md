@@ -615,3 +615,38 @@ Status: published August 26, 2026 as GitHub commit `75a8b04d76f21ff968397ddc0d45
 
 - Restore GitHub `main` to `c90144931a6b3ecb69bc7f2277c064f38ad66f9c` to keep Builds 1–13 but remove the update checker.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 15 — Required company-message acknowledgement
+
+Status: ready to publish as Build 52.
+
+#### Additions
+
+1. Added acknowledgement to the current required Before and After photo reminder.
+   - Ordinary company notices remain read-only and never create email.
+   - The inspector enters their name and confirms that the required instruction was read and understood.
+   - One acknowledgement is emailed only to Kevin when the inspector deliberately submits it.
+
+2. Added device-side acknowledgement memory.
+   - After a successful return from the email service, the required message changes to Acknowledged on this phone.
+   - The acknowledgement form is hidden to reduce duplicate submissions.
+   - The confirmation query is removed from the address after it has been processed.
+   - Nothing is tracked or emailed in the background.
+
+3. Kept the acknowledgement specific and auditable.
+   - The email includes the inspector, exact required-message title, stable message ID, and submission time.
+   - The acknowledgement does not represent training completion or competency sign-off.
+   - Updated the visible build, version file, and offline cache identifier to Build 52.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Isolated submission test: subject, timestamp, disabled pending state, and Kevin-only recipient generated correctly without external submission.
+- Successful-return simulation: card marked acknowledged, form hidden, completion notice shown, and query removed.
+- 390-pixel phone layout: acknowledgement panel stayed within the viewport with no horizontal overflow.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `2d259244ce384413d1d751ea8f998e28bd0914c6` to keep Builds 1–14 but remove required-message acknowledgement.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.

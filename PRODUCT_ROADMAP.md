@@ -59,6 +59,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 - Kevin publishes a short update to everyone or a selected inspector.
 - Urgent policy updates require a simple “Read and understood” acknowledgement.
 - Training assignments remain separate from general messages.
+- **Initial required-message acknowledgement implemented in Build 52; targeted publishing and central management status remain future work.**
 
 ### 7. Smart links between the existing tools
 
