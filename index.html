@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="75">
+  <meta name="app-build" content="76">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4103,7 +4103,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">75</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">76</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -5098,7 +5098,7 @@
       </div>
 
       <div class="sop-version-bar">
-        <span><strong>Quick field prompts</strong> · Based on MPI Residential Inspector SOP Version 1.3 · Effective August 17, 2026</span>
+        <span><strong>26 quick field prompts</strong> · Offline, searchable, and available by copyable direct link · SOP Version 1.3</span>
         <span class="sop-offline-badge">Available offline</span>
       </div>
 
@@ -13829,6 +13829,12 @@
           actions.append(safetyLink, questionLink);
           content.appendChild(actions);
         }
+        const copyProcedureLink = document.createElement("button");
+        copyProcedureLink.type = "button";
+        copyProcedureLink.className = "tool-manual-link tool-guide-copy-link";
+        copyProcedureLink.dataset.copySopProcedure = record.id;
+        copyProcedureLink.textContent = "Copy direct link to this procedure";
+        content.appendChild(copyProcedureLink);
         const source = document.createElement("p");
         source.className = "sop-detail-source";
         source.textContent = record.sourceNote || `Source: MPI SOP ${record.source} · Version ${SOP_DATA.meta.version} · Effective ${SOP_DATA.meta.effective}. This prompt is a condensed field aid; the controlled company SOP and current training govern.`;
@@ -13895,10 +13901,22 @@
 
       function initializeSopGuide() {
         populateSopChapters();
-        const defaultRecord = SOP_RECORDS.find(record => record.id === "quick-ac-delta") || SOP_RECORDS[0];
+        const requestedProcedureId = new URL(window.location.href).searchParams.get("procedure") || "";
+        const requestedRecord = SOP_RECORDS.find(record => record.id === requestedProcedureId);
+        const defaultRecord = requestedRecord || SOP_RECORDS.find(record => record.id === "quick-ac-delta") || SOP_RECORDS[0];
+        if (requestedRecord) sopSearch.value = requestedRecord.title;
         activeSopId = defaultRecord?.id || "";
         if (defaultRecord) renderSopDetail(defaultRecord);
         renderSopResults();
+      }
+
+      function copySopProcedureLink(procedureId) {
+        if (!SOP_RECORDS.some(record => record.id === procedureId)) return;
+        const url = new URL(window.location.href);
+        url.search = "";
+        url.searchParams.set("procedure", procedureId);
+        url.hash = "sop-guide";
+        copyText(url.href, "Direct field-procedure link copied");
       }
 
       function sizeCommentOutput() {
@@ -14267,6 +14285,11 @@
         if (window.innerWidth < 861) sopDetail.scrollIntoView({ behavior: "smooth", block: "start" });
       });
       sopDetail.addEventListener("click", event => {
+        const procedureLink = event.target.closest("[data-copy-sop-procedure]");
+        if (procedureLink) {
+          copySopProcedureLink(procedureLink.dataset.copySopProcedure);
+          return;
+        }
         const copyButton = event.target.closest("[data-water-package-copy]");
         if (copyButton) copyText(copyButton.dataset.waterPackageCopy || "", "COC parameter list copied");
       });
