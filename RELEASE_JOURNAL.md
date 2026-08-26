@@ -650,3 +650,43 @@ Status: published August 26, 2026 as GitHub commit `bc004847b809a459683388154c4d
 
 - Restore GitHub `main` to `2d259244ce384413d1d751ea8f998e28bd0914c6` to keep Builds 1–14 but remove required-message acknowledgement.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 16 — Job Companion next useful action
+
+Status: published August 26, 2026 as GitHub commit `a002a82347353bd7f3c6742f39be4b11cd13bd35`.
+
+#### Additions
+
+1. Added one focused **Next useful action** card to Job Companion.
+   - It identifies the first incomplete step instead of making the inspector scan all four stages.
+   - The guidance advances immediately when a field step is checked.
+   - The wording stays short and task specific for phone use.
+
+2. Connected each next action to the relevant place.
+   - Schedule and scope open Today’s Jobs.
+   - Field-kit readiness opens Company Tool Guides.
+   - Before/After documentation opens Equipment Photo Record.
+   - Wet-area recheck opens Field Procedures.
+   - Tool closeout and communication open their matching app screens.
+   - Local checklist actions open and move to the correct stage without leaving Job Companion.
+
+3. Added clear final states.
+   - After all 12 field steps, the card directs the inspector to the 60-second report release check.
+   - After both the field steps and report release check are complete, the card displays **Job closeout checks complete** and removes its action button.
+   - Updated the visible build, version file, and offline cache identifier to Build 53.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- First-incomplete-step test: after the first three travel items were complete, the card advanced to **Verify the property and report**.
+- Local action test: **Open this stage** expanded the matching On arrival checklist.
+- Final-step test: all 12 field steps changed the card to **Complete the report release check** and opened that panel.
+- Completion test: all 12 field steps plus all six release checks changed the card to **Job closeout checks complete** with no action button.
+- 390-pixel phone layout: no horizontal overflow; the action button remained 44 pixels high.
+- The feature stores no new data and creates no email or network submission.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `f994b5f79ed3fbdc7c2bede9700d6a8f2030f454` to keep Builds 1–15 but remove the next-action guide.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
