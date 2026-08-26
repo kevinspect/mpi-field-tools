@@ -1867,3 +1867,34 @@ Status: published August 26, 2026 as GitHub commit `98b91aba555a22de6aa4acf7cc12
 
 - Restore GitHub `main` to `522ede58895371f8cb57ebdae9d58c89a4ca974d` to keep Builds 1–48 but remove the additional draft recovery.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 50 — Remove the retired generic comment payload
+
+Status: published August 26, 2026 as GitHub commit `aab516642a36fc7abe577992ecefb9a82261bb91` (app Build 87).
+
+#### Additions
+
+1. Removed the unused offline template-comment library from the published phone app.
+   - The old rule-based builder was already hidden because MPI Comment Builder is planned as a controlled online feature for comments not present in the report template.
+   - No visible field tool, report form, equipment decoder, guide, procedure, training lesson, or company workflow was removed.
+   - Build 86 and the full-cycle fallback retain the earlier payload if restoration is ever required.
+
+2. Reduced the main HTML from 1,841,454 bytes to 1,093,056 bytes.
+   - Removed 748,398 bytes, a 40.6% reduction in the main document.
+   - Reduced the local gzip comparison from 379,979 bytes to 242,990 bytes, a 36.1% reduction.
+   - This reduces first-load transfer, offline-cache storage, and JavaScript parsing work on company phones.
+
+3. Updated the visible build, version file, and offline cache identifier to Build 87.
+
+#### Validation record
+
+- Re-ran the complete 13-screen structural, accessibility-name, recipient, link-safety, route, and phone-width audit.
+- Re-ran all 64 exact guidance links: 22 Tool Guides, 26 Field Procedures, and 16 refresher lessons.
+- Re-ran Home search, all eight non-photo company submission paths, all-not-used tool closeout, all 16 lesson completions, all 20 onboarding milestones, and all three additional draft-recovery workflows.
+- Re-ran the displayed example for all 21 Equipment Age Finder families plus Trane 1996, A. O. Smith 1960, and Rheem-family 1960 historical checks.
+- All tests passed; no test email was sent.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `6f0aa2cf7c63dae7a87481b25ce9c6b185db7d2b` to keep Builds 1–49 and restore the retired hidden comment payload.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
