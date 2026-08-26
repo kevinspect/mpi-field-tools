@@ -803,3 +803,42 @@ Status: published August 26, 2026 as GitHub commit `2ade1aa3cea5bc2aab76994f67bc
 
 - Restore GitHub `main` to `bcd4d418bff11bd1a7b598e2b6229fe9652e6377` to keep Builds 1–18 but remove device-only draft protection.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 20 — Offline HVAC temperature-difference calculator
+
+Status: published August 26, 2026 as GitHub commit `2cab17486ab20e28a11b21f2e9023e01e41f5200`.
+
+#### Additions
+
+1. Added a collapsed temperature-difference calculator at the top of Field Procedures.
+   - Cooling mode calculates return air minus supply air.
+   - Heating mode calculates supply air minus return air.
+   - Decimal Fahrenheit readings are accepted and the result is rounded to one decimal place.
+   - A copy button copies only the mode, actual readings, and calculated difference.
+
+2. Added MPI-specific interpretation boundaries.
+   - Cooling results between 14°F and 22°F are identified only as falling within MPI’s usual field-screen range under typical conditions.
+   - Cooling results outside that range prompt the inspector to record readings, conditions, and run time and recommend qualified HVAC evaluation without diagnosing refrigerant charge or capacity.
+   - Heating results direct the inspector to compare actual rise with the manufacturer’s nameplate range; no generic heating pass/fail range is applied.
+   - Reversed readings prompt verification of mode, locations, run time, and thermometer operation.
+
+3. Kept the calculator offline and non-diagnostic.
+   - No result is emailed or stored.
+   - The existing SOP procedure and company training continue to control the test.
+   - Updated the visible build, version file, and offline cache identifier to Build 57.
+
+#### Validation record
+
+- Inline JavaScript syntax: passed.
+- Duplicate HTML IDs: none detected.
+- Cooling typical-range test: 74.0°F return and 56.0°F supply produced 18.0°F and the qualified field-screen wording.
+- Cooling outside-range test: 74.0°F return and 65.0°F supply produced 9.0°F and the evaluation/no-diagnosis wording.
+- Heating test: 70.0°F return and 120.0°F supply produced 50.0°F and nameplate-comparison wording.
+- Reversed-reading test: 70.0°F return and 75.0°F supply produced a verification prompt.
+- Copied output contained the mode, both readings, and calculated result without adding a diagnosis.
+- 390-pixel phone layout: no horizontal overflow; Calculate remained 46 pixels high.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `b19f9e7604027f34d5c08bf4720f24ecc057caa9` to keep Builds 1–19 but remove the temperature calculator.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
