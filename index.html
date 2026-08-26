@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="63">
+  <meta name="app-build" content="64">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3787,6 +3787,19 @@
     .room-coverage-remove { min-width: 44px; min-height: 44px; padding: 6px 9px; color: #8b2c26; background: #fff4f2; border: 1px solid #e7c0bc; border-radius: 9px; font-size: 10px; font-weight: 900; }
     .room-coverage-empty { margin: 12px 0 0; color: var(--ink-2); font-size: 11px; line-height: 1.5; }
 
+    .field-readings-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+    .field-readings-form .field-wide { grid-column: 1 / -1; }
+    .field-readings-actions { display: flex; grid-column: 1 / -1; gap: 9px; }
+    .field-readings-actions .decode-btn { flex: 1; margin: 0; }
+    .field-readings-list { display: grid; gap: 8px; margin-top: 14px; }
+    .field-reading-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; padding: 13px; color: var(--forest); background: #f7f9fc; border: 1px solid var(--line); border-radius: 12px; }
+    .field-reading-item strong { display: block; font-size: 12px; line-height: 1.35; }
+    .field-reading-item span { display: block; margin-top: 4px; color: var(--ink-2); font-size: 10.5px; line-height: 1.45; }
+    .field-reading-value { color: var(--bright-blue); font-size: 13px; font-weight: 900; white-space: nowrap; }
+    .field-reading-actions { display: flex; grid-column: 1 / -1; gap: 8px; }
+    .field-reading-actions button { min-height: 44px; padding: 8px 12px; color: var(--bright-blue); background: #edf5fc; border: 1px solid #cbdff1; border-radius: 9px; font: inherit; font-size: 10.5px; font-weight: 850; cursor: pointer; }
+    .field-readings-copy { width: 100%; min-height: 44px; margin-top: 12px; color: var(--forest); background: var(--orange); border: 0; border-radius: 10px; font: inherit; font-size: 11px; font-weight: 900; cursor: pointer; }
+
     .tool-readiness-form { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; padding: 20px; border-bottom: 1px solid var(--line); }
     .tool-readiness-form .field-wide { grid-column: 1 / -1; }
     .tool-readiness-actions { display: flex; grid-column: 1 / -1; gap: 10px; }
@@ -3895,6 +3908,8 @@
       .job-next-action button { width: 100%; }
       .room-coverage-add { grid-template-columns: 1fr; }
       .room-coverage-add .decode-btn { width: 100%; }
+      .field-readings-form { grid-template-columns: 1fr; }
+      .field-readings-form .field-wide { grid-column: auto; }
       .tool-readiness-form { grid-template-columns: 1fr; }
       .tool-readiness-form .field-wide { grid-column: auto; }
       .tool-commissioning-panel .damage-form { padding: 20px 16px 22px; }
@@ -4047,7 +4062,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">63</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">64</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4209,6 +4224,42 @@
           <div class="room-coverage-list" id="roomCoverageList"></div>
           <p class="room-coverage-empty" id="roomCoverageEmpty">Start the current job, then add the rooms that actually apply.</p>
           <p class="report-quality-note">Optional field aid: check a room only after its four landscape overview photographs are present. Doorway, panoramic, thermal, and defect photographs do not replace the four required overview images. The report template remains authoritative.</p>
+        </div>
+      </details>
+
+      <details class="panel report-quality-card" id="fieldReadingsCard">
+        <summary>
+          <span><strong>Field readings notebook</strong><small>Keep factual measurements with the active job and copy them into the report before closeout.</small></span>
+          <span class="daily-readiness-status" id="fieldReadingsStatus">No readings</span>
+        </summary>
+        <div class="report-quality-body">
+          <form class="field-readings-form" id="fieldReadingsForm">
+            <input id="fieldReadingEditId" type="hidden">
+            <div class="field">
+              <label for="fieldReadingType">Reading type *</label>
+              <div class="select-wrap"><select class="damage-input" id="fieldReadingType" required>
+                <option value="">Choose type…</option>
+                <option>Water pressure</option>
+                <option>Temperature</option>
+                <option>Temperature difference</option>
+                <option>Carbon monoxide</option>
+                <option>Moisture</option>
+                <option>Electrical</option>
+                <option>Other field measurement</option>
+              </select></div>
+            </div>
+            <div class="field"><label for="fieldReadingLocation">Location / component *</label><input class="damage-input" id="fieldReadingLocation" type="text" maxlength="120" placeholder="Example: Rear hose bib" required></div>
+            <div class="field"><label for="fieldReadingValue">Exact reading and unit *</label><input class="damage-input" id="fieldReadingValue" type="text" maxlength="80" placeholder="Example: 62 psi" required></div>
+            <div class="field"><label for="fieldReadingNote">Conditions or instrument note</label><input class="damage-input" id="fieldReadingNote" type="text" maxlength="180" placeholder="Example: Static; other fixtures off"></div>
+            <div class="field-readings-actions">
+              <button class="decode-btn" type="submit">Save reading</button>
+              <button class="secondary-btn" id="fieldReadingCancel" type="button" hidden>Cancel edit</button>
+            </div>
+          </form>
+          <div class="field-readings-list" id="fieldReadingsList"></div>
+          <p class="room-coverage-empty" id="fieldReadingsEmpty">Start the current job, then add only measurements actually obtained at that property.</p>
+          <button class="field-readings-copy" id="copyFieldReadingsBtn" type="button" hidden>Copy all factual readings</button>
+          <p class="report-quality-note">Scratchpad only: verify each entry, copy it into the correct report item, and follow the applicable MPI procedure. The app does not decide whether a reading passes, fails, diagnoses a system, or replaces the report.</p>
         </div>
       </details>
 
@@ -6369,6 +6420,18 @@
       const roomCoveragePresets = document.getElementById("roomCoveragePresets");
       const roomCoverageList = document.getElementById("roomCoverageList");
       const roomCoverageEmpty = document.getElementById("roomCoverageEmpty");
+      const fieldReadingsCard = document.getElementById("fieldReadingsCard");
+      const fieldReadingsStatus = document.getElementById("fieldReadingsStatus");
+      const fieldReadingsForm = document.getElementById("fieldReadingsForm");
+      const fieldReadingEditId = document.getElementById("fieldReadingEditId");
+      const fieldReadingType = document.getElementById("fieldReadingType");
+      const fieldReadingLocation = document.getElementById("fieldReadingLocation");
+      const fieldReadingValue = document.getElementById("fieldReadingValue");
+      const fieldReadingNote = document.getElementById("fieldReadingNote");
+      const fieldReadingCancel = document.getElementById("fieldReadingCancel");
+      const fieldReadingsList = document.getElementById("fieldReadingsList");
+      const fieldReadingsEmpty = document.getElementById("fieldReadingsEmpty");
+      const copyFieldReadingsBtn = document.getElementById("copyFieldReadingsBtn");
       const dailyReadiness = document.getElementById("dailyReadiness");
       const dailyReadinessStatus = document.getElementById("dailyReadinessStatus");
       const dailyReadinessReadyBtn = document.getElementById("dailyReadinessReadyBtn");
@@ -11173,7 +11236,14 @@
               id: String(room?.id || `room-${index}`),
               name: String(room?.name || "").trim().slice(0, 80),
               complete: Boolean(room?.complete)
-            })).filter(room => room.name) : []
+            })).filter(room => room.name) : [],
+            readings: Array.isArray(saved.readings) ? saved.readings.map((reading, index) => ({
+              id: String(reading?.id || `reading-${index}`),
+              type: String(reading?.type || "").trim().slice(0, 80),
+              location: String(reading?.location || "").trim().slice(0, 120),
+              value: String(reading?.value || "").trim().slice(0, 80),
+              note: String(reading?.note || "").trim().slice(0, 180)
+            })).filter(reading => reading.type && reading.location && reading.value) : []
           };
         } catch (_) {
           return null;
@@ -11266,6 +11336,112 @@
         job.rooms = job.rooms.filter(item => item.id !== room.id);
         storeActiveJob(job);
         renderRoomCoverage(job);
+      }
+
+      function resetFieldReadingForm() {
+        fieldReadingsForm.reset();
+        fieldReadingEditId.value = "";
+        fieldReadingCancel.hidden = true;
+        fieldReadingsForm.querySelector('button[type="submit"]').textContent = "Save reading";
+      }
+
+      function renderFieldReadings(job = loadActiveJob()) {
+        const readings = job?.readings || [];
+        fieldReadingsStatus.textContent = !job?.property ? "Start job" : readings.length ? `${readings.length} ${readings.length === 1 ? "reading" : "readings"}` : "No readings";
+        fieldReadingsStatus.classList.toggle("is-ready", readings.length > 0);
+        fieldReadingsList.replaceChildren();
+        fieldReadingsEmpty.hidden = readings.length > 0;
+        fieldReadingsEmpty.textContent = job?.property
+          ? "Add only measurements actually obtained at this property."
+          : "Start the current job, then add only measurements actually obtained at that property.";
+        copyFieldReadingsBtn.hidden = readings.length === 0;
+
+        readings.forEach(reading => {
+          const row = document.createElement("div");
+          row.className = "field-reading-item";
+          const copy = document.createElement("div");
+          const title = document.createElement("strong");
+          title.textContent = `${reading.type} · ${reading.location}`;
+          const note = document.createElement("span");
+          note.textContent = reading.note || "No additional conditions recorded";
+          copy.append(title, note);
+          const value = document.createElement("div");
+          value.className = "field-reading-value";
+          value.textContent = reading.value;
+          const actions = document.createElement("div");
+          actions.className = "field-reading-actions";
+          const edit = document.createElement("button");
+          edit.type = "button";
+          edit.dataset.fieldReadingEdit = reading.id;
+          edit.textContent = "Update";
+          const remove = document.createElement("button");
+          remove.type = "button";
+          remove.dataset.fieldReadingRemove = reading.id;
+          remove.textContent = "Remove";
+          actions.append(edit, remove);
+          row.append(copy, value, actions);
+          fieldReadingsList.append(row);
+        });
+      }
+
+      function saveFieldReading(event) {
+        event.preventDefault();
+        if (!fieldReadingsForm.reportValidity()) return;
+        const job = loadActiveJob();
+        if (!job?.property) {
+          showToast("Start the current job first");
+          activeJobProperty.focus();
+          return;
+        }
+        const record = {
+          id: fieldReadingEditId.value || `reading-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+          type: fieldReadingType.value.trim().slice(0, 80),
+          location: fieldReadingLocation.value.trim().slice(0, 120),
+          value: fieldReadingValue.value.trim().slice(0, 80),
+          note: fieldReadingNote.value.trim().slice(0, 180)
+        };
+        const index = job.readings.findIndex(reading => reading.id === record.id);
+        if (index >= 0) job.readings[index] = record;
+        else job.readings.push(record);
+        storeActiveJob(job);
+        resetFieldReadingForm();
+        renderFieldReadings(job);
+        showToast(index >= 0 ? "Field reading updated" : "Field reading saved with this job");
+      }
+
+      function handleFieldReadingAction(event) {
+        const edit = event.target.closest("[data-field-reading-edit]");
+        const remove = event.target.closest("[data-field-reading-remove]");
+        if (!edit && !remove) return;
+        const job = loadActiveJob();
+        if (!job?.property) return;
+        const id = (edit || remove).dataset.fieldReadingEdit || (edit || remove).dataset.fieldReadingRemove;
+        const reading = job.readings.find(item => item.id === id);
+        if (!reading) return;
+        if (edit) {
+          fieldReadingEditId.value = reading.id;
+          fieldReadingType.value = reading.type;
+          fieldReadingLocation.value = reading.location;
+          fieldReadingValue.value = reading.value;
+          fieldReadingNote.value = reading.note;
+          fieldReadingCancel.hidden = false;
+          fieldReadingsForm.querySelector('button[type="submit"]').textContent = "Update reading";
+          fieldReadingsForm.scrollIntoView({ behavior: "smooth", block: "center" });
+          return;
+        }
+        if (!window.confirm(`Remove the ${reading.type.toLowerCase()} reading at ${reading.location}?`)) return;
+        job.readings = job.readings.filter(item => item.id !== id);
+        storeActiveJob(job);
+        if (fieldReadingEditId.value === id) resetFieldReadingForm();
+        renderFieldReadings(job);
+      }
+
+      function copyFieldReadings() {
+        const job = loadActiveJob();
+        if (!job?.property || !job.readings.length) return;
+        const lines = [`Property: ${job.property}`, "Field readings:"];
+        job.readings.forEach(reading => lines.push(`- ${reading.type} — ${reading.location}: ${reading.value}${reading.note ? ` (${reading.note})` : ""}`));
+        copyText(lines.join("\n"), "Factual field readings copied");
       }
 
       function syncActiveJobToForms(job, force = false) {
@@ -11392,6 +11568,7 @@
           activeJobMapLink.setAttribute("aria-disabled", "true");
           updateJobProgress(null);
           renderRoomCoverage(null);
+          renderFieldReadings(null);
           return;
         }
         activeJobInspector.value = job.inspector;
@@ -11410,6 +11587,7 @@
         homeActiveJobMap.href = `https://maps.apple.com/?q=${encodeURIComponent(job.property)}`;
         updateJobProgress(job);
         renderRoomCoverage(job);
+        renderFieldReadings(job);
         syncActiveJobToForms(job);
       }
 
@@ -11426,11 +11604,13 @@
           startedAt: sameJob && existing.startedAt ? existing.startedAt : new Date().toISOString(),
           steps: sameJob ? existing.steps : [],
           quality: sameJob ? existing.quality : [],
-          rooms: sameJob ? existing.rooms : []
+          rooms: sameJob ? existing.rooms : [],
+          readings: sameJob ? existing.readings : []
         };
         storeActiveJob(job);
         saveInspectorName(inspector);
         renderActiveJob(job);
+        if (!sameJob) resetFieldReadingForm();
         syncActiveJobToForms(job, true);
         showToast(sameJob ? "Current job updated" : "Job companion started");
       }
@@ -13261,6 +13441,10 @@
       roomCoverageList.addEventListener("click", event => {
         if (event.target.closest("[data-room-remove]")) updateRoomCoverage(event);
       });
+      fieldReadingsForm.addEventListener("submit", saveFieldReading);
+      fieldReadingsList.addEventListener("click", handleFieldReadingAction);
+      fieldReadingCancel.addEventListener("click", resetFieldReadingForm);
+      copyFieldReadingsBtn.addEventListener("click", copyFieldReadings);
       calculateTempDifferenceBtn.addEventListener("click", calculateTemperatureDifference);
       copyTempDifferenceBtn.addEventListener("click", () => copyText(tempDifferenceResult.dataset.copyText || "", "Temperature readings copied"));
       damagePhoto1.addEventListener("change", () => updateDamagePhotoPreview(damagePhoto1, damagePhotoPreview1, damagePhotoCard1));
