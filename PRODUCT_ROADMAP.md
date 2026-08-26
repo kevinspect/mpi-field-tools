@@ -10,6 +10,7 @@ MPI Field Tools should feel like a calm field companion, not office software squ
 
 - Job Companion with reusable current-job details and staged closeout.
 - Build 93 merges Today’s Jobs into that workflow, fills the selected job address automatically, preserves the loaded schedule on the phone, and reduces closeout to four stages.
+- Build 94 removes the duplicate current-job progress/actions/shortcut block so the selected job flows directly into the four-stage check.
 - Company Tool Guides for all 21 inventory tools plus first-use commissioning.
 - Direct links between selected tool cards, controlled SOP prompts, support requests, and safety reporting.
 - Safety & Near-Miss initial notice.

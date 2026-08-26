@@ -2127,3 +2127,29 @@ Status: prepared August 26, 2026 as app Build 93.
 
 - Restore GitHub `main` to `e48ad817b8397ecfa9658724935a93c5d5e881ac` to restore public Build 92.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire improvement cycle.
+
+### Build 57 — Remove duplicate current-job controls
+
+Status: prepared August 26, 2026 as app Build 94.
+
+#### Changes
+
+1. Removed the duplicated block beneath the current-job card.
+   - Removed the second job-progress display.
+   - Removed the Maps, copy-status, clear-job, and restore-job controls from that card.
+   - Removed the five shortcuts that repeated tools already available from the home screen and job workflow.
+   - Kept the selected job record and the four-stage job check unchanged.
+
+2. Updated the visible build, version file, and offline cache identifier to Build 94.
+
+#### Validation record
+
+- Confirmed the circled control block is absent at phone width.
+- Confirmed the active calendar job and address still load normally.
+- Confirmed all four job-stage controls remain available and persist on the phone.
+- Confirmed inline JavaScript syntax and unique element IDs pass.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `327b072268dcd3be23240a39e51713df658fbb5a` to restore public Build 93.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire improvement cycle.

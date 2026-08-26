@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="93">
+  <meta name="app-build" content="94">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4158,7 +4158,7 @@
         </div>
       </section>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">93</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">94</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4292,23 +4292,6 @@
           <div class="job-context-status" id="activeJobStatus" aria-live="polite">
             <strong>No active job on this phone</strong>
             <span>Enter the inspector and property to begin.</span>
-          </div>
-          <div class="job-progress-track" aria-hidden="true"><div class="job-progress-fill" id="jobProgressFill"></div></div>
-          <p class="privacy-note" id="jobProgressText">0 of 4 job stages complete.</p>
-
-          <div class="job-context-actions">
-            <a class="job-secondary-action" id="activeJobMapLink" href="https://maps.apple.com/" target="_blank" rel="noopener">Open in Apple Maps</a>
-            <button class="job-secondary-action" id="copyActiveJobStatusBtn" type="button">Copy job status</button>
-            <button class="job-secondary-action danger" id="clearActiveJobBtn" type="button">Clear finished job</button>
-            <button class="job-secondary-action" id="restoreLastJobBtn" type="button" hidden>Restore last cleared job</button>
-          </div>
-
-          <div class="job-shortcuts" aria-label="Current job shortcuts">
-            <a class="job-secondary-action" href="#equipment-record">Before/After photos</a>
-            <a class="job-secondary-action" href="#damage-report">Damage notice</a>
-            <a class="job-secondary-action" href="#safety-notice">Safety / near miss</a>
-            <a class="job-secondary-action" href="#sop-guide">Field procedure</a>
-            <a class="job-secondary-action" href="#tool-check">Tool closeout</a>
           </div>
         </form>
 
@@ -12327,8 +12310,8 @@
         const completed = new Set(job?.steps || []);
         jobSteps.forEach(step => { step.checked = completed.has(step.dataset.jobStep); });
         const count = jobSteps.filter(step => step.checked).length;
-        jobProgressFill.style.width = `${jobSteps.length ? (count / jobSteps.length) * 100 : 0}%`;
-        jobProgressText.textContent = `${count} of ${jobSteps.length} job stages complete${count === jobSteps.length ? " — closeout complete." : "."}`;
+        if (jobProgressFill) jobProgressFill.style.width = `${jobSteps.length ? (count / jobSteps.length) * 100 : 0}%`;
+        if (jobProgressText) jobProgressText.textContent = `${count} of ${jobSteps.length} job stages complete${count === jobSteps.length ? " — closeout complete." : "."}`;
         jobPhases.forEach(phase => {
           const phaseSteps = [...phase.querySelectorAll("[data-job-step]")];
           phase.classList.toggle("is-complete", phaseSteps.length > 0 && phaseSteps.every(step => step.checked));
@@ -12354,7 +12337,7 @@
       function renderActiveJob(job = loadActiveJob()) {
         const title = activeJobStatus.querySelector("strong");
         const detail = activeJobStatus.querySelector("span");
-        restoreLastJobBtn.hidden = Boolean(job?.property) || !loadLastClearedJob();
+        if (restoreLastJobBtn) restoreLastJobBtn.hidden = Boolean(job?.property) || !loadLastClearedJob();
         if (!job?.property) {
           homeActiveJob.hidden = true;
           homeActiveJobProperty.textContent = "";
@@ -12363,8 +12346,10 @@
           activeJobProperty.value = "";
           title.textContent = "No active job on this phone";
           detail.textContent = "Enter the inspector and property to begin.";
-          activeJobMapLink.href = "https://maps.apple.com/";
-          activeJobMapLink.setAttribute("aria-disabled", "true");
+          if (activeJobMapLink) {
+            activeJobMapLink.href = "https://maps.apple.com/";
+            activeJobMapLink.setAttribute("aria-disabled", "true");
+          }
           updateJobProgress(null);
           renderJobServices(null);
           renderRoomCoverage(null);
@@ -12379,8 +12364,10 @@
           : job.startedAt
           ? `Started ${new Date(job.startedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })} · Saved on this phone.`
           : "Current job information stays on this phone.";
-        activeJobMapLink.href = `https://maps.apple.com/?q=${encodeURIComponent(job.property)}`;
-        activeJobMapLink.removeAttribute("aria-disabled");
+        if (activeJobMapLink) {
+          activeJobMapLink.href = `https://maps.apple.com/?q=${encodeURIComponent(job.property)}`;
+          activeJobMapLink.removeAttribute("aria-disabled");
+        }
         const completedSteps = new Set(job.steps || []).size;
         homeActiveJob.hidden = false;
         homeActiveJobProperty.textContent = job.property;
@@ -14456,9 +14443,9 @@
       });
       jobServiceOptions.forEach(option => option.addEventListener("change", updateJobServices));
       jobServiceLinks.addEventListener("click", openJobServicePack);
-      copyActiveJobStatusBtn.addEventListener("click", copyActiveJobStatus);
-      clearActiveJobBtn.addEventListener("click", clearActiveJob);
-      restoreLastJobBtn.addEventListener("click", restoreLastClearedJob);
+      copyActiveJobStatusBtn?.addEventListener("click", copyActiveJobStatus);
+      clearActiveJobBtn?.addEventListener("click", clearActiveJob);
+      restoreLastJobBtn?.addEventListener("click", restoreLastClearedJob);
       jobNextActionBtn.addEventListener("click", openNextJobAction);
       dailyReadinessReadyBtn.addEventListener("click", confirmDailyReadiness);
       dailyReadinessIssueBtn.addEventListener("click", openReadinessIssueRequest);
