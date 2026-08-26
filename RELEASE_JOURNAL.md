@@ -1666,3 +1666,34 @@ Status: published August 26, 2026 as GitHub commit `8a84cd11ae70c2922329d5b74dca
 
 - Restore GitHub `main` to `04ba76323471f8c71e447d0ce53a67f254e8bbd1` to keep Builds 1–42 but remove copied no-match handoffs.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
+
+### Build 44 — Route an unresolved equipment age to management
+
+Status: published August 26, 2026 as GitHub commit `5ba6b282d5f1a9823c98d0131b10a8ac6586aa87` (app Build 81).
+
+#### Additions
+
+1. Added **Ask management to verify** to Equipment Age Finder no-match results.
+   - One tap opens the existing Team Messages field-question form.
+   - The response timing is set to **Before the report is released**.
+   - The question is prefilled with the equipment family, cleaned serial, no-match status, exact decoder reason, supported-format guidance, and a clear request to verify the manufacture date.
+   - The inspector still reviews and deliberately submits the question; no email is sent automatically.
+
+2. Preserved the unresolved-age question as an unsent draft.
+   - The prefilled timing and question survive a reload or signal interruption on that company phone.
+   - Updated the visible build, version file, and offline cache identifier to Build 81.
+
+#### Validation record
+
+- Entered unsupported Ducane serial `UNKNOWN-9988` and opened the management-verification action.
+- Confirmed Team Messages opened with the exact equipment family and cleaned serial `UNKNOWN9988`.
+- Confirmed **Before the report is released** was selected and the question field received focus.
+- Confirmed the full prefilled question survived a reload through the existing draft-protection system.
+- Confirmed no FormSubmit request or email occurred.
+- The action measured 44 pixels high and the 390-pixel phone layout had no horizontal overflow.
+- Browser script errors: none detected.
+
+#### Rollback for this build
+
+- Restore GitHub `main` to `34bcd68bf3111be84786bfddfe159e6636c48da3` to keep Builds 1–43 but remove one-tap unresolved-age escalation.
+- Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire six-hour improvement cycle.
