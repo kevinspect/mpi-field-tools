@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="100">
+  <meta name="app-build" content="101">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4390,7 +4390,7 @@
       .workflow-schedule-tools { align-items: flex-start; flex-direction: column; }
     }
 
-    /* Build 100: simple four-hub field navigation */
+    /* Build 101: simple four-hub field navigation */
     body { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
     .topbar-actions .offline-badge { display: none; }
     .app-home { min-height: calc(100dvh - 132px); }
@@ -6869,7 +6869,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 100</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 101</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7028,8 +7028,12 @@
         const shouldShow = Boolean(job?.property) && !["home", "job-companion", "settings"].includes(activeScreen);
         activeJobContext.hidden = !shouldShow;
         if (!shouldShow) return;
+        let inspectorName = job.inspector || "";
+        if (!inspectorName) {
+          try { inspectorName = loadWorkflowProfile()?.name || loadRememberedInspector(); } catch (_) {}
+        }
         activeJobContextProperty.textContent = job.property;
-        activeJobContextInspector.textContent = `${job.inspector || "Assigned inspector"} · Details are filled into this tool automatically.`;
+        activeJobContextInspector.textContent = `${inspectorName || "Assigned inspector"} · Details are filled into this tool automatically.`;
       }
 
       function renderAppScreen() {
@@ -14280,14 +14284,15 @@
       function syncActiveJobToForms(job, force = false) {
         const inspectorInputs = [damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, onboardingInspector, trainingShareInspector, messageAckInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector];
         const propertyInputs = [damageProperty, equipmentProperty, toolCheckProperty, teamQuestionProperty, safetyNoticeProperty];
+        const inspectorName = job ? (job.inspector || loadWorkflowProfile()?.name || loadRememberedInspector()) : "";
         inspectorInputs.forEach(input => {
           if (!input) return;
           const wasAutoFilled = input.classList.contains("is-auto-filled");
-          if (job?.inspector && (force || !input.value || input.readOnly)) input.value = job.inspector;
-          else if (!job?.inspector && wasAutoFilled) input.value = loadRememberedInspector();
-          input.readOnly = Boolean(job?.inspector);
-          input.classList.toggle("is-auto-filled", Boolean(job?.inspector));
-          if (job?.inspector) input.title = "Filled from the current inspection";
+          if (inspectorName && (force || !input.value || input.readOnly)) input.value = inspectorName;
+          else if (!inspectorName && wasAutoFilled) input.value = loadRememberedInspector();
+          input.readOnly = Boolean(inspectorName);
+          input.classList.toggle("is-auto-filled", Boolean(inspectorName));
+          if (inspectorName) input.title = "Filled from the current inspection";
           else input.removeAttribute("title");
         });
         propertyInputs.forEach(input => {

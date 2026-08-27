@@ -20,6 +20,20 @@
 
 ## Change log
 
+### Build 63 — Saved-job inspector identity fallback (App Build 101)
+
+Status: published August 26, 2026.
+
+#### Changes
+
+1. Filled the inspector identity from the signed-in workflow profile when an older saved job does not contain an inspector name.
+2. Applied the same fallback to the current-inspection banner and all relevant field forms.
+3. Updated the offline cache so installed phones receive the corrected app shell.
+
+#### Validation
+
+- Verified JavaScript parsing, unique element IDs, required workflow controls, live job-context autofill, and the public app version after publication.
+
 ### Build 62 — Four-hub navigation and zero-repeat field context (App Build 100)
 
 Status: published August 26, 2026.
