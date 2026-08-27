@@ -20,6 +20,21 @@
 
 ## Change log
 
+### Build 66 — Free Gusto time-off launcher (App Build 104)
+
+Status: published August 27, 2026.
+
+#### Changes
+
+1. Added **Request Time Off** to the Contact MPI screen.
+2. Opened Gusto's secure employee sign-in and request workflow without collecting duplicate leave information inside MPI Field Tools.
+3. Clarified that balances, requests, approvals, and notifications remain in Gusto.
+4. Added app-search terms for Gusto, time off, PTO, vacation, sick leave, and absence.
+
+#### Validation
+
+- Verified JavaScript parsing, unique element IDs, the secure external-link attributes, search discovery, mobile Contact MPI layout, and the Build 104 offline cache.
+
 ### Build 65 — Remove delivered logs from company phones (App Build 103)
 
 Status: published August 27, 2026.

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="103">
+  <meta name="app-build" content="104">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -423,7 +423,8 @@
 
     .home-tool-icon.icon-job,
     .home-tool-icon.icon-tool-guides,
-    .home-tool-icon.icon-safety {
+    .home-tool-icon.icon-safety,
+    .home-tool-icon.icon-time-off {
       position: relative;
       display: grid;
       place-items: center;
@@ -435,7 +436,8 @@
 
     .home-tool-icon.icon-job::before,
     .home-tool-icon.icon-tool-guides::before,
-    .home-tool-icon.icon-safety::before {
+    .home-tool-icon.icon-safety::before,
+    .home-tool-icon.icon-time-off::before {
       display: grid;
       width: 42px;
       height: 42px;
@@ -453,6 +455,7 @@
     .home-tool-icon.icon-job::before { content: "MY DAY"; }
     .home-tool-icon.icon-tool-guides::before { content: "HOW TO"; }
     .home-tool-icon.icon-safety::before { content: "SAFE"; }
+    .home-tool-icon.icon-time-off::before { content: "TIME OFF"; }
 
     .home-tool-copy strong { display: block; font-size: 17px; line-height: 1.25; }
     .home-tool-copy small { display: block; margin-top: 4px; color: var(--ink-2); font-size: 12px; line-height: 1.35; }
@@ -4390,7 +4393,7 @@
       .workflow-schedule-tools { align-items: flex-start; flex-direction: column; }
     }
 
-    /* Build 103: simple four-hub field navigation */
+    /* Build 104: simple four-hub field navigation */
     body { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
     .topbar-actions .offline-badge { display: none; }
     .app-home { min-height: calc(100dvh - 132px); }
@@ -4577,11 +4580,11 @@
       </a>
       <a class="home-tool-card" href="#contact-mpi">
         <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Contact MPI</strong><small>Company messages, field questions, safety notices, requests, and feedback.</small></span>
+        <span class="home-tool-copy"><strong>Contact MPI</strong><small>Company messages, field questions, safety notices, requests, time off, and feedback.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">100</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">104</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -4618,7 +4621,9 @@
       <a class="home-tool-card" href="#team-messages"><span class="home-tool-icon icon-messages" aria-hidden="true"></span><span class="home-tool-copy"><strong>Messages &amp; Field Questions</strong><small>Read company updates or send management a job-related question.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
       <a class="home-tool-card" href="#safety-notice"><span class="home-tool-icon icon-safety" aria-hidden="true"></span><span class="home-tool-copy"><strong>Safety &amp; Near-Miss Notice</strong><small>Report a safety event, equipment failure, vehicle event, or close call.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
       <a class="home-tool-card" href="#requests-feedback"><span class="home-tool-icon icon-requests" aria-hidden="true"></span><span class="home-tool-copy"><strong>Requests &amp; Feedback</strong><small>Request tools, uniforms, supplies, training, or share an improvement.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
+      <a class="home-tool-card" href="https://app.gusto.com/" target="_blank" rel="noopener noreferrer"><span class="home-tool-icon icon-time-off" aria-hidden="true"></span><span class="home-tool-copy"><strong>Request Time Off</strong><small>Open Gusto to choose the policy, dates, and hours and submit the request for approval.</small></span><span class="home-tool-arrow" aria-hidden="true">↗</span></a>
     </nav>
+    <p class="hub-note">Time-off balances, requests, approvals, and notifications remain securely in Gusto. MPI Field Tools does not store leave information.</p>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -6880,7 +6885,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 103</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 104</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -15622,7 +15627,8 @@
           { title: "Training Center", detail: "MPI refreshers, field pathway, and assigned training", route: "#training-center", aliases: "course internachi progress onboarding lesson" },
           { title: "Safety & Near-Miss Notice", detail: "Safety event, equipment failure, or close call", route: "#safety-notice", aliases: "hazard injury unsafe stop work" },
           { title: "Team Messages", detail: "Company updates, acknowledgements, and field questions", route: "#team-messages", aliases: "ask management notification update help" },
-          { title: "Requests & Feedback", detail: "Tools, uniforms, supplies, training, and suggestions", route: "#requests-feedback", aliases: "order request uniform equipment feedback" }
+          { title: "Requests & Feedback", detail: "Tools, uniforms, supplies, training, and suggestions", route: "#requests-feedback", aliases: "order request uniform equipment feedback" },
+          { title: "Request Time Off", detail: "Open Gusto to submit a leave request", route: "#contact-mpi", aliases: "gusto vacation pto sick leave holiday absence request time off" }
         ].map(entry => ({ ...entry, kind: "screen", searchText: normalizeSopText(`${entry.title} ${entry.detail} ${entry.aliases}`) }));
         const procedures = QUICK_SOP_PROCEDURES.map(procedure => ({
           title: procedure.title,
