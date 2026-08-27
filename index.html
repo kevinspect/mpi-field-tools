@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="99">
+  <meta name="app-build" content="100">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4277,6 +4277,8 @@
     .workflow-jobs-list { display: grid; gap: 10px; margin-top: 16px; }
     .workflow-job-row { display: grid; grid-template-columns: 68px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 14px; background: #f7f9fc; border: 1px solid #e0e5ef; border-radius: 13px; }
     .workflow-job-row.is-complete { opacity: .62; }
+    .workflow-job-row.is-complete { min-height: 58px; padding-block: 9px; background: #eef2f7; }
+    .workflow-job-row.is-complete button { display: none; }
     .workflow-job-row time { color: var(--forest); font-size: 12px; font-weight: 950; text-align: center; }
     .workflow-job-row strong { display: block; color: var(--forest); font-size: 13px; line-height: 1.3; }
     .workflow-job-row small { display: block; margin-top: 4px; color: var(--ink-2); font-size: 10px; line-height: 1.4; }
@@ -4388,6 +4390,119 @@
       .workflow-schedule-tools { align-items: flex-start; flex-direction: column; }
     }
 
+    /* Build 100: simple four-hub field navigation */
+    body { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
+    .topbar-actions .offline-badge { display: none; }
+    .app-home { min-height: calc(100dvh - 132px); }
+    .app-home .home-tools { padding: 8px 18px; }
+    .app-home .home-tool-card { min-height: 108px; }
+    .app-home .home-tool-copy small { display: block; }
+    .home-version-row { color: rgba(255,255,255,.68); }
+    .home-version-row button { color: #fff; }
+    .home-version-row a { color: #fff; font-size: 10px; font-weight: 900; text-decoration: none; }
+
+    .hub-screen {
+      min-height: calc(100dvh - 180px);
+      padding: 48px max(18px, calc((100vw - 820px) / 2)) 72px;
+    }
+    .hub-heading {
+      margin: 0 auto 20px;
+      padding: 28px 24px;
+      color: #fff;
+      background: linear-gradient(145deg, #0b1050, #11186a 68%, #2f75b5);
+      border: 1px solid rgba(180,135,32,.48);
+      border-radius: 19px;
+      text-align: center;
+      box-shadow: 0 12px 28px rgba(17,24,106,.14);
+    }
+    .hub-heading .eyebrow { justify-content: center; color: #e2c56e; }
+    .hub-heading h1 { margin: 5px 0 0; color: #fff; font-size: clamp(30px, 6vw, 44px); line-height: 1.05; }
+    .hub-heading p:last-child { max-width: 620px; margin: 10px auto 0; color: rgba(255,255,255,.76); font-size: 13px; line-height: 1.5; }
+    .hub-list { overflow: hidden; padding: 4px 18px; background: #fff; border: 1px solid #dfe4ef; border-radius: 18px; box-shadow: 0 12px 28px rgba(17,24,106,.08); }
+    .hub-list .home-tool-card:last-child { border-bottom: 0; }
+    .hub-note { margin: 15px auto 0; color: #686e89; font-size: 10.5px; line-height: 1.5; text-align: center; }
+
+    .active-job-context {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      max-width: 820px;
+      margin: 14px auto 0;
+      padding: 12px 15px;
+      color: var(--forest);
+      background: #edf4fb;
+      border: 1px solid #cbdff1;
+      border-radius: 13px;
+    }
+    .active-job-context span { display: block; color: var(--bright-blue); font-size: 8.5px; font-weight: 950; letter-spacing: .1em; text-transform: uppercase; }
+    .active-job-context strong { display: block; margin-top: 4px; font-size: 12.5px; line-height: 1.35; }
+    .active-job-context small { display: block; margin-top: 3px; color: var(--ink-2); font-size: 9.5px; }
+    .active-job-context a { display: grid; min-height: 42px; place-items: center; padding: 8px 12px; color: #fff; background: var(--forest); border-radius: 9px; font-size: 10px; font-weight: 900; text-decoration: none; }
+    .is-auto-filled { color: #3d4964 !important; background: #edf4fb !important; border-color: #cbdff1 !important; }
+    .auto-filled-note { display: block; margin-top: 5px; color: #2f75b5; font-size: 9px; font-weight: 800; }
+
+    .training-assignment-card { margin: 0 auto 20px; overflow: hidden; padding: 0; }
+    .training-assignment-head { padding: 18px 20px; color: #fff; background: var(--forest); text-align: center; }
+    .training-assignment-head span { color: #e2c56e; font-size: 9px; font-weight: 950; letter-spacing: .12em; text-transform: uppercase; }
+    .training-assignment-head h3 { margin: 5px 0 0; color: #fff; font-size: 21px; }
+    .training-assignment-head p { margin: 7px auto 0; color: rgba(255,255,255,.74); font-size: 10.5px; line-height: 1.45; }
+    .training-assignment-frame { display: block; width: 100%; min-height: 610px; background: #fff; border: 0; }
+    .training-assignment-fallback { display: flex; justify-content: center; gap: 9px; padding: 13px; background: #f5f7fb; border-top: 1px solid #e0e5ef; }
+    .training-assignment-fallback a { display: grid; min-height: 42px; place-items: center; padding: 8px 13px; color: #fff; background: var(--bright-blue); border-radius: 9px; font-size: 10px; font-weight: 900; text-decoration: none; }
+
+    .settings-grid { display: grid; gap: 14px; }
+    .settings-card { padding: 20px; }
+    .settings-card h2, .settings-card h3 { margin: 0; color: var(--forest); }
+    .settings-card p { margin: 8px 0 0; color: var(--ink-2); font-size: 11px; line-height: 1.55; }
+    .settings-status { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding: 12px; background: #eef4fa; border-radius: 11px; }
+    .settings-status strong { color: var(--forest); font-size: 11px; }
+    .settings-status span { color: var(--bright-blue); font-size: 10px; font-weight: 900; text-align: right; }
+
+    .app-bottom-nav {
+      position: fixed;
+      z-index: 30;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      min-height: calc(64px + env(safe-area-inset-bottom));
+      padding: 6px max(8px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(8px, env(safe-area-inset-left));
+      background: rgba(255,255,255,.97);
+      border-top: 1px solid #d9dfeb;
+      box-shadow: 0 -8px 26px rgba(17,24,106,.12);
+      backdrop-filter: blur(18px);
+    }
+    .app-bottom-nav a { display: grid; place-items: center; align-content: center; gap: 3px; min-height: 54px; color: #666d8a; border-radius: 11px; font-size: 9.5px; font-weight: 850; text-decoration: none; }
+    .app-bottom-nav a::before { font-size: 19px; line-height: 1; }
+    .app-bottom-nav a[data-bottom-screen="home"]::before { content: "⌂"; }
+    .app-bottom-nav a[data-bottom-screen="job-companion"]::before { content: "▣"; }
+    .app-bottom-nav a[data-bottom-screen="field-tools"]::before { content: "◆"; }
+    .app-bottom-nav a[data-bottom-screen="training-center"]::before { content: "★"; }
+    .app-bottom-nav a[aria-current="page"] { color: #fff; background: var(--forest); }
+
+    #tool-check { display: none !important; }
+    #workflowAdminPanel { display: none !important; }
+
+    @media (max-width: 560px) {
+      .app-home { padding-bottom: 84px; }
+      .app-home .home-tools { padding-inline: 13px; }
+      .app-home .home-tool-card { min-height: 91px; grid-template-columns: 58px minmax(0, 1fr) 18px; }
+      .app-home .home-tool-copy small { display: block; font-size: 10px; line-height: 1.35; }
+      .hub-screen { padding: 30px 14px 86px; }
+      .hub-heading { padding: 22px 17px; border-radius: 16px; }
+      .hub-heading h1 { font-size: 30px; }
+      .hub-list { padding-inline: 13px; border-radius: 16px; }
+      .hub-list .home-tool-card { grid-template-columns: 58px minmax(0, 1fr) 18px; min-height: 88px; gap: 13px; }
+      .hub-list .home-tool-copy small { display: block; font-size: 10px; line-height: 1.35; }
+      .active-job-context { grid-template-columns: 1fr; margin: 10px 12px 0; }
+      .active-job-context a { width: 100%; }
+      .training-assignment-frame { min-height: 690px; }
+      .training-assignment-fallback { flex-direction: column; }
+      .app-bottom-nav a { font-size: 9px; }
+    }
+
     :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
       outline: 3px solid #fff !important;
       outline-offset: 2px;
@@ -4410,9 +4525,14 @@
   </header>
 
   <nav class="screen-nav" id="screenNav" aria-label="Current field tool" hidden>
-    <a class="screen-back" href="#home">Back to Field Tools</a>
+    <a class="screen-back" id="screenBack" href="#home">Back</a>
     <span class="screen-title" id="screenTitle"></span>
   </nav>
+
+  <aside class="active-job-context" id="activeJobContext" aria-live="polite" hidden>
+    <div><span>Current inspection</span><strong id="activeJobContextProperty"></strong><small id="activeJobContextInspector"></small></div>
+    <a href="#job-companion">Open My Day</a>
+  </aside>
 
   <section class="app-home app-screen-view" id="home" data-app-screen="home" aria-labelledby="home-title">
     <div class="home-intro">
@@ -4438,88 +4558,67 @@
       <div><strong id="homeToolAttentionTitle">Equipment needs attention</strong><span id="homeToolAttentionDetail">Review held or overdue field equipment before use.</span></div>
       <a href="#tool-guides">Review equipment</a>
     </aside>
+    <p class="home-section-label">Choose where you need to go</p>
+    <nav class="home-tools" aria-label="MPI app sections">
+      <a class="home-tool-card" href="#job-companion">
+        <span class="home-tool-icon icon-job" aria-hidden="true"></span>
+        <span class="home-tool-copy"><strong>My Day</strong><small>Today’s jobs, client contact, timing, closeout, and the next required action.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="home-tool-card" href="#field-tools">
+        <span class="home-tool-icon icon-tool-guides" aria-hidden="true"></span>
+        <span class="home-tool-copy"><strong>Field Tools</strong><small>Equipment age, timers, procedures, records, and company tool guides.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="home-tool-card" href="#training-center">
+        <span class="home-tool-icon icon-training" aria-hidden="true"></span>
+        <span class="home-tool-copy"><strong>Training</strong><small>Assigned courses, due dates, MPI refreshers, and InterNACHI progress.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="home-tool-card" href="#contact-mpi">
+        <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
+        <span class="home-tool-copy"><strong>Contact MPI</strong><small>Company messages, field questions, safety notices, requests, and feedback.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
+    </nav>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">100</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+  </section>
+
+  <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
+    <header class="hub-heading">
+      <p class="eyebrow">MPI field tools</p>
+      <h1 id="field-tools-title">Get the field answer.</h1>
+      <p>Search once, or choose the tool you need. Inspection findings and report photos remain in Spectora.</p>
+    </header>
     <div class="home-search" id="homeSearch">
-      <label for="homeSearchInput">Find a field tool, procedure, or lesson</label>
+      <label for="homeSearchInput">Search tools, procedures, and lessons</label>
       <div class="home-search-wrap">
-        <input class="home-search-input" id="homeSearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Example: water pressure, moisture meter, training">
+        <input class="home-search-input" id="homeSearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Example: well test, water pressure, Trane age">
         <button class="home-search-clear" id="homeSearchClear" type="button" aria-label="Clear app search" hidden>×</button>
       </div>
       <div class="home-search-results" id="homeSearchResults" role="listbox" aria-label="Matching MPI tools, procedures, and lessons" hidden></div>
     </div>
-    <p class="home-section-label">What do you need?</p>
-    <nav class="home-tools" aria-label="MPI field tools">
-      <section class="home-tool-group" aria-labelledby="home-group-work">
-        <h2 class="home-tool-group-title" id="home-group-work">Today’s inspection</h2>
-        <div class="home-tool-group-list">
-          <a class="home-tool-card" href="#job-companion">
-            <span class="home-tool-icon icon-job" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>Today’s Workflow</strong><small>Morning readiness, next job, client contact, inspection timing, and equipment closeout.</small></span>
-            <span class="home-tool-arrow" aria-hidden="true">→</span>
-          </a>
-          <a class="home-tool-card" href="#age-finder">
-            <span class="home-tool-icon icon-age" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>Equipment Age Finder</strong><small>Decode supported HVAC, furnace and water-heater serial numbers.</small></span>
-            <span class="home-tool-arrow" aria-hidden="true">→</span>
-          </a>
-          <a class="home-tool-card" href="#damage-report">
-            <span class="home-tool-icon icon-damage" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>Damaged Item Notice</strong><small>Record the item, photos, action taken and people informed.</small></span>
-            <span class="home-tool-arrow" aria-hidden="true">→</span>
-          </a>
-          <a class="home-tool-card" href="#equipment-record">
-            <span class="home-tool-icon icon-record" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>Equipment Photo Record</strong><small>Document thermostat settings and furnace access before and after inspection.</small></span>
-            <span class="home-tool-arrow" aria-hidden="true">→</span>
-          </a>
-        </div>
-      </section>
-      <section class="home-tool-group" aria-labelledby="home-group-reference">
-        <h2 class="home-tool-group-title" id="home-group-reference">Reference &amp; training</h2>
-        <div class="home-tool-group-list">
-          <a class="home-tool-card" href="#tool-guides">
-            <span class="home-tool-icon icon-tool-guides" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>Company Tool Guides</strong><small>Open concise operating, safety, care, and documentation steps for every MPI tool.</small></span>
-            <span class="home-tool-arrow" aria-hidden="true">→</span>
-          </a>
-          <a class="home-tool-card" href="#sop-guide">
-            <span class="home-tool-icon icon-sop" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>Field Procedures</strong><small>Open short, step-by-step prompts from the MPI handbook.</small></span>
-            <span class="home-tool-arrow" aria-hidden="true">→</span>
-          </a>
-          <a class="home-tool-card" href="#training-center">
-            <span class="home-tool-icon icon-training" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>Training Center</strong><small>Complete short MPI lessons and save progress on this device.</small></span>
-            <span class="home-tool-arrow" aria-hidden="true">→</span>
-          </a>
-        </div>
-      </section>
-      <section class="home-tool-group" aria-labelledby="home-group-support">
-        <h2 class="home-tool-group-title" id="home-group-support">Team &amp; support</h2>
-        <div class="home-tool-group-list">
-          <a class="home-tool-card" href="#safety-notice">
-            <span class="home-tool-icon icon-safety" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>Safety &amp; Near-Miss Notice</strong><small>Send MPI an immediate, factual record of a safety event, equipment failure, or close call.</small></span>
-            <span class="home-tool-arrow" aria-hidden="true">→</span>
-          </a>
-          <a class="home-tool-card" href="#team-messages">
-            <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>Team Messages</strong><small>Receive MPI notifications, read updates, and ask management.</small></span>
-            <span class="home-tool-arrow" aria-hidden="true">→</span>
-          </a>
-          <a class="home-tool-card" href="#requests-feedback">
-            <span class="home-tool-icon icon-requests" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>Requests &amp; Feedback</strong><small>Request tools, uniforms, supplies or training and share feedback.</small></span>
-            <span class="home-tool-arrow" aria-hidden="true">→</span>
-          </a>
-          <div class="home-tool-card phase-two" role="note" aria-label="MPI Comment Builder is planned for phase two">
-            <span class="home-tool-icon icon-ai" aria-hidden="true"></span>
-            <span class="home-tool-copy"><strong>MPI Comment Builder</strong><small>Online MPI commentary will be added after the free tools are complete.</small></span>
-            <span class="home-tool-arrow">Phase 2</span>
-          </div>
-        </div>
-      </section>
+    <nav class="hub-list" aria-label="Field tools">
+      <a class="home-tool-card" href="#age-finder"><span class="home-tool-icon icon-age" aria-hidden="true"></span><span class="home-tool-copy"><strong>Equipment Age Finder</strong><small>Decode HVAC, furnace, boiler, and water-heater serial numbers.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
+      <a class="home-tool-card" href="#sop-guide"><span class="home-tool-icon icon-sop" aria-hidden="true"></span><span class="home-tool-copy"><strong>Field Procedures &amp; Timers</strong><small>Well testing, water tests, system checks, stop conditions, and timed alerts.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
+      <a class="home-tool-card" href="#tool-guides"><span class="home-tool-icon icon-tool-guides" aria-hidden="true"></span><span class="home-tool-copy"><strong>Company Tool Guides</strong><small>Operating, safety, care, and documentation steps for MPI equipment.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
+      <a class="home-tool-card" href="#equipment-record"><span class="home-tool-icon icon-record" aria-hidden="true"></span><span class="home-tool-copy"><strong>Equipment Photo Record</strong><small>Document thermostat and furnace condition before and after inspection.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
+      <a class="home-tool-card" href="#damage-report"><span class="home-tool-icon icon-damage" aria-hidden="true"></span><span class="home-tool-copy"><strong>Damaged Item Notice</strong><small>Record property or equipment damage connected with inspection activity.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">99</strong></span><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <p class="hub-note">Use Spectora for inspection observations, defects, report photographs, videos, comments, and report publishing.</p>
+  </section>
+
+  <section class="hub-screen app-screen-view" id="contact-mpi" data-app-screen="contact-mpi" aria-labelledby="contact-mpi-title">
+    <header class="hub-heading">
+      <p class="eyebrow">MPI team support</p>
+      <h1 id="contact-mpi-title">Contact the right person.</h1>
+      <p>Choose the reason for contacting MPI so the message arrives in the correct format.</p>
+    </header>
+    <nav class="hub-list" aria-label="Contact MPI options">
+      <a class="home-tool-card" href="#team-messages"><span class="home-tool-icon icon-messages" aria-hidden="true"></span><span class="home-tool-copy"><strong>Messages &amp; Field Questions</strong><small>Read company updates or send management a job-related question.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
+      <a class="home-tool-card" href="#safety-notice"><span class="home-tool-icon icon-safety" aria-hidden="true"></span><span class="home-tool-copy"><strong>Safety &amp; Near-Miss Notice</strong><small>Report a safety event, equipment failure, vehicle event, or close call.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
+      <a class="home-tool-card" href="#requests-feedback"><span class="home-tool-icon icon-requests" aria-hidden="true"></span><span class="home-tool-copy"><strong>Requests &amp; Feedback</strong><small>Request tools, uniforms, supplies, training, or share an improvement.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
+    </nav>
   </section>
 
   <section class="hero app-screen-view" id="age-finder" data-app-screen="age-finder">
@@ -4716,7 +4815,7 @@
         </div>
       </dialog>
 
-      <p class="workflow-integration-note"><strong>Current connection:</strong> the company schedule supplies today’s jobs and stays available offline after loading. Secure Spectora job retrieval and the separate owner dashboard require the protected management connection; no private key is stored in this public app.</p>
+      <p class="workflow-integration-note" hidden aria-hidden="true"><strong>Connection status:</strong> the company schedule supplies today’s jobs and stays available offline after loading.</p>
 
       <section class="panel today-jobs-panel" aria-label="Legacy schedule compatibility" hidden aria-hidden="true">
         <div class="today-jobs-toolbar">
@@ -5080,10 +5179,10 @@
     <section class="damage-report app-screen-view" id="damage-report" data-app-screen="damage-report" aria-labelledby="damage-report-title">
       <div class="damage-heading">
         <div>
-          <p class="eyebrow">MPI equipment notice</p>
-          <h2 id="damage-report-title">Report a damaged item.</h2>
+          <p class="eyebrow">MPI property-protection notice</p>
+          <h2 id="damage-report-title">Record inspection-related damage.</h2>
         </div>
-        <p>Photograph damaged inspection equipment or access components, add the essential field details, and submit the notice to MPI management.</p>
+        <p>Use this only when property or equipment was damaged, disturbed, or could not be restored during inspection activity. Inspection defects belong in Spectora.</p>
       </div>
 
       <div class="damage-grid">
@@ -5199,10 +5298,11 @@
 
         <aside class="panel damage-info-panel" aria-labelledby="damage-info-title">
           <span class="damage-online-badge">Online submission</span>
-          <h3 id="damage-info-title">One notice. Everything attached.</h3>
+          <h3 id="damage-info-title">Company incident record—not a report defect.</h3>
           <p>The submitted notice includes the inspector, property, damaged item, location, description, everyone who was informed, action taken, submission time, and uploaded photos.</p>
           <ul class="damage-checklist">
-            <li>Use for damaged access hatches, ladders, tools, covers, panels, or other inspection-related items.</li>
+            <li>Use for access hatches, covers, panels, tools, or property damaged or disturbed during inspection activity.</li>
+            <li>Do not use this form for pre-existing property defects; document those in Spectora.</li>
             <li>Take a clear Before photo and an After photo showing how the item was left.</li>
             <li>Stop using or accessing an item when the condition appears unsafe.</li>
             <li>Do not include client documents, identification, or unrelated personal information in the photo.</li>
@@ -5879,6 +5979,19 @@
         <p>Open assigned InterNACHI training, track InterNACHI-issued credentials, and use or share direct links to short MPI lessons that turn the handbook into repeatable field habits.</p>
       </div>
 
+      <section class="panel training-assignment-card" aria-labelledby="assigned-training-title">
+        <div class="training-assignment-head">
+          <span>Assigned by MPI</span>
+          <h3 id="assigned-training-title">Your assigned training</h3>
+          <p>Your courses and due dates appear here automatically when you use your MPI company Google account.</p>
+        </div>
+        <iframe class="training-assignment-frame" title="Your assigned MPI training and due dates" src="https://script.google.com/a/macros/michiganpropertyinspections.com/s/AKfycbyyU-4_BDEcrYPqDasXn3tCFcmuLg97dAm4JCjS3tZSx-I7Tcg8KrFFg8oFzY-FrPqk/exec" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <div class="training-assignment-fallback">
+          <a href="https://script.google.com/a/macros/michiganpropertyinspections.com/s/AKfycbyyU-4_BDEcrYPqDasXn3tCFcmuLg97dAm4JCjS3tZSx-I7Tcg8KrFFg8oFzY-FrPqk/exec" target="_blank" rel="noopener">Open full training plan</a>
+          <a href="https://www.nachi.org/my/certification/cpi" target="_blank" rel="noopener">Open InterNACHI</a>
+        </div>
+      </section>
+
       <div class="training-overview">
         <article class="panel training-intro-card">
           <h3>Field-focused learning</h3>
@@ -5928,41 +6041,6 @@
           <p class="report-quality-note">Nothing is sent in the background. This reports only the 16 MPI refresher checks saved on this phone; it does not issue a credential, approve a competency, or change the inspector’s InterNACHI account.</p>
         </div>
       </details>
-
-      <details class="panel report-quality-card" id="phoneSetupPanel">
-        <summary>
-          <span><strong>Company phone setup</strong><small>One-time readiness check for the app, offline access, notifications, schedule, and training account.</small></span>
-          <span class="daily-readiness-status" id="phoneSetupStatus">Checking…</span>
-        </summary>
-        <div class="phone-setup-body">
-          <div class="phone-setup-list">
-            <div class="phone-setup-item"><div><strong>MPI app added to the Home Screen</strong><small>Open from the MPI icon for the full app and iPhone notifications.</small></div><span class="phone-setup-detected" id="phoneSetupInstalled">Check needed</span></div>
-            <div class="phone-setup-item"><div><strong>Offline access saved</strong><small>Reconnect once and open the app so the current build can be stored on this phone.</small></div><span class="phone-setup-detected" id="phoneSetupOffline">Check needed</span></div>
-            <div class="phone-setup-item"><div><strong>MPI notifications enabled</strong><small>Company push messages can arrive when the app is closed.</small></div><span class="phone-setup-detected" id="phoneSetupNotifications">Check needed</span></div>
-            <div class="phone-setup-item"><div><strong>Inspector name remembered</strong><small>Open Today’s Jobs once so MPI forms can use the correct inspector name.</small></div><span class="phone-setup-detected" id="phoneSetupInspector">Check needed</span></div>
-            <label class="phone-setup-item phone-setup-manual"><input id="phoneSetupCalendar" type="checkbox"><span><strong>Today’s Jobs verified</strong><small>I opened the schedule with my assigned MPI company account and saw the correct jobs.</small></span></label>
-            <label class="phone-setup-item phone-setup-manual"><input id="phoneSetupTraining" type="checkbox"><span><strong>Training profile verified</strong><small>I opened my MPI training profile and InterNACHI account under my own credentials.</small></span></label>
-          </div>
-          <div class="phone-setup-actions">
-            <a href="#job-companion">Open Today’s Jobs</a>
-            <a href="#team-messages">Set up notifications</a>
-            <button id="refreshPhoneSetupBtn" type="button">Refresh phone check</button>
-          </div>
-          <p class="report-quality-note">The two confirmations and detected setup state remain only on this company phone. No setup report is emailed.</p>
-        </div>
-      </details>
-
-      <aside class="external-training-card" aria-label="MPI assigned training profile">
-        <div>
-          <h3>Your MPI training plan</h3>
-          <p>Open the courses assigned to you, review due dates, mark completed work in your MPI plan, and see credentials issued through your InterNACHI account. The MPI management view can assign a specific course to an individual inspector and set the completion date.</p>
-          <span class="training-account-note">Use your MPI company Google account. Each inspector sees only their own training profile.</span>
-        </div>
-        <div class="external-training-actions">
-          <a href="https://script.google.com/a/macros/michiganpropertyinspections.com/s/AKfycbyyU-4_BDEcrYPqDasXn3tCFcmuLg97dAm4JCjS3tZSx-I7Tcg8KrFFg8oFzY-FrPqk/exec" target="_blank" rel="noopener">Open my training profile</a>
-          <a href="https://www.nachi.org/my/certification/cpi" target="_blank" rel="noopener">Open InterNACHI account</a>
-        </div>
-      </aside>
 
       <details class="panel onboarding-program" id="onboardingProgram">
         <summary><span><strong>New inspector field pathway</strong><small>Work through 20 MPI milestones in order, save progress on this phone, and submit one review summary to MPI management.</small></span></summary>
@@ -6580,21 +6658,6 @@
           <div class="form-success-box" id="teamQuestionSuccess" hidden><strong>Question submitted.</strong>The field question was delivered to MPI management.</div>
         </form>
       </div>
-      <section class="push-setup-card" aria-labelledby="push-setup-title">
-        <div class="push-setup-topline">
-          <span class="push-setup-badge">MPI true push</span>
-          <span class="push-status" id="pushStatus">Not enabled</span>
-        </div>
-        <h3 id="push-setup-title">MPI app notifications</h3>
-        <p>Receive company reminders on this phone even when MPI Field Tools is closed. Notifications open directly to Team Messages.</p>
-        <button class="push-enable-btn" id="enablePushBtn" type="button">Enable MPI notifications</button>
-        <div class="push-setup-code" id="pushSetupCode" hidden>
-          <span>This phone's setup code</span>
-          <code id="pushTokenValue"></code>
-          <button class="push-copy-btn" id="copyPushTokenBtn" type="button">Copy setup code</button>
-        </div>
-        <p class="push-setup-help" id="pushSetupHelp">On iPhone or iPad, first add MPI Field Tools to the Home Screen, then open it from the MPI icon and tap Enable.</p>
-      </section>
       <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
     </section>
 
@@ -6795,6 +6858,61 @@
       <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
     </section>
 
+    <section class="hub-screen app-screen-view" id="settings" data-app-screen="settings" aria-labelledby="settings-title">
+      <header class="hub-heading">
+        <p class="eyebrow">Company phone</p>
+        <h1 id="settings-title">App settings.</h1>
+        <p>One-time connection and notification controls are kept here so inspectors do not see technical setup during the normal workday.</p>
+      </header>
+      <div class="settings-grid">
+        <section class="panel settings-card">
+          <h2>App status</h2>
+          <p>The current version and offline readiness are checked automatically.</p>
+          <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 100</span></div>
+        </section>
+
+        <details class="panel report-quality-card" id="phoneSetupPanel">
+          <summary>
+            <span><strong>Company phone setup</strong><small>One-time readiness check for the app, offline access, notifications, schedule, and training account.</small></span>
+            <span class="daily-readiness-status" id="phoneSetupStatus">Checking…</span>
+          </summary>
+          <div class="phone-setup-body">
+            <div class="phone-setup-list">
+              <div class="phone-setup-item"><div><strong>MPI app added to the Home Screen</strong><small>Open from the MPI icon for the full app and iPhone notifications.</small></div><span class="phone-setup-detected" id="phoneSetupInstalled">Check needed</span></div>
+              <div class="phone-setup-item"><div><strong>Offline access saved</strong><small>Reconnect once and open the app so the current build can be stored on this phone.</small></div><span class="phone-setup-detected" id="phoneSetupOffline">Check needed</span></div>
+              <div class="phone-setup-item"><div><strong>MPI notifications enabled</strong><small>Company push messages can arrive when the app is closed.</small></div><span class="phone-setup-detected" id="phoneSetupNotifications">Check needed</span></div>
+              <div class="phone-setup-item"><div><strong>Inspector name remembered</strong><small>Open My Day once so MPI forms can use the correct inspector name.</small></div><span class="phone-setup-detected" id="phoneSetupInspector">Check needed</span></div>
+              <label class="phone-setup-item phone-setup-manual"><input id="phoneSetupCalendar" type="checkbox"><span><strong>Today’s jobs verified</strong><small>I opened the schedule with my assigned MPI company account and saw the correct jobs.</small></span></label>
+              <label class="phone-setup-item phone-setup-manual"><input id="phoneSetupTraining" type="checkbox"><span><strong>Training profile verified</strong><small>I opened my MPI training profile and InterNACHI account under my own credentials.</small></span></label>
+            </div>
+            <div class="phone-setup-actions">
+              <a href="#job-companion">Open My Day</a>
+              <a href="#training-center">Open Training</a>
+              <button id="refreshPhoneSetupBtn" type="button">Refresh phone check</button>
+            </div>
+            <p class="report-quality-note">Setup information stays on this company phone and is not part of the inspector’s daily workflow.</p>
+          </div>
+        </details>
+
+        <section class="push-setup-card" aria-labelledby="push-setup-title">
+          <div class="push-setup-topline">
+            <span class="push-setup-badge">MPI notifications</span>
+            <span class="push-status" id="pushStatus">Not enabled</span>
+          </div>
+          <h3 id="push-setup-title">Company notifications</h3>
+          <p>Receive company reminders on this phone even when MPI Field Tools is closed. Notifications open directly to Messages.</p>
+          <button class="push-enable-btn" id="enablePushBtn" type="button">Enable MPI notifications</button>
+          <div class="push-setup-code" id="pushSetupCode" hidden>
+            <span>This phone's setup code</span>
+            <code id="pushTokenValue"></code>
+            <button class="push-copy-btn" id="copyPushTokenBtn" type="button">Copy setup code</button>
+          </div>
+          <p class="push-setup-help" id="pushSetupHelp">On iPhone or iPad, first add MPI Field Tools to the Home Screen, then open it from the MPI icon and tap Enable.</p>
+        </section>
+      </div>
+    </section>
+
     <section class="coverage app-screen-view" data-app-screen="age-finder" aria-labelledby="coverage-title">
       <div class="section-heading">
         <h2 id="coverage-title">Built for the common field formats</h2>
@@ -6852,6 +6970,13 @@
     </footer>
   </main>
 
+  <nav class="app-bottom-nav" id="appBottomNav" aria-label="Main app navigation">
+    <a href="#home" data-bottom-screen="home">Home</a>
+    <a href="#job-companion" data-bottom-screen="job-companion">My Day</a>
+    <a href="#field-tools" data-bottom-screen="field-tools">Tools</a>
+    <a href="#training-center" data-bottom-screen="training-center">Training</a>
+  </nav>
+
   <div class="toast" id="toast" role="status">Copied</div>
   <aside class="app-update-notice" id="appUpdateNotice" role="status" aria-live="polite" hidden>
     <div><strong>A newer MPI Field Tools update is ready.</strong><span id="appUpdateMessage">Reload when you have finished any unsent form.</span></div>
@@ -6871,7 +6996,9 @@
 
       const APP_SCREEN_TITLES = {
         "home": "MPI Field Tools",
-        "job-companion": "Today’s Workflow",
+        "job-companion": "My Day",
+        "field-tools": "Field Tools",
+        "contact-mpi": "Contact MPI",
         "age-finder": "Equipment Age Finder",
         "damage-report": "Damaged Item Notice",
         "equipment-record": "Equipment Photo Record",
@@ -6880,11 +7007,30 @@
         "training-center": "Training Center",
         "team-messages": "Team Messages",
         "safety-notice": "Safety & Near-Miss Notice",
-        "requests-feedback": "Requests & Feedback"
+        "requests-feedback": "Requests & Feedback",
+        "settings": "Settings"
       };
       const screenViews = Array.from(document.querySelectorAll("[data-app-screen]"));
       const screenNav = document.getElementById("screenNav");
       const screenTitle = document.getElementById("screenTitle");
+      const screenBack = document.getElementById("screenBack");
+      const activeJobContext = document.getElementById("activeJobContext");
+      const activeJobContextProperty = document.getElementById("activeJobContextProperty");
+      const activeJobContextInspector = document.getElementById("activeJobContextInspector");
+      const bottomNavLinks = [...document.querySelectorAll("[data-bottom-screen]")];
+      const toolScreens = new Set(["field-tools", "age-finder", "damage-report", "equipment-record", "tool-guides", "sop-guide"]);
+      const contactScreens = new Set(["contact-mpi", "team-messages", "safety-notice", "requests-feedback"]);
+
+      function updateJobContextBanner(activeScreen, job) {
+        if (job === undefined) {
+          try { job = loadActiveJob(); } catch (_) { job = null; }
+        }
+        const shouldShow = Boolean(job?.property) && !["home", "job-companion", "settings"].includes(activeScreen);
+        activeJobContext.hidden = !shouldShow;
+        if (!shouldShow) return;
+        activeJobContextProperty.textContent = job.property;
+        activeJobContextInspector.textContent = `${job.inspector || "Assigned inspector"} · Details are filled into this tool automatically.`;
+      }
 
       function renderAppScreen() {
         const rawRequestedScreen = window.location.hash.slice(1);
@@ -6896,6 +7042,30 @@
         for (const view of screenViews) view.hidden = view.dataset.appScreen !== activeScreen;
         screenNav.hidden = activeScreen === "home";
         screenTitle.textContent = APP_SCREEN_TITLES[activeScreen];
+        screenBack.href = toolScreens.has(activeScreen) && activeScreen !== "field-tools"
+          ? "#field-tools"
+          : contactScreens.has(activeScreen) && activeScreen !== "contact-mpi"
+            ? "#contact-mpi"
+            : "#home";
+        screenBack.setAttribute("aria-label",
+          toolScreens.has(activeScreen) && activeScreen !== "field-tools"
+            ? "Back to Field Tools"
+            : contactScreens.has(activeScreen) && activeScreen !== "contact-mpi"
+              ? "Back to Contact MPI"
+              : "Back to Home"
+        );
+        const activeBottom = activeScreen === "job-companion"
+          ? "job-companion"
+          : toolScreens.has(activeScreen)
+            ? "field-tools"
+            : activeScreen === "training-center"
+              ? "training-center"
+              : "home";
+        bottomNavLinks.forEach(link => {
+          if (link.dataset.bottomScreen === activeBottom) link.setAttribute("aria-current", "page");
+          else link.removeAttribute("aria-current");
+        });
+        updateJobContextBanner(activeScreen);
         document.body.classList.toggle("app-tool-open", activeScreen !== "home");
         document.title = activeScreen === "home"
           ? "MPI Field Tools"
@@ -7795,6 +7965,7 @@
       const sopResults = document.getElementById("sopResults");
       const sopDetail = document.getElementById("sopDetail");
       const offlineStatus = document.getElementById("offlineStatus");
+      const settingsOfflineStatus = document.getElementById("settingsOfflineStatus");
       const toast = document.getElementById("toast");
       const appBuildNumber = document.getElementById("appBuildNumber");
       const checkForUpdatesBtn = document.getElementById("checkForUpdatesBtn");
@@ -7817,6 +7988,12 @@
       const CALENDAR_AUTHORIZED_KEY = "mpiCalendarAuthorizedV1";
       const CALENDAR_ID_KEY = "mpiScheduleCalendarIdV1";
       const CALENDAR_NAME_KEY = "mpiScheduleCalendarNameV1";
+
+      function mirrorOfflineStatus() {
+        if (settingsOfflineStatus) settingsOfflineStatus.textContent = offlineStatus.textContent;
+      }
+      mirrorOfflineStatus();
+      new MutationObserver(mirrorOfflineStatus).observe(offlineStatus, { childList: true, characterData: true, subtree: true });
       const CALENDAR_CACHE_KEY = "mpiTodayJobsCacheV1";
       const WELL_YIELD_STORAGE_KEY = "mpiWellYieldRecordV1";
       const WELL_YIELD_TIMER_KEY = "mpiWellYieldTimerV1";
@@ -14101,14 +14278,27 @@
       }
 
       function syncActiveJobToForms(job, force = false) {
-        if (!job) return;
-        const inspectorInputs = [damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, onboardingInspector, messageAckInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector];
+        const inspectorInputs = [damageInspector, equipmentInspector, toolCheckInspector, toolCommissionInspector, onboardingInspector, trainingShareInspector, messageAckInspector, teamQuestionInspector, safetyNoticeInspector, requestInspector];
         const propertyInputs = [damageProperty, equipmentProperty, toolCheckProperty, teamQuestionProperty, safetyNoticeProperty];
         inspectorInputs.forEach(input => {
-          if (input && (force || !input.value)) input.value = job.inspector;
+          if (!input) return;
+          const wasAutoFilled = input.classList.contains("is-auto-filled");
+          if (job?.inspector && (force || !input.value || input.readOnly)) input.value = job.inspector;
+          else if (!job?.inspector && wasAutoFilled) input.value = loadRememberedInspector();
+          input.readOnly = Boolean(job?.inspector);
+          input.classList.toggle("is-auto-filled", Boolean(job?.inspector));
+          if (job?.inspector) input.title = "Filled from the current inspection";
+          else input.removeAttribute("title");
         });
         propertyInputs.forEach(input => {
-          if (input && (force || !input.value)) input.value = job.property;
+          if (!input) return;
+          const wasAutoFilled = input.classList.contains("is-auto-filled");
+          if (job?.property && (force || !input.value || input.readOnly)) input.value = job.property;
+          else if (!job?.property && wasAutoFilled) input.value = "";
+          input.readOnly = Boolean(job?.property);
+          input.classList.toggle("is-auto-filled", Boolean(job?.property));
+          if (job?.property) input.title = "Filled from the current inspection";
+          else input.removeAttribute("title");
         });
       }
 
@@ -14207,6 +14397,8 @@
           renderJobServices(null);
           renderRoomCoverage(null);
           renderFieldReadings(null);
+          syncActiveJobToForms(null);
+          updateJobContextBanner(window.location.hash.slice(1) || "job-companion", null);
           return;
         }
         activeJobInspector.value = job.inspector;
@@ -14224,13 +14416,22 @@
         const completedSteps = new Set(job.steps || []).size;
         homeActiveJob.hidden = false;
         homeActiveJobProperty.textContent = job.property;
-        homeActiveJobProgress.textContent = `${completedSteps} of ${jobSteps.length} job stages`;
         homeActiveJobMap.href = `https://maps.apple.com/?q=${encodeURIComponent(job.property)}`;
         updateJobProgress(job);
+        const workflowStatusLabel = {
+          scheduled: "Scheduled",
+          "on-my-way": "On my way",
+          arrived: "Arrived",
+          "in-progress": "Inspection in progress",
+          "job-complete": "Ready for tool confirmation",
+          completed: "Complete"
+        }[job.workflowStatus] || `${completedSteps} of ${jobSteps.length} job stages`;
+        homeActiveJobProgress.textContent = workflowStatusLabel;
         renderJobServices(job);
         renderRoomCoverage(job);
         renderFieldReadings(job);
         syncActiveJobToForms(job);
+        updateJobContextBanner(window.location.hash.slice(1) || "job-companion", job);
       }
 
       function saveActiveJob(event) {
@@ -15262,9 +15463,9 @@
 
       function getHomeSearchEntries() {
         const screens = [
-          { title: "Today’s Workflow", detail: "Morning Ready, today’s jobs, client contact, inspection timing, and equipment accountability", route: "#job-companion", aliases: "calendar job companion property closeout current inspection address route navigation maps" },
+          { title: "My Day", detail: "Morning Ready, today’s jobs, client contact, inspection timing, and equipment accountability", route: "#job-companion", aliases: "calendar job companion property closeout current inspection address route navigation maps today workflow" },
           { title: "Equipment Age Finder", detail: "HVAC, furnace, boiler, and water-heater serial numbers", route: "#age-finder", aliases: "serial date manufacturer manufacture age trane ducane" },
-          { title: "Damaged Item Notice", detail: "Property damage, photographs, action, and people informed", route: "#damage-report", aliases: "broken damage incident attic hatch" },
+          { title: "Damaged Item Notice", detail: "Inspection-related property or equipment damage, photographs, action, and people informed", route: "#damage-report", aliases: "broken damage incident attic hatch disturbed property protection" },
           { title: "Equipment Photo Record", detail: "Thermostat and furnace Before/After documentation", route: "#equipment-record", aliases: "before after restored cover photo" },
           { title: "Company Tool Guides", detail: "Operating, safety, care, and readiness instructions", route: "#tool-guides", aliases: "manual equipment purchased tool how to use" },
           { title: "Field Procedures", detail: "Short step-by-step prompts from the MPI handbook", route: "#sop-guide", aliases: "sop procedure test steps well septic water hvac" },

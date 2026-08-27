@@ -20,6 +20,31 @@
 
 ## Change log
 
+### Build 62 — Four-hub navigation and zero-repeat field context (App Build 100)
+
+Status: published August 26, 2026.
+
+#### Changes
+
+1. Replaced the crowded home screen with four clear choices: My Day, Field Tools, Training, and Contact MPI.
+2. Added persistent Home, My Day, Tools, and Training navigation sized for one-handed phone use.
+3. Added Field Tools and Contact MPI hub screens so related functions are grouped without exposing the full app on every page.
+4. Added a current-inspection context banner outside My Day and automatically filled and locked the inspector and property fields on applicable forms.
+5. Clarified that Damaged Item Notice is for inspection-related property or equipment damage, not inspection defects; defects and report evidence remain in Spectora.
+6. Removed the planned comment builder from the home screen and kept legacy report-tracking and owner-log interfaces unavailable to inspectors.
+7. Moved phone setup, offline status, and push-notification controls to a separate Settings screen.
+8. Embedded the signed-in inspector’s assigned training and due dates directly in Training Center, with full-profile and InterNACHI links retained as fallbacks.
+9. Condensed completed jobs in Today’s Jobs while retaining the prominent next-job card.
+10. Preserved the Build 99 timestamp workflow, departure alerts, well-test timer, client contact, one-action job closeout, and end-of-day equipment check.
+
+#### Validation
+
+- Verified JavaScript parsing, screen routing, bottom-navigation state, active-job form autofill, mobile layout, assigned-training embed, and offline cache version before publication.
+
+#### Rollback
+
+- Restore App Build 99 to return to the previous all-tools home screen.
+
 ### Build 61 — Timed field workflow and departure alerts (App Build 99)
 
 Status: published August 26, 2026.
