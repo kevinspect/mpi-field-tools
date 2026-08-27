@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="101">
+  <meta name="app-build" content="103">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4390,7 +4390,7 @@
       .workflow-schedule-tools { align-items: flex-start; flex-direction: column; }
     }
 
-    /* Build 101: simple four-hub field navigation */
+    /* Build 103: simple four-hub field navigation */
     body { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
     .topbar-actions .offline-badge { display: none; }
     .app-home { min-height: calc(100dvh - 132px); }
@@ -4764,6 +4764,17 @@
           </div>
           <button class="workflow-button" id="workflowDayCompleteBtn" type="button" disabled>SIGN OFF FOR DAY</button>
           <p class="workflow-integration-note" id="workflowDayCompleteStatus">Confirm every listed item to sign off.</p>
+          <form id="workflowDailySummaryForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" hidden aria-hidden="true">
+            <input type="hidden" name="_subject" id="workflowDailySummarySubject" value="MPI Daily Inspector Log">
+            <input type="hidden" name="_captcha" value="false">
+            <input type="hidden" name="_template" value="table">
+            <input type="hidden" name="Inspector" id="workflowDailySummaryInspector">
+            <input type="hidden" name="Inspector ID" id="workflowDailySummaryInspectorId">
+            <input type="hidden" name="Date" id="workflowDailySummaryDate">
+            <input type="hidden" name="Signed off at" id="workflowDailySummarySignedOffAt">
+            <input type="hidden" name="Equipment confirmed" id="workflowDailySummaryEquipment">
+            <textarea name="Daily activity summary" id="workflowDailySummaryBody"></textarea>
+          </form>
         </section>
       </div>
 
@@ -6869,7 +6880,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 101</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 103</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7654,6 +7665,14 @@
       const workflowEndOfDayChecks = [...document.querySelectorAll("[data-workflow-eod-equipment]")];
       const workflowDayCompleteBtn = document.getElementById("workflowDayCompleteBtn");
       const workflowDayCompleteStatus = document.getElementById("workflowDayCompleteStatus");
+      const workflowDailySummaryForm = document.getElementById("workflowDailySummaryForm");
+      const workflowDailySummarySubject = document.getElementById("workflowDailySummarySubject");
+      const workflowDailySummaryInspector = document.getElementById("workflowDailySummaryInspector");
+      const workflowDailySummaryInspectorId = document.getElementById("workflowDailySummaryInspectorId");
+      const workflowDailySummaryDate = document.getElementById("workflowDailySummaryDate");
+      const workflowDailySummarySignedOffAt = document.getElementById("workflowDailySummarySignedOffAt");
+      const workflowDailySummaryEquipment = document.getElementById("workflowDailySummaryEquipment");
+      const workflowDailySummaryBody = document.getElementById("workflowDailySummaryBody");
       const workflowAdminPanel = document.getElementById("workflowAdminPanel");
       const workflowAdminFilters = document.getElementById("workflowAdminFilters");
       const workflowAdminInspectorFilter = document.getElementById("workflowAdminInspectorFilter");
@@ -12865,6 +12884,7 @@
       let workflowMessageTemplate = "";
       let workflowMessageEta = "";
       let workflowAdminFilter = "today";
+      let workflowDailySummaryInFlight = false;
       const FORM_DRAFT_CONFIG = [
         { form: damageForm, key: "mpiDraftDamageV1", status: damageSubmitStatus, photoReminder: true },
         { form: toolCheckForm, key: "mpiDraftToolCheckV1", status: toolCheckSubmitStatus },
@@ -13029,10 +13049,12 @@
       }
 
       function workflowCompletedEventIds() {
-        return new Set(loadWorkflowHistory()
+        const historyIds = loadWorkflowHistory()
           .filter(item => item.date === localDateKey())
           .map(item => item.job?.calendarEventId)
-          .filter(Boolean));
+          .filter(Boolean);
+        const receiptIds = workflowDayCompleteRecord()?.completedJobIds || [];
+        return new Set([...historyIds, ...receiptIds].filter(Boolean));
       }
 
       function workflowDayCompleteRecord() {
@@ -13527,8 +13549,21 @@
         const checked = workflowEndOfDayChecks.filter(check => check.checked).length;
         const allConfirmed = workflowEndOfDayChecks.length > 0 && checked === workflowEndOfDayChecks.length;
         workflowEndOfDayChecks.forEach(check => { check.disabled = Boolean(record); });
-        workflowDayCompleteBtn.disabled = Boolean(record) || !allConfirmed;
-        workflowDayCompleteBtn.textContent = record ? "SIGNED OFF FOR DAY" : allConfirmed ? "SIGN OFF FOR DAY" : `CONFIRM EQUIPMENT · ${checked}/${workflowEndOfDayChecks.length}`;
+        if (record) {
+          const delivered = record.emailStatus === "sent";
+          const waitingForInternet = !navigator.onLine;
+          workflowDayCompleteBtn.disabled = delivered || waitingForInternet || workflowDailySummaryInFlight;
+          workflowDayCompleteBtn.textContent = delivered
+            ? "SIGNED OFF & LOG SENT"
+            : workflowDailySummaryInFlight
+              ? "SENDING DAILY SUMMARY…"
+              : waitingForInternet
+                ? "SUMMARY WAITING FOR INTERNET"
+                : "SEND DAILY SUMMARY";
+          return;
+        }
+        workflowDayCompleteBtn.disabled = !allConfirmed;
+        workflowDayCompleteBtn.textContent = allConfirmed ? "SIGN OFF FOR DAY" : `CONFIRM EQUIPMENT · ${checked}/${workflowEndOfDayChecks.length}`;
       }
 
       function renderWorkflowDayComplete() {
@@ -13540,24 +13575,126 @@
         workflowDayCompleteCard.hidden = !ready;
         if (record?.equipment?.length) {
           workflowEndOfDayChecks.forEach(check => { check.checked = record.equipment.includes(check.dataset.workflowEodEquipment); });
+        } else if (record?.equipmentConfirmed) {
+          workflowEndOfDayChecks.forEach(check => { check.checked = true; });
         }
         updateWorkflowDayCompleteButton();
-        workflowDayCompleteStatus.textContent = record?.completedAt
-          ? `Signed off at ${new Date(record.completedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}.`
-          : "Confirm every listed item to sign off.";
+        if (!record?.completedAt) {
+          workflowDayCompleteStatus.textContent = "Confirm every listed item to sign off.";
+        } else {
+          const signedOff = new Date(record.completedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+          if (record.emailStatus === "sent") {
+            workflowDayCompleteStatus.textContent = `Signed off at ${signedOff}. The summary was sent to MPI management and the phone log was cleared.`;
+          } else if (workflowDailySummaryInFlight) {
+            workflowDayCompleteStatus.textContent = `Signed off at ${signedOff}. Sending the daily summary to MPI management…`;
+          } else if (!navigator.onLine) {
+            workflowDayCompleteStatus.textContent = `Signed off at ${signedOff}. The summary is saved on this phone and will be ready to send after reconnecting.`;
+          } else {
+            workflowDayCompleteStatus.textContent = `Signed off at ${signedOff}. Tap Send Daily Summary to retry delivery.`;
+          }
+        }
+      }
+
+      function saveWorkflowDayCompleteRecord(record) {
+        try { localStorage.setItem(WORKFLOW_DAY_COMPLETE_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
+      }
+
+      function clearDeliveredWorkflowLogs(record) {
+        const completedJobIds = [...workflowCompletedEventIds()];
+        const receipt = {
+          date: record.date,
+          completedAt: record.completedAt,
+          emailStatus: "sent",
+          emailedAt: record.emailedAt,
+          equipmentConfirmed: true,
+          completedJobIds
+        };
+        try {
+          localStorage.removeItem(WORKFLOW_ACTIVITY_STORAGE_KEY);
+          localStorage.removeItem(WORKFLOW_HISTORY_STORAGE_KEY);
+          localStorage.removeItem(LAST_CLEARED_JOB_STORAGE_KEY);
+          localStorage.removeItem(SHIFT_RESET_STORAGE_KEY);
+          localStorage.setItem(DAILY_READINESS_STORAGE_KEY, JSON.stringify({ date: record.date, completed: true }));
+          localStorage.setItem(WORKFLOW_DAY_COMPLETE_STORAGE_KEY, JSON.stringify(receipt));
+        } catch (_) {}
+        return receipt;
+      }
+
+      async function submitWorkflowDailySummary(record = workflowDayCompleteRecord()) {
+        if (!record || workflowDailySummaryInFlight || record.emailStatus === "sent") return;
+        if (!navigator.onLine) {
+          record.emailStatus = "pending";
+          saveWorkflowDayCompleteRecord(record);
+          renderWorkflowDayComplete();
+          showToast("Sign-off saved — reconnect to send the daily summary");
+          return;
+        }
+        const profile = loadWorkflowProfile();
+        const displayDate = new Date(`${record.date}T12:00:00`).toLocaleDateString("en-US", { dateStyle: "long" });
+        workflowDailySummarySubject.value = `MPI Daily Inspector Log — ${record.inspector} — ${displayDate}`.slice(0, 180);
+        workflowDailySummaryInspector.value = record.inspector;
+        workflowDailySummaryInspectorId.value = record.inspectorId || profile?.id || "Not listed";
+        workflowDailySummaryDate.value = displayDate;
+        workflowDailySummarySignedOffAt.value = new Date(record.completedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+        workflowDailySummaryEquipment.value = record.equipment.join(", ");
+        workflowDailySummaryBody.value = workflowSummaryText(false);
+        record.emailStatus = "sending";
+        record.lastEmailAttemptAt = new Date().toISOString();
+        saveWorkflowDayCompleteRecord(record);
+        workflowDailySummaryInFlight = true;
+        updateWorkflowDayCompleteButton();
+        renderWorkflowDayComplete();
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 20000);
+        try {
+          const endpoint = workflowDailySummaryForm.action.replace("https://formsubmit.co/", "https://formsubmit.co/ajax/");
+          const response = await fetch(endpoint, {
+            method: "POST",
+            body: new FormData(workflowDailySummaryForm),
+            headers: { Accept: "application/json" },
+            signal: controller.signal
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || String(result.success).toLowerCase() !== "true") throw new Error(result.message || "Delivery was not confirmed");
+          const delivered = workflowDayCompleteRecord();
+          if (!delivered) return;
+          delivered.emailStatus = "sent";
+          delivered.emailedAt = new Date().toISOString();
+          saveWorkflowDayCompleteRecord(delivered);
+          appendWorkflowEvent("Daily summary submitted to management", { submittedAt: delivered.emailedAt });
+          clearDeliveredWorkflowLogs(delivered);
+          renderWorkflowAdmin();
+          showToast("Summary sent — phone log cleared");
+        } catch (_) {
+          const pending = workflowDayCompleteRecord();
+          if (pending && pending.emailStatus !== "sent") {
+            pending.emailStatus = "pending";
+            saveWorkflowDayCompleteRecord(pending);
+          }
+          showToast("Sign-off saved — tap Send Daily Summary to retry");
+        } finally {
+          window.clearTimeout(timeout);
+          workflowDailySummaryInFlight = false;
+          renderWorkflowDayComplete();
+        }
       }
 
       function completeWorkflowDay() {
+        const existing = workflowDayCompleteRecord();
+        if (existing) {
+          submitWorkflowDailySummary(existing);
+          return;
+        }
         if (!workflowEndOfDayChecks.length || !workflowEndOfDayChecks.every(check => check.checked)) return;
         const profile = loadWorkflowProfile();
         const completedAt = new Date().toISOString();
         const equipment = workflowEndOfDayChecks.map(check => check.dataset.workflowEodEquipment);
-        const record = { date: localDateKey(), inspector: profile?.name || "Unknown inspector", inspectorId: profile?.id || "", completedAt, equipment };
-        try { localStorage.setItem(WORKFLOW_DAY_COMPLETE_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
+        const record = { date: localDateKey(), inspector: profile?.name || "Unknown inspector", inspectorId: profile?.id || "", completedAt, equipment, emailStatus: "pending" };
+        saveWorkflowDayCompleteRecord(record);
         appendWorkflowEvent("End-of-day equipment check completed", { equipment, completedAt });
         appendWorkflowEvent("Signed off for day", { completedAt });
         renderWorkflowDayComplete();
-        showToast("End-of-day sign-off recorded");
+        submitWorkflowDailySummary(record);
       }
 
       function openWorkflowMessageDialog(template = "") {
@@ -13842,6 +13979,14 @@
         workflowEquipmentCompleteBtn.addEventListener("click", completeWorkflowEquipment);
         workflowEndOfDayChecklist.addEventListener("change", updateWorkflowDayCompleteButton);
         workflowDayCompleteBtn.addEventListener("click", completeWorkflowDay);
+        window.addEventListener("online", () => {
+          updateWorkflowDayCompleteButton();
+          renderWorkflowDayComplete();
+        });
+        window.addEventListener("offline", () => {
+          updateWorkflowDayCompleteButton();
+          renderWorkflowDayComplete();
+        });
         workflowMessageTemplates.addEventListener("click", selectWorkflowMessageTemplate);
         workflowEtaTime.addEventListener("input", selectWorkflowEta);
         workflowCancelMessage.addEventListener("click", cancelWorkflowMessage);

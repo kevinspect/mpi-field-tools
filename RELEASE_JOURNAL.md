@@ -20,6 +20,37 @@
 
 ## Change log
 
+### Build 65 — Remove delivered logs from company phones (App Build 103)
+
+Status: published August 27, 2026.
+
+#### Changes
+
+1. Kept the daily workflow log only temporarily while the inspector works and while an unsent summary is waiting for delivery.
+2. Automatically removed the activity log, detailed job history, and prior cleared-job record from the phone after the end-of-day email service confirms delivery.
+3. Retained only a minimal same-day delivery receipt and completed-job identifiers so the app does not repeat completed jobs or request a second sign-off.
+4. Updated the sign-off confirmation to tell the inspector that the management summary was sent and the phone log was cleared.
+
+#### Validation
+
+- Verified JavaScript parsing, completed-job preservation, phone-log purge targets, minimal delivery-receipt fields, and the Build 103 offline cache without sending a test email.
+
+### Build 64 — End-of-day owner email delivery (App Build 102)
+
+Status: incorporated into App Build 103 before separate publication.
+
+#### Changes
+
+1. Connected `SIGN OFF FOR DAY` to the existing MPI management email service.
+2. Added a concise daily log containing the inspector, sign-off time, equipment confirmation, job workflow events, client-contact actions, timed alerts, and meaningful exception flags.
+3. Kept the inspector inside MPI Field Tools while the summary is submitted.
+4. Added an offline-safe pending state and a visible retry button so the phone does not silently lose an end-of-day summary.
+5. Kept the full activity history on the company phone and sent the summary only to `kev@michiganpropertyinspections.com`.
+
+#### Validation
+
+- Verified JavaScript parsing, unique element IDs, email-field population, offline retry state, successful-return handling, and the Build 102 offline cache without sending a test email.
+
 ### Build 63 — Saved-job inspector identity fallback (App Build 101)
 
 Status: published August 26, 2026.
