@@ -1,5 +1,5 @@
-const CACHE_NAME = "mpi-field-tools-shell-v110";
-const APP_SHELL = ["./", "./index.html", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./mpi-logo.png", "./tool-thumbnails.png", "./mpi-email-template.html"];
+const CACHE_NAME = "mpi-field-tools-shell-v111";
+const APP_SHELL = ["./", "./index.html", "./admin.html", "./mpi-shared.js", "./mpi-field-sync.js", "./admin.js", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./mpi-logo.png", "./tool-thumbnails.png", "./mpi-email-template.html"];
 
 async function fetchFresh(resource) {
   return fetch(resource, { cache: "no-store" });
@@ -26,20 +26,31 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
-  if (event.request.method !== "GET" || event.request.mode !== "navigate") return;
-
+  if (event.request.method !== "GET") return;
+  const requestUrl = new URL(event.request.url);
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetchFresh(event.request)
+        .then(response => {
+          if (response.ok && requestUrl.origin === self.location.origin) {
+            const fallback = requestUrl.pathname.endsWith("/admin.html") ? "./admin.html" : "./index.html";
+            caches.open(CACHE_NAME).then(cache => cache.put(fallback, response.clone()));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const fallback = requestUrl.pathname.endsWith("/admin.html") ? "./admin.html" : "./index.html";
+          return (await caches.match(fallback)) || (await caches.match("./"));
+        })
+    );
+    return;
+  }
+  if (requestUrl.origin !== self.location.origin) return;
   event.respondWith(
-    fetchFresh(event.request)
-      .then(response => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put("./index.html", copy));
-        }
-        return response;
-      })
-      .catch(async () => {
-        return (await caches.match("./index.html")) || (await caches.match("./"));
-      })
+    caches.match(event.request).then(cached => cached || fetchFresh(event.request).then(response => {
+      if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
+      return response;
+    }))
   );
 });
 
