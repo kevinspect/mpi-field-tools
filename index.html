@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="105">
+  <meta name="app-build" content="106">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4275,6 +4275,37 @@
     .workflow-job-detail { display: grid; gap: 6px; margin-bottom: 18px; padding: 15px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); border-radius: 13px; }
     .workflow-job-detail span { color: rgba(255,255,255,.65); font-size: 10px; font-weight: 850; letter-spacing: .05em; text-transform: uppercase; }
     .workflow-job-detail strong { color: #fff; font-size: 14px; line-height: 1.4; }
+    .workflow-job-notes {
+      margin: 0 0 18px;
+      overflow: hidden;
+      color: #fff;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 13px;
+    }
+    .workflow-job-notes summary {
+      display: flex;
+      min-height: 58px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 15px;
+      cursor: pointer;
+      list-style: none;
+    }
+    .workflow-job-notes summary::-webkit-details-marker { display: none; }
+    .workflow-job-notes summary strong,
+    .workflow-job-notes summary small { display: block; }
+    .workflow-job-notes summary strong { color: #fff; font-size: 13px; }
+    .workflow-job-notes summary small { margin-top: 3px; color: rgba(255,255,255,.65); font-size: 10px; line-height: 1.4; }
+    .workflow-job-notes summary > b { color: var(--orange); font-size: 17px; transition: transform .18s ease; }
+    .workflow-job-notes[open] summary > b { transform: rotate(180deg); }
+    .workflow-job-notes-body { padding: 4px 15px 13px; border-top: 1px solid rgba(255,255,255,.13); }
+    .workflow-job-note-line { display: grid; grid-template-columns: minmax(82px, 108px) minmax(0, 1fr); gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .workflow-job-note-line:last-child { border-bottom: 0; }
+    .workflow-job-note-label { color: #e4c569; font-size: 10px; font-weight: 900; line-height: 1.45; text-transform: uppercase; }
+    .workflow-job-note-value { min-width: 0; color: #fff; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+    .workflow-job-note-value.is-full { grid-column: 1 / -1; }
     .workflow-departure-panel {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4363,6 +4394,8 @@
       .workflow-button { min-height: 58px; font-size: 13px; }
       .workflow-job-row { grid-template-columns: 57px minmax(0, 1fr); }
       .workflow-job-row button { grid-column: 1 / -1; width: 100%; }
+      .workflow-job-note-line { grid-template-columns: 1fr; gap: 3px; }
+      .workflow-job-note-value.is-full { grid-column: auto; }
       .workflow-template-options,
       .workflow-eta-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .workflow-dialog-actions,
@@ -4371,7 +4404,7 @@
       .workflow-schedule-tools { align-items: flex-start; flex-direction: column; }
     }
 
-    /* Build 105: simple four-hub field navigation */
+    /* Build 106: simple four-hub field navigation and price-free calendar job notes */
     body { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
     .topbar-actions .offline-badge { display: none; }
     .app-home { min-height: calc(100dvh - 132px); }
@@ -4558,7 +4591,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">105</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">106</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -4691,6 +4724,13 @@
           <div class="workflow-job-detail"><span>Property</span><strong id="workflowJobAddress"></strong></div>
           <div class="workflow-job-detail" id="workflowJobClientBlock"><span>Client</span><strong id="workflowJobClient">Not listed</strong></div>
           <div class="workflow-job-detail"><span>Inspection services</span><strong id="workflowJobServices">Inspection</strong></div>
+          <details class="workflow-job-notes" id="workflowJobNotesPanel" hidden>
+            <summary>
+              <span><strong>Job notes</strong><small>Information pulled from this scheduled job</small></span>
+              <b aria-hidden="true">⌄</b>
+            </summary>
+            <div class="workflow-job-notes-body" id="workflowJobNotes"></div>
+          </details>
           <div class="workflow-departure-panel" id="workflowDeparturePanel" hidden>
             <div class="workflow-departure-item"><span>Started</span><strong id="workflowInspectionStarted">—</strong></div>
             <div class="workflow-departure-item"><span>Next appointment</span><strong id="workflowNextAppointment">—</strong></div>
@@ -6831,7 +6871,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 105</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 106</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7587,6 +7627,8 @@
       const workflowJobClient = document.getElementById("workflowJobClient");
       const workflowJobClientBlock = document.getElementById("workflowJobClientBlock");
       const workflowJobServices = document.getElementById("workflowJobServices");
+      const workflowJobNotesPanel = document.getElementById("workflowJobNotesPanel");
+      const workflowJobNotes = document.getElementById("workflowJobNotes");
       const workflowDeparturePanel = document.getElementById("workflowDeparturePanel");
       const workflowInspectionStarted = document.getElementById("workflowInspectionStarted");
       const workflowNextAppointment = document.getElementById("workflowNextAppointment");
@@ -12425,6 +12467,8 @@
           || existing.property.toLowerCase() === job.location.toLowerCase()
         );
         if (sameJob) {
+          existing.jobNotes = workflowJobNotesFor(job);
+          storeActiveJob(existing);
           renderActiveJob(existing);
           return true;
         }
@@ -12452,6 +12496,7 @@
           agentName: String(job.agentName || ""),
           agentPhone: String(job.agentPhone || ""),
           serviceNames: Array.isArray(job.serviceNames) ? job.serviceNames.map(String) : [],
+          jobNotes: workflowJobNotesFor(job),
           spectoraJobId: String(job.spectoraJobId || ""),
           spectoraLink: String(job.spectoraLink || ""),
           estimatedDriveMinutes: Number(job.estimatedDriveMinutes) || 0,
@@ -12567,6 +12612,40 @@
         return match ? match[1].trim() : "";
       }
 
+      function calendarJobNoteLines(value) {
+        if (Array.isArray(value)) {
+          value = value.map(item => String(item || "")).join("\n");
+        }
+        const prepared = String(value || "")
+          .replace(/<br\s*\/?>/gi, "\n")
+          .replace(/<\/(?:p|div|li|tr)>/gi, "\n");
+        let plain = prepared;
+        try {
+          const documentCopy = new DOMParser().parseFromString(prepared, "text/html");
+          plain = documentCopy.body.textContent || prepared;
+        } catch (_) {
+          plain = prepared.replace(/<[^>]+>/g, " ");
+        }
+        return plain
+          .replace(/\u00a0/g, " ")
+          .split(/\r?\n+/)
+          .map(line => line
+            .replace(/\(\s*\$\s*[\d,]+(?:\.\d{2})?\s*\)/g, "")
+            .replace(/\$\s*[\d,]+(?:\.\d{2})?/g, "")
+            .replace(/\bUSD\s*[\d,]+(?:\.\d{2})?/gi, "")
+            .replace(/\(\s*\)/g, "")
+            .replace(/[ \t]+/g, " ")
+            .replace(/\s+,/g, ",")
+            .replace(/\s+([.;])/g, "$1")
+            .trim())
+          .filter(line => line && !/^(?:price|cost|total)\s*:?$/i.test(line))
+          .slice(0, 40);
+      }
+
+      function workflowJobNotesFor(job) {
+        return calendarJobNoteLines(Array.isArray(job?.jobNotes) && job.jobNotes.length ? job.jobNotes : job?.description);
+      }
+
       function normalizePhone(value) {
         const trimmed = String(value || "").trim();
         if (!trimmed) return "";
@@ -12616,7 +12695,7 @@
         const estimatedDriveMinutes = Number.parseInt(String(driveField || "").match(/\d{1,3}/)?.[0] || "", 10);
         const serviceDetails = inferServiceDetails(`${summary} ${servicesField}`, description);
         return {
-          description,
+          jobNotes: calendarJobNoteLines(description),
           clientName,
           clientPhone: normalizePhone(clientPhoneRaw || phoneFallback),
           agentName,
@@ -13149,7 +13228,8 @@
           const nextCard = document.createElement("article");
           nextCard.className = "workflow-next-job";
           const time = eventTimeLabel(next).time;
-          nextCard.innerHTML = `<span>Next job</span><h4>${escapeHtml(next.location || next.summary || "Inspection appointment")}</h4><p>${escapeHtml(time)} · ${escapeHtml(workflowServiceLabel(next))}</p><div class="workflow-job-meta">${next.clientName ? `<span>${escapeHtml(next.clientName)}</span>` : ""}${next.spectoraJobId ? `<span>Job ${escapeHtml(next.spectoraJobId)}</span>` : ""}</div><button class="workflow-button" type="button" data-workflow-open-job="${escapeHtml(next.id || "")}">OPEN NEXT JOB</button>`;
+          const hasNotes = workflowJobNotesFor(next).length > 0;
+          nextCard.innerHTML = `<span>Next job</span><h4>${escapeHtml(next.location || next.summary || "Inspection appointment")}</h4><p>${escapeHtml(time)} · ${escapeHtml(workflowServiceLabel(next))}</p><div class="workflow-job-meta">${next.clientName ? `<span>${escapeHtml(next.clientName)}</span>` : ""}${next.spectoraJobId ? `<span>Job ${escapeHtml(next.spectoraJobId)}</span>` : ""}${hasNotes ? "<span>Job notes</span>" : ""}</div><button class="workflow-button" type="button" data-workflow-open-job="${escapeHtml(next.id || "")}">OPEN NEXT JOB</button>`;
           workflowNextJob.appendChild(nextCard);
         } else if (workflowCurrentJobs.length) {
           const complete = document.createElement("div");
@@ -13168,7 +13248,8 @@
           const title = document.createElement("strong");
           title.textContent = job.location || job.summary || "Inspection appointment";
           const detail = document.createElement("small");
-          detail.textContent = done ? "Completed today" : workflowServiceLabel(job);
+          const hasNotes = workflowJobNotesFor(job).length > 0;
+          detail.textContent = done ? "Completed today" : `${workflowServiceLabel(job)}${hasNotes ? " · Job notes" : ""}`;
           copy.append(title, detail);
           const button = document.createElement("button");
           button.type = "button";
@@ -13404,6 +13485,34 @@
         if (!workflowJobCard.hidden) renderWorkflowDeparturePlan(job);
       }
 
+      function renderWorkflowJobNotes(job) {
+        if (!workflowJobNotesPanel || !workflowJobNotes) return;
+        const lines = workflowJobNotesFor(job);
+        workflowJobNotesPanel.hidden = !lines.length;
+        workflowJobNotesPanel.open = false;
+        workflowJobNotes.replaceChildren();
+        lines.forEach(line => {
+          const row = document.createElement("div");
+          row.className = "workflow-job-note-line";
+          const labeled = String(line).match(/^([^:]{2,45}):\s*(.+)$/);
+          if (labeled) {
+            const label = document.createElement("span");
+            label.className = "workflow-job-note-label";
+            label.textContent = labeled[1];
+            const value = document.createElement("span");
+            value.className = "workflow-job-note-value";
+            value.textContent = labeled[2];
+            row.append(label, value);
+          } else {
+            const value = document.createElement("span");
+            value.className = "workflow-job-note-value is-full";
+            value.textContent = line;
+            row.append(value);
+          }
+          workflowJobNotes.appendChild(row);
+        });
+      }
+
       function renderWorkflowJob(job = loadActiveJob()) {
         if (!job?.property) {
           renderWorkflowApp();
@@ -13439,6 +13548,7 @@
         workflowJobClient.textContent = job.clientName || "Not listed in the schedule";
         workflowJobClientBlock.hidden = !job.clientName && !job.clientPhone;
         workflowJobServices.textContent = workflowServiceLabel(job);
+        renderWorkflowJobNotes(job);
         workflowDirectionsBtn.href = `https://maps.apple.com/?daddr=${encodeURIComponent(job.property)}&dirflg=d`;
         workflowCallClientBtn.href = job.clientPhone ? `tel:${job.clientPhone}` : "#";
         workflowCallClientBtn.setAttribute("aria-disabled", String(!job.clientPhone));
@@ -14132,6 +14242,7 @@
             agentName: String(saved.agentName || "").trim().slice(0, 120),
             agentPhone: String(saved.agentPhone || "").trim().slice(0, 40),
             serviceNames: Array.isArray(saved.serviceNames) ? saved.serviceNames.map(String).filter(Boolean).slice(0, 20) : [],
+            jobNotes: workflowJobNotesFor(saved),
             spectoraJobId: String(saved.spectoraJobId || "").trim().slice(0, 120),
             spectoraLink: String(saved.spectoraLink || "").trim().slice(0, 500),
             estimatedDriveMinutes: Number(saved.estimatedDriveMinutes) || 0,

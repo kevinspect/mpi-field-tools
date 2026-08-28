@@ -20,6 +20,22 @@
 
 ## Change log
 
+### Build 68 — Show price-free calendar notes on My Day (App Build 106)
+
+Status: published August 28, 2026.
+
+#### Changes
+
+1. Pulls the scheduled job description from the connected company calendar into the inspector’s My Day workflow.
+2. Shows a clear **Job notes** indicator on the daily schedule and a simple expandable notes panel inside the opened job.
+3. Keeps the notes with the active job so they remain available after the schedule is cached on the company phone.
+4. Removes dollar amounts from every calendar-note line before the information is saved or displayed.
+5. Keeps the feature focused on calendar notes only; no attachment controls or duplicate job-entry fields were added.
+
+#### Validation
+
+- Confirmed the full inline JavaScript and service worker parse successfully, all 552 element IDs are unique, Build 106 uses a new offline cache, the iPhone-size home screen loads without browser warnings, and a representative calendar note removes all three service prices and the total while preserving the useful client, service, and property information.
+
 ### Build 67 — Correct daily job rollover and remove equipment readiness (App Build 105)
 
 Status: published August 28, 2026.
