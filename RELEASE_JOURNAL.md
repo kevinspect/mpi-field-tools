@@ -20,6 +20,24 @@
 
 ## Change log
 
+### Build 71 — Company-owned branded closeout email (App Build 109)
+
+Status: ready for publication August 28, 2026.
+
+#### Changes
+
+1. Removed FormSubmit entirely from the daily inspector closeout workflow and replaced it with the company-owned **MPI Workflow Email Service** running under `kev@michiganpropertyinspections.com`.
+2. Sends a reusable, mobile-responsive Michigan Property Inspections email with the company logo, navy/gold/blue branding, app-style cards, equipment badges, a readable activity timeline, completed-job cards, professional exception wording, and a branded footer.
+3. Uses the requested subject format, **Daily Inspector Closeout | [Inspector] | [Date]**, plus meaningful inbox preview text.
+4. Prevents raw inspector IDs, job IDs, database fields, ISO timestamps, variable names, JSON data, raw activity logs, and FormSubmit branding from reaching the recipient.
+5. The sender accepts only a strict, cleaned closeout summary and always sends to the fixed management recipient; the phone cannot supply an arbitrary email destination or arbitrary HTML.
+6. Added delivery confirmation and request deduplication so the phone log is cleared only after the company service confirms the email and a retry cannot create a duplicate message.
+7. Keeps an offline or failed closeout pending on the company phone until the inspector reconnects and retries.
+
+#### Validation
+
+- Parsed the full app JavaScript and the Apps Script sender, confirmed all element IDs remain unique, verified the public service health response and cross-origin delivery-status callback, rendered a representative branded email with every required section, and confirmed the output contains none of the prohibited raw names or FormSubmit wording.
+
 ### Build 70 — Reopen signed-off days for newly added jobs (App Build 108)
 
 Status: published August 28, 2026.

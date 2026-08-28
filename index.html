@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="108">
+  <meta name="app-build" content="109">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4783,17 +4783,6 @@
           </div>
           <button class="workflow-button" id="workflowDayCompleteBtn" type="button" disabled>SIGN OFF FOR DAY</button>
           <p class="workflow-integration-note" id="workflowDayCompleteStatus">Confirm every listed item to sign off.</p>
-          <form id="workflowDailySummaryForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" hidden aria-hidden="true">
-            <input type="hidden" name="_subject" id="workflowDailySummarySubject" value="MPI Daily Inspector Log">
-            <input type="hidden" name="_captcha" value="false">
-            <input type="hidden" name="_template" value="box">
-            <input type="hidden" name="Inspector" id="workflowDailySummaryInspector">
-            <input type="hidden" name="Inspector ID" id="workflowDailySummaryInspectorId">
-            <input type="hidden" name="Date" id="workflowDailySummaryDate">
-            <input type="hidden" name="Signed off at" id="workflowDailySummarySignedOffAt">
-            <input type="hidden" name="Equipment confirmed" id="workflowDailySummaryEquipment">
-            <textarea name="Daily activity summary" id="workflowDailySummaryBody"></textarea>
-          </form>
         </section>
       </div>
 
@@ -6871,7 +6860,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 108</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 109</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7655,14 +7644,6 @@
       const workflowEndOfDayChecks = [...document.querySelectorAll("[data-workflow-eod-equipment]")];
       const workflowDayCompleteBtn = document.getElementById("workflowDayCompleteBtn");
       const workflowDayCompleteStatus = document.getElementById("workflowDayCompleteStatus");
-      const workflowDailySummaryForm = document.getElementById("workflowDailySummaryForm");
-      const workflowDailySummarySubject = document.getElementById("workflowDailySummarySubject");
-      const workflowDailySummaryInspector = document.getElementById("workflowDailySummaryInspector");
-      const workflowDailySummaryInspectorId = document.getElementById("workflowDailySummaryInspectorId");
-      const workflowDailySummaryDate = document.getElementById("workflowDailySummaryDate");
-      const workflowDailySummarySignedOffAt = document.getElementById("workflowDailySummarySignedOffAt");
-      const workflowDailySummaryEquipment = document.getElementById("workflowDailySummaryEquipment");
-      const workflowDailySummaryBody = document.getElementById("workflowDailySummaryBody");
       const workflowAdminPanel = document.getElementById("workflowAdminPanel");
       const workflowAdminFilters = document.getElementById("workflowAdminFilters");
       const workflowAdminInspectorFilter = document.getElementById("workflowAdminInspectorFilter");
@@ -12971,6 +12952,8 @@
       const WORKFLOW_HISTORY_STORAGE_KEY = "mpiWorkflowJobHistoryV1";
       const WORKFLOW_DAY_COMPLETE_STORAGE_KEY = "mpiWorkflowDayCompleteV1";
       const WORKFLOW_CLOSEOUT_HISTORY_STORAGE_KEY = "mpiWorkflowCloseoutHistoryV1";
+      const WORKFLOW_EMAIL_ENDPOINT = "https://script.google.com/macros/s/AKfycbzd701WKgQIzWP24pmjL3gaTFIjH2iHxjMYzirArFoYq8nup57p8h1VMmJPx9MVYOqL/exec";
+      const WORKFLOW_EMAIL_SOURCE = "mpi-field-tools-daily-closeout";
       const WORKFLOW_STAGES = ["scheduled", "on-my-way", "arrived", "in-progress", "equipment", "completed"];
       const WORKFLOW_STAGE_LABELS = {
         scheduled: "Scheduled",
@@ -13828,6 +13811,217 @@
         return receipt;
       }
 
+      const WORKFLOW_EMAIL_EQUIPMENT_LABELS = {
+        "thermal-camera": "Thermal Camera",
+        "moisture-meters": "Moisture Meters",
+        "sewer-camera": "Sewer Camera",
+        radon: "Radon Equipment",
+        well: "Well Equipment",
+        septic: "Septic Equipment",
+        ladders: "Ladders",
+        devices: "Devices",
+        "specialty-meters": "Specialty Equipment",
+        power: "Power Equipment"
+      };
+
+      const WORKFLOW_EMAIL_ACTION_LABELS = {
+        "Working day reopened for added appointment": "Additional appointment added — workday reopened",
+        "Morning readiness completed": "Morning readiness confirmed",
+        "Job opened": "Appointment opened",
+        "On My Way selected": "On My Way recorded",
+        "Directions selected": "Directions selected",
+        Arrived: "Arrival recorded",
+        "Inspection started": "Inspection started",
+        "Job Complete selected": "Job completion started",
+        "Used tools back on truck confirmed": "Used tools confirmed back on truck",
+        "Final job completion": "Appointment completed",
+        "Client call initiated": "Client call opened",
+        "Client message composer opened": "Client message prepared",
+        "Running Behind selected": "Running-behind message prepared",
+        "Client message cancelled": "Client message cancelled",
+        "Well test started": "Well test started",
+        "Well test target duration reached": "Well test target duration reached",
+        "Well test stopped early": "Well test stopped early",
+        "Well test completed": "Well test completed",
+        "End-of-day equipment check completed": "Equipment confirmed",
+        "Signed off for day": "Inspector signed off for the day"
+      };
+
+      function workflowEmailDisplayDate(dateKey = localDateKey()) {
+        const date = new Date(`${dateKey}T12:00:00`);
+        return Number.isNaN(date.getTime())
+          ? new Date().toLocaleDateString("en-US", { dateStyle: "long" })
+          : date.toLocaleDateString("en-US", { dateStyle: "long" });
+      }
+
+      function workflowEmailActivitySummary() {
+        return loadWorkflowActivity()
+          .filter(item => item.date === localDateKey() && WORKFLOW_EMAIL_ACTION_LABELS[item.action])
+          .sort((left, right) => new Date(left.timestamp) - new Date(right.timestamp))
+          .slice(-80)
+          .map(item => {
+            let detail = "";
+            if (item.action === "Client message composer opened" || item.action === "Running Behind selected") {
+              const template = item.action === "Running Behind selected" ? "Running Behind" : String(item.data?.template || "Client update").replace(/-/g, " ");
+              const eta = item.data?.etaDisplay || (item.data?.etaTime ? workflowEtaDisplay(item.data.etaTime) : "");
+              detail = [template, eta ? `ETA ${eta}` : ""].filter(Boolean).join(" · ");
+            } else if (item.action === "Well test stopped early") {
+              detail = "Test ended before the target duration";
+            } else if (item.action === "Working day reopened for added appointment") {
+              const additions = Array.isArray(item.data?.addedAppointments) ? item.data.addedAppointments.filter(Boolean).slice(0, 4) : [];
+              detail = additions.length ? additions.join(" · ") : "An additional appointment was received";
+            }
+            return {
+              time: workflowClock(item.timestamp),
+              label: WORKFLOW_EMAIL_ACTION_LABELS[item.action],
+              address: String(item.property || "").trim(),
+              detail
+            };
+          });
+      }
+
+      function workflowEmailCompletedJobs() {
+        const seen = new Set();
+        return loadWorkflowHistory()
+          .filter(item => item.date === localDateKey() && item.job?.property)
+          .sort((left, right) => new Date(left.job?.scheduledStart || left.completedAt) - new Date(right.job?.scheduledStart || right.completedAt))
+          .map(item => item.job)
+          .filter(job => {
+            const key = String(job.calendarEventId || `${job.property}|${job.scheduledStart || ""}`);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          })
+          .slice(0, 20)
+          .map(job => ({
+            address: String(job.property || "").trim(),
+            scheduledTime: workflowClock(job.scheduledStart),
+            services: (Array.isArray(job.serviceNames) ? job.serviceNames : [])
+              .map(value => String(value || "").trim())
+              .filter(Boolean)
+              .slice(0, 12),
+            status: "Completed"
+          }));
+      }
+
+      function workflowEmailExceptions() {
+        const flags = [];
+        const activity = loadWorkflowActivity().filter(item => item.date === localDateKey());
+        const completedHistory = loadWorkflowHistory().filter(item => item.date === localDateKey());
+        const completedIds = new Set(completedHistory.map(item => item.job?.calendarEventId).filter(Boolean));
+        const relevantJobs = workflowScheduleJobs().filter(job => completedIds.has(job.id));
+        const readiness = workflowReadinessRecord();
+        const firstStart = relevantJobs.map(job => scheduleJobTimestamp(job, "start")).filter(Boolean).sort((a, b) => a - b)[0];
+        if (relevantJobs.length && !readiness) flags.push("Morning readiness confirmation was not completed.");
+        if (readiness?.completedAt && firstStart && new Date(readiness.completedAt).getTime() > firstStart) {
+          flags.push("Morning readiness was completed after the first scheduled appointment.");
+        }
+        relevantJobs.forEach(job => {
+          const events = activity.filter(item => item.calendarEventId === job.id);
+          const scheduled = scheduleJobTimestamp(job, "start");
+          const arrived = events.find(item => item.action === "Arrived");
+          const started = events.find(item => item.action === "Inspection started");
+          const selectedComplete = events.find(item => item.action === "Job Complete selected");
+          const completed = events.find(item => item.action === "Final job completion") || completedIds.has(job.id);
+          const address = String(job.location || "This appointment").trim();
+          if (arrived && scheduled && new Date(arrived.timestamp).getTime() > scheduled + 10 * 60 * 1000) {
+            flags.push(`${address}: arrival was recorded more than 10 minutes after the scheduled start time.`);
+          }
+          if (started && scheduled && new Date(started.timestamp).getTime() > scheduled + 10 * 60 * 1000) {
+            flags.push(`${address}: Start Inspection was recorded more than 10 minutes after the scheduled start time.`);
+          }
+          if (selectedComplete && !completed) flags.push(`${address}: the used-tools confirmation was not completed.`);
+        });
+        return [...new Set(flags)].slice(0, 12);
+      }
+
+      function workflowEmailRequestId(record) {
+        if (record.emailRequestId) return record.emailRequestId;
+        const random = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 14)}`;
+        record.emailRequestId = `closeout-${record.date}-${random}`.slice(0, 120);
+        saveWorkflowDayCompleteRecord(record);
+        return record.emailRequestId;
+      }
+
+      function buildWorkflowCloseoutEmailPayload(record) {
+        const inspectorName = String(record.inspector || loadWorkflowProfile()?.name || "MPI Inspector").trim().slice(0, 80);
+        const date = workflowEmailDisplayDate(record.date);
+        const updated = Number(record.closeoutNumber) > 1 || Boolean(record.reopenedAfterCloseout);
+        return {
+          source: WORKFLOW_EMAIL_SOURCE,
+          version: 1,
+          requestId: workflowEmailRequestId(record),
+          inspectorName,
+          date,
+          status: "Day Completed",
+          closeoutLabel: updated ? "Updated Daily Inspector Closeout" : "Daily Inspector Closeout",
+          preheader: `${inspectorName} completed the daily inspector closeout for ${date}.`,
+          equipment: (record.equipment || []).map(key => WORKFLOW_EMAIL_EQUIPMENT_LABELS[key]).filter(Boolean),
+          activity: workflowEmailActivitySummary(),
+          jobs: workflowEmailCompletedJobs(),
+          exceptions: workflowEmailExceptions()
+        };
+      }
+
+      function queryWorkflowEmailStatus(requestId) {
+        return new Promise((resolve, reject) => {
+          const callbackName = `mpiEmailStatus_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+          const script = document.createElement("script");
+          let settled = false;
+          const cleanup = () => {
+            delete window[callbackName];
+            script.remove();
+          };
+          const timeout = window.setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            reject(new Error("Email delivery confirmation timed out"));
+          }, 12000);
+          window[callbackName] = result => {
+            if (settled) return;
+            settled = true;
+            window.clearTimeout(timeout);
+            cleanup();
+            resolve(result || {});
+          };
+          script.onerror = () => {
+            if (settled) return;
+            settled = true;
+            window.clearTimeout(timeout);
+            cleanup();
+            reject(new Error("Email delivery confirmation failed"));
+          };
+          const url = new URL(WORKFLOW_EMAIL_ENDPOINT);
+          url.searchParams.set("action", "status");
+          url.searchParams.set("requestId", requestId);
+          url.searchParams.set("callback", callbackName);
+          script.src = url.toString();
+          document.head.appendChild(script);
+        });
+      }
+
+      async function sendWorkflowCloseoutEmail(payload, signal) {
+        if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/i.test(WORKFLOW_EMAIL_ENDPOINT)) {
+          throw new Error("MPI email service is not connected");
+        }
+        await fetch(WORKFLOW_EMAIL_ENDPOINT, {
+          method: "POST",
+          mode: "no-cors",
+          cache: "no-store",
+          headers: { "Content-Type": "text/plain;charset=UTF-8" },
+          body: JSON.stringify(payload),
+          signal
+        });
+        for (let attempt = 0; attempt < 4; attempt += 1) {
+          const status = await queryWorkflowEmailStatus(payload.requestId);
+          if (status.status === "sent" || status.status === "duplicate") return status;
+          if (status.status === "failed" || status.status === "rejected") throw new Error(status.message || "Email delivery failed");
+          await new Promise(resolve => window.setTimeout(resolve, 900));
+        }
+        throw new Error("Email delivery was not confirmed");
+      }
+
       async function submitWorkflowDailySummary(record = workflowDayCompleteRecord()) {
         if (!record || workflowDailySummaryInFlight || record.emailStatus === "sent") return;
         if (!navigator.onLine) {
@@ -13837,19 +14031,7 @@
           showToast("Sign-off saved — reconnect to send the daily summary");
           return;
         }
-        const profile = loadWorkflowProfile();
-        const displayDate = new Date(`${record.date}T12:00:00`).toLocaleDateString("en-US", { dateStyle: "long" });
-        const isUpdatedCloseout = Number(record.closeoutNumber) > 1 || Boolean(record.reopenedAfterCloseout);
-        workflowDailySummarySubject.value = `${isUpdatedCloseout ? "MPI Updated End-of-Day Log" : "MPI Daily Inspector Log"} — ${record.inspector} — ${displayDate}`.slice(0, 180);
-        workflowDailySummaryInspector.value = record.inspector;
-        workflowDailySummaryInspectorId.value = record.inspectorId || profile?.id || "Not listed";
-        workflowDailySummaryDate.value = displayDate;
-        workflowDailySummarySignedOffAt.value = new Date(record.completedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
-        workflowDailySummaryEquipment.value = (record.equipment || []).join(", ");
-        const priorCloseout = isUpdatedCloseout && record.previousCompletedAt
-          ? `UPDATED CLOSEOUT\nAn earlier daily summary was sent at ${workflowClock(record.previousEmailedAt || record.previousCompletedAt)}. The working day reopened after an additional appointment was added. This summary records the added work and final sign-off.\n\n`
-          : "";
-        workflowDailySummaryBody.value = `${priorCloseout}${workflowSummaryText(false)}`;
+        const payload = buildWorkflowCloseoutEmailPayload(record);
         record.emailStatus = "sending";
         record.lastEmailAttemptAt = new Date().toISOString();
         saveWorkflowDayCompleteRecord(record);
@@ -13859,15 +14041,7 @@
         const controller = new AbortController();
         const timeout = window.setTimeout(() => controller.abort(), 20000);
         try {
-          const endpoint = workflowDailySummaryForm.action.replace("https://formsubmit.co/", "https://formsubmit.co/ajax/");
-          const response = await fetch(endpoint, {
-            method: "POST",
-            body: new FormData(workflowDailySummaryForm),
-            headers: { Accept: "application/json" },
-            signal: controller.signal
-          });
-          const result = await response.json().catch(() => ({}));
-          if (!response.ok || String(result.success).toLowerCase() !== "true") throw new Error(result.message || "Delivery was not confirmed");
+          await sendWorkflowCloseoutEmail(payload, controller.signal);
           const delivered = workflowDayCompleteRecord();
           if (!delivered) return;
           delivered.emailStatus = "sent";
