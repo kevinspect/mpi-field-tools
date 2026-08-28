@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>{{email_title}}</title>
+</head>
+<body style="margin:0;padding:0;background:#eef2f8;color:#11186a;font-family:Arial,Helvetica,sans-serif;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;line-height:1px;font-size:1px;">
+    {{preheader_text}}
+  </div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#eef2f8;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:640px;background:#ffffff;border-radius:22px;overflow:hidden;border:1px solid #dce4ef;">
+          <tr>
+            <td style="background:#11186a;padding:28px 28px 24px;text-align:center;">
+              <img src="https://kevinspect.github.io/mpi-field-tools/mpi-logo.png" width="92" alt="Michigan Property Inspections" style="display:block;width:92px;height:auto;margin:0 auto 14px;border:0;">
+              <div style="font-size:12px;line-height:18px;letter-spacing:2px;text-transform:uppercase;color:#d8b655;font-weight:700;">Michigan Property Inspections</div>
+              <h1 style="margin:7px 0 0;font-size:28px;line-height:34px;color:#ffffff;font-weight:800;">{{email_title}}</h1>
+              <p style="margin:12px 0 0;font-size:18px;line-height:26px;color:#ffffff;font-weight:700;">{{property_address}}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 24px 8px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#f5f8fc;border:1px solid #dce4ef;border-radius:16px;">
+                <tr>
+                  <td style="padding:20px 20px 8px;">
+                    <h2 style="margin:0;font-size:18px;line-height:24px;color:#11186a;">Job information</h2>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:4px 20px 20px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;font-size:14px;line-height:21px;color:#28355f;">
+                      <tr><td style="padding:7px 8px 7px 0;color:#68718b;width:42%;">Property Address</td><td style="padding:7px 0;font-weight:700;">{{property_address}}</td></tr>
+                      <tr><td style="padding:7px 8px 7px 0;color:#68718b;">Client Name</td><td style="padding:7px 0;font-weight:700;">{{client_name}}</td></tr>
+                      <tr><td style="padding:7px 8px 7px 0;color:#68718b;">Inspector</td><td style="padding:7px 0;font-weight:700;">{{inspector_name}}</td></tr>
+                      <tr><td style="padding:7px 8px 7px 0;color:#68718b;">Inspection Date</td><td style="padding:7px 0;font-weight:700;">{{inspection_date}}</td></tr>
+                      <tr><td style="padding:7px 8px 7px 0;color:#68718b;">Scheduled Time</td><td style="padding:7px 0;font-weight:700;">{{scheduled_time}}</td></tr>
+                      <tr><td style="padding:7px 8px 7px 0;color:#68718b;">Inspection Type</td><td style="padding:7px 0;font-weight:700;">{{inspection_type}}</td></tr>
+                      <tr><td style="padding:7px 8px 7px 0;color:#68718b;">Job Status</td><td style="padding:7px 0;font-weight:700;">{{job_status}}</td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 24px 8px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:{{status_background}};border:1px solid {{status_border}};border-radius:16px;">
+                <tr>
+                  <td style="padding:18px 20px;color:{{status_color}};font-size:17px;line-height:24px;font-weight:800;">{{status_icon}} {{status_text}}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          {{#completed_forms}}
+          <tr>
+            <td style="padding:16px 24px 8px;">
+              <h2 style="margin:0 0 12px;font-size:18px;line-height:24px;color:#11186a;">Completed forms</h2>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#ffffff;border:1px solid #dce4ef;border-radius:16px;">
+                {{completed_forms_rows}}
+              </table>
+            </td>
+          </tr>
+          {{/completed_forms}}
+          {{#attachments}}
+          <tr>
+            <td style="padding:16px 24px 8px;">
+              <h2 style="margin:0 0 12px;font-size:18px;line-height:24px;color:#11186a;">Attachments</h2>
+              <div style="padding:18px 20px;background:#f5f8fc;border:1px solid #dce4ef;border-radius:16px;color:#28355f;font-size:14px;line-height:22px;">{{attachments_list}}</div>
+            </td>
+          </tr>
+          {{/attachments}}
+          {{#notes_or_exceptions}}
+          <tr>
+            <td style="padding:16px 24px 8px;">
+              <h2 style="margin:0 0 12px;font-size:18px;line-height:24px;color:#11186a;">Job notes / exceptions</h2>
+              <div style="padding:18px 20px;background:#fff8e6;border:1px solid #d8b655;border-radius:16px;color:#60490b;font-size:14px;line-height:22px;">{{notes_or_exceptions}}</div>
+            </td>
+          </tr>
+          {{/notes_or_exceptions}}
+          {{#button_url}}
+          <tr>
+            <td align="center" style="padding:22px 24px 8px;">
+              <a href="{{button_url}}" style="display:inline-block;background:#b48720;color:#11186a;text-decoration:none;font-size:15px;line-height:20px;font-weight:800;padding:14px 24px;border-radius:12px;">{{button_label}}</a>
+            </td>
+          </tr>
+          {{/button_url}}
+          <tr>
+            <td style="padding:28px 24px;text-align:center;">
+              <div style="height:3px;width:48px;background:#b48720;margin:0 auto 16px;border-radius:2px;"></div>
+              <p style="margin:0;color:#11186a;font-size:14px;line-height:21px;font-weight:800;">Michigan Property Inspections</p>
+              <p style="margin:5px 0 0;color:#68718b;font-size:12px;line-height:19px;">{{company_phone}} · {{company_email}}</p>
+              <p style="margin:12px 0 0;color:#8a93aa;font-size:11px;line-height:17px;">This email was automatically generated by the Michigan Property Inspections workflow system.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

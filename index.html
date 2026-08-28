@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="107">
+  <meta name="app-build" content="108">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4404,7 +4404,7 @@
       .workflow-schedule-tools { align-items: flex-start; flex-direction: column; }
     }
 
-    /* Build 107: reliable dynamic job selection, destination checks, and completed-job clearing */
+    /* Build 108: reopen signed-off days for added appointments and improve workflow email presentation */
     body { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
     .topbar-actions .offline-badge { display: none; }
     .app-home { min-height: calc(100dvh - 132px); }
@@ -4591,7 +4591,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">107</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">108</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -4786,7 +4786,7 @@
           <form id="workflowDailySummaryForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" hidden aria-hidden="true">
             <input type="hidden" name="_subject" id="workflowDailySummarySubject" value="MPI Daily Inspector Log">
             <input type="hidden" name="_captcha" value="false">
-            <input type="hidden" name="_template" value="table">
+            <input type="hidden" name="_template" value="box">
             <input type="hidden" name="Inspector" id="workflowDailySummaryInspector">
             <input type="hidden" name="Inspector ID" id="workflowDailySummaryInspectorId">
             <input type="hidden" name="Date" id="workflowDailySummaryDate">
@@ -5218,7 +5218,7 @@
       <div class="damage-grid">
         <form class="panel damage-form" id="damageForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" enctype="multipart/form-data" novalidate>
           <input type="hidden" name="_subject" id="damageEmailSubject" value="MPI Damaged Item Notice">
-          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?damage-sent=1#damage-report">
           <input type="hidden" name="_url" value="https://kevinspect.github.io/mpi-field-tools/#damage-report">
@@ -5357,7 +5357,7 @@
       <div class="workflow-grid">
         <form class="panel damage-form" id="equipmentForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" enctype="multipart/form-data" novalidate>
           <input type="hidden" name="_subject" id="equipmentEmailSubject" value="MPI Thermostat &amp; Furnace Photo Record">
-          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?equipment-sent=1#equipment-record">
           <input type="hidden" name="_url" value="https://kevinspect.github.io/mpi-field-tools/#equipment-record">
@@ -5455,7 +5455,7 @@
       <div class="workflow-grid">
         <form class="panel damage-form" id="toolCheckForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
           <input type="hidden" name="_subject" id="toolCheckEmailSubject" value="MPI End-of-Job Tool Check">
-          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?tool-check-sent=1#tool-check">
           <input type="hidden" name="Submitted at" id="toolCheckSubmittedAt" value="">
@@ -5616,7 +5616,7 @@
         </summary>
         <form class="damage-form" id="toolCommissionForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
           <input type="hidden" name="_subject" id="toolCommissionSubject" value="MPI New Tool Commissioning Record">
-          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?tool-commission-sent=1#tool-guides">
           <input type="hidden" name="Submitted at" id="toolCommissionSubmittedAt" value="">
@@ -6024,7 +6024,7 @@
         <div class="report-quality-body">
           <form id="trainingProgressShareForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
             <input type="hidden" name="_subject" id="trainingShareSubject" value="MPI Refresher Progress">
-            <input type="hidden" name="_template" value="table">
+            <input type="hidden" name="_template" value="box">
             <input type="hidden" name="_captcha" value="false">
             <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?refresher-progress-sent=1#training-center">
             <input type="hidden" name="Submitted at" id="trainingShareSubmittedAt" value="">
@@ -6055,7 +6055,7 @@
 
           <form id="onboardingForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
             <input type="hidden" name="_subject" id="onboardingSubject" value="MPI Inspector Onboarding Progress">
-            <input type="hidden" name="_template" value="table">
+            <input type="hidden" name="_template" value="box">
             <input type="hidden" name="_captcha" value="false">
             <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?onboarding-sent=1#training-center">
             <input type="hidden" name="Submitted at" id="onboardingSubmittedAt" value="">
@@ -6607,7 +6607,7 @@
             <summary id="messageAckSummary">Acknowledge the required message</summary>
             <form class="message-ack-form" id="messageAckForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
               <input type="hidden" name="_subject" id="messageAckSubject" value="MPI Required Message Acknowledgement">
-              <input type="hidden" name="_template" value="table">
+              <input type="hidden" name="_template" value="box">
               <input type="hidden" name="_captcha" value="false">
               <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?message-ack-sent=photo-restoration-2026-08-25#team-messages">
               <input type="hidden" name="Submitted at" id="messageAckSubmittedAt" value="">
@@ -6626,7 +6626,7 @@
 
         <form class="panel damage-form support-panel" id="teamQuestionForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
           <input type="hidden" name="_subject" id="teamQuestionSubject" value="MPI Inspector Field Question">
-          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?question-sent=1#team-messages">
           <input type="hidden" name="Submitted at" id="teamQuestionSubmittedAt" value="">
@@ -6675,7 +6675,7 @@
       <div class="workflow-grid">
         <form class="panel damage-form" id="safetyNoticeForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
           <input type="hidden" name="_subject" id="safetyNoticeSubject" value="MPI Safety and Near-Miss Notice">
-          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?safety-sent=1#safety-notice">
           <input type="hidden" name="Submitted at" id="safetyNoticeSubmittedAt" value="">
@@ -6787,7 +6787,7 @@
       <div class="workflow-grid">
         <form class="panel damage-form" id="requestForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
           <input type="hidden" name="_subject" id="requestEmailSubject" value="MPI Inspector Request">
-          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?request-sent=1#requests-feedback">
           <input type="hidden" name="Submitted at" id="requestSubmittedAt" value="">
@@ -6871,7 +6871,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 107</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 108</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -12557,6 +12557,7 @@
             : "Offline — no schedule is saved for today.";
           return false;
         }
+        reopenWorkflowDayForAddedJobs(saved.jobs);
         autoSelectCurrentScheduleJob(saved.jobs);
         renderTodayJobs(saved.jobs, saved.calendarName, { cached: true });
         todayJobsStatus.textContent = navigator.onLine
@@ -12760,6 +12761,7 @@
         const data = await calendarApi(`/calendars/${encodeURIComponent(calendar.id)}/events?${parameters}`, token);
         const jobs = keepInspectionEvents(data.items || []);
         saveScheduleCalendar(calendar);
+        reopenWorkflowDayForAddedJobs(jobs);
         autoSelectCurrentScheduleJob(jobs);
         renderTodayJobs(jobs, calendar.summary || "Company schedule");
         try {
@@ -12968,6 +12970,7 @@
       const WORKFLOW_ACTIVITY_STORAGE_KEY = "mpiWorkflowActivityV1";
       const WORKFLOW_HISTORY_STORAGE_KEY = "mpiWorkflowJobHistoryV1";
       const WORKFLOW_DAY_COMPLETE_STORAGE_KEY = "mpiWorkflowDayCompleteV1";
+      const WORKFLOW_CLOSEOUT_HISTORY_STORAGE_KEY = "mpiWorkflowCloseoutHistoryV1";
       const WORKFLOW_STAGES = ["scheduled", "on-my-way", "arrived", "in-progress", "equipment", "completed"];
       const WORKFLOW_STAGE_LABELS = {
         scheduled: "Scheduled",
@@ -13151,7 +13154,10 @@
           .map(item => item.job?.calendarEventId)
           .filter(Boolean);
         const receiptIds = workflowDayCompleteRecord()?.completedJobIds || [];
-        return new Set([...historyIds, ...receiptIds].filter(Boolean));
+        const archivedIds = loadWorkflowCloseoutHistory()
+          .filter(item => item.date === localDateKey())
+          .flatMap(item => Array.isArray(item.completedJobIds) ? item.completedJobIds : []);
+        return new Set([...historyIds, ...receiptIds, ...archivedIds].filter(Boolean));
       }
 
       function workflowDayCompleteRecord() {
@@ -13161,6 +13167,51 @@
         } catch (_) {
           return null;
         }
+      }
+
+      function loadWorkflowCloseoutHistory() {
+        try {
+          const records = JSON.parse(localStorage.getItem(WORKFLOW_CLOSEOUT_HISTORY_STORAGE_KEY) || "[]");
+          return Array.isArray(records) ? records.filter(record => record?.date && record?.completedAt) : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function archiveWorkflowCloseout(record) {
+        if (!record?.date || !record?.completedAt) return;
+        const records = loadWorkflowCloseoutHistory().filter(item => item.date === record.date);
+        const identity = `${record.date}|${record.completedAt}|${record.emailedAt || ""}`;
+        if (!records.some(item => `${item.date}|${item.completedAt}|${item.emailedAt || ""}` === identity)) {
+          records.push({ ...record, archivedAt: new Date().toISOString() });
+          try { localStorage.setItem(WORKFLOW_CLOSEOUT_HISTORY_STORAGE_KEY, JSON.stringify(records.slice(-10))); } catch (_) {}
+        }
+      }
+
+      function todayArchivedCloseouts() {
+        return loadWorkflowCloseoutHistory().filter(record => record.date === localDateKey());
+      }
+
+      function reopenWorkflowDayForAddedJobs(jobs) {
+        const record = workflowDayCompleteRecord();
+        if (!record || record.emailStatus !== "sent" || record.date !== localDateKey()) return false;
+        const previouslyCompleted = new Set(Array.isArray(record.completedJobIds) ? record.completedJobIds : []);
+        const addedJobs = (Array.isArray(jobs) ? jobs : []).filter(job => job?.id && !previouslyCompleted.has(job.id));
+        if (!addedJobs.length) return false;
+        archiveWorkflowCloseout(record);
+        try { localStorage.removeItem(WORKFLOW_DAY_COMPLETE_STORAGE_KEY); } catch (_) {}
+        workflowEndOfDayChecks.forEach(check => { check.checked = false; check.disabled = false; });
+        const reopenedAt = new Date().toISOString();
+        appendWorkflowEvent("Working day reopened for added appointment", {
+          reopenedAt,
+          previousSignOff: record.completedAt,
+          previousSummarySent: record.emailedAt || "Sent",
+          addedAppointments: addedJobs.map(job => job.location || job.summary || job.id)
+        }, null);
+        showToast(addedJobs.length === 1
+          ? "New appointment added — today’s workflow has reopened"
+          : `${addedJobs.length} new appointments added — today’s workflow has reopened`);
+        return true;
       }
 
       function workflowReadinessRecord() {
@@ -13763,7 +13814,8 @@
           emailStatus: "sent",
           emailedAt: record.emailedAt,
           equipmentConfirmed: true,
-          completedJobIds
+          completedJobIds,
+          closeoutNumber: Number(record.closeoutNumber) || Math.max(1, todayArchivedCloseouts().length + 1)
         };
         try {
           localStorage.removeItem(WORKFLOW_ACTIVITY_STORAGE_KEY);
@@ -13787,13 +13839,17 @@
         }
         const profile = loadWorkflowProfile();
         const displayDate = new Date(`${record.date}T12:00:00`).toLocaleDateString("en-US", { dateStyle: "long" });
-        workflowDailySummarySubject.value = `MPI Daily Inspector Log — ${record.inspector} — ${displayDate}`.slice(0, 180);
+        const isUpdatedCloseout = Number(record.closeoutNumber) > 1 || Boolean(record.reopenedAfterCloseout);
+        workflowDailySummarySubject.value = `${isUpdatedCloseout ? "MPI Updated End-of-Day Log" : "MPI Daily Inspector Log"} — ${record.inspector} — ${displayDate}`.slice(0, 180);
         workflowDailySummaryInspector.value = record.inspector;
         workflowDailySummaryInspectorId.value = record.inspectorId || profile?.id || "Not listed";
         workflowDailySummaryDate.value = displayDate;
         workflowDailySummarySignedOffAt.value = new Date(record.completedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
-        workflowDailySummaryEquipment.value = record.equipment.join(", ");
-        workflowDailySummaryBody.value = workflowSummaryText(false);
+        workflowDailySummaryEquipment.value = (record.equipment || []).join(", ");
+        const priorCloseout = isUpdatedCloseout && record.previousCompletedAt
+          ? `UPDATED CLOSEOUT\nAn earlier daily summary was sent at ${workflowClock(record.previousEmailedAt || record.previousCompletedAt)}. The working day reopened after an additional appointment was added. This summary records the added work and final sign-off.\n\n`
+          : "";
+        workflowDailySummaryBody.value = `${priorCloseout}${workflowSummaryText(false)}`;
         record.emailStatus = "sending";
         record.lastEmailAttemptAt = new Date().toISOString();
         saveWorkflowDayCompleteRecord(record);
@@ -13845,7 +13901,20 @@
         const profile = loadWorkflowProfile();
         const completedAt = new Date().toISOString();
         const equipment = workflowEndOfDayChecks.map(check => check.dataset.workflowEodEquipment);
-        const record = { date: localDateKey(), inspector: profile?.name || "Unknown inspector", inspectorId: profile?.id || "", completedAt, equipment, emailStatus: "pending" };
+        const earlierCloseouts = todayArchivedCloseouts();
+        const previous = earlierCloseouts[earlierCloseouts.length - 1] || null;
+        const record = {
+          date: localDateKey(),
+          inspector: profile?.name || "Unknown inspector",
+          inspectorId: profile?.id || "",
+          completedAt,
+          equipment,
+          emailStatus: "pending",
+          closeoutNumber: earlierCloseouts.length + 1,
+          reopenedAfterCloseout: Boolean(previous),
+          previousCompletedAt: previous?.completedAt || "",
+          previousEmailedAt: previous?.emailedAt || ""
+        };
         saveWorkflowDayCompleteRecord(record);
         appendWorkflowEvent("End-of-day equipment check completed", { equipment, completedAt });
         appendWorkflowEvent("Signed off for day", { completedAt });

@@ -20,6 +20,23 @@
 
 ## Change log
 
+### Build 70 — Reopen signed-off days for newly added jobs (App Build 108)
+
+Status: published August 28, 2026.
+
+#### Changes
+
+1. Detects a genuinely new calendar appointment added after the inspector has already signed off and automatically reopens the working day.
+2. Preserves the first emailed closeout as an audit receipt, keeps the earlier completed jobs hidden, and presents only the newly added appointment in the live workflow.
+3. Requires the normal job completion and a fresh end-of-day equipment check after the additional appointment.
+4. Sends a second summary titled **MPI Updated End-of-Day Log** and identifies it as an updated closeout rather than overwriting or duplicating the first email.
+5. Supports repeated reopenings if another appointment is added after a later closeout.
+6. Moves every current FormSubmit workflow email to its cleaner box presentation and adds a reusable, responsive MPI HTML email master using the existing logo, navy, gold, blue, card hierarchy, status treatment, conditional forms/attachments/exceptions, and branded footer.
+
+#### Validation
+
+- Confirmed that a sent receipt for completed jobs A and B remains authoritative after job C is added, the day reopens once, A and B stay hidden, C becomes available, the second closeout requires a new equipment confirmation, the updated email subject and context are generated, and a later job D can reopen the day again. Parsed the full application and service worker, checked for duplicate element IDs, and verified the mobile workflow and reusable email layout.
+
 ### Build 69 — Correct dynamic job order, Maps destination, and completed-job clearing (App Build 107)
 
 Status: published August 28, 2026.
