@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="110">
+  <meta name="app-build" content="111">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4489,6 +4489,44 @@
     .settings-status strong { color: var(--forest); font-size: 11px; }
     .settings-status span { color: var(--bright-blue); font-size: 10px; font-weight: 900; text-align: right; }
 
+    .mpi-home-updates { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:14px; align-items:center; margin:0 auto 18px; padding:17px 19px; color:#fff; background:linear-gradient(135deg,#2775b9,#11186a); border:1px solid rgba(255,255,255,.2); border-radius:16px; box-shadow:0 12px 28px rgba(17,24,106,.2); }
+    .mpi-home-updates span { color:#f1d16f; font-size:9px; font-weight:950; letter-spacing:.12em; text-transform:uppercase; }
+    .mpi-home-updates strong { display:block; margin-top:5px; font-size:16px; }
+    .mpi-home-updates small { display:block; overflow:hidden; margin-top:5px; color:#dfe4f5; font-size:10.5px; line-height:1.4; text-overflow:ellipsis; white-space:nowrap; }
+    .mpi-home-updates a { display:grid; min-height:44px; place-items:center; padding:0 14px; color:var(--forest); background:#fff; border-radius:10px; font-size:10px; font-weight:950; text-decoration:none; }
+    .mpi-account-card { padding:22px; }
+    .mpi-account-head { display:flex; align-items:flex-start; justify-content:space-between; gap:15px; }
+    .mpi-account-head h2 { margin:0; color:var(--forest); font-size:21px; }
+    .mpi-account-head p { margin:7px 0 0; color:var(--ink-2); font-size:11px; line-height:1.5; }
+    .mpi-account-badge { display:inline-flex; min-height:29px; align-items:center; padding:5px 9px; color:var(--bright-blue); background:#edf5fb; border-radius:999px; font-size:9px; font-weight:950; text-align:right; }
+    .mpi-account-details { margin-top:15px; padding:14px; background:#f3f6fa; border:1px solid #dfe5ee; border-radius:12px; }
+    .mpi-account-details strong,.mpi-account-details span { display:block; }
+    .mpi-account-details strong { color:var(--forest); font-size:14px; }
+    .mpi-account-details span { margin-top:4px; color:var(--ink-2); font-size:10.5px; }
+    .mpi-account-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:13px; }
+    .mpi-account-actions button,.mpi-account-actions a { display:grid; min-height:44px; place-items:center; padding:0 14px; color:#fff; background:var(--forest); border:0; border-radius:10px; font-size:10px; font-weight:900; text-decoration:none; }
+    .mpi-account-actions button.secondary { color:var(--bright-blue); background:#edf5fb; border:1px solid #cbdff0; }
+    .mpi-updates-shell { display:grid; gap:12px; max-width:820px; margin:0 auto; }
+    .mpi-updates-summary { padding:13px 15px; color:var(--forest); background:#edf5fb; border:1px solid #cbdff0; border-radius:12px; font-size:10px; font-weight:900; text-align:center; }
+    .mpi-updates-list { display:grid; gap:12px; }
+    .mpi-update-card { padding:19px; background:#fff; border:1px solid #dce3ee; border-left:5px solid var(--bright-blue); border-radius:15px; box-shadow:0 9px 24px rgba(17,24,106,.07); }
+    .mpi-update-card.important { border-left-color:#c4931f; }
+    .mpi-update-card.urgent { border-left-color:#b74841; background:#fffafa; }
+    .mpi-update-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .mpi-update-top span,.mpi-update-top strong { color:var(--bright-blue); font-size:9px; font-weight:950; letter-spacing:.08em; text-transform:uppercase; }
+    .mpi-update-top strong { color:#9a6d00; }
+    .mpi-update-card h3 { margin:9px 0 0; color:var(--forest); font-size:18px; }
+    .mpi-update-card p { margin:8px 0 0; color:var(--ink-2); font-size:11.5px; line-height:1.55; white-space:pre-wrap; }
+    .mpi-update-meta { display:flex; flex-wrap:wrap; gap:8px 15px; margin-top:12px; color:#6b7188; font-size:9.5px; font-weight:750; }
+    .mpi-update-link { display:inline-flex; margin-top:12px; color:var(--bright-blue); font-size:10.5px; font-weight:900; }
+    .mpi-update-action { display:grid; width:100%; min-height:46px; place-items:center; margin-top:15px; color:#fff; background:var(--forest); border:0; border-radius:10px; font-size:10px; font-weight:950; }
+    .mpi-update-action:disabled { color:#276a55; background:#dff1ea; }
+    .mpi-updates-empty { display:grid; gap:5px; padding:30px 20px; color:var(--ink-2); background:#fff; border:1px dashed #cbd4e2; border-radius:15px; text-align:center; }
+    .mpi-updates-empty strong { color:var(--forest); }
+    .mpi-updates-gate { max-width:680px; margin:0 auto; padding:28px; text-align:center; }
+    .mpi-updates-gate h3 { margin:0; color:var(--forest); font-size:22px; }
+    .mpi-updates-gate p { margin:9px auto 17px; color:var(--ink-2); font-size:11px; line-height:1.55; }
+
     .app-bottom-nav {
       position: fixed;
       z-index: 30;
@@ -4531,6 +4569,10 @@
       .training-assignment-frame { min-height: 690px; }
       .training-assignment-fallback { flex-direction: column; }
       .app-bottom-nav a { font-size: 9px; }
+      .mpi-home-updates { grid-template-columns:1fr; margin-inline:13px; }
+      .mpi-home-updates small { white-space:normal; }
+      .mpi-account-head { display:block; }
+      .mpi-account-badge { margin-top:10px; }
     }
 
     :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
@@ -4584,6 +4626,10 @@
         <a id="homeActiveJobMap" href="https://maps.apple.com/" target="_blank" rel="noopener">Directions</a>
       </div>
     </aside>
+    <aside class="mpi-home-updates" id="mpiHomeUpdates" aria-live="polite" hidden>
+      <div><span id="mpiHomeUpdatesCount">New office update</span><strong id="mpiHomeUpdatesTitle">Information from MPI</strong><small id="mpiHomeUpdatesDetail"></small></div>
+      <a href="#office-updates">Open updates</a>
+    </aside>
     <p class="home-section-label">Choose where you need to go</p>
     <nav class="home-tools" aria-label="MPI app sections">
       <a class="home-tool-card" href="#job-companion">
@@ -4606,8 +4652,13 @@
         <span class="home-tool-copy"><strong>Contact MPI</strong><small>Company messages, field questions, safety notices, requests, time off, and feedback.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
+      <a class="home-tool-card" id="officeConsoleCard" href="./admin.html" hidden>
+        <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
+        <span class="home-tool-copy"><strong>Office Console</strong><small>Publish company information, training assignments, job notes, and instructions from this phone or a desktop.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">108</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">111</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -4641,6 +4692,7 @@
       <p>Choose the reason for contacting MPI so the message arrives in the correct format.</p>
     </header>
     <nav class="hub-list" aria-label="Contact MPI options">
+      <a class="home-tool-card" href="#office-updates"><span class="home-tool-icon icon-messages" aria-hidden="true"></span><span class="home-tool-copy"><strong>Office Updates &amp; Assignments</strong><small>Read company announcements, individual instructions, training assignments, and job notes.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
       <a class="home-tool-card" href="#team-messages"><span class="home-tool-icon icon-messages" aria-hidden="true"></span><span class="home-tool-copy"><strong>Messages &amp; Field Questions</strong><small>Read company updates or send management a job-related question.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
       <a class="home-tool-card" href="#safety-notice"><span class="home-tool-icon icon-safety" aria-hidden="true"></span><span class="home-tool-copy"><strong>Safety &amp; Near-Miss Notice</strong><small>Report a safety event, equipment failure, vehicle event, or close call.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
       <a class="home-tool-card" href="#requests-feedback"><span class="home-tool-icon icon-requests" aria-hidden="true"></span><span class="home-tool-copy"><strong>Requests &amp; Feedback</strong><small>Request tools, uniforms, supplies, training, or share an improvement.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
@@ -6883,6 +6935,23 @@
       <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
     </section>
 
+    <section class="field-app-section app-screen-view" id="office-updates" data-app-screen="office-updates" aria-labelledby="office-updates-title">
+      <div class="field-section-heading">
+        <div><p class="eyebrow">MPI office connection</p><h2 id="office-updates-title">Updates &amp; assignments.</h2></div>
+        <p>Information published by MPI management appears here for the signed-in inspector and remains available offline after it has synchronized.</p>
+      </div>
+      <section class="panel mpi-updates-gate" id="mpiUpdatesGate">
+        <h3>Sign in to receive your information</h3>
+        <p>Use the Google account assigned to this company phone. The account remains signed in until you choose Sign Out in Settings.</p>
+        <button class="decode-btn" type="button" data-mpi-sign-in>SIGN IN WITH MPI GOOGLE ACCOUNT</button>
+      </section>
+      <div class="mpi-updates-shell" id="mpiUpdatesContent" hidden>
+        <div class="mpi-updates-summary" id="mpiUpdatesSummary">Loading office updates…</div>
+        <div class="mpi-updates-list" id="mpiUpdatesList"></div>
+      </div>
+      <a class="back-to-tools" href="#home">↑ Back to MPI Field Tools</a>
+    </section>
+
     <section class="hub-screen app-screen-view" id="settings" data-app-screen="settings" aria-labelledby="settings-title">
       <header class="hub-heading">
         <p class="eyebrow">Company phone</p>
@@ -6890,11 +6959,16 @@
         <p>One-time connection and notification controls are kept here so inspectors do not see technical setup during the normal workday.</p>
       </header>
       <div class="settings-grid">
+        <section class="panel mpi-account-card" id="mpiAccountCard">
+          <div class="mpi-account-head"><div><h2>MPI company account</h2><p>One secure account controls which inspector information appears on this phone. Owner access also unlocks the Office Console on phone and desktop.</p></div><span class="mpi-account-badge" id="mpiAccountStatus">Checking…</span></div>
+          <div class="mpi-account-details"><strong id="mpiAccountName">Not signed in</strong><span id="mpiAccountRole">Company account required</span></div>
+          <div class="mpi-account-actions"><button type="button" data-mpi-sign-in>SIGN IN WITH MPI GOOGLE ACCOUNT</button><button class="secondary" type="button" data-mpi-sign-out hidden>SIGN OUT</button><a id="mpiSettingsAdminLink" href="./admin.html" hidden>Open Office Console</a></div>
+        </section>
         <section class="panel settings-card">
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 110</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 111</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7009,7 +7083,11 @@
   </aside>
 
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
+  <script src="./mpi-shared.js"></script>
+  <script src="./mpi-field-sync.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -7030,6 +7108,7 @@
         "tool-guides": "Company Tool Guides",
         "sop-guide": "Field Procedures",
         "training-center": "Training Center",
+        "office-updates": "Office Updates",
         "team-messages": "Team Messages",
         "safety-notice": "Safety & Near-Miss Notice",
         "requests-feedback": "Requests & Feedback",
@@ -7044,7 +7123,7 @@
       const activeJobContextInspector = document.getElementById("activeJobContextInspector");
       const bottomNavLinks = [...document.querySelectorAll("[data-bottom-screen]")];
       const toolScreens = new Set(["field-tools", "age-finder", "damage-report", "equipment-record", "tool-guides", "sop-guide"]);
-      const contactScreens = new Set(["contact-mpi", "team-messages", "safety-notice", "requests-feedback"]);
+      const contactScreens = new Set(["contact-mpi", "office-updates", "team-messages", "safety-notice", "requests-feedback"]);
 
       function updateJobContextBanner(activeScreen, job) {
         if (job === undefined) {
