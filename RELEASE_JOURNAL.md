@@ -20,6 +20,25 @@
 
 ## Change log
 
+### Build 72 — Job addresses and geolocated time clock (App Build 110)
+
+Status: ready for publication August 28, 2026.
+
+#### Changes
+
+1. Shows the full property address beneath every job-related entry in the branded Daily Activity timeline.
+2. Shows the full property address as the heading of every Completed Job card.
+3. Resolves missing addresses from the authoritative calendar event ID, current schedule, completed-job history, or active job instead of relying only on the original activity entry.
+4. Keeps non-job events such as Morning Readiness, end-of-day equipment confirmation, and Sign Off uncluttered by unrelated property information.
+5. Adds a simple **Clock On / Clock Off** card to My Day, with live elapsed time and support for more than one shift in a day.
+6. Requests the phone location only when Clock On or Clock Off is pressed; it never continuously tracks the inspector, and time recording still works when location is denied or unavailable.
+7. Requires an active clock session to be ended before end-of-day sign-off and adds Clock On, Clock Off, total worked time, and private location buttons to the branded management email.
+8. Clears the time-clock record from the phone only after the management email service confirms delivery, consistent with the existing closeout-log privacy behavior.
+
+#### Validation
+
+- Verified address recovery for activity entries that contain only a calendar event ID, confirmed completed-job address fallback behavior, tested the clocked-off and clocked-on interface states, parsed the application and email-service JavaScript, and checked that the new offline cache/build number is consistent.
+
 ### Build 71 — Company-owned branded closeout email (App Build 109)
 
 Status: ready for publication August 28, 2026.

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="109">
+  <meta name="app-build" content="110">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4236,6 +4236,22 @@
     .workflow-readiness-summary li + li { margin-top: 7px; }
     .workflow-readiness-summary + .workflow-button { width: 100%; }
 
+    .workflow-time-clock-card {
+      color: #fff;
+      background: linear-gradient(145deg, #0b1050, #11186a 72%, #2f75b5);
+      border-color: rgba(180,135,32,.48);
+    }
+    .workflow-time-clock-card .workflow-card-header h3 { color: #fff; }
+    .workflow-time-clock-card .workflow-card-header p { color: rgba(255,255,255,.72); }
+    .workflow-time-clock-status { display: grid; gap: 5px; margin: 0 0 14px; padding: 15px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.17); border-radius: 13px; }
+    .workflow-time-clock-status span { color: #e4c569; font-size: 9px; font-weight: 950; letter-spacing: .09em; text-transform: uppercase; }
+    .workflow-time-clock-status strong { color: #fff; font-size: 21px; line-height: 1.25; }
+    .workflow-time-clock-status small { color: rgba(255,255,255,.72); font-size: 10px; line-height: 1.45; }
+    .workflow-time-clock-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .workflow-time-clock-actions .workflow-button { width: 100%; }
+    .workflow-time-clock-actions .workflow-secondary { min-height: 54px; border-radius: 13px; font: inherit; font-size: 13px; font-weight: 950; cursor: pointer; }
+    .workflow-time-clock-note { margin: 11px 0 0; color: rgba(255,255,255,.68); font-size: 9.5px; line-height: 1.5; text-align: center; }
+
     .workflow-progress { display: flex; align-items: center; gap: 5px; margin: 0 0 20px; }
     .workflow-progress span { flex: 1; height: 6px; background: #e5e9f0; border-radius: 99px; }
     .workflow-progress span.complete { background: #2f846b; }
@@ -4675,6 +4691,24 @@
               <button class="workflow-button field-wide" type="submit">SAVE COMPANY PHONE PROFILE</button>
             </div>
           </form>
+        </section>
+
+        <section class="workflow-card workflow-time-clock-card" id="workflowTimeClockCard" aria-labelledby="workflow-time-clock-title" hidden>
+          <div class="workflow-card-header">
+            <span class="workflow-status-pill" id="workflowTimeClockBadge">Clocked off</span>
+            <h3 id="workflow-time-clock-title">Workday time clock</h3>
+            <p>Clock on when work begins and clock off after the final company task.</p>
+          </div>
+          <div class="workflow-time-clock-status">
+            <span id="workflowTimeClockLabel">Today</span>
+            <strong id="workflowTimeClockValue">Not clocked on</strong>
+            <small id="workflowTimeClockDetail">Your time and location status will appear here.</small>
+          </div>
+          <div class="workflow-time-clock-actions">
+            <button class="workflow-button" id="workflowClockOnBtn" type="button">CLOCK ON</button>
+            <button class="workflow-secondary" id="workflowClockOffBtn" type="button" disabled>CLOCK OFF</button>
+          </div>
+          <p class="workflow-time-clock-note">Location is requested only when Clock On or Clock Off is pressed. The app does not continuously track the phone.</p>
         </section>
 
         <section class="workflow-card" id="workflowReadinessCard" aria-labelledby="workflow-readiness-title" hidden>
@@ -6860,7 +6894,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 109</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 110</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7595,6 +7629,13 @@
       const workflowInspectorId = document.getElementById("workflowInspectorId");
       const workflowInspectorPhone = document.getElementById("workflowInspectorPhone");
       const workflowInspectorVehicle = document.getElementById("workflowInspectorVehicle");
+      const workflowTimeClockCard = document.getElementById("workflowTimeClockCard");
+      const workflowTimeClockBadge = document.getElementById("workflowTimeClockBadge");
+      const workflowTimeClockLabel = document.getElementById("workflowTimeClockLabel");
+      const workflowTimeClockValue = document.getElementById("workflowTimeClockValue");
+      const workflowTimeClockDetail = document.getElementById("workflowTimeClockDetail");
+      const workflowClockOnBtn = document.getElementById("workflowClockOnBtn");
+      const workflowClockOffBtn = document.getElementById("workflowClockOffBtn");
       const workflowReadinessCard = document.getElementById("workflowReadinessCard");
       const workflowReadinessInspector = document.getElementById("workflowReadinessInspector");
       const workflowReadinessChecks = [...document.querySelectorAll("[data-workflow-readiness]")];
@@ -12952,6 +12993,7 @@
       const WORKFLOW_HISTORY_STORAGE_KEY = "mpiWorkflowJobHistoryV1";
       const WORKFLOW_DAY_COMPLETE_STORAGE_KEY = "mpiWorkflowDayCompleteV1";
       const WORKFLOW_CLOSEOUT_HISTORY_STORAGE_KEY = "mpiWorkflowCloseoutHistoryV1";
+      const WORKFLOW_TIME_CLOCK_STORAGE_KEY = "mpiWorkflowTimeClockV1";
       const WORKFLOW_EMAIL_ENDPOINT = "https://script.google.com/macros/s/AKfycbzd701WKgQIzWP24pmjL3gaTFIjH2iHxjMYzirArFoYq8nup57p8h1VMmJPx9MVYOqL/exec";
       const WORKFLOW_EMAIL_SOURCE = "mpi-field-tools-daily-closeout";
       const WORKFLOW_STAGES = ["scheduled", "on-my-way", "arrived", "in-progress", "equipment", "completed"];
@@ -12968,6 +13010,8 @@
       let workflowMessageEta = "";
       let workflowAdminFilter = "today";
       let workflowDailySummaryInFlight = false;
+      let workflowTimeClockInFlight = false;
+      let workflowTimeClockInterval = 0;
       const FORM_DRAFT_CONFIG = [
         { form: damageForm, key: "mpiDraftDamageV1", status: damageSubmitStatus, photoReminder: true },
         { form: toolCheckForm, key: "mpiDraftToolCheckV1", status: toolCheckSubmitStatus },
@@ -13114,6 +13158,148 @@
         try { localStorage.setItem(WORKFLOW_ACTIVITY_STORAGE_KEY, JSON.stringify(activity.slice(-5000))); } catch (_) {}
         renderWorkflowAdmin();
         return event;
+      }
+
+      function loadWorkflowTimeClock() {
+        try {
+          const record = JSON.parse(localStorage.getItem(WORKFLOW_TIME_CLOCK_STORAGE_KEY) || "null");
+          const profile = loadWorkflowProfile();
+          if (!record || record.date !== localDateKey() || !Array.isArray(record.sessions)) return null;
+          if (profile?.id && record.inspectorId && record.inspectorId !== profile.id) return null;
+          return {
+            date: record.date,
+            inspector: String(record.inspector || "").trim().slice(0, 80),
+            inspectorId: String(record.inspectorId || "").trim().slice(0, 40),
+            sessions: record.sessions.slice(0, 12).map(session => ({
+              clockedInAt: String(session?.clockedInAt || ""),
+              clockedOutAt: String(session?.clockedOutAt || ""),
+              clockInLocation: session?.clockInLocation && typeof session.clockInLocation === "object" ? { ...session.clockInLocation } : null,
+              clockOutLocation: session?.clockOutLocation && typeof session.clockOutLocation === "object" ? { ...session.clockOutLocation } : null
+            })).filter(session => session.clockedInAt)
+          };
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function saveWorkflowTimeClock(record) {
+        try { localStorage.setItem(WORKFLOW_TIME_CLOCK_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
+      }
+
+      function workflowActiveClockSession(record = loadWorkflowTimeClock()) {
+        const session = record?.sessions?.[record.sessions.length - 1];
+        return session?.clockedInAt && !session.clockedOutAt ? session : null;
+      }
+
+      function workflowWorkedMilliseconds(record = loadWorkflowTimeClock(), endTime = Date.now()) {
+        return (record?.sessions || []).reduce((total, session) => {
+          const start = new Date(session.clockedInAt).getTime();
+          const end = session.clockedOutAt ? new Date(session.clockedOutAt).getTime() : endTime;
+          return total + (Number.isFinite(start) && Number.isFinite(end) && end > start ? end - start : 0);
+        }, 0);
+      }
+
+      function workflowWorkedDuration(record = loadWorkflowTimeClock(), endTime = Date.now()) {
+        const minutes = Math.max(0, Math.floor(workflowWorkedMilliseconds(record, endTime) / 60000));
+        const hours = Math.floor(minutes / 60);
+        const remainder = minutes % 60;
+        return hours ? `${hours} hr ${remainder} min` : `${remainder} min`;
+      }
+
+      function workflowClockLocationDetail(location) {
+        if (location?.status === "recorded") {
+          const accuracy = Number(location.accuracyFeet) || 0;
+          return accuracy ? `Location recorded · accuracy about ${accuracy} ft` : "Location recorded";
+        }
+        if (location?.status === "denied") return "Time recorded · location permission was not allowed";
+        if (location?.status === "unavailable") return "Time recorded · location was unavailable";
+        return "Time recorded · location is not supported on this device";
+      }
+
+      function requestWorkflowClockLocation() {
+        return new Promise(resolve => {
+          if (!navigator.geolocation) {
+            resolve({ status: "unsupported" });
+            return;
+          }
+          navigator.geolocation.getCurrentPosition(position => {
+            resolve({
+              status: "recorded",
+              latitude: Number(position.coords.latitude.toFixed(6)),
+              longitude: Number(position.coords.longitude.toFixed(6)),
+              accuracyFeet: Math.max(0, Math.round(Number(position.coords.accuracy || 0) * 3.28084))
+            });
+          }, error => {
+            resolve({ status: error?.code === 1 ? "denied" : "unavailable" });
+          }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+        });
+      }
+
+      function renderWorkflowTimeClock() {
+        if (!workflowTimeClockCard) return;
+        const profile = loadWorkflowProfile();
+        const record = loadWorkflowTimeClock();
+        const active = workflowActiveClockSession(record);
+        workflowTimeClockCard.hidden = !profile;
+        if (!profile) return;
+        workflowTimeClockBadge.textContent = active ? "Clocked on" : "Clocked off";
+        workflowTimeClockLabel.textContent = active ? "Current shift" : "Today’s recorded time";
+        workflowTimeClockValue.textContent = active
+          ? `${workflowWorkedDuration(record)} · since ${workflowClock(active.clockedInAt)}`
+          : record?.sessions?.length
+            ? workflowWorkedDuration(record)
+            : "Not clocked on";
+        const lastSession = record?.sessions?.[record.sessions.length - 1];
+        const lastLocation = active?.clockInLocation || lastSession?.clockOutLocation || lastSession?.clockInLocation;
+        workflowTimeClockDetail.textContent = workflowTimeClockInFlight
+          ? "Recording the time and requesting this phone’s location…"
+          : lastLocation
+            ? workflowClockLocationDetail(lastLocation)
+            : "Press Clock On to begin recording work time.";
+        workflowClockOnBtn.disabled = Boolean(active) || workflowTimeClockInFlight;
+        workflowClockOffBtn.disabled = !active || workflowTimeClockInFlight;
+      }
+
+      async function clockWorkflowOn() {
+        const profile = loadWorkflowProfile();
+        if (!profile || workflowActiveClockSession()) return;
+        workflowTimeClockInFlight = true;
+        renderWorkflowTimeClock();
+        const clockedInAt = new Date().toISOString();
+        const location = await requestWorkflowClockLocation();
+        const record = loadWorkflowTimeClock() || { date: localDateKey(), inspector: profile.name, inspectorId: profile.id, sessions: [] };
+        record.inspector = profile.name;
+        record.inspectorId = profile.id;
+        record.sessions.push({ clockedInAt, clockedOutAt: "", clockInLocation: location, clockOutLocation: null });
+        saveWorkflowTimeClock(record);
+        appendWorkflowEvent("Clocked on", { clockedInAt, locationStatus: location.status, accuracyFeet: location.accuracyFeet || "" }, null);
+        workflowTimeClockInFlight = false;
+        renderWorkflowTimeClock();
+        updateWorkflowDayCompleteButton();
+        showToast(`Clocked on at ${workflowClock(clockedInAt)}`);
+      }
+
+      async function clockWorkflowOff() {
+        const record = loadWorkflowTimeClock();
+        const active = workflowActiveClockSession(record);
+        if (!record || !active) return;
+        workflowTimeClockInFlight = true;
+        renderWorkflowTimeClock();
+        const clockedOutAt = new Date().toISOString();
+        const location = await requestWorkflowClockLocation();
+        active.clockedOutAt = clockedOutAt;
+        active.clockOutLocation = location;
+        saveWorkflowTimeClock(record);
+        appendWorkflowEvent("Clocked off", {
+          clockedOutAt,
+          worked: workflowWorkedDuration(record, new Date(clockedOutAt).getTime()),
+          locationStatus: location.status,
+          accuracyFeet: location.accuracyFeet || ""
+        }, null);
+        workflowTimeClockInFlight = false;
+        renderWorkflowTimeClock();
+        updateWorkflowDayCompleteButton();
+        showToast(`Clocked off at ${workflowClock(clockedOutAt)}`);
       }
 
       function loadWorkflowHistory() {
@@ -13736,6 +13922,7 @@
 
       function updateWorkflowDayCompleteButton() {
         const record = workflowDayCompleteRecord();
+        const clockActive = Boolean(workflowActiveClockSession());
         const checked = workflowEndOfDayChecks.filter(check => check.checked).length;
         const allConfirmed = workflowEndOfDayChecks.length > 0 && checked === workflowEndOfDayChecks.length;
         workflowEndOfDayChecks.forEach(check => { check.disabled = Boolean(record); });
@@ -13752,8 +13939,12 @@
                 : "SEND DAILY SUMMARY";
           return;
         }
-        workflowDayCompleteBtn.disabled = !allConfirmed;
-        workflowDayCompleteBtn.textContent = allConfirmed ? "SIGN OFF FOR DAY" : `CONFIRM EQUIPMENT · ${checked}/${workflowEndOfDayChecks.length}`;
+        workflowDayCompleteBtn.disabled = !allConfirmed || clockActive;
+        workflowDayCompleteBtn.textContent = clockActive
+          ? "CLOCK OFF BEFORE SIGNING OFF"
+          : allConfirmed
+            ? "SIGN OFF FOR DAY"
+            : `CONFIRM EQUIPMENT · ${checked}/${workflowEndOfDayChecks.length}`;
       }
 
       function renderWorkflowDayComplete() {
@@ -13770,7 +13961,9 @@
         }
         updateWorkflowDayCompleteButton();
         if (!record?.completedAt) {
-          workflowDayCompleteStatus.textContent = "Confirm every listed item to sign off.";
+          workflowDayCompleteStatus.textContent = workflowActiveClockSession()
+            ? "Confirm the equipment, then Clock Off before signing off for the day."
+            : "Confirm every listed item to sign off.";
         } else {
           const signedOff = new Date(record.completedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
           if (record.emailStatus === "sent") {
@@ -13805,9 +13998,11 @@
           localStorage.removeItem(WORKFLOW_HISTORY_STORAGE_KEY);
           localStorage.removeItem(LAST_CLEARED_JOB_STORAGE_KEY);
           localStorage.removeItem(SHIFT_RESET_STORAGE_KEY);
+          localStorage.removeItem(WORKFLOW_TIME_CLOCK_STORAGE_KEY);
           localStorage.setItem(DAILY_READINESS_STORAGE_KEY, JSON.stringify({ date: record.date, completed: true }));
           localStorage.setItem(WORKFLOW_DAY_COMPLETE_STORAGE_KEY, JSON.stringify(receipt));
         } catch (_) {}
+        renderWorkflowTimeClock();
         return receipt;
       }
 
@@ -13843,9 +14038,73 @@
         "Well test target duration reached": "Well test target duration reached",
         "Well test stopped early": "Well test stopped early",
         "Well test completed": "Well test completed",
+        "Clocked on": "Clocked on for work",
+        "Clocked off": "Clocked off from work",
         "End-of-day equipment check completed": "Equipment confirmed",
         "Signed off for day": "Inspector signed off for the day"
       };
+
+      const WORKFLOW_EMAIL_JOB_ACTIONS = new Set([
+        "Job opened",
+        "On My Way selected",
+        "Directions selected",
+        "Arrived",
+        "Inspection started",
+        "Job Complete selected",
+        "Used tools back on truck confirmed",
+        "Final job completion",
+        "Client call initiated",
+        "Client message composer opened",
+        "Running Behind selected",
+        "Client message cancelled",
+        "Well test started",
+        "Well test target duration reached",
+        "Well test stopped early",
+        "Well test completed"
+      ]);
+
+      function workflowEmailAddressIndex() {
+        const addresses = new Map();
+        const add = (keys, value) => {
+          const address = String(value || "").trim();
+          if (!address) return;
+          keys.filter(Boolean).map(String).forEach(key => {
+            if (!addresses.has(key)) addresses.set(key, address);
+          });
+        };
+
+        workflowScheduleJobs().forEach(job => {
+          add([job?.id, job?.calendarEventId, job?.spectoraJobId], job?.location || job?.property);
+        });
+        loadWorkflowHistory()
+          .filter(item => item.date === localDateKey())
+          .forEach(item => {
+            const job = item.job || {};
+            add([job.calendarEventId, job.id, job.spectoraJobId], job.property || job.location);
+          });
+        const active = loadActiveJob();
+        if (active) add([active.calendarEventId, active.spectoraJobId], active.property);
+        loadWorkflowActivity()
+          .filter(item => item.date === localDateKey())
+          .forEach(item => add([item.calendarEventId, item.jobId], item.property));
+        return addresses;
+      }
+
+      function workflowEmailAddressFor(item, addresses) {
+        const direct = String(item?.property || item?.location || item?.job?.property || item?.job?.location || "").trim();
+        if (direct) return direct;
+        const keys = [
+          item?.calendarEventId,
+          item?.jobId,
+          item?.job?.calendarEventId,
+          item?.job?.id,
+          item?.job?.spectoraJobId
+        ].filter(Boolean).map(String);
+        for (const key of keys) {
+          if (addresses.has(key)) return addresses.get(key);
+        }
+        return String(item?.data?.selectedProperty || "").trim();
+      }
 
       function workflowEmailDisplayDate(dateKey = localDateKey()) {
         const date = new Date(`${dateKey}T12:00:00`);
@@ -13855,6 +14114,7 @@
       }
 
       function workflowEmailActivitySummary() {
+        const addresses = workflowEmailAddressIndex();
         return loadWorkflowActivity()
           .filter(item => item.date === localDateKey() && WORKFLOW_EMAIL_ACTION_LABELS[item.action])
           .sort((left, right) => new Date(left.timestamp) - new Date(right.timestamp))
@@ -13874,7 +14134,7 @@
             return {
               time: workflowClock(item.timestamp),
               label: WORKFLOW_EMAIL_ACTION_LABELS[item.action],
-              address: String(item.property || "").trim(),
+              address: WORKFLOW_EMAIL_JOB_ACTIONS.has(item.action) ? workflowEmailAddressFor(item, addresses) : "",
               detail
             };
           });
@@ -13882,6 +14142,7 @@
 
       function workflowEmailCompletedJobs() {
         const seen = new Set();
+        const addresses = workflowEmailAddressIndex();
         return loadWorkflowHistory()
           .filter(item => item.date === localDateKey() && item.job?.property)
           .sort((left, right) => new Date(left.job?.scheduledStart || left.completedAt) - new Date(right.job?.scheduledStart || right.completedAt))
@@ -13894,7 +14155,7 @@
           })
           .slice(0, 20)
           .map(job => ({
-            address: String(job.property || "").trim(),
+            address: workflowEmailAddressFor({ job }, addresses) || "Address not available",
             scheduledTime: workflowClock(job.scheduledStart),
             services: (Array.isArray(job.serviceNames) ? job.serviceNames : [])
               .map(value => String(value || "").trim())
@@ -13911,6 +14172,9 @@
         const completedIds = new Set(completedHistory.map(item => item.job?.calendarEventId).filter(Boolean));
         const relevantJobs = workflowScheduleJobs().filter(job => completedIds.has(job.id));
         const readiness = workflowReadinessRecord();
+        const timeClock = loadWorkflowTimeClock();
+        if (relevantJobs.length && !timeClock?.sessions?.length) flags.push("Clock On was not recorded for this working day.");
+        if (workflowActiveClockSession(timeClock)) flags.push("The inspector remained clocked on when the daily closeout was prepared.");
         const firstStart = relevantJobs.map(job => scheduleJobTimestamp(job, "start")).filter(Boolean).sort((a, b) => a - b)[0];
         if (relevantJobs.length && !readiness) flags.push("Morning readiness confirmation was not completed.");
         if (readiness?.completedAt && firstStart && new Date(readiness.completedAt).getTime() > firstStart) {
@@ -13935,6 +14199,34 @@
         return [...new Set(flags)].slice(0, 12);
       }
 
+      function workflowEmailLocation(location) {
+        if (location?.status !== "recorded") return { recorded: false, status: String(location?.status || "unavailable") };
+        const latitude = Number(location.latitude);
+        const longitude = Number(location.longitude);
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return { recorded: false, status: "unavailable" };
+        return {
+          recorded: true,
+          latitude,
+          longitude,
+          accuracyFeet: Math.max(0, Math.round(Number(location.accuracyFeet) || 0))
+        };
+      }
+
+      function workflowEmailTimeClock() {
+        const record = loadWorkflowTimeClock();
+        if (!record?.sessions?.length) return null;
+        const first = record.sessions[0];
+        const last = record.sessions[record.sessions.length - 1];
+        return {
+          clockOnTime: workflowClock(first.clockedInAt),
+          clockOffTime: last.clockedOutAt ? workflowClock(last.clockedOutAt) : "Not clocked off",
+          totalWorked: workflowWorkedDuration(record),
+          shiftCount: record.sessions.length,
+          clockOnLocation: workflowEmailLocation(first.clockInLocation),
+          clockOffLocation: workflowEmailLocation(last.clockOutLocation)
+        };
+      }
+
       function workflowEmailRequestId(record) {
         if (record.emailRequestId) return record.emailRequestId;
         const random = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 14)}`;
@@ -13957,6 +14249,7 @@
           closeoutLabel: updated ? "Updated Daily Inspector Closeout" : "Daily Inspector Closeout",
           preheader: `${inspectorName} completed the daily inspector closeout for ${date}.`,
           equipment: (record.equipment || []).map(key => WORKFLOW_EMAIL_EQUIPMENT_LABELS[key]).filter(Boolean),
+          timeClock: workflowEmailTimeClock(),
           activity: workflowEmailActivitySummary(),
           jobs: workflowEmailCompletedJobs(),
           exceptions: workflowEmailExceptions()
@@ -14069,6 +14362,10 @@
         const existing = workflowDayCompleteRecord();
         if (existing) {
           submitWorkflowDailySummary(existing);
+          return;
+        }
+        if (workflowActiveClockSession()) {
+          showToast("Clock off before signing off for the day");
           return;
         }
         if (!workflowEndOfDayChecks.length || !workflowEndOfDayChecks.every(check => check.checked)) return;
@@ -14326,6 +14623,7 @@
         const readiness = workflowReadinessRecord();
         const active = loadActiveJob();
         workflowIdentityCard.hidden = Boolean(profile);
+        renderWorkflowTimeClock();
         workflowReadinessCard.hidden = true;
         workflowTodayCard.hidden = true;
         workflowJobCard.hidden = true;
@@ -14358,6 +14656,8 @@
         workflowIdentityForm.addEventListener("submit", saveWorkflowProfile);
         workflowReadinessChecks.forEach(check => check.addEventListener("change", updateWorkflowReadinessButton));
         workflowReadyBtn.addEventListener("click", completeWorkflowReadiness);
+        workflowClockOnBtn.addEventListener("click", clockWorkflowOn);
+        workflowClockOffBtn.addEventListener("click", clockWorkflowOff);
         workflowJobsList.addEventListener("click", handleWorkflowJobSelection);
         workflowNextJob.addEventListener("click", handleWorkflowJobSelection);
         workflowConnectSchedule.addEventListener("click", connectCompanyCalendar);
@@ -14402,6 +14702,7 @@
         workflowCopySummary.addEventListener("click", () => copyText(workflowSummaryText(false), "Daily activity summary copied"));
         workflowExportLog.addEventListener("click", () => copyText(workflowSummaryText(true), "Full activity log copied"));
         if (!workflowDepartureInterval) workflowDepartureInterval = window.setInterval(monitorWorkflowDeparture, 30000);
+        if (!workflowTimeClockInterval) workflowTimeClockInterval = window.setInterval(renderWorkflowTimeClock, 30000);
         document.addEventListener("visibilitychange", () => { if (!document.hidden) monitorWorkflowDeparture(); });
         window.addEventListener("pageshow", monitorWorkflowDeparture);
         window.addEventListener("focus", monitorWorkflowDeparture);
