@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="104">
+  <meta name="app-build" content="105">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -278,10 +278,6 @@
     .home-active-job-actions a { display: grid; min-height: 44px; place-items: center; padding: 9px 12px; color: var(--forest); background: #fff; border-radius: 9px; font-size: 10.5px; font-weight: 900; text-decoration: none; }
     .home-active-job-actions a:first-child { color: #11186a; background: #d7ad48; }
 
-    .home-tool-attention { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; max-width: 690px; margin: 12px auto 0; padding: 14px 16px; color: #621b18; background: #fff0ef; border: 1px solid #e7b7b3; border-radius: 14px; box-shadow: 0 10px 24px rgba(44,12,12,.12); }
-    .home-tool-attention strong { display: block; font-size: 13px; }
-    .home-tool-attention span { display: block; margin-top: 3px; color: #82403b; font-size: 10.5px; line-height: 1.4; }
-    .home-tool-attention a { display: grid; min-height: 44px; place-items: center; padding: 8px 12px; color: #fff; background: #9a2c28; border-radius: 9px; font-size: 10.5px; font-weight: 900; text-decoration: none; }
 
     .home-section-label {
       margin: 40px 0 10px;
@@ -4012,12 +4008,6 @@
     .field-reading-actions button { min-height: 44px; padding: 8px 12px; color: var(--bright-blue); background: #edf5fc; border: 1px solid #cbdff1; border-radius: 9px; font: inherit; font-size: 10.5px; font-weight: 850; cursor: pointer; }
     .field-readings-copy { width: 100%; min-height: 44px; margin-top: 12px; color: var(--forest); background: var(--orange); border: 0; border-radius: 10px; font: inherit; font-size: 11px; font-weight: 900; cursor: pointer; }
 
-    .tool-readiness-form { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; padding: 20px; border-bottom: 1px solid var(--line); }
-    .tool-readiness-form .field-wide { grid-column: 1 / -1; }
-    .tool-readiness-actions { display: flex; grid-column: 1 / -1; gap: 10px; }
-    .tool-readiness-actions .decode-btn { flex: 1; margin: 0; }
-    .tool-readiness-list { display: grid; gap: 10px; padding: 18px 20px 20px; }
-    .tool-readiness-empty { margin: 0; color: var(--ink-2); font-size: 12px; line-height: 1.5; }
     .service-pack-body { display: grid; gap: 16px; padding: 18px; border-top: 1px solid var(--line); }
     .service-pack-result { display: grid; gap: 10px; }
     .service-pack-result[hidden] { display: none; }
@@ -4034,15 +4024,6 @@
     .service-pack-item button { min-height: 42px; padding: 8px 11px; color: var(--bright-blue); background: #fff; border: 1px solid #c7d9e8; border-radius: 9px; font-size: 10px; font-weight: 900; }
     .service-pack-extras { margin: 0; padding: 12px 14px; color: #634a12; background: #fff9e9; border-left: 4px solid var(--orange); border-radius: 8px; font-size: 10.5px; line-height: 1.5; }
     .service-pack-confirm { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 10px; min-height: 44px; padding: 10px 12px; color: var(--forest); background: #eef5fb; border: 1px solid #c7d9e8; border-radius: 10px; font-size: 10.5px; font-weight: 850; line-height: 1.35; cursor: pointer; }
-    .tool-readiness-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 14px; align-items: center; padding: 14px; background: #fff; border: 1px solid var(--line); border-radius: 13px; }
-    .tool-readiness-copy { min-width: 0; }
-    .tool-readiness-copy strong { display: block; color: var(--forest); font-size: 14px; }
-    .tool-readiness-copy span { display: block; margin-top: 4px; color: var(--ink-2); font-size: 11px; line-height: 1.45; }
-    .tool-readiness-badge { padding: 6px 9px; color: #17643a; background: #eaf7ef; border-radius: 999px; font-size: 10px; font-weight: 850; white-space: nowrap; }
-    .tool-readiness-badge.due-soon { color: #785b0d; background: #fff4d2; }
-    .tool-readiness-badge.attention { color: #9a2c28; background: #fff0ef; }
-    .tool-readiness-item-actions { display: flex; grid-column: 1 / -1; gap: 8px; }
-    .tool-readiness-item-actions button { min-height: 44px; padding: 8px 12px; color: var(--bright); background: #edf5fc; border: 1px solid #cbdff1; border-radius: 10px; font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; }
 
     .job-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
     .job-shortcuts a { display: grid; min-height: 54px; place-items: center; padding: 10px; }
@@ -4152,15 +4133,12 @@
       .room-coverage-add .decode-btn { width: 100%; }
       .field-readings-form { grid-template-columns: 1fr; }
       .field-readings-form .field-wide { grid-column: auto; }
-      .tool-readiness-form { grid-template-columns: 1fr; }
-      .tool-readiness-form .field-wide { grid-column: auto; }
       .tool-commissioning-panel .damage-form { padding: 20px 16px 22px; }
       .onboarding-stage-grid { grid-template-columns: 1fr; }
       .onboarding-body { padding: 18px 15px 20px; }
       .onboarding-progress-row { align-items: start; grid-template-columns: 1fr; }
       .home-active-job { align-items: stretch; grid-template-columns: 1fr; padding: 17px; }
       .home-active-job-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .home-tool-attention { align-items: stretch; grid-template-columns: 1fr; }
       .home-version-row { align-items: stretch; flex-direction: column; }
       .app-update-notice { align-items: stretch; grid-template-columns: 1fr; }
     }
@@ -4393,7 +4371,7 @@
       .workflow-schedule-tools { align-items: flex-start; flex-direction: column; }
     }
 
-    /* Build 104: simple four-hub field navigation */
+    /* Build 105: simple four-hub field navigation */
     body { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
     .topbar-actions .offline-badge { display: none; }
     .app-home { min-height: calc(100dvh - 132px); }
@@ -4557,10 +4535,6 @@
         <a id="homeActiveJobMap" href="https://maps.apple.com/" target="_blank" rel="noopener">Directions</a>
       </div>
     </aside>
-    <aside class="home-tool-attention" id="homeToolAttention" aria-live="polite" hidden>
-      <div><strong id="homeToolAttentionTitle">Equipment needs attention</strong><span id="homeToolAttentionDetail">Review held or overdue field equipment before use.</span></div>
-      <a href="#tool-guides">Review equipment</a>
-    </aside>
     <p class="home-section-label">Choose where you need to go</p>
     <nav class="home-tools" aria-label="MPI app sections">
       <a class="home-tool-card" href="#job-companion">
@@ -4584,7 +4558,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">104</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">105</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -5594,34 +5568,6 @@
           <div class="service-pack-result" id="servicePackResult" hidden></div>
           <p class="report-quality-note">Packing aid only. Confirm the contracted scope, inspector authorization, current MPI procedure, required forms, batteries, PPE, consumables, and the full assigned tool list before travel.</p>
         </div>
-      </details>
-
-      <details class="panel escalation-guide" id="toolReadinessPanel">
-        <summary>
-          <span><strong>Equipment readiness</strong><small>Keep a device-only list of field equipment that is ready, due for a required check, or held out of service.</small></span>
-          <span class="daily-readiness-status" id="toolReadinessStatus">No items</span>
-        </summary>
-        <form class="tool-readiness-form" id="toolReadinessForm">
-          <input id="toolReadinessEditId" type="hidden">
-          <div class="field"><label for="toolReadinessName">Tool and identifying number *</label><input class="damage-input" id="toolReadinessName" type="text" maxlength="120" placeholder="Example: Tramex MEP / Asset 04" required></div>
-          <div class="field"><label for="toolReadinessDue">Next required check or service</label><input class="damage-input" id="toolReadinessDue" type="date"></div>
-          <div class="field">
-            <label for="toolReadinessState">Current status *</label>
-            <div class="select-wrap"><select class="damage-input" id="toolReadinessState" required>
-              <option value="ready">Ready for approved company use</option>
-              <option value="hold">Hold out of service</option>
-            </select></div>
-          </div>
-          <div class="field"><label for="toolReadinessNote">Check, restriction, or storage note</label><input class="damage-input" id="toolReadinessNote" type="text" maxlength="180" placeholder="Example: Known-condition check completed"></div>
-          <div class="tool-readiness-actions">
-            <button class="decode-btn" type="submit">Save readiness item</button>
-            <button class="secondary-btn" id="toolReadinessCancel" type="button" hidden>Cancel edit</button>
-          </div>
-        </form>
-        <div class="tool-readiness-list" id="toolReadinessList">
-          <p class="tool-readiness-empty" id="toolReadinessEmpty">Add only equipment with a company or manufacturer check, calibration, inspection, or service requirement. Dates must come from the current instruction or company schedule.</p>
-        </div>
-        <p class="report-quality-note">This list stays on this phone and does not replace a manufacturer instruction, company asset record, calibration certificate, ladder inspection, or management hold. Use Requests &amp; Feedback to report an equipment problem.</p>
       </details>
 
       <details class="panel escalation-guide tool-commissioning-panel" id="toolCommissioningPanel">
@@ -6885,7 +6831,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 104</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 105</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7601,9 +7547,6 @@
       const homeActiveJobProperty = document.getElementById("homeActiveJobProperty");
       const homeActiveJobProgress = document.getElementById("homeActiveJobProgress");
       const homeActiveJobMap = document.getElementById("homeActiveJobMap");
-      const homeToolAttention = document.getElementById("homeToolAttention");
-      const homeToolAttentionTitle = document.getElementById("homeToolAttentionTitle");
-      const homeToolAttentionDetail = document.getElementById("homeToolAttentionDetail");
       const homeSearchInput = document.getElementById("homeSearchInput");
       const homeSearchClear = document.getElementById("homeSearchClear");
       const homeSearchResults = document.getElementById("homeSearchResults");
@@ -7863,17 +7806,6 @@
       const servicePackSelect = document.getElementById("servicePackSelect");
       const servicePackResult = document.getElementById("servicePackResult");
       const servicePackStatus = document.getElementById("servicePackStatus");
-      const toolReadinessPanel = document.getElementById("toolReadinessPanel");
-      const toolReadinessStatus = document.getElementById("toolReadinessStatus");
-      const toolReadinessForm = document.getElementById("toolReadinessForm");
-      const toolReadinessEditId = document.getElementById("toolReadinessEditId");
-      const toolReadinessName = document.getElementById("toolReadinessName");
-      const toolReadinessDue = document.getElementById("toolReadinessDue");
-      const toolReadinessState = document.getElementById("toolReadinessState");
-      const toolReadinessNote = document.getElementById("toolReadinessNote");
-      const toolReadinessCancel = document.getElementById("toolReadinessCancel");
-      const toolReadinessList = document.getElementById("toolReadinessList");
-      const toolReadinessEmpty = document.getElementById("toolReadinessEmpty");
       const toolCommissionForm = document.getElementById("toolCommissionForm");
       const toolCommissionInspector = document.getElementById("toolCommissionInspector");
       const toolCommissionDate = document.getElementById("toolCommissionDate");
@@ -8037,6 +7969,8 @@
       let timedAlertRepeatInterval = 0;
       let activeTimedAlert = null;
       let timedAlertAudioContext = null;
+      let todayJobsActiveDate = "";
+      let todayJobsDateCheckInterval = 0;
 
       const TOOL_GUIDES = [
         {
@@ -12557,7 +12491,17 @@
       function renderSavedTodayJobs() {
         let saved = null;
         try { saved = JSON.parse(localStorage.getItem(CALENDAR_CACHE_KEY) || "null"); } catch (_) {}
-        if (!saved || saved.date !== localDateKey() || !Array.isArray(saved.jobs)) return false;
+        if (!saved || saved.date !== localDateKey() || !Array.isArray(saved.jobs)) {
+          if (saved?.date && saved.date !== localDateKey()) {
+            try { localStorage.removeItem(CALENDAR_CACHE_KEY); } catch (_) {}
+          }
+          workflowCurrentJobs = [];
+          renderTodayJobs([], todayCalendarName.textContent || "Company schedule");
+          todayJobsStatus.textContent = navigator.onLine
+            ? "No schedule is saved for today. Refresh the company schedule."
+            : "Offline — no schedule is saved for today.";
+          return false;
+        }
         autoSelectCurrentScheduleJob(saved.jobs);
         renderTodayJobs(saved.jobs, saved.calendarName, { cached: true });
         todayJobsStatus.textContent = navigator.onLine
@@ -12565,6 +12509,56 @@
           : "Offline — showing the last schedule saved on this phone.";
         calendarRefreshBtn.hidden = false;
         return true;
+      }
+
+      function calendarJobDateKey(job) {
+        const value = String(job?.scheduledStart || job?.start?.dateTime || job?.start?.date || "");
+        if (!value) return "";
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? "" : localDateKey(date);
+      }
+
+      function resetScheduleForCurrentDate() {
+        const currentDate = localDateKey();
+        const dateChanged = todayJobsActiveDate !== currentDate;
+        todayJobsActiveDate = currentDate;
+        todayJobsDate.textContent = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+        let cacheDate = "";
+        try {
+          const cache = JSON.parse(localStorage.getItem(CALENDAR_CACHE_KEY) || "null");
+          cacheDate = String(cache?.date || "");
+          if (cacheDate && cacheDate !== currentDate) localStorage.removeItem(CALENDAR_CACHE_KEY);
+        } catch (_) {}
+
+        const active = loadActiveJob();
+        const activeDate = calendarJobDateKey(active);
+        if (active?.calendarEventId && activeDate && activeDate !== currentDate) {
+          try {
+            localStorage.setItem(LAST_CLEARED_JOB_STORAGE_KEY, JSON.stringify({ job: active, clearedAt: new Date().toISOString(), reason: "date-rollover" }));
+            localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY);
+          } catch (_) {}
+          renderActiveJob(null);
+          renderWorkflowApp();
+        }
+
+        if (dateChanged || (cacheDate && cacheDate !== currentDate)) workflowCurrentJobs = [];
+        return dateChanged || (cacheDate && cacheDate !== currentDate);
+      }
+
+      function refreshScheduleForCurrentDate({ force = false } = {}) {
+        const dateChanged = resetScheduleForCurrentDate();
+        if (!dateChanged && !force) return;
+        const restored = renderSavedTodayJobs();
+        const token = savedCalendarToken();
+        if (token && navigator.onLine) {
+          loadScheduleCalendars(token).catch(() => {
+            if (!restored) {
+              todayJobsStatus.textContent = "Today’s schedule could not be refreshed. Tap Refresh schedule.";
+              calendarConnectBtn.textContent = "Refresh schedule";
+            }
+          });
+        }
       }
 
       function calendarField(text, labels) {
@@ -12757,7 +12751,7 @@
       }
 
       function initializeTodayJobs() {
-        todayJobsDate.textContent = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+        resetScheduleForCurrentDate();
         let savedName = "";
         try { savedName = localStorage.getItem(CALENDAR_NAME_KEY) || ""; } catch (_) {}
         if (savedName) todayCalendarName.textContent = savedName;
@@ -12765,11 +12759,21 @@
         if (savedCalendarToken()) {
           calendarConnectBtn.textContent = "Connected ✓";
           calendarRefreshBtn.hidden = false;
-          if (window.location.hash === "#job-companion" && navigator.onLine) loadScheduleCalendars().catch(() => renderSavedTodayJobs());
+          if (navigator.onLine) loadScheduleCalendars().catch(() => renderSavedTodayJobs());
         } else {
           let previouslyAuthorized = false;
           try { previouslyAuthorized = localStorage.getItem(CALENDAR_AUTHORIZED_KEY) === "yes"; } catch (_) {}
           if (previouslyAuthorized) calendarConnectBtn.textContent = "Refresh schedule";
+        }
+        document.addEventListener("visibilitychange", () => {
+          if (!document.hidden) refreshScheduleForCurrentDate({ force: window.location.hash === "#job-companion" });
+        });
+        window.addEventListener("pageshow", () => refreshScheduleForCurrentDate({ force: window.location.hash === "#job-companion" }));
+        window.addEventListener("hashchange", () => {
+          if (window.location.hash === "#job-companion") refreshScheduleForCurrentDate({ force: true });
+        });
+        if (!todayJobsDateCheckInterval) {
+          todayJobsDateCheckInterval = window.setInterval(() => refreshScheduleForCurrentDate(), 60000);
         }
       }
 
@@ -12870,7 +12874,6 @@
       const LAST_CLEARED_JOB_STORAGE_KEY = "mpiLastClearedJobV1";
       const DAILY_READINESS_STORAGE_KEY = "mpiDailyReadinessV1";
       const SHIFT_RESET_STORAGE_KEY = "mpiShiftResetV1";
-      const TOOL_READINESS_STORAGE_KEY = "mpiToolReadinessV1";
       const PHONE_SETUP_STORAGE_KEY = "mpiPhoneSetupV1";
       const WORKFLOW_PROFILE_STORAGE_KEY = "mpiWorkflowProfileV1";
       const WORKFLOW_ACTIVITY_STORAGE_KEY = "mpiWorkflowActivityV1";
@@ -15973,150 +15976,6 @@
         toolGuideDetail.scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
-      function loadToolReadiness() {
-        try {
-          const saved = JSON.parse(localStorage.getItem(TOOL_READINESS_STORAGE_KEY) || "[]");
-          if (!Array.isArray(saved)) return [];
-          return saved.map((item, index) => ({
-            id: String(item?.id || `tool-${index}`),
-            name: String(item?.name || "").trim().slice(0, 120),
-            due: /^\d{4}-\d{2}-\d{2}$/.test(String(item?.due || "")) ? String(item.due) : "",
-            state: item?.state === "hold" ? "hold" : "ready",
-            note: String(item?.note || "").trim().slice(0, 180),
-            updatedAt: String(item?.updatedAt || "")
-          })).filter(item => item.name);
-        } catch (_) {
-          return [];
-        }
-      }
-
-      function storeToolReadiness(items) {
-        try { localStorage.setItem(TOOL_READINESS_STORAGE_KEY, JSON.stringify(items)); } catch (_) {}
-      }
-
-      function toolReadinessCondition(item) {
-        if (item.state === "hold") return { rank: 0, label: "Hold", className: "attention", attention: true, detail: "Held out of service" };
-        if (!item.due) return { rank: 3, label: "Ready", className: "", attention: false, detail: "No scheduled date" };
-        const today = new Date(`${localDateKey()}T12:00:00`);
-        const due = new Date(`${item.due}T12:00:00`);
-        const days = Math.round((due - today) / 86400000);
-        const formatted = due.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-        if (days < 0) return { rank: 0, label: "Overdue", className: "attention", attention: true, detail: `Required date was ${formatted}` };
-        if (days === 0) return { rank: 0, label: "Due today", className: "attention", attention: true, detail: `Required date is ${formatted}` };
-        if (days <= 30) return { rank: 1, label: `Due in ${days}d`, className: "due-soon", attention: false, detail: `Required date is ${formatted}` };
-        return { rank: 2, label: "Ready", className: "", attention: false, detail: `Next required date is ${formatted}` };
-      }
-
-      function resetToolReadinessForm() {
-        toolReadinessForm.reset();
-        toolReadinessEditId.value = "";
-        toolReadinessState.value = "ready";
-        toolReadinessCancel.hidden = true;
-        toolReadinessForm.querySelector('button[type="submit"]').textContent = "Save readiness item";
-      }
-
-      function renderToolReadiness() {
-        const items = loadToolReadiness().map(item => ({ ...item, condition: toolReadinessCondition(item) }))
-          .sort((a, b) => a.condition.rank - b.condition.rank || a.name.localeCompare(b.name));
-        const attentionCount = items.filter(item => item.condition.attention).length;
-        toolReadinessStatus.textContent = attentionCount ? `${attentionCount} need attention` : items.length ? `${items.length} tracked` : "No items";
-        toolReadinessStatus.classList.toggle("is-ready", items.length > 0 && attentionCount === 0);
-        toolReadinessPanel.classList.toggle("is-complete", items.length > 0 && attentionCount === 0);
-        homeToolAttention.hidden = attentionCount === 0;
-        if (attentionCount) {
-          homeToolAttentionTitle.textContent = `${attentionCount} equipment ${attentionCount === 1 ? "item needs" : "items need"} attention`;
-          const held = items.filter(item => item.state === "hold").length;
-          const overdue = items.filter(item => item.state !== "hold" && item.condition.label === "Overdue").length;
-          homeToolAttentionDetail.textContent = [held ? `${held} held out of service` : "", overdue ? `${overdue} overdue` : ""].filter(Boolean).join(" · ");
-        }
-        toolReadinessList.replaceChildren();
-        if (!items.length) {
-          toolReadinessEmpty.textContent = "Add only equipment with a company or manufacturer check, calibration, inspection, or service requirement. Dates must come from the current instruction or company schedule.";
-          toolReadinessList.append(toolReadinessEmpty);
-          return;
-        }
-
-        items.forEach(item => {
-          const row = document.createElement("div");
-          row.className = "tool-readiness-item";
-          const copy = document.createElement("div");
-          copy.className = "tool-readiness-copy";
-          const name = document.createElement("strong");
-          name.textContent = item.name;
-          const detail = document.createElement("span");
-          detail.textContent = `${item.condition.detail}${item.note ? ` · ${item.note}` : ""}`;
-          copy.append(name, detail);
-          const badge = document.createElement("span");
-          badge.className = `tool-readiness-badge${item.condition.className ? ` ${item.condition.className}` : ""}`;
-          badge.textContent = item.condition.label;
-          const actions = document.createElement("div");
-          actions.className = "tool-readiness-item-actions";
-          const edit = document.createElement("button");
-          edit.type = "button";
-          edit.dataset.toolReadinessEdit = item.id;
-          edit.textContent = "Update";
-          const remove = document.createElement("button");
-          remove.type = "button";
-          remove.dataset.toolReadinessRemove = item.id;
-          remove.textContent = "Remove";
-          actions.append(edit, remove);
-          row.append(copy, badge, actions);
-          toolReadinessList.append(row);
-        });
-      }
-
-      function saveToolReadiness(event) {
-        event.preventDefault();
-        if (!toolReadinessForm.reportValidity()) return;
-        const items = loadToolReadiness();
-        const editingId = toolReadinessEditId.value;
-        const name = toolReadinessName.value.trim().slice(0, 120);
-        if (!editingId && items.some(item => item.name.toLowerCase() === name.toLowerCase())) {
-          showToast("That equipment is already tracked");
-          return;
-        }
-        const record = {
-          id: editingId || `tool-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
-          name,
-          due: toolReadinessDue.value,
-          state: toolReadinessState.value === "hold" ? "hold" : "ready",
-          note: toolReadinessNote.value.trim().slice(0, 180),
-          updatedAt: new Date().toISOString()
-        };
-        const index = items.findIndex(item => item.id === record.id);
-        if (index >= 0) items[index] = record;
-        else items.push(record);
-        storeToolReadiness(items);
-        resetToolReadinessForm();
-        renderToolReadiness();
-        showToast(index >= 0 ? "Readiness item updated" : "Readiness item saved on this phone");
-      }
-
-      function handleToolReadinessAction(event) {
-        const edit = event.target.closest("[data-tool-readiness-edit]");
-        const remove = event.target.closest("[data-tool-readiness-remove]");
-        if (!edit && !remove) return;
-        const items = loadToolReadiness();
-        const id = (edit || remove).dataset.toolReadinessEdit || (edit || remove).dataset.toolReadinessRemove;
-        const item = items.find(entry => entry.id === id);
-        if (!item) return;
-        if (edit) {
-          toolReadinessEditId.value = item.id;
-          toolReadinessName.value = item.name;
-          toolReadinessDue.value = item.due;
-          toolReadinessState.value = item.state;
-          toolReadinessNote.value = item.note;
-          toolReadinessCancel.hidden = false;
-          toolReadinessForm.querySelector('button[type="submit"]').textContent = "Update readiness item";
-          toolReadinessForm.scrollIntoView({ behavior: "smooth", block: "center" });
-          return;
-        }
-        if (!window.confirm(`Remove ${item.name} from this phone’s readiness list?`)) return;
-        storeToolReadiness(items.filter(entry => entry.id !== id));
-        if (toolReadinessEditId.value === id) resetToolReadinessForm();
-        renderToolReadiness();
-      }
-
       function initializeToolGuides() {
         populateToolGuideCategories();
         const requestedGuideId = new URL(window.location.href).searchParams.get("tool") || "";
@@ -16126,7 +15985,6 @@
         activeToolGuideId = defaultGuide?.id || "";
         if (defaultGuide) renderToolGuideDetail(defaultGuide);
         renderServicePack();
-        renderToolReadiness();
         renderToolGuideResults();
       }
 
@@ -17014,9 +16872,6 @@
       toolCheckResultOptions.forEach(option => option.addEventListener("change", updateToolCheckResult));
       toolCheckForm.addEventListener("submit", validateToolCheckSubmission);
       toolCommissionForm.addEventListener("submit", validateToolCommissionSubmission);
-      toolReadinessForm.addEventListener("submit", saveToolReadiness);
-      toolReadinessList.addEventListener("click", handleToolReadinessAction);
-      toolReadinessCancel.addEventListener("click", resetToolReadinessForm);
       openFirstUseGuideBtn.addEventListener("click", () => {
         toolGuideSearch.value = "newly purchased tool";
         toolGuideCategory.value = "";

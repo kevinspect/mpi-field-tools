@@ -20,6 +20,22 @@
 
 ## Change log
 
+### Build 67 — Correct daily job rollover and remove equipment readiness (App Build 105)
+
+Status: published August 28, 2026.
+
+#### Changes
+
+1. Added a daily schedule rollover check that removes an expired calendar cache instead of continuing to display the previous day’s jobs.
+2. Clears a previous-day active calendar job from the inspector workflow while retaining its recovery copy and management activity records.
+3. Refreshes today’s schedule when the app opens, returns to the foreground, or the inspector opens My Day; it also checks for a date change once per minute while running.
+4. Shows a clear reconnect or refresh message when today has no current saved schedule rather than falling back to yesterday’s information.
+5. Removed the Equipment readiness panel and its home-screen attention banner, controls, and related app logic.
+
+#### Validation
+
+- Verified the date-rollover path with a deliberately seeded previous-day cache and active job, confirmed today’s screen contained no previous-day address, checked the refreshed mobile layout, parsed the full JavaScript, and confirmed unique element IDs and the Build 105 offline cache.
+
 ### Build 66 — Free Gusto time-off launcher (App Build 104)
 
 Status: published August 27, 2026.
