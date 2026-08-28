@@ -1,5 +1,19 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 111 — Responsive MPI Office Console
+
+- Added an owner/admin console designed for both iPhone and desktop.
+- Added secure company Google-account sign-in with persistent sessions.
+- Added owner, office-admin, and inspector roles so management tools stay hidden from inspectors.
+- Added office publishing for announcements, individual instructions, training assignments, job notes, procedures, and equipment notices.
+- Added inspector-specific and company-wide delivery with due dates, priority, supporting links, and acknowledgement/completion tracking.
+- Added an Office Updates screen to the field app with offline Firestore caching after synchronization.
+- Added a management account directory and responsive dashboard statistics.
+- Added Firestore security rules that restrict management data to owner/admin accounts and each inspector's own assignments.
+- Restricted owner-role changes to the owner account and aligned inspector update queries with the security rules.
+- Configured `kev@michiganpropertyinspections.com` as the sole MPI owner identity; no workflow or admin email is directed to the Firebase technical account.
+- Expanded the offline app shell to include the Office Console and its supporting files.
+
 ## Protected fallback
 
 - Date created: August 26, 2026
