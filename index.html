@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="106">
+  <meta name="app-build" content="107">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4404,7 +4404,7 @@
       .workflow-schedule-tools { align-items: flex-start; flex-direction: column; }
     }
 
-    /* Build 106: simple four-hub field navigation and price-free calendar job notes */
+    /* Build 107: reliable dynamic job selection, destination checks, and completed-job clearing */
     body { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
     .topbar-actions .offline-badge { display: none; }
     .app-home { min-height: calc(100dvh - 132px); }
@@ -4591,7 +4591,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">106</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">107</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -6871,7 +6871,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 106</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 107</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -12444,10 +12444,10 @@
         const withAddress = jobs.filter(job => job.location);
         if (!withAddress.length) return null;
         const cleared = loadLastClearedJob()?.job;
-        const candidates = cleared?.calendarEventId
-          ? withAddress.filter(job => job.id !== cleared.calendarEventId)
-          : withAddress;
-        const available = candidates.length ? candidates : withAddress;
+        const completed = workflowCompletedEventIds();
+        const available = withAddress.filter(job => !completed.has(job.id)
+          && (!cleared?.calendarEventId || job.id !== cleared.calendarEventId));
+        if (!available.length) return null;
         const now = Date.now();
         return available.find(job => {
           const start = scheduleJobTimestamp(job, "start");
@@ -12462,11 +12462,19 @@
           return false;
         }
         const existing = loadActiveJob();
-        const sameJob = Boolean(existing?.property) && (
-          (job.id && existing.calendarEventId === job.id)
-          || existing.property.toLowerCase() === job.location.toLowerCase()
-        );
+        const sameJob = Boolean(existing?.property) && (job.id
+          ? existing.calendarEventId === job.id
+          : existing.property.toLowerCase() === job.location.toLowerCase());
         if (sameJob) {
+          existing.property = String(job.location || existing.property);
+          existing.calendarSummary = String(job.summary || existing.calendarSummary || "Inspection appointment");
+          existing.scheduledStart = String(job.start?.dateTime || job.start?.date || existing.scheduledStart || "");
+          existing.scheduledEnd = String(job.end?.dateTime || job.end?.date || existing.scheduledEnd || "");
+          existing.clientName = String(job.clientName || existing.clientName || "");
+          existing.clientPhone = String(job.clientPhone || existing.clientPhone || "");
+          existing.agentName = String(job.agentName || existing.agentName || "");
+          existing.agentPhone = String(job.agentPhone || existing.agentPhone || "");
+          existing.serviceNames = Array.isArray(job.serviceNames) ? job.serviceNames.map(String) : existing.serviceNames;
           existing.jobNotes = workflowJobNotesFor(job);
           storeActiveJob(existing);
           renderActiveJob(existing);
@@ -12474,8 +12482,10 @@
         }
         if (automatic && existing?.property) return false;
         if (!automatic && existing?.property) {
-          if (new Set(existing.steps || []).size > 0) {
-            const switchJobs = window.confirm(`Switch the current job from ${existing.property} to ${job.location}? A recovery copy of the current job will be kept on this phone.`);
+          const existingHasStarted = !["", "scheduled", "completed"].includes(String(existing.workflowStatus || "scheduled"))
+            || new Set(existing.steps || []).size > 0;
+          if (existingHasStarted) {
+            const switchJobs = window.confirm(`Open ${job.location} instead of the current job at ${existing.property}? The current job will be kept as a recovery copy on this phone.`);
             if (!switchJobs) return false;
           }
           try { localStorage.setItem(LAST_CLEARED_JOB_STORAGE_KEY, JSON.stringify({ job: existing, clearedAt: new Date().toISOString() })); } catch (_) {}
@@ -13197,9 +13207,15 @@
       function workflowNextScheduledJob(jobs = workflowScheduleJobs()) {
         const completed = workflowCompletedEventIds();
         const active = loadActiveJob();
-        if (active?.calendarEventId) return jobs.find(job => job.id === active.calendarEventId) || null;
-        const remaining = jobs.filter(job => !completed.has(job.id));
+        const remaining = jobs
+          .filter(job => !completed.has(job.id))
+          .slice()
+          .sort((left, right) => scheduleJobTimestamp(left, "start") - scheduleJobTimestamp(right, "start"));
         if (!remaining.length) return null;
+        if (active?.calendarEventId && active.workflowStatus !== "scheduled") {
+          const activeJob = remaining.find(job => job.id === active.calendarEventId);
+          if (activeJob) return activeJob;
+        }
         const now = Date.now();
         return remaining.find(job => scheduleJobTimestamp(job, "end") > now)
           || remaining[0];
@@ -13212,14 +13228,17 @@
       }
 
       function renderWorkflowTodayJobs(jobs = workflowScheduleJobs(), calendarName = "Company schedule", { cached = false } = {}) {
-        workflowCurrentJobs = Array.isArray(jobs) ? jobs : [];
+        workflowCurrentJobs = Array.isArray(jobs)
+          ? jobs.slice().sort((left, right) => scheduleJobTimestamp(left, "start") - scheduleJobTimestamp(right, "start"))
+          : [];
         if (!workflowJobsList || !workflowNextJob) return;
         const profile = loadWorkflowProfile();
         const completed = workflowCompletedEventIds();
+        const remainingJobs = workflowCurrentJobs.filter(job => !completed.has(job.id));
         const next = workflowNextScheduledJob(workflowCurrentJobs);
         workflowTodayInspector.textContent = profile?.name || "Inspector";
         workflowScheduleStatus.textContent = workflowCurrentJobs.length
-          ? `${workflowCurrentJobs.length} ${workflowCurrentJobs.length === 1 ? "job" : "jobs"} · ${calendarName || "Company schedule"}${cached ? " · saved on this phone" : ""}`
+          ? `${remainingJobs.length} ${remainingJobs.length === 1 ? "job" : "jobs"} remaining · ${calendarName || "Company schedule"}${cached ? " · saved on this phone" : ""}`
           : "Connect the MPI schedule once on this company phone.";
         workflowConnectSchedule.textContent = savedCalendarToken() ? "Connected ✓" : "Connect schedule";
         workflowRefreshSchedule.hidden = !savedCalendarToken() && !workflowCurrentJobs.length;
@@ -13234,14 +13253,13 @@
         } else if (workflowCurrentJobs.length) {
           const complete = document.createElement("div");
           complete.className = "workflow-next-job";
-          complete.innerHTML = "<span>Schedule complete</span><h4>All jobs are closed</h4><p>Confirm the end of the working day below.</p>";
+          complete.innerHTML = "<span>Today’s schedule</span><h4>No jobs remaining</h4><p>Completed properties have been cleared from My Day. Continue to the end-of-day check below.</p>";
           workflowNextJob.appendChild(complete);
         }
         workflowJobsList.replaceChildren();
-        workflowCurrentJobs.forEach(job => {
-          const done = completed.has(job.id);
+        remainingJobs.forEach(job => {
           const row = document.createElement("article");
-          row.className = `workflow-job-row${done ? " is-complete" : ""}`;
+          row.className = "workflow-job-row";
           const time = document.createElement("time");
           time.textContent = eventTimeLabel(job).time;
           const copy = document.createElement("div");
@@ -13249,13 +13267,12 @@
           title.textContent = job.location || job.summary || "Inspection appointment";
           const detail = document.createElement("small");
           const hasNotes = workflowJobNotesFor(job).length > 0;
-          detail.textContent = done ? "Completed today" : `${workflowServiceLabel(job)}${hasNotes ? " · Job notes" : ""}`;
+          detail.textContent = `${workflowServiceLabel(job)}${hasNotes ? " · Job notes" : ""}`;
           copy.append(title, detail);
           const button = document.createElement("button");
           button.type = "button";
           button.dataset.workflowOpenJob = job.id || "";
-          button.textContent = done ? "Complete ✓" : "Open";
-          button.disabled = done;
+          button.textContent = "Open";
           row.append(time, copy, button);
           workflowJobsList.appendChild(row);
         });
@@ -13268,15 +13285,16 @@
           showToast("This scheduled job does not include a property address");
           return;
         }
-        const existing = loadActiveJob();
-        if (existing?.property && existing.calendarEventId !== job.id && existing.workflowStatus !== "completed") {
-          showToast(`Finish the current job at ${existing.property} first`);
-          renderWorkflowJob(existing);
+        if (!activateScheduleJob(job)) {
+          showToast("The current job was kept open");
           return;
         }
-        activateScheduleJob(job);
         const active = loadActiveJob();
-        appendWorkflowEvent("Job opened", { scheduledStart: active?.scheduledStart || "" }, active);
+        if (!active?.property || (job.id && active.calendarEventId !== job.id)) {
+          showToast("That job could not be selected. Refresh the schedule and try again.");
+          return;
+        }
+        appendWorkflowEvent("Job opened", { scheduledStart: active.scheduledStart || "", selectedProperty: active.property }, active);
         renderWorkflowJob(active);
       }
 
@@ -13513,6 +13531,16 @@
         });
       }
 
+      function workflowMapsUrl(property) {
+        return `https://maps.apple.com/?daddr=${encodeURIComponent(String(property || "").trim())}&dirflg=d`;
+      }
+
+      function workflowDestinationName(property) {
+        const parts = String(property || "").split(",").map(part => part.trim()).filter(Boolean);
+        if (parts.length > 1) return parts[1].toUpperCase();
+        return "PROPERTY";
+      }
+
       function renderWorkflowJob(job = loadActiveJob()) {
         if (!job?.property) {
           renderWorkflowApp();
@@ -13549,7 +13577,10 @@
         workflowJobClientBlock.hidden = !job.clientName && !job.clientPhone;
         workflowJobServices.textContent = workflowServiceLabel(job);
         renderWorkflowJobNotes(job);
-        workflowDirectionsBtn.href = `https://maps.apple.com/?daddr=${encodeURIComponent(job.property)}&dirflg=d`;
+        workflowDirectionsBtn.href = workflowMapsUrl(job.property);
+        workflowDirectionsBtn.dataset.destination = job.property;
+        workflowDirectionsBtn.textContent = `DIRECTIONS TO ${workflowDestinationName(job.property)}`;
+        workflowDirectionsBtn.setAttribute("aria-label", `Open Apple Maps directions to ${job.property}`);
         workflowCallClientBtn.href = job.clientPhone ? `tel:${job.clientPhone}` : "#";
         workflowCallClientBtn.setAttribute("aria-disabled", String(!job.clientPhone));
         workflowCallClientBtn.style.opacity = job.clientPhone ? "1" : ".45";
@@ -13571,9 +13602,16 @@
         homeActiveJobMap.href = workflowDirectionsBtn.href;
       }
 
-      function handleWorkflowDirections() {
+      function handleWorkflowDirections(event) {
+        const property = String(workflowDirectionsBtn.dataset.destination || workflowJobAddress.textContent || "").trim();
+        if (!property) {
+          event.preventDefault();
+          showToast("Select a scheduled job before opening Directions");
+          return;
+        }
+        workflowDirectionsBtn.href = workflowMapsUrl(property);
         const job = loadActiveJob();
-        if (job?.property) appendWorkflowEvent("Directions selected", {}, job);
+        appendWorkflowEvent("Directions selected", { destination: property }, job?.property === property ? job : { ...(job || {}), property });
       }
 
       function setWorkflowOnMyWay() {

@@ -20,6 +20,23 @@
 
 ## Change log
 
+### Build 69 — Correct dynamic job order, Maps destination, and completed-job clearing (App Build 107)
+
+Status: published August 28, 2026.
+
+#### Changes
+
+1. Corrected a stale-active-job condition that could reopen a previously selected appointment when the inspector deliberately tapped a newly inserted calendar job.
+2. Reorders refreshed appointments by their current scheduled start time and allows an earlier newly booked job to become **Next job** even when a later unstarted job was previously selected.
+3. Treats the calendar event ID as the authoritative job identity so separate appointments are not confused by cached workflow state.
+4. Labels the directions button with the selected destination city and rebuilds the Apple Maps link from the job displayed on screen immediately before navigation.
+5. Removes completed properties from the inspector’s My Day list and prevents completed jobs from being automatically selected again after reopening or refreshing the app.
+6. After the final appointment, replaces the previous property card with a clear **No jobs remaining** message and the end-of-day check.
+
+#### Validation
+
+- Reproduced the reported order-change scenario with Brighton previously selected and Ypsilanti inserted earlier, confirmed Ypsilanti becomes the next job and the Apple Maps destination/label use Ypsilanti, retained a genuinely in-progress appointment, confirmed completed jobs are absent from the remaining-job list and cannot be auto-selected again, parsed the full JavaScript and service worker, verified all 552 element IDs, loaded the iPhone-size Build 107 screen without browser warnings, and confirmed the new offline cache version.
+
 ### Build 68 — Show price-free calendar notes on My Day (App Build 106)
 
 Status: published August 28, 2026.
