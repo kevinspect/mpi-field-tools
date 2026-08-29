@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="113">
+  <meta name="app-build" content="114">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4380,6 +4380,17 @@
     .workflow-time-clock-actions .workflow-secondary { min-height: 54px; border-radius: 13px; font: inherit; font-size: 13px; font-weight: 950; cursor: pointer; }
     .workflow-time-clock-actions .workflow-location-retry { grid-column: 1 / -1; color: #0b1050; background: #fff7dc; border-color: #e4c569; }
     .workflow-time-clock-note { margin: 11px 0 0; color: rgba(255,255,255,.68); font-size: 9.5px; line-height: 1.5; text-align: center; }
+    .workflow-hours-pending {
+      margin: 13px 0 0;
+      padding: 13px 14px;
+      color: #201a09;
+      background: #fff4cf;
+      border: 1px solid #e4c569;
+      border-radius: 13px;
+      text-align: left;
+    }
+    .workflow-hours-pending strong { display: block; color: #8d6815; font-size: 11px; letter-spacing: .04em; }
+    .workflow-hours-pending span { display: block; margin-top: 4px; font-size: 10px; line-height: 1.45; }
 
     .workflow-progress { display: flex; align-items: center; gap: 5px; margin: 0 0 20px; }
     .workflow-progress span { flex: 1; height: 6px; background: #e5e9f0; border-radius: 99px; }
@@ -4876,21 +4887,25 @@
 
         <section class="workflow-card workflow-time-clock-card" id="workflowTimeClockCard" aria-labelledby="workflow-time-clock-title" hidden>
           <div class="workflow-card-header">
-            <span class="workflow-status-pill" id="workflowTimeClockBadge">Clocked off</span>
-            <h3 id="workflow-time-clock-title">Workday time clock</h3>
-            <p>Clock on when work begins and clock off after the final company task.</p>
+            <span class="workflow-status-pill" id="workflowTimeClockBadge">Not started</span>
+            <h3 id="workflow-time-clock-title">Hours worked today</h3>
+            <p>Your hours begin automatically when ARRIVED is location-verified at the first inspection.</p>
           </div>
           <div class="workflow-time-clock-status">
-            <span id="workflowTimeClockLabel">Today</span>
-            <strong id="workflowTimeClockValue">Not clocked on</strong>
-            <small id="workflowTimeClockDetail">Your time and location status will appear here.</small>
+            <span id="workflowTimeClockLabel">HOURS WORKED TODAY</span>
+            <strong id="workflowTimeClockValue">0:00</strong>
+            <small id="workflowTimeClockDetail">Waiting for your first verified arrival.</small>
+          </div>
+          <div class="workflow-hours-pending" id="workflowHoursPending" hidden>
+            <strong>HOURS WORKED HAS NOT STARTED</strong>
+            <span>Tap ARRIVED when you reach your first scheduled inspection.</span>
           </div>
           <div class="workflow-time-clock-actions">
-            <button class="workflow-button" id="workflowClockOnBtn" type="button">CLOCK ON</button>
+            <button class="workflow-button" id="workflowClockOnBtn" type="button" hidden>CLOCK ON</button>
             <button class="workflow-secondary" id="workflowClockOffBtn" type="button" disabled>CLOCK OFF</button>
             <button class="workflow-secondary workflow-location-retry" id="workflowClockRetryLocationBtn" type="button" hidden>TRY LOCATION AGAIN</button>
           </div>
-          <p class="workflow-time-clock-note">Location is requested only when Clock On or Clock Off is pressed. The app does not continuously track the phone.</p>
+          <p class="workflow-time-clock-note">Location is checked at the first ARRIVED action and at Clock Off. The app does not continuously track the phone.</p>
         </section>
 
         <section class="workflow-card" id="workflowReadinessCard" aria-labelledby="workflow-readiness-title" hidden>
@@ -5047,6 +5062,15 @@
           <h3 id="timedAlertTitle">Timed alert</h3>
           <p id="timedAlertBody"></p>
           <button class="workflow-button" id="timedAlertAcknowledge" type="button">ACKNOWLEDGE</button>
+        </div>
+      </dialog>
+
+      <dialog class="timed-alert-dialog" id="workflowNoticeDialog">
+        <div class="timed-alert-inner">
+          <div class="timed-alert-icon" aria-hidden="true">!</div>
+          <h3 id="workflowNoticeTitle">Important</h3>
+          <p id="workflowNoticeBody"></p>
+          <button class="workflow-button" id="workflowNoticeAcknowledge" type="button">UNDERSTOOD</button>
         </div>
       </dialog>
 
@@ -7138,7 +7162,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 113</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 114</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7883,6 +7907,7 @@
       const workflowTimeClockLabel = document.getElementById("workflowTimeClockLabel");
       const workflowTimeClockValue = document.getElementById("workflowTimeClockValue");
       const workflowTimeClockDetail = document.getElementById("workflowTimeClockDetail");
+      const workflowHoursPending = document.getElementById("workflowHoursPending");
       const workflowClockOnBtn = document.getElementById("workflowClockOnBtn");
       const workflowClockOffBtn = document.getElementById("workflowClockOffBtn");
       const workflowClockRetryLocationBtn = document.getElementById("workflowClockRetryLocationBtn");
@@ -7953,6 +7978,10 @@
       const timedAlertTitle = document.getElementById("timedAlertTitle");
       const timedAlertBody = document.getElementById("timedAlertBody");
       const timedAlertAcknowledge = document.getElementById("timedAlertAcknowledge");
+      const workflowNoticeDialog = document.getElementById("workflowNoticeDialog");
+      const workflowNoticeTitle = document.getElementById("workflowNoticeTitle");
+      const workflowNoticeBody = document.getElementById("workflowNoticeBody");
+      const workflowNoticeAcknowledge = document.getElementById("workflowNoticeAcknowledge");
       const roomCoverageCard = document.getElementById("roomCoverageCard");
       const roomCoverageStatus = document.getElementById("roomCoverageStatus");
       const roomCoverageForm = document.getElementById("roomCoverageForm");
@@ -13261,6 +13290,10 @@
       const WORKFLOW_DAY_COMPLETE_STORAGE_KEY = "mpiWorkflowDayCompleteV1";
       const WORKFLOW_CLOSEOUT_HISTORY_STORAGE_KEY = "mpiWorkflowCloseoutHistoryV1";
       const WORKFLOW_TIME_CLOCK_STORAGE_KEY = "mpiWorkflowTimeClockV1";
+      const WORKFLOW_GEOCODE_CACHE_STORAGE_KEY = "mpiWorkflowGeocodeCacheV1";
+      const WORKFLOW_CLOCK_MODEL = "verified-first-arrival-v2";
+      const WORKFLOW_ARRIVAL_GEOFENCE_FEET = 600;
+      const WORKFLOW_ARRIVAL_ACCURACY_ALLOWANCE_FEET = 200;
       const WORKFLOW_EMAIL_ENDPOINT = "https://script.google.com/macros/s/AKfycbzd701WKgQIzWP24pmjL3gaTFIjH2iHxjMYzirArFoYq8nup57p8h1VMmJPx9MVYOqL/exec";
       const WORKFLOW_EMAIL_SOURCE = "mpi-field-tools-daily-closeout";
       const WORKFLOW_STAGES = ["scheduled", "on-my-way", "arrived", "in-progress", "equipment", "completed"];
@@ -13437,11 +13470,22 @@
             date: record.date,
             inspector: String(record.inspector || "").trim().slice(0, 80),
             inspectorId: String(record.inspectorId || "").trim().slice(0, 40),
+            clockModel: String(record.clockModel || ""),
+            activityStartedAt: String(record.activityStartedAt || ""),
+            activityStartSource: String(record.activityStartSource || ""),
+            firstArrivalReminderAcknowledgedAt: String(record.firstArrivalReminderAcknowledgedAt || ""),
+            hoursWorkedStartedAt: String(record.hoursWorkedStartedAt || ""),
+            hoursWorkedJobId: String(record.hoursWorkedJobId || ""),
+            hoursWorkedProperty: String(record.hoursWorkedProperty || ""),
             sessions: record.sessions.slice(0, 12).map(session => ({
               clockedInAt: String(session?.clockedInAt || ""),
               clockedOutAt: String(session?.clockedOutAt || ""),
+              startSource: String(session?.startSource || ""),
+              jobId: String(session?.jobId || ""),
+              property: String(session?.property || ""),
               clockInLocation: session?.clockInLocation && typeof session.clockInLocation === "object" ? { ...session.clockInLocation } : null,
-              clockOutLocation: session?.clockOutLocation && typeof session.clockOutLocation === "object" ? { ...session.clockOutLocation } : null
+              clockOutLocation: session?.clockOutLocation && typeof session.clockOutLocation === "object" ? { ...session.clockOutLocation } : null,
+              arrivalVerification: session?.arrivalVerification && typeof session.arrivalVerification === "object" ? { ...session.arrivalVerification } : null
             })).filter(session => session.clockedInAt)
           };
         } catch (_) {
@@ -13453,13 +13497,45 @@
         try { localStorage.setItem(WORKFLOW_TIME_CLOCK_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
       }
 
+      function ensureWorkflowTimeClockRecord(profile = loadWorkflowProfile(), readiness = workflowReadinessRecord()) {
+        if (!profile) return null;
+        const existing = loadWorkflowTimeClock();
+        const record = existing || {
+          date: localDateKey(),
+          inspector: profile.name,
+          inspectorId: profile.id,
+          clockModel: WORKFLOW_CLOCK_MODEL,
+          activityStartedAt: "",
+          activityStartSource: "",
+          firstArrivalReminderAcknowledgedAt: "",
+          hoursWorkedStartedAt: "",
+          hoursWorkedJobId: "",
+          hoursWorkedProperty: "",
+          sessions: []
+        };
+        record.inspector = profile.name;
+        record.inspectorId = profile.id;
+        record.clockModel = WORKFLOW_CLOCK_MODEL;
+        if (!record.activityStartedAt && readiness?.completedAt) {
+          record.activityStartedAt = readiness.completedAt;
+          record.activityStartSource = "morning-readiness";
+        }
+        saveWorkflowTimeClock(record);
+        return record;
+      }
+
+      function workflowPaySessions(record = loadWorkflowTimeClock()) {
+        return (record?.sessions || []).filter(session => ["verified-first-arrival", "management-override", "reopened-workday-arrival"].includes(session.startSource));
+      }
+
       function workflowActiveClockSession(record = loadWorkflowTimeClock()) {
-        const session = record?.sessions?.[record.sessions.length - 1];
+        const sessions = workflowPaySessions(record);
+        const session = sessions[sessions.length - 1];
         return session?.clockedInAt && !session.clockedOutAt ? session : null;
       }
 
       function workflowWorkedMilliseconds(record = loadWorkflowTimeClock(), endTime = Date.now()) {
-        return (record?.sessions || []).reduce((total, session) => {
+        return workflowPaySessions(record).reduce((total, session) => {
           const start = new Date(session.clockedInAt).getTime();
           const end = session.clockedOutAt ? new Date(session.clockedOutAt).getTime() : endTime;
           return total + (Number.isFinite(start) && Number.isFinite(end) && end > start ? end - start : 0);
@@ -13473,6 +13549,11 @@
         return hours ? `${hours} hr ${remainder} min` : `${remainder} min`;
       }
 
+      function workflowWorkedCounter(record = loadWorkflowTimeClock(), endTime = Date.now()) {
+        const minutes = Math.max(0, Math.floor(workflowWorkedMilliseconds(record, endTime) / 60000));
+        return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`;
+      }
+
       function workflowClockLocationDetail(location) {
         if (location?.status === "recorded") {
           const accuracy = Number(location.accuracyFeet) || 0;
@@ -13481,6 +13562,43 @@
         if (location?.status === "denied") return "Time recorded · allow Location for MPI Field Tools in iPhone Settings, then tap Try Location Again";
         if (location?.status === "unavailable") return "Time recorded · location could not be fixed. Move near a window or outside, then tap Try Location Again";
         return "Time recorded · location is not supported on this device";
+      }
+
+      function workflowHoursHaveStarted(record = loadWorkflowTimeClock()) {
+        return Boolean(record?.hoursWorkedStartedAt || workflowPaySessions(record).length);
+      }
+
+      function showWorkflowNotice(title, body, buttonLabel = "UNDERSTOOD", kind = "general") {
+        workflowNoticeTitle.textContent = title;
+        workflowNoticeBody.textContent = body;
+        workflowNoticeAcknowledge.textContent = buttonLabel;
+        workflowNoticeDialog.dataset.noticeKind = kind;
+        if (typeof workflowNoticeDialog.showModal === "function" && !workflowNoticeDialog.open) workflowNoticeDialog.showModal();
+        else workflowNoticeDialog.setAttribute("open", "");
+      }
+
+      function acknowledgeWorkflowNotice() {
+        if (workflowNoticeDialog.dataset.noticeKind === "first-arrival") {
+          const record = ensureWorkflowTimeClockRecord();
+          if (record && !record.firstArrivalReminderAcknowledgedAt) {
+            record.firstArrivalReminderAcknowledgedAt = new Date().toISOString();
+            saveWorkflowTimeClock(record);
+            appendWorkflowEvent("First-job arrival reminder acknowledged", { acknowledgedAt: record.firstArrivalReminderAcknowledgedAt }, null);
+          }
+        }
+        workflowNoticeDialog.close?.();
+      }
+
+      function maybeShowFirstArrivalReminder() {
+        const readiness = workflowReadinessRecord();
+        const record = loadWorkflowTimeClock();
+        if (!readiness || workflowHoursHaveStarted(record) || record?.firstArrivalReminderAcknowledgedAt || workflowNoticeDialog.open) return;
+        showWorkflowNotice(
+          "IMPORTANT – FIRST JOB ARRIVAL",
+          "You must tap ARRIVED promptly when you reach your first inspection. Your Hours Worked clock starts when your verified arrival at the first job is recorded.",
+          "UNDERSTOOD",
+          "first-arrival"
+        );
       }
 
       function getWorkflowClockPosition(options) {
@@ -13518,52 +13636,202 @@
         }
       }
 
+      function loadWorkflowGeocodeCache() {
+        try {
+          const cache = JSON.parse(localStorage.getItem(WORKFLOW_GEOCODE_CACHE_STORAGE_KEY) || "{}");
+          return cache && typeof cache === "object" && !Array.isArray(cache) ? cache : {};
+        } catch (_) {
+          return {};
+        }
+      }
+
+      function workflowAddressCacheKey(address) {
+        return String(address || "").trim().toLowerCase().replace(/\s+/g, " ").slice(0, 180);
+      }
+
+      function saveWorkflowGeocode(address, result) {
+        const key = workflowAddressCacheKey(address);
+        if (!key || !Number.isFinite(Number(result?.latitude)) || !Number.isFinite(Number(result?.longitude))) return;
+        const cache = loadWorkflowGeocodeCache();
+        cache[key] = { ...result, cachedAt: new Date().toISOString() };
+        const entries = Object.entries(cache).slice(-100);
+        try { localStorage.setItem(WORKFLOW_GEOCODE_CACHE_STORAGE_KEY, JSON.stringify(Object.fromEntries(entries))); } catch (_) {}
+      }
+
+      function censusGeocodeWorkflowAddress(address) {
+        return new Promise((resolve, reject) => {
+          const callbackName = `mpiCensusGeocode_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+          const script = document.createElement("script");
+          let settled = false;
+          const cleanup = () => {
+            delete window[callbackName];
+            script.remove();
+          };
+          const timeout = window.setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            reject(new Error("Property location lookup timed out"));
+          }, 12000);
+          window[callbackName] = data => {
+            if (settled) return;
+            settled = true;
+            window.clearTimeout(timeout);
+            cleanup();
+            const match = data?.result?.addressMatches?.[0];
+            const latitude = Number(match?.coordinates?.y);
+            const longitude = Number(match?.coordinates?.x);
+            if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+              reject(new Error("The scheduled property address could not be verified"));
+              return;
+            }
+            resolve({
+              latitude,
+              longitude,
+              matchedAddress: String(match?.matchedAddress || address),
+              provider: "US Census Geocoder"
+            });
+          };
+          script.onerror = () => {
+            if (settled) return;
+            settled = true;
+            window.clearTimeout(timeout);
+            cleanup();
+            reject(new Error("Property location lookup is unavailable"));
+          };
+          const url = new URL("https://geocoding.geo.census.gov/geocoder/locations/onelineaddress");
+          url.searchParams.set("address", String(address || "").slice(0, 100));
+          url.searchParams.set("benchmark", "Public_AR_Current");
+          url.searchParams.set("format", "jsonp");
+          url.searchParams.set("callback", callbackName);
+          script.src = url.toString();
+          document.head.appendChild(script);
+        });
+      }
+
+      async function workflowPropertyCoordinates(job) {
+        const directLatitude = Number(job?.propertyCoordinates?.latitude ?? job?.latitude);
+        const directLongitude = Number(job?.propertyCoordinates?.longitude ?? job?.longitude);
+        if (Number.isFinite(directLatitude) && Number.isFinite(directLongitude)) {
+          return { latitude: directLatitude, longitude: directLongitude, matchedAddress: job.property, provider: "Scheduled job" };
+        }
+        const key = workflowAddressCacheKey(job?.property);
+        const cached = loadWorkflowGeocodeCache()[key];
+        if (Number.isFinite(Number(cached?.latitude)) && Number.isFinite(Number(cached?.longitude))) return cached;
+        const resolved = await censusGeocodeWorkflowAddress(job?.property);
+        saveWorkflowGeocode(job?.property, resolved);
+        job.propertyCoordinates = resolved;
+        storeActiveJob(job);
+        return resolved;
+      }
+
+      function workflowDistanceFeet(left, right) {
+        const toRadians = value => value * Math.PI / 180;
+        const latitude1 = toRadians(Number(left.latitude));
+        const latitude2 = toRadians(Number(right.latitude));
+        const latitudeDifference = latitude2 - latitude1;
+        const longitudeDifference = toRadians(Number(right.longitude) - Number(left.longitude));
+        const a = Math.sin(latitudeDifference / 2) ** 2
+          + Math.cos(latitude1) * Math.cos(latitude2) * Math.sin(longitudeDifference / 2) ** 2;
+        return 20902231 * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+      }
+
+      async function verifyWorkflowFirstArrival(job) {
+        const location = await requestWorkflowClockLocation();
+        if (location.status !== "recorded") {
+          return { verified: false, location, reason: location.status === "denied" ? "Location permission was not allowed." : "This phone could not obtain a reliable location." };
+        }
+        try {
+          const propertyCoordinates = await workflowPropertyCoordinates(job);
+          const distanceFeet = Math.round(workflowDistanceFeet(location, propertyCoordinates));
+          const accuracyAllowanceFeet = Math.min(WORKFLOW_ARRIVAL_ACCURACY_ALLOWANCE_FEET, Math.max(0, Number(location.accuracyFeet) || 0));
+          const acceptedDistanceFeet = WORKFLOW_ARRIVAL_GEOFENCE_FEET + accuracyAllowanceFeet;
+          return {
+            verified: distanceFeet <= acceptedDistanceFeet,
+            location,
+            reason: distanceFeet <= acceptedDistanceFeet ? "" : "The phone is outside the approved arrival area.",
+            verification: {
+              verifiedAt: new Date().toISOString(),
+              propertyLatitude: Number(propertyCoordinates.latitude),
+              propertyLongitude: Number(propertyCoordinates.longitude),
+              propertyMatch: String(propertyCoordinates.matchedAddress || job.property),
+              geocoder: String(propertyCoordinates.provider || "Scheduled job"),
+              distanceFeet,
+              approvedGeofenceFeet: WORKFLOW_ARRIVAL_GEOFENCE_FEET,
+              accuracyAllowanceFeet,
+              acceptedDistanceFeet
+            }
+          };
+        } catch (error) {
+          return { verified: false, location, reason: error?.message || "The scheduled property address could not be verified." };
+        }
+      }
+
       function renderWorkflowTimeClock() {
         if (!workflowTimeClockCard) return;
         const profile = loadWorkflowProfile();
-        const record = loadWorkflowTimeClock();
+        const readiness = workflowReadinessRecord();
+        const record = profile ? ensureWorkflowTimeClockRecord(profile, readiness) : null;
+        const sessions = workflowPaySessions(record);
         const active = workflowActiveClockSession(record);
+        const hoursStarted = Boolean(record?.hoursWorkedStartedAt || sessions.length);
         workflowTimeClockCard.hidden = !profile;
         if (!profile) return;
-        workflowTimeClockBadge.textContent = active ? "Clocked on" : "Clocked off";
-        workflowTimeClockLabel.textContent = active ? "Current shift" : "Today’s recorded time";
-        workflowTimeClockValue.textContent = active
-          ? `${workflowWorkedDuration(record)} · since ${workflowClock(active.clockedInAt)}`
-          : record?.sessions?.length
-            ? workflowWorkedDuration(record)
-            : "Not clocked on";
-        const lastSession = record?.sessions?.[record.sessions.length - 1];
+        workflowTimeClockBadge.textContent = active ? "Hours running" : hoursStarted ? "Clocked off" : readiness ? "Waiting for arrival" : "Not started";
+        workflowTimeClockLabel.textContent = "HOURS WORKED TODAY";
+        workflowTimeClockValue.textContent = hoursStarted ? workflowWorkedCounter(record) : "0:00";
+        const lastSession = sessions[sessions.length - 1];
         const lastLocation = active?.clockInLocation || lastSession?.clockOutLocation || lastSession?.clockInLocation;
         workflowTimeClockDetail.textContent = workflowTimeClockInFlight
           ? "Recording the time and requesting this phone’s location…"
-          : lastLocation
-            ? workflowClockLocationDetail(lastLocation)
-            : active
-              ? "Clock-in time recorded · location has not been recorded. Tap Try Location Again"
-              : "Press Clock On to begin recording work time.";
-        workflowClockOnBtn.disabled = Boolean(active) || workflowTimeClockInFlight;
+          : active
+            ? `Started at ${workflowClock(active.clockedInAt)} · ${workflowClockLocationDetail(active.clockInLocation)}`
+            : hoursStarted
+              ? `Clocked off at ${workflowClock(lastSession?.clockedOutAt)} · ${workflowClockLocationDetail(lastLocation)}`
+              : readiness
+                ? "Activity tracking is active for management. Paid hours begin at the first verified arrival."
+                : "Complete Morning Readiness to begin the working-day activity record.";
+        workflowHoursPending.hidden = !readiness || hoursStarted;
+        workflowClockOnBtn.hidden = true;
+        workflowClockOnBtn.disabled = true;
         workflowClockOffBtn.disabled = !active || workflowTimeClockInFlight;
-        workflowClockRetryLocationBtn.hidden = !active || lastLocation?.status === "recorded" || lastLocation?.status === "unsupported";
+        workflowClockOffBtn.hidden = !hoursStarted;
+        workflowClockRetryLocationBtn.hidden = true;
         workflowClockRetryLocationBtn.disabled = workflowTimeClockInFlight;
       }
 
-      async function clockWorkflowOn() {
+      function startWorkflowHoursAtVerifiedArrival(job, arrivalAt, location, arrivalVerification, startSource = "verified-first-arrival") {
         const profile = loadWorkflowProfile();
-        if (!profile || workflowActiveClockSession()) return;
-        workflowTimeClockInFlight = true;
-        renderWorkflowTimeClock();
-        const clockedInAt = new Date().toISOString();
-        const location = await requestWorkflowClockLocation();
-        const record = loadWorkflowTimeClock() || { date: localDateKey(), inspector: profile.name, inspectorId: profile.id, sessions: [] };
+        if (!profile || workflowActiveClockSession()) return loadWorkflowTimeClock();
+        const record = ensureWorkflowTimeClockRecord(profile, workflowReadinessRecord());
         record.inspector = profile.name;
         record.inspectorId = profile.id;
-        record.sessions.push({ clockedInAt, clockedOutAt: "", clockInLocation: location, clockOutLocation: null });
+        record.clockModel = WORKFLOW_CLOCK_MODEL;
+        record.hoursWorkedStartedAt ||= arrivalAt;
+        record.hoursWorkedJobId ||= String(job?.calendarEventId || job?.spectoraJobId || "");
+        record.hoursWorkedProperty ||= String(job?.property || "");
+        record.sessions.push({
+          clockedInAt: arrivalAt,
+          clockedOutAt: "",
+          startSource,
+          jobId: String(job?.calendarEventId || job?.spectoraJobId || ""),
+          property: String(job?.property || ""),
+          clockInLocation: location,
+          clockOutLocation: null,
+          arrivalVerification
+        });
         saveWorkflowTimeClock(record);
-        appendWorkflowEvent("Clocked on", { clockedInAt, locationStatus: location.status, accuracyFeet: location.accuracyFeet || "" }, null);
-        workflowTimeClockInFlight = false;
+        appendWorkflowEvent("Hours worked started", {
+          startedAt: arrivalAt,
+          startSource,
+          locationStatus: location?.status || "unavailable",
+          accuracyFeet: location?.accuracyFeet || "",
+          distanceFeet: arrivalVerification?.distanceFeet || "",
+          approvedGeofenceFeet: arrivalVerification?.approvedGeofenceFeet || WORKFLOW_ARRIVAL_GEOFENCE_FEET
+        }, job);
         renderWorkflowTimeClock();
         updateWorkflowDayCompleteButton();
-        showToast(`Clocked on at ${workflowClock(clockedInAt)}`);
+        return record;
       }
 
       async function clockWorkflowOff() {
@@ -13713,10 +13981,17 @@
         const items = ["vehicle-ready", "fuel-ready", "route-reviewed", "required-equipment-onboard", "devices-charged"];
         const record = { date: localDateKey(), inspector: profile.name, inspectorId: profile.id, completedAt, items };
         try { localStorage.setItem(DAILY_READINESS_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
-        appendWorkflowEvent("Morning readiness completed", { checklist: items, completedAt });
+        const timeClock = ensureWorkflowTimeClockRecord(profile, record);
+        timeClock.activityStartedAt = completedAt;
+        timeClock.activityStartSource = "morning-readiness";
+        timeClock.clockModel = WORKFLOW_CLOCK_MODEL;
+        saveWorkflowTimeClock(timeClock);
+        appendWorkflowEvent("Morning readiness completed", { checklist: items, completedAt, inspectorActivityStartedAt: completedAt }, null);
+        appendWorkflowEvent("Inspector activity started", { startedAt: completedAt, source: "Morning readiness" }, null);
         renderDailyReadiness();
         renderWorkflowApp();
         showToast(`Ready for work recorded at ${new Date(completedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`);
+        window.setTimeout(maybeShowFirstArrivalReminder, 120);
       }
 
       function workflowScheduleJobs() {
@@ -14151,11 +14426,73 @@
         showToast("On My Way time recorded");
       }
 
-      function setWorkflowArrived() {
+      function workflowArrivalPerformance(arrivalAt, scheduledStart) {
+        const scheduled = new Date(scheduledStart || "").getTime();
+        const arrived = new Date(arrivalAt || "").getTime();
+        if (!Number.isFinite(scheduled) || !Number.isFinite(arrived)) return { varianceMinutes: "", label: "Scheduled time unavailable" };
+        const varianceMinutes = Math.round((arrived - scheduled) / 60000);
+        if (varianceMinutes > 0) return { varianceMinutes, label: `${varianceMinutes} ${varianceMinutes === 1 ? "minute" : "minutes"} late` };
+        if (varianceMinutes < 0) return { varianceMinutes, label: `${Math.abs(varianceMinutes)} ${Math.abs(varianceMinutes) === 1 ? "minute" : "minutes"} early` };
+        return { varianceMinutes: 0, label: "On time" };
+      }
+
+      async function setWorkflowArrived() {
         const job = loadActiveJob();
         if (!job?.property) return;
-        updateWorkflowStage(job, "arrived", "Arrived", { scheduledStart: job.scheduledStart || "" });
-        showToast("Arrival time recorded");
+        const timeClock = ensureWorkflowTimeClockRecord();
+        const firstHoursStart = !workflowHoursHaveStarted(timeClock);
+        let arrivalVerification = null;
+        let location = null;
+        if (firstHoursStart) {
+          workflowTimeClockInFlight = true;
+          workflowArrivedBtn.disabled = true;
+          workflowArrivedBtn.textContent = "VERIFYING ARRIVAL…";
+          renderWorkflowTimeClock();
+          const result = await verifyWorkflowFirstArrival(job);
+          workflowTimeClockInFlight = false;
+          workflowArrivedBtn.disabled = false;
+          workflowArrivedBtn.textContent = "ARRIVED";
+          if (!result.verified) {
+            appendWorkflowEvent("Arrival verification failed", {
+              attemptedAt: new Date().toISOString(),
+              reason: result.reason,
+              locationStatus: result.location?.status || "unavailable",
+              accuracyFeet: result.location?.accuracyFeet || "",
+              distanceFeet: result.verification?.distanceFeet || "",
+              approvedGeofenceFeet: WORKFLOW_ARRIVAL_GEOFENCE_FEET
+            }, job);
+            renderWorkflowTimeClock();
+            showWorkflowNotice(
+              "ARRIVAL NOT VERIFIED",
+              `You must be at the scheduled inspection property before starting your Hours Worked clock.${result.reason ? `\n\n${result.reason}` : ""}`,
+              "UNDERSTOOD",
+              "arrival-failed"
+            );
+            return;
+          }
+          location = result.location;
+          arrivalVerification = result.verification;
+        }
+        const arrivedJob = updateWorkflowStage(job, "arrived", "Arrived", {
+          scheduledStart: job.scheduledStart || "",
+          gpsVerified: firstHoursStart ? true : "First-job verification already completed",
+          latitude: location?.latitude || "",
+          longitude: location?.longitude || "",
+          accuracyFeet: location?.accuracyFeet || "",
+          distanceFeet: arrivalVerification?.distanceFeet || "",
+          approvedGeofenceFeet: arrivalVerification?.approvedGeofenceFeet || ""
+        });
+        const arrivalAt = arrivedJob?.workflowTimestamps?.arrived || new Date().toISOString();
+        const performance = workflowArrivalPerformance(arrivalAt, job.scheduledStart);
+        appendWorkflowEvent("Arrival performance calculated", {
+          arrivedAt: arrivalAt,
+          scheduledStart: job.scheduledStart || "",
+          varianceMinutes: performance.varianceMinutes,
+          performance: performance.label
+        }, arrivedJob || job);
+        if (firstHoursStart) startWorkflowHoursAtVerifiedArrival(arrivedJob || job, arrivalAt, location, arrivalVerification);
+        renderWorkflowTimeClock();
+        showToast(firstHoursStart ? `Arrival verified · Hours Worked started at ${workflowClock(arrivalAt)}` : "Arrival time recorded");
       }
 
       function startWorkflowInspection() {
@@ -14331,10 +14668,15 @@
       const WORKFLOW_EMAIL_ACTION_LABELS = {
         "Working day reopened for added appointment": "Additional appointment added — workday reopened",
         "Morning readiness completed": "Morning readiness confirmed",
+        "Inspector activity started": "Inspector activity tracking started",
+        "First-job arrival reminder acknowledged": "First-job arrival reminder acknowledged",
         "Job opened": "Appointment opened",
         "On My Way selected": "On My Way recorded",
         "Directions selected": "Directions selected",
         Arrived: "Arrival recorded",
+        "Arrival performance calculated": "Arrival performance recorded",
+        "Arrival verification failed": "Arrival could not be verified",
+        "Hours worked started": "Hours Worked started",
         "Inspection started": "Inspection started",
         "Job Complete selected": "Job completion started",
         "Used tools back on truck confirmed": "Used tools confirmed back on truck",
@@ -14358,6 +14700,9 @@
         "On My Way selected",
         "Directions selected",
         "Arrived",
+        "Arrival performance calculated",
+        "Arrival verification failed",
+        "Hours worked started",
         "Inspection started",
         "Job Complete selected",
         "Used tools back on truck confirmed",
@@ -14439,6 +14784,12 @@
             } else if (item.action === "Working day reopened for added appointment") {
               const additions = Array.isArray(item.data?.addedAppointments) ? item.data.addedAppointments.filter(Boolean).slice(0, 4) : [];
               detail = additions.length ? additions.join(" · ") : "An additional appointment was received";
+            } else if (item.action === "Arrival performance calculated") {
+              detail = String(item.data?.performance || "Arrival compared with schedule");
+            } else if (item.action === "Arrival verification failed") {
+              detail = String(item.data?.reason || "Location was outside the approved arrival area");
+            } else if (item.action === "Hours worked started") {
+              detail = [item.data?.distanceFeet ? `${item.data.distanceFeet} ft from scheduled property` : "Location verified", item.data?.accuracyFeet ? `GPS accuracy about ${item.data.accuracyFeet} ft` : ""].filter(Boolean).join(" · ");
             }
             return {
               time: workflowClock(item.timestamp),
@@ -14482,7 +14833,7 @@
         const relevantJobs = workflowScheduleJobs().filter(job => completedIds.has(job.id));
         const readiness = workflowReadinessRecord();
         const timeClock = loadWorkflowTimeClock();
-        if (relevantJobs.length && !timeClock?.sessions?.length) flags.push("Clock On was not recorded for this working day.");
+        if (relevantJobs.length && !workflowPaySessions(timeClock).length) flags.push("Verified first-job arrival was not recorded, so Hours Worked did not start.");
         if (workflowActiveClockSession(timeClock)) flags.push("The inspector remained clocked on when the daily closeout was prepared.");
         const firstStart = relevantJobs.map(job => scheduleJobTimestamp(job, "start")).filter(Boolean).sort((a, b) => a - b)[0];
         if (relevantJobs.length && !readiness) flags.push("Morning readiness confirmation was not completed.");
@@ -14523,16 +14874,28 @@
 
       function workflowEmailTimeClock() {
         const record = loadWorkflowTimeClock();
-        if (!record?.sessions?.length) return null;
-        const first = record.sessions[0];
-        const last = record.sessions[record.sessions.length - 1];
+        const readiness = workflowReadinessRecord();
+        const sessions = workflowPaySessions(record);
+        const first = sessions[0];
+        const last = sessions[sessions.length - 1];
+        const activityStartedAt = record?.activityStartedAt || readiness?.completedAt || "";
+        if (!record && !activityStartedAt) return null;
+        const activityEndedAt = last?.clockedOutAt || "";
+        const activityMilliseconds = activityStartedAt && activityEndedAt
+          ? Math.max(0, new Date(activityEndedAt).getTime() - new Date(activityStartedAt).getTime())
+          : 0;
+        const activityMinutes = Math.floor(activityMilliseconds / 60000);
         return {
-          clockOnTime: workflowClock(first.clockedInAt),
-          clockOffTime: last.clockedOutAt ? workflowClock(last.clockedOutAt) : "Not clocked off",
-          totalWorked: workflowWorkedDuration(record),
-          shiftCount: record.sessions.length,
-          clockOnLocation: workflowEmailLocation(first.clockInLocation),
-          clockOffLocation: workflowEmailLocation(last.clockOutLocation)
+          activityStartTime: activityStartedAt ? workflowClock(activityStartedAt) : "Not recorded",
+          hoursWorkedStartTime: first?.clockedInAt ? workflowClock(first.clockedInAt) : "Not started",
+          clockOnTime: first?.clockedInAt ? workflowClock(first.clockedInAt) : "Not started",
+          clockOffTime: last?.clockedOutAt ? workflowClock(last.clockedOutAt) : first ? "Not clocked off" : "Not started",
+          totalWorked: sessions.length ? workflowWorkedDuration(record) : "0 min",
+          managementActivityWindow: activityMinutes ? `${Math.floor(activityMinutes / 60)} hr ${activityMinutes % 60} min` : "In progress",
+          shiftCount: sessions.length,
+          clockOnLocation: workflowEmailLocation(first?.clockInLocation),
+          clockOffLocation: workflowEmailLocation(last?.clockOutLocation),
+          hoursWorkedProperty: record?.hoursWorkedProperty || ""
         };
       }
 
@@ -14954,10 +15317,12 @@
         }
         if (active?.property) {
           renderWorkflowJob(active);
+          window.setTimeout(maybeShowFirstArrivalReminder, 80);
           return;
         }
         workflowTodayCard.hidden = false;
         renderWorkflowTodayJobs();
+        window.setTimeout(maybeShowFirstArrivalReminder, 80);
       }
 
       function initializeWorkflowApp() {
@@ -14965,7 +15330,6 @@
         workflowIdentityForm.addEventListener("submit", saveWorkflowProfile);
         workflowReadinessChecks.forEach(check => check.addEventListener("change", updateWorkflowReadinessButton));
         workflowReadyBtn.addEventListener("click", completeWorkflowReadiness);
-        workflowClockOnBtn.addEventListener("click", clockWorkflowOn);
         workflowClockOffBtn.addEventListener("click", clockWorkflowOff);
         workflowClockRetryLocationBtn.addEventListener("click", retryWorkflowClockLocation);
         workflowJobsList.addEventListener("click", handleWorkflowJobSelection);
@@ -15001,6 +15365,7 @@
         workflowCancelMessage.addEventListener("click", cancelWorkflowMessage);
         workflowOpenMessages.addEventListener("click", openWorkflowMessagesComposer);
         timedAlertAcknowledge.addEventListener("click", acknowledgeTimedAlert);
+        workflowNoticeAcknowledge.addEventListener("click", acknowledgeWorkflowNotice);
         workflowAdminFilters.addEventListener("click", event => {
           const button = event.target.closest("[data-workflow-log-filter]");
           if (!button) return;

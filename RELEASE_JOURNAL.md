@@ -1,5 +1,15 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 114 — Separate Activity and Hours-Worked Start
+
+- Morning Readiness now records the management-only Inspector Activity Start without adding that time to the inspector's Hours Worked total.
+- Added the prominent first-job ARRIVED reminder and the persistent Hours Worked Has Not Started dashboard notice.
+- Removed manual Clock On from the inspector workflow. Hours Worked remains at `0:00` until the first arrival is location-verified.
+- Added a 600-foot property geofence with a limited GPS-accuracy allowance, scheduled-address geocoding, distance recording, and a clear Arrival Not Verified block when the phone is outside the approved area.
+- The first verified ARRIVED action now records GPS verification, scheduled-versus-actual arrival performance, and starts Hours Worked automatically.
+- Management records now keep Activity Start, Hours Worked Start, location verification, arrival performance, Clock Off, and the two separate elapsed-time calculations.
+- Updated the visible build, version file, and offline cache identifier to Build 114.
+
 ## Build 113 — Guided Mold and Asbestos Sampling
 
 - Added a 15-step Mold Air Sampling field procedure with a client-concern first sample, findings-driven second sample, outdoor control, and saved investigation notes.
