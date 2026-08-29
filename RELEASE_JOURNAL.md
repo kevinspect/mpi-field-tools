@@ -1,5 +1,14 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 112 — Reliable iPhone Sign-In and Clock-In Location
+
+- Changed company Google sign-in to open directly from the inspector's tap, with a redirect fallback only when the browser cannot open the sign-in window.
+- Added clearer sign-in guidance when the Google window is closed or interrupted.
+- Improved clock-in location capture with a second, lower-power location attempt when an indoor high-accuracy GPS fix times out.
+- Added a **Try Location Again** control so an inspector can attach the clock-in location after changing iPhone permission or moving to a better-signal area without clocking off and starting over.
+- Added clear iPhone guidance for blocked and unavailable location states while continuing to record the correct clock-in time.
+- Updated the visible build, version file, and offline cache identifier to Build 112.
+
 ## Build 111 — Responsive MPI Office Console
 
 - Added an owner/admin console designed for both iPhone and desktop.

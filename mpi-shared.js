@@ -47,12 +47,18 @@
   async function signIn() {
     const provider = new window.firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
-    const isPhone = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
-    if (isPhone || window.matchMedia("(display-mode: standalone)").matches) {
+    try {
+      return await auth.signInWithPopup(provider);
+    } catch (error) {
+      const redirectFallbackCodes = new Set([
+        "auth/popup-blocked",
+        "auth/operation-not-supported-in-this-environment",
+        "auth/web-storage-unsupported"
+      ]);
+      if (!redirectFallbackCodes.has(error?.code)) throw error;
       await auth.signInWithRedirect(provider);
       return null;
     }
-    return auth.signInWithPopup(provider);
   }
 
   function signOut() {

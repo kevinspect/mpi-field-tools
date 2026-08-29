@@ -100,7 +100,17 @@
   async function signIn(button) {
     button.disabled = true;
     accountStatus.textContent = "Opening company sign-in…";
-    try { await shared.signIn(); } catch (error) { accountStatus.textContent = error.message || "Sign-in did not finish."; }
+    try {
+      await shared.signIn();
+    } catch (error) {
+      const messages = {
+        "auth/popup-closed-by-user": "Sign-in was closed before it finished. Tap Sign In and complete the Google window.",
+        "auth/cancelled-popup-request": "Sign-in was interrupted. Tap Sign In once and complete the Google window.",
+        "auth/unauthorized-domain": "This app address is not approved for company sign-in. Contact MPI management.",
+        "auth/account-exists-with-different-credential": "Use the MPI Google account already assigned to this email address."
+      };
+      accountStatus.textContent = messages[error?.code] || error.message || "Sign-in did not finish. Please try again.";
+    }
     button.disabled = false;
   }
 

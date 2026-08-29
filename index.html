@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="111">
+  <meta name="app-build" content="112">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4250,6 +4250,7 @@
     .workflow-time-clock-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .workflow-time-clock-actions .workflow-button { width: 100%; }
     .workflow-time-clock-actions .workflow-secondary { min-height: 54px; border-radius: 13px; font: inherit; font-size: 13px; font-weight: 950; cursor: pointer; }
+    .workflow-time-clock-actions .workflow-location-retry { grid-column: 1 / -1; color: #0b1050; background: #fff7dc; border-color: #e4c569; }
     .workflow-time-clock-note { margin: 11px 0 0; color: rgba(255,255,255,.68); font-size: 9.5px; line-height: 1.5; text-align: center; }
 
     .workflow-progress { display: flex; align-items: center; gap: 5px; margin: 0 0 20px; }
@@ -4658,7 +4659,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">111</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">112</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -4759,6 +4760,7 @@
           <div class="workflow-time-clock-actions">
             <button class="workflow-button" id="workflowClockOnBtn" type="button">CLOCK ON</button>
             <button class="workflow-secondary" id="workflowClockOffBtn" type="button" disabled>CLOCK OFF</button>
+            <button class="workflow-secondary workflow-location-retry" id="workflowClockRetryLocationBtn" type="button" hidden>TRY LOCATION AGAIN</button>
           </div>
           <p class="workflow-time-clock-note">Location is requested only when Clock On or Clock Off is pressed. The app does not continuously track the phone.</p>
         </section>
@@ -6968,7 +6970,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 111</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 112</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7715,6 +7717,7 @@
       const workflowTimeClockDetail = document.getElementById("workflowTimeClockDetail");
       const workflowClockOnBtn = document.getElementById("workflowClockOnBtn");
       const workflowClockOffBtn = document.getElementById("workflowClockOffBtn");
+      const workflowClockRetryLocationBtn = document.getElementById("workflowClockRetryLocationBtn");
       const workflowReadinessCard = document.getElementById("workflowReadinessCard");
       const workflowReadinessInspector = document.getElementById("workflowReadinessInspector");
       const workflowReadinessChecks = [...document.querySelectorAll("[data-workflow-readiness]")];
@@ -13290,28 +13293,44 @@
           const accuracy = Number(location.accuracyFeet) || 0;
           return accuracy ? `Location recorded · accuracy about ${accuracy} ft` : "Location recorded";
         }
-        if (location?.status === "denied") return "Time recorded · location permission was not allowed";
-        if (location?.status === "unavailable") return "Time recorded · location was unavailable";
+        if (location?.status === "denied") return "Time recorded · allow Location for MPI Field Tools in iPhone Settings, then tap Try Location Again";
+        if (location?.status === "unavailable") return "Time recorded · location could not be fixed. Move near a window or outside, then tap Try Location Again";
         return "Time recorded · location is not supported on this device";
       }
 
-      function requestWorkflowClockLocation() {
-        return new Promise(resolve => {
-          if (!navigator.geolocation) {
-            resolve({ status: "unsupported" });
-            return;
+      function getWorkflowClockPosition(options) {
+        return new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, options));
+      }
+
+      function recordedWorkflowClockLocation(position) {
+        return {
+          status: "recorded",
+          latitude: Number(position.coords.latitude.toFixed(6)),
+          longitude: Number(position.coords.longitude.toFixed(6)),
+          accuracyFeet: Math.max(0, Math.round(Number(position.coords.accuracy || 0) * 3.28084)),
+          recordedAt: new Date().toISOString()
+        };
+      }
+
+      async function requestWorkflowClockLocation() {
+        const attemptedAt = new Date().toISOString();
+        if (!navigator.geolocation) return { status: "unsupported", attemptedAt };
+        try {
+          const position = await getWorkflowClockPosition({ enableHighAccuracy: true, timeout: 12000, maximumAge: 120000 });
+          return recordedWorkflowClockLocation(position);
+        } catch (firstError) {
+          if (firstError?.code === 1) return { status: "denied", errorCode: 1, attemptedAt };
+          try {
+            const position = await getWorkflowClockPosition({ enableHighAccuracy: false, timeout: 20000, maximumAge: 300000 });
+            return recordedWorkflowClockLocation(position);
+          } catch (secondError) {
+            return {
+              status: secondError?.code === 1 ? "denied" : "unavailable",
+              errorCode: Number(secondError?.code || firstError?.code || 0),
+              attemptedAt
+            };
           }
-          navigator.geolocation.getCurrentPosition(position => {
-            resolve({
-              status: "recorded",
-              latitude: Number(position.coords.latitude.toFixed(6)),
-              longitude: Number(position.coords.longitude.toFixed(6)),
-              accuracyFeet: Math.max(0, Math.round(Number(position.coords.accuracy || 0) * 3.28084))
-            });
-          }, error => {
-            resolve({ status: error?.code === 1 ? "denied" : "unavailable" });
-          }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
-        });
+        }
       }
 
       function renderWorkflowTimeClock() {
@@ -13334,9 +13353,13 @@
           ? "Recording the time and requesting this phone’s location…"
           : lastLocation
             ? workflowClockLocationDetail(lastLocation)
-            : "Press Clock On to begin recording work time.";
+            : active
+              ? "Clock-in time recorded · location has not been recorded. Tap Try Location Again"
+              : "Press Clock On to begin recording work time.";
         workflowClockOnBtn.disabled = Boolean(active) || workflowTimeClockInFlight;
         workflowClockOffBtn.disabled = !active || workflowTimeClockInFlight;
+        workflowClockRetryLocationBtn.hidden = !active || lastLocation?.status === "recorded" || lastLocation?.status === "unsupported";
+        workflowClockRetryLocationBtn.disabled = workflowTimeClockInFlight;
       }
 
       async function clockWorkflowOn() {
@@ -13379,6 +13402,28 @@
         renderWorkflowTimeClock();
         updateWorkflowDayCompleteButton();
         showToast(`Clocked off at ${workflowClock(clockedOutAt)}`);
+      }
+
+      async function retryWorkflowClockLocation() {
+        const record = loadWorkflowTimeClock();
+        const active = workflowActiveClockSession(record);
+        if (!record || !active || workflowTimeClockInFlight) return;
+        workflowTimeClockInFlight = true;
+        renderWorkflowTimeClock();
+        const location = await requestWorkflowClockLocation();
+        active.clockInLocation = location;
+        saveWorkflowTimeClock(record);
+        appendWorkflowEvent("Clock-in location retried", {
+          locationStatus: location.status,
+          accuracyFeet: location.accuracyFeet || ""
+        }, null);
+        workflowTimeClockInFlight = false;
+        renderWorkflowTimeClock();
+        showToast(location.status === "recorded"
+          ? "Clock-in location recorded"
+          : location.status === "denied"
+            ? "Allow Location in iPhone Settings, then try again"
+            : "Location is still unavailable; move near a window or outside and try again");
       }
 
       function loadWorkflowHistory() {
@@ -14737,6 +14782,7 @@
         workflowReadyBtn.addEventListener("click", completeWorkflowReadiness);
         workflowClockOnBtn.addEventListener("click", clockWorkflowOn);
         workflowClockOffBtn.addEventListener("click", clockWorkflowOff);
+        workflowClockRetryLocationBtn.addEventListener("click", retryWorkflowClockLocation);
         workflowJobsList.addEventListener("click", handleWorkflowJobSelection);
         workflowNextJob.addEventListener("click", handleWorkflowJobSelection);
         workflowConnectSchedule.addEventListener("click", connectCompanyCalendar);
