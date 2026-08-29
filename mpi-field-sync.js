@@ -22,6 +22,26 @@
   let currentProfile = null;
   let currentUpdates = [];
   let unsubscribeUpdates = null;
+  let registeredPushToken = "";
+
+  function savedPushToken() {
+    try { return String(localStorage.getItem("mpiPushTokenV1") || "").trim(); }
+    catch (_) { return ""; }
+  }
+
+  async function registerPushDevice(user, profile, suppliedToken = "") {
+    const token = String(suppliedToken || savedPushToken()).trim();
+    if (!user || !profile || !token || token === registeredPushToken) return;
+    await shared.db.collection("users").doc(user.uid).set({
+      notificationDevice: {
+        token,
+        enabled: true,
+        app: "MPI Field Tools",
+        updatedAt: shared.serverTimestamp()
+      }
+    }, { merge: true });
+    registeredPushToken = token;
+  }
 
   function escapeHtml(value) {
     return String(value || "").replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
@@ -93,6 +113,7 @@
     settingsAdminLink.hidden = !shared.isAdminRole(profile);
     updatesGate.hidden = true;
     updatesContent.hidden = false;
+    registerPushDevice(user, profile).catch(() => {});
     unsubscribeUpdates?.();
     unsubscribeUpdates = shared.watchUpdates(user, profile, renderUpdates);
   }
@@ -136,5 +157,8 @@
   signInButtons.forEach(button => button.addEventListener("click", () => signIn(button)));
   signOutButtons.forEach(button => button.addEventListener("click", () => shared.signOut()));
   updatesList.addEventListener("click", handleUpdateAction);
+  window.addEventListener("mpi-push-token-ready", event => {
+    if (currentUser && currentProfile) registerPushDevice(currentUser, currentProfile, event.detail?.token).catch(() => {});
+  });
   shared.watchSession(({ user, profile, error }) => renderSession(user, profile, error));
 })();

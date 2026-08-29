@@ -1,5 +1,12 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 116 — Automatic Employee Notification Registration
+
+- A phone's notification identity now attaches automatically to the employee's secure MPI company profile after sign-in.
+- Existing phones with notifications already enabled register automatically when Build 116 opens; the long setup code does not need to be re-entered or published in the app.
+- New or refreshed notification identities are synchronized without exposing the code in the inspector interface or management activity log.
+- Updated the visible build, version file, and offline cache identifier to Build 116.
+
 ## Build 115 — Emergency iPhone Freeze Recovery
 
 - Replaced the blocking first-arrival popup with a non-blocking dashboard reminder so the phone interface cannot become trapped behind a dialog.
