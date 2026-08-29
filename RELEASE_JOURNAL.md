@@ -1,5 +1,13 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 113 — Guided Mold and Asbestos Sampling
+
+- Added a 15-step Mold Air Sampling field procedure with a client-concern first sample, findings-driven second sample, outdoor control, and saved investigation notes.
+- Added three persistent five-minute mold air sample timers at 15 LPM / 75 liters with the app's loud repeating alert, vibration, and notification behavior at completion.
+- Added a separate 12-step Asbestos Sampling field procedure with material-specific collection guidance, before/final documentation prompts, Chain of Custody matching, two-bag packaging, and a final verification checklist.
+- Kept both procedures separate from the Well Inspection workflow and from client report comments.
+- Updated the visible build, version file, and offline cache identifier to Build 113.
+
 ## Build 112 — Reliable iPhone Sign-In and Clock-In Location
 
 - Changed company Google sign-in to open directly from the inspector's tap, with a redirect fallback only when the browser cannot open the sign-in window.

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="112">
+  <meta name="app-build" content="113">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -3828,6 +3828,134 @@
       .well-final-actions { grid-template-columns: 1fr; }
     }
 
+    .guided-help-card { margin: 0 0 18px; border: 1px solid #c8d8e7; }
+    .guided-help-card > summary { background: linear-gradient(135deg, #eef5fb, #fffdf6); }
+    .guided-help-card.is-complete > summary { background: linear-gradient(135deg, #e9f7ef, #fffdf6); }
+    .guided-help-body { padding: 18px 20px 20px; border-top: 1px solid var(--line); }
+    .guided-help-reminder {
+      margin: 0 0 14px;
+      padding: 13px 14px;
+      color: var(--ink-2);
+      background: #fff8e7;
+      border-left: 4px solid var(--orange);
+      border-radius: 10px;
+      font-size: 10.5px;
+      line-height: 1.55;
+    }
+    .guided-help-reminder strong { color: var(--forest); }
+    .guided-help-progress {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 13px;
+      padding: 13px 14px;
+      color: #fff;
+      background: var(--forest);
+      border-radius: 12px;
+    }
+    .guided-help-progress strong { display: block; font-size: 12px; }
+    .guided-help-progress span { display: block; margin-top: 3px; color: rgba(255,255,255,.72); font-size: 9px; }
+    .guided-help-progress b { color: #f1d98e; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; }
+    .guided-help-step {
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      box-shadow: 0 8px 22px rgba(17,24,106,.06);
+    }
+    .guided-help-step-head {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      gap: 11px;
+      align-items: center;
+      padding: 14px;
+      background: #f4f7fa;
+      border-bottom: 1px solid var(--line);
+    }
+    .guided-help-step-number {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      color: #fff;
+      background: var(--forest);
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 950;
+    }
+    .guided-help-step-head h3 { margin: 0; color: var(--forest); font-size: 16px; line-height: 1.2; }
+    .guided-help-step-head p { margin: 4px 0 0; color: var(--ink-2); font-size: 9.5px; line-height: 1.4; }
+    .guided-help-step-content { padding: 14px; }
+    .guided-help-step-content > p { margin: 0 0 11px; color: var(--ink-2); font-size: 10.5px; line-height: 1.55; }
+    .guided-help-list { display: grid; gap: 7px; margin: 0 0 13px; padding: 0; list-style: none; }
+    .guided-help-list li { position: relative; padding-left: 20px; color: var(--ink-2); font-size: 10.5px; line-height: 1.48; }
+    .guided-help-list li::before { position: absolute; left: 0; color: var(--bright-blue); font-weight: 950; content: "\2713"; }
+    .guided-help-list.is-warning li::before { color: #a7352d; content: "!"; }
+    .guided-help-fields { display: grid; gap: 10px; }
+    .guided-help-fields.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .guided-help-fields .field { margin: 0; }
+    .guided-help-callout { margin: 12px 0; padding: 12px 13px; color: var(--forest); background: #eef5fb; border-left: 4px solid var(--bright-blue); border-radius: 9px; font-size: 10px; font-weight: 750; line-height: 1.5; }
+    .guided-help-callout.warning { color: #7d3028; background: #fff2ef; border-color: #bd4734; }
+    .guided-help-callout.success { color: #245c4a; background: #eaf7f0; border-color: #3d8b6d; }
+    .guided-help-timer {
+      margin: 12px 0;
+      padding: 18px 14px;
+      color: #fff;
+      background: linear-gradient(145deg, #11186a, #070b45);
+      border: 1px solid rgba(209,163,58,.58);
+      border-radius: 14px;
+      text-align: center;
+    }
+    .guided-help-timer h4 { margin: 0; color: #f1d98e; font-size: 14px; letter-spacing: .035em; }
+    .guided-help-timer-meta { margin: 7px 0 0; color: rgba(255,255,255,.75); font-size: 10px; font-weight: 850; }
+    .guided-help-countdown { display: block; margin: 12px 0; color: #fff; font-size: clamp(34px, 8vw, 52px); font-weight: 950; letter-spacing: .06em; }
+    .guided-help-timer .decode-btn { min-height: 52px; margin: 0; }
+    .guided-help-nav { display: grid; grid-template-columns: .8fr 1.2fr; gap: 9px; margin-top: 13px; }
+    .guided-help-nav button { min-height: 52px; }
+    .guided-help-nav .decode-btn { margin: 0; }
+    .guided-help-nav button:disabled { cursor: not-allowed; opacity: .48; }
+    .guided-help-action { width: 100%; min-height: 52px; margin-top: 12px; }
+    .guided-help-checks { display: grid; gap: 8px; margin-top: 12px; }
+    .guided-help-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      min-height: 46px;
+      padding: 11px;
+      color: var(--forest);
+      background: #f4f7fa;
+      border: 1px solid #dde5ed;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 750;
+      line-height: 1.4;
+    }
+    .guided-help-check input { flex: 0 0 auto; width: 18px; height: 18px; margin: 0; accent-color: var(--bright-blue); }
+    .guided-help-summary { display: grid; gap: 8px; margin: 12px 0; }
+    .guided-help-summary div { padding: 12px; background: #eef4fa; border: 1px solid #d6e2ee; border-radius: 10px; }
+    .guided-help-summary span { display: block; color: var(--ink-2); font-size: 8.5px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+    .guided-help-summary strong { display: block; margin-top: 4px; color: var(--forest); font-size: 13px; line-height: 1.35; }
+    .guided-material-selector { display: grid; gap: 9px; }
+    .guided-material-card { overflow: hidden; border: 1px solid var(--line); border-radius: 10px; }
+    .guided-material-card > summary { padding: 12px; color: var(--forest); background: #f6f8fb; cursor: pointer; font-size: 10.5px; font-weight: 900; list-style: none; }
+    .guided-material-card > summary::-webkit-details-marker { display: none; }
+    .guided-material-card > summary::after { float: right; color: var(--bright-blue); content: "+"; }
+    .guided-material-card[open] > summary::after { content: "−"; }
+    .guided-material-card .guided-help-list { margin: 0; padding: 12px; border-top: 1px solid var(--line); }
+    .guided-help-complete { padding: 18px; color: #fff; background: var(--forest); border-radius: 13px; text-align: center; }
+    .guided-help-complete h4 { margin: 0 0 6px; color: #f1d98e; font-size: 18px; }
+    .guided-help-complete p { margin: 0; color: rgba(255,255,255,.78); font-size: 10px; line-height: 1.5; }
+
+    @media (max-width: 680px) {
+      .guided-help-body { padding: 14px 12px 15px; }
+      .guided-help-progress { grid-template-columns: 1fr; }
+      .guided-help-fields.two,
+      .guided-help-nav { grid-template-columns: 1fr; }
+      .guided-help-nav .job-secondary-action { order: 2; }
+      .guided-help-nav .decode-btn { order: 1; }
+    }
+
     .job-context-card {
       display: grid;
       gap: 16px;
@@ -5822,7 +5950,7 @@
       </div>
 
       <div class="sop-version-bar">
-        <span><strong>27 quick field prompts</strong> · Offline, searchable, and available by copyable direct link · SOP Version 1.3</span>
+        <span><strong>29 quick field prompts</strong> · Offline, searchable, and available by copyable direct link · SOP Version 1.3</span>
         <span class="sop-offline-badge">Available offline</span>
       </div>
 
@@ -5998,12 +6126,50 @@
         </div>
       </details>
 
+      <details class="panel report-quality-card guided-help-card" id="moldSamplingHelpCard">
+        <summary>
+          <span><strong>Mold air sampling</strong><small>Follow the client concern, investigation, two indoor samples, and outdoor control in the correct field order.</small></span>
+          <span class="daily-readiness-status" id="moldSamplingStatus">Not started</span>
+        </summary>
+        <div class="guided-help-body">
+          <p class="guided-help-reminder"><strong>Three standard air samples:</strong> 15 LPM × 5 minutes = 75 liters per sample. Indoor Sample #1 normally follows the client’s primary concern. Indoor Sample #2 is selected from the inspector’s findings—never automatically assigned to the basement.</p>
+          <div class="guided-help-progress">
+            <div><strong id="moldSamplingProgressTitle">Ready to begin</strong><span>Notes, findings, sample locations, and timer progress stay saved on this company phone.</span></div>
+            <b id="moldSamplingProgressCount">Step 1 of 15</b>
+          </div>
+          <div id="moldSamplingStepHost" aria-live="polite"></div>
+          <div class="guided-help-nav">
+            <button class="job-secondary-action" id="moldSamplingBack" type="button">BACK</button>
+            <button class="decode-btn" id="moldSamplingNext" type="button">NEXT</button>
+          </div>
+        </div>
+      </details>
+
+      <details class="panel report-quality-card guided-help-card" id="asbestosSamplingHelpCard">
+        <summary>
+          <span><strong>Asbestos sampling – field procedure</strong><small>Document, collect, secure, label, and package a representative bulk sample using material-specific guidance.</small></span>
+          <span class="daily-readiness-status" id="asbestosSamplingStatus">Not started</span>
+        </summary>
+        <div class="guided-help-body">
+          <p class="guided-help-reminder"><strong>Sampling methods vary depending on the material.</strong> Minimize disturbance, control dust, document the location thoroughly, and obtain a representative sample using the least destructive practical method.<br><br><strong>Do not automatically use the flooring/tape method</strong> for insulation, vermiculite, siding, trim, or other materials. Follow the applicable material-specific guidance.</p>
+          <div class="guided-help-progress">
+            <div><strong id="asbestosSamplingProgressTitle">Ready to begin</strong><span>Field entries and checklist progress stay saved on this company phone.</span></div>
+            <b id="asbestosSamplingProgressCount">Step 1 of 12</b>
+          </div>
+          <div id="asbestosSamplingStepHost" aria-live="polite"></div>
+          <div class="guided-help-nav">
+            <button class="job-secondary-action" id="asbestosSamplingBack" type="button">BACK</button>
+            <button class="decode-btn" id="asbestosSamplingNext" type="button">NEXT</button>
+          </div>
+        </div>
+      </details>
+
       <div class="sop-shell">
         <aside class="sop-browser" aria-label="SOP procedure browser">
           <div class="sop-controls">
             <label for="sopSearch">What do you need help with?</label>
             <div class="sop-search-wrap">
-              <input class="sop-search" id="sopSearch" type="search" autocomplete="off" spellcheck="false" placeholder="Example: temperature difference or well">
+              <input class="sop-search" id="sopSearch" type="search" autocomplete="off" spellcheck="false" placeholder="Example: mold sampling or well">
               <button class="sop-clear-search" id="sopClearSearch" type="button" aria-label="Clear SOP search" hidden>×</button>
             </div>
             <select class="sop-select" id="sopChapter" aria-label="Filter field prompts by inspection system">
@@ -6016,6 +6182,8 @@
               <button class="sop-chip" type="button" data-sop-query="hot cold fixture water">Fixture water test</button>
               <button class="sop-chip" type="button" data-sop-query="private well">Private well</button>
               <button class="sop-chip" type="button" data-open-well-yield>100-minute well test</button>
+              <button class="sop-chip" type="button" data-open-mold-air>Mold air sampling</button>
+              <button class="sop-chip" type="button" data-open-asbestos-sampling>Asbestos sampling</button>
               <button class="sop-chip" type="button" data-sop-query="water test parameters">Water test parameters</button>
               <button class="sop-chip" type="button" data-sop-query="panel cover">Panel cover</button>
               <button class="sop-chip" type="button" data-sop-query="carbon monoxide">CO screening</button>
@@ -6970,7 +7138,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 112</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 113</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7850,6 +8018,20 @@
       const wellYieldStopEarly = document.getElementById("wellYieldStopEarly");
       const copyWellYieldSummary = document.getElementById("copyWellYieldSummaryQuick");
       const resetWellYieldRecord = document.getElementById("resetWellYieldRecordQuick");
+      const moldSamplingHelpCard = document.getElementById("moldSamplingHelpCard");
+      const moldSamplingStatus = document.getElementById("moldSamplingStatus");
+      const moldSamplingProgressTitle = document.getElementById("moldSamplingProgressTitle");
+      const moldSamplingProgressCount = document.getElementById("moldSamplingProgressCount");
+      const moldSamplingStepHost = document.getElementById("moldSamplingStepHost");
+      const moldSamplingBack = document.getElementById("moldSamplingBack");
+      const moldSamplingNext = document.getElementById("moldSamplingNext");
+      const asbestosSamplingHelpCard = document.getElementById("asbestosSamplingHelpCard");
+      const asbestosSamplingStatus = document.getElementById("asbestosSamplingStatus");
+      const asbestosSamplingProgressTitle = document.getElementById("asbestosSamplingProgressTitle");
+      const asbestosSamplingProgressCount = document.getElementById("asbestosSamplingProgressCount");
+      const asbestosSamplingStepHost = document.getElementById("asbestosSamplingStepHost");
+      const asbestosSamplingBack = document.getElementById("asbestosSamplingBack");
+      const asbestosSamplingNext = document.getElementById("asbestosSamplingNext");
       const manufacturer = document.getElementById("manufacturer");
       const serialInput = document.getElementById("serial");
       const resultContent = document.getElementById("resultContent");
@@ -8103,6 +8285,8 @@
       const CALENDAR_CACHE_KEY = "mpiTodayJobsCacheV1";
       const WELL_YIELD_STORAGE_KEY = "mpiWellYieldRecordV1";
       const WELL_YIELD_TIMER_KEY = "mpiWellYieldTimerV1";
+      const MOLD_SAMPLING_STORAGE_KEY = "mpiMoldAirSamplingHelpV1";
+      const ASBESTOS_SAMPLING_STORAGE_KEY = "mpiAsbestosSamplingHelpV1";
       const WORKFLOW_DEFAULT_DRIVE_MINUTES = 30;
       let commentType = "defect";
       let copyPayload = "";
@@ -8111,6 +8295,7 @@
       let activeToolGuideId = "";
       let availableScheduleCalendars = [];
       let wellYieldTimerInterval = 0;
+      let moldSamplingTimerInterval = 0;
       let workflowDepartureInterval = 0;
       let timedAlertRepeatInterval = 0;
       let activeTimedAlert = null;
@@ -17447,6 +17632,482 @@
         if (timer?.startedAt && !timer.actualCompletedAt && !timer.stoppedAt) wellYieldTimerInterval = window.setInterval(updateWellYieldTimer, 1000);
       }
 
+      const MOLD_STEP_TITLES = [
+        "Speak with client",
+        "Primary indoor sample",
+        "Sample #1 timer / investigate room",
+        "Secure Sample #1",
+        "Investigate property",
+        "Basement check",
+        "HVAC / AC check",
+        "Attic check",
+        "Select Indoor Sample #2",
+        "Collect Indoor Sample #2",
+        "Secure Sample #2",
+        "Attic / crawlspace sample warning",
+        "Outdoor control sample",
+        "Secure outdoor sample",
+        "Final mold inspection check"
+      ];
+
+      const ASBESTOS_STEP_TITLES = [
+        "Arrival / client communication",
+        "Document the area before sampling",
+        "PPE / contamination control",
+        "Select a representative sample",
+        "Material-specific collection method",
+        "Bag and label the sample",
+        "Seal or protect the sampling location",
+        "Clean the immediate area",
+        "Final photographs",
+        "Complete the Chain of Custody",
+        "Double-bag for transport",
+        "Final inspector check"
+      ];
+
+      function loadGuidedRecord(key, totalSteps) {
+        try {
+          const saved = JSON.parse(localStorage.getItem(key) || "null");
+          if (saved && typeof saved === "object") {
+            saved.currentStep = Math.min(totalSteps, Math.max(1, Number(saved.currentStep) || 1));
+            saved.fields = saved.fields && typeof saved.fields === "object" ? saved.fields : {};
+            saved.checks = saved.checks && typeof saved.checks === "object" ? saved.checks : {};
+            return saved;
+          }
+        } catch (_) {}
+        return { version: 1, currentStep: 1, fields: {}, checks: {}, startedAt: 0, completedAt: 0 };
+      }
+
+      function saveGuidedRecord(key, record) {
+        try { localStorage.setItem(key, JSON.stringify(record)); } catch (_) {}
+      }
+
+      function guidedTextField(name, label, value = "", options = {}) {
+        const tag = options.multiline ? "textarea" : "input";
+        const attrs = options.multiline
+          ? `rows="${options.rows || 3}" maxlength="${options.maxlength || 800}"`
+          : `type="${options.type || "text"}" maxlength="${options.maxlength || 180}"${options.list ? ` list="${options.list}"` : ""}`;
+        return `<div class="field"><label for="guided-${name}">${escapeHtml(label)}</label><${tag} class="${options.multiline ? "damage-action-input" : "damage-input"}" id="guided-${name}" data-guided-field="${escapeHtml(name)}" ${attrs} placeholder="${escapeHtml(options.placeholder || "")}">${options.multiline ? escapeHtml(value || "") : ""}</${tag}>`.replace(
+          options.multiline ? "" : `></${tag}>`,
+          options.multiline ? "" : ` value="${escapeHtml(value || "")}">`
+        ) + `</div>`;
+      }
+
+      function guidedSelectField(name, label, value, choices) {
+        return `<div class="field"><label for="guided-${name}">${escapeHtml(label)}</label><div class="select-wrap"><select class="damage-input" id="guided-${name}" data-guided-field="${escapeHtml(name)}"><option value="">Choose…</option>${choices.map(choice => `<option${choice === value ? " selected" : ""}>${escapeHtml(choice)}</option>`).join("")}</select></div></div>`;
+      }
+
+      function guidedChecklist(items, record, prefix, required = false) {
+        return `<div class="guided-help-checks">${items.map((item, index) => {
+          const key = `${prefix}${index + 1}`;
+          return `<label class="guided-help-check"><input type="checkbox" data-guided-check="${key}"${record.checks[key] ? " checked" : ""}${required ? " data-guided-required" : ""}><span>${escapeHtml(item)}</span></label>`;
+        }).join("")}</div>`;
+      }
+
+      function guidedList(items, warning = false) {
+        return `<ul class="guided-help-list${warning ? " is-warning" : ""}">${items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+      }
+
+      function guidedStepShell(step, total, title, subtitle, content) {
+        return `<article class="guided-help-step"><header class="guided-help-step-head"><span class="guided-help-step-number">${step}</span><div><h3>${escapeHtml(title)}</h3><p>${escapeHtml(subtitle)}</p></div></header><div class="guided-help-step-content">${content}</div></article>`;
+      }
+
+      function moldSampleInfo(record, sampleKey) {
+        record.samples = record.samples && typeof record.samples === "object" ? record.samples : {};
+        record.samples[sampleKey] = record.samples[sampleKey] && typeof record.samples[sampleKey] === "object" ? record.samples[sampleKey] : {};
+        return record.samples[sampleKey];
+      }
+
+      function moldTimerMarkup(record, sampleKey, heading, startLabel) {
+        const sample = moldSampleInfo(record, sampleKey);
+        const running = sample.startedAt && !sample.stoppedAt;
+        const reached = Boolean(sample.targetReachedAt);
+        const remaining = running ? Math.max(0, Math.ceil((Number(sample.targetAt) - Date.now()) / 1000)) : 300;
+        const display = `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(remaining % 60).padStart(2, "0")}`;
+        let button = `<button class="decode-btn guided-help-action" type="button" data-mold-action="start-timer" data-sample-key="${sampleKey}">${escapeHtml(startLabel)}</button>`;
+        if (running && !reached) button = `<button class="decode-btn guided-help-action" type="button" disabled>MOLD AIR SAMPLE RUNNING</button>`;
+        if (reached && !sample.stoppedAt) button = `<button class="decode-btn guided-help-action" type="button" data-mold-action="stop-sample" data-sample-key="${sampleKey}">SAMPLE STOPPED</button>`;
+        if (sample.stoppedAt) button = `<div class="guided-help-callout success">Sample stopped and recorded at ${escapeHtml(workflowClock(sample.stoppedAt))}.</div>`;
+        return `<div class="guided-help-timer" data-mold-timer-panel="${sampleKey}"><h4>${escapeHtml(reached && !sample.stoppedAt ? "SAMPLE COMPLETE – STOP PUMP" : heading)}</h4><p class="guided-help-timer-meta">15 LPM &nbsp;·&nbsp; 5 MINUTES &nbsp;·&nbsp; 75 LITERS TOTAL</p><output class="guided-help-countdown" data-mold-countdown="${sampleKey}">${display}</output>${button}</div>`;
+      }
+
+      function moldRequiredChecksComplete(record, prefix, count) {
+        return Array.from({ length: count }, (_, index) => Boolean(record.checks[`${prefix}${index + 1}`])).every(Boolean);
+      }
+
+      function moldCanAdvance(record) {
+        const step = record.currentStep;
+        if (step === 1) return Boolean(String(record.fields.primaryArea || "").trim());
+        if (step === 2) return Boolean(String(record.fields.sample1Location || record.fields.primaryArea || "").trim());
+        if (step === 3) return Boolean(moldSampleInfo(record, "sample1").stoppedAt);
+        if (step === 4) return moldRequiredChecksComplete(record, "moldSecure1-", 4);
+        if (step === 9) return Boolean(String(record.fields.sample2Location || "").trim() && String(record.fields.sample2Reason || "").trim());
+        if (step === 10) return Boolean(moldSampleInfo(record, "sample2").stoppedAt);
+        if (step === 11) return moldRequiredChecksComplete(record, "moldSecure2-", 4);
+        if (step === 13) return Boolean(String(record.fields.outdoorLocation || "").trim() && moldSampleInfo(record, "outdoor").stoppedAt);
+        if (step === 14) return moldRequiredChecksComplete(record, "moldSecureOutdoor-", 4);
+        return true;
+      }
+
+      function renderMoldSamplingStep() {
+        const record = loadGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, 15);
+        if (!record.startedAt && (record.currentStep > 1 || Object.keys(record.fields).length || Object.keys(record.checks).length)) record.startedAt = Date.now();
+        const step = record.currentStep;
+        const f = record.fields;
+        let content = "";
+        let subtitle = "Follow this step before moving forward.";
+        if (step === 1) {
+          subtitle = "Start with the client’s actual concern and water/mold history.";
+          content = `<p>Speak with the client or occupant before sampling and determine exactly what they are experiencing.</p>${guidedList(["Musty or unusual odors and the affected room", "Whether the issue is constant or intermittent", "Visible suspected mold", "Previous or current roof, plumbing, basement, flooding, condensation, or HVAC/AC leakage", "Previous mold remediation or water-damage repairs"])}<div class="guided-help-fields">${guidedTextField("primaryArea", "Primary area of concern *", f.primaryArea, { placeholder: "Room / exact location" })}${guidedTextField("clientConcern", "Client concern", f.clientConcern, { multiline: true, placeholder: "What the client is experiencing" })}${guidedTextField("waterMoldHistory", "Previous water / mold history", f.waterMoldHistory, { multiline: true, placeholder: "Leaks, flooding, repairs, remediation, staining, or moisture history" })}</div>`;
+        } else if (step === 2) {
+          if (!f.sample1Location && f.primaryArea) { f.sample1Location = f.primaryArea; saveGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, record); }
+          subtitle = "The first indoor sample normally follows the client’s primary concern.";
+          content = `<div class="guided-help-callout"><strong>INDOOR SAMPLE #1</strong><br>Use the primary area of concern unless field conditions justify an adjustment.</div>${guidedTextField("sample1Location", "Sample #1 location *", f.sample1Location || f.primaryArea, { placeholder: "Exact room / location" })}${guidedList(["Position sampling equipment in the room", "Close the room door where practical", "Avoid unnecessarily disturbing dust or materials", "Document the exact sample location"])}<button class="decode-btn guided-help-action" type="button" data-mold-action="start-primary">START 5-MINUTE AIR SAMPLE</button>`;
+        } else if (step === 3) {
+          subtitle = "Let the pump run while you investigate the primary room without creating excess air movement.";
+          content = `${moldTimerMarkup(record, "sample1", "SAMPLE #1 RUNNING", "START 5-MINUTE AIR SAMPLE")}${guidedList(["Use thermal imaging, visual inspection, and a moisture meter where warranted", "Look for thermal anomalies, elevated moisture, staining, damaged finishes, window/exterior-wall moisture, plumbing moisture, condensation, HVAC/register conditions, visible suspected growth, and unusual odors", "Do not unnecessarily disturb materials or create excessive air movement while sampling"])} `;
+        } else if (step === 4) {
+          subtitle = "Seal, label, and match the first cassette to the Chain of Custody.";
+          content = `<p>Remove the cassette carefully, immediately reseal it, and record the exact sample location.</p>${guidedChecklist(["Cassette sealed", "Sample bagged", "Sample labeled", "Chain of Custody completed"], record, "moldSecure1-", true)}`;
+        } else if (step === 5) {
+          subtitle = "Investigate the home before choosing the second indoor sample.";
+          content = `<div class="guided-help-callout"><strong>Sample #2 is findings-driven.</strong> Do not automatically choose the basement.</div>${guidedList(["Walk adjoining rooms, bathrooms, kitchens, laundry areas, plumbing fixtures, exterior walls, ceilings below wet areas, previous leak locations, windows, basement, HVAC, and attic", "Use thermal imaging and visual inspection throughout", "Investigate suspicious thermal areas with a moisture meter", "Document moisture damage, staining, leakage, or other significant conditions and consider the most useful occupied location for Sample #2"])}${guidedTextField("propertyFindings", "Property investigation findings", f.propertyFindings, { multiline: true, placeholder: "Significant observations that may guide Sample #2" })}`;
+        } else if (step === 6) {
+          subtitle = "Inspect a basement when present, but do not automatically sample it.";
+          content = `${guidedList(["Check current/previous water intrusion, seepage, damp walls/floors, efflorescence, plumbing, sump and drain conditions", "Check condensation, damaged finishes, musty odors, suspected growth, and evidence of prior remediation"])}<div class="guided-help-fields">${guidedSelectField("basementStatus", "Basement result", f.basementStatus, ["No significant concerns", "Potential mold / moisture concern identified", "No basement"])}${guidedTextField("basementFindings", "Basement findings", f.basementFindings, { multiline: true, placeholder: "Record visible and measured conditions" })}</div>${f.basementStatus === "Potential mold / moisture concern identified" ? guidedChecklist(["Consider this area when selecting Sample #2"], record, "moldBasementConsider-", false) : ""}`;
+        } else if (step === 7) {
+          subtitle = "Always inspect accessible HVAC equipment, evaporator coil, and condensate system.";
+          content = `${guidedList(["Check condensate leakage, drain blockage or improper drainage", "Check moisture near the evaporator coil, wet insulation, cabinet leakage, corrosion, standing water, damp ductwork, and accessible contamination", "If a significant HVAC moisture condition exists, consider an affected occupied area influenced by that system for Sample #2"])}<div class="guided-help-fields">${guidedSelectField("hvacStatus", "HVAC result", f.hvacStatus, ["No significant concerns", "Moisture / leak condition identified", "Not accessible"])}${guidedTextField("hvacFindings", "HVAC findings", f.hvacFindings, { multiline: true, placeholder: "Record condensate, moisture, leakage, or accessibility findings" })}</div>`;
+        } else if (step === 8) {
+          subtitle = "Inspect when safely and reasonably accessible; do not routinely air-sample the attic.";
+          content = `${guidedList(["Check roof leaks and staining, ventilation, baffles, exhaust termination, condensation, elevated moisture, darkened/deteriorated sheathing, suspected growth, wet or disturbed insulation"])}<div class="guided-help-fields">${guidedSelectField("atticStatus", "Attic result", f.atticStatus, ["No significant concerns", "Moisture / ventilation concern identified", "Not accessible"])}${guidedTextField("atticFindings", "Attic findings", f.atticFindings, { multiline: true, placeholder: "Record moisture, ventilation, staining, sheathing, or access findings" })}</div><div class="guided-help-callout warning">Do not routinely collect a normal occupied-space mold air sample from an attic. Use visual, thermal, and moisture assessment instead.</div>`;
+        } else if (step === 9) {
+          subtitle = "Choose the occupied location that provides the most useful comparison.";
+          content = `<div class="guided-help-callout"><strong>SAMPLE #2 IS FINDINGS-DRIVEN</strong><br>The basement is only one possible location and is never forced.</div><datalist id="moldSample2Choices"><option value="Basement"><option value="Adjacent room"><option value="Room with moisture damage"><option value="Room associated with HVAC concern"><option value="Another occupied room"><option value="Other"></datalist><div class="guided-help-fields">${guidedTextField("sample2Location", "Indoor Sample #2 location *", f.sample2Location, { placeholder: "Select or type exact location", list: "moldSample2Choices" })}${guidedTextField("sample2Reason", "Reason for selecting this location *", f.sample2Reason, { multiline: true, placeholder: "Connect the choice to the inspection findings" })}</div>${guidedList(["Choose an adjoining room when it has meaningful moisture damage", "Investigate a thermal anomaly and consider that room when findings support it", "For HVAC condensate leakage, consider an appropriate occupied area influenced by the system", "Use the basement only when its conditions warrant the comparison"])} `;
+        } else if (step === 10) {
+          subtitle = "Collect the second indoor sample at the findings-based location.";
+          content = `<div class="guided-help-callout"><strong>INDOOR SAMPLE #2:</strong> ${escapeHtml(f.sample2Location || "Location not entered")}</div>${moldTimerMarkup(record, "sample2", "INDOOR SAMPLE #2", "START 5-MINUTE AIR SAMPLE")}`;
+        } else if (step === 11) {
+          subtitle = "Seal, label, and match the second cassette to the Chain of Custody.";
+          content = `<p>Remove the cassette carefully, immediately reseal it, and record the exact location.</p>${guidedChecklist(["Cassette sealed", "Sample bagged", "Sample labeled", "Chain of Custody completed"], record, "moldSecure2-", true)}`;
+        } else if (step === 12) {
+          subtitle = "Keep normal occupied-space samples out of attics and crawlspaces.";
+          content = `<div class="guided-help-callout warning"><strong>DO NOT ROUTINELY COLLECT STANDARD OCCUPIED-SPACE MOLD AIR SAMPLES IN ATTICS OR CRAWLSPACES.</strong></div><p>These spaces have different airflow and environmental conditions and may naturally contain higher fungal levels.</p>${guidedList(["Visually inspect", "Check for moisture and use thermal imaging where appropriate", "Document suspected microbial growth and water intrusion", "Recommend specialized investigation/testing when warranted"])} `;
+        } else if (step === 13) {
+          subtitle = "Collect a representative outside baseline away from localized contamination sources.";
+          content = `<p>Where practical, sample outside air reasonably representative of air entering the home, including near an identifiable fresh-air intake when appropriate.</p>${guidedList(["Avoid dryer, bathroom, furnace, and vehicle exhaust", "Avoid compost, heavy vegetation/debris, and other localized contamination sources"])}${guidedTextField("outdoorLocation", "Outdoor sample location *", f.outdoorLocation, { multiline: true, placeholder: "Describe the exact control-sample location" })}${moldTimerMarkup(record, "outdoor", "OUTDOOR CONTROL SAMPLE", "START OUTDOOR SAMPLE")}`;
+        } else if (step === 14) {
+          subtitle = "Secure and identify the outdoor control before the final review.";
+          content = `<p>Immediately reseal the cassette, label it as the outdoor/exterior control, and record its exact location.</p>${guidedChecklist(["Cassette sealed", "Sample bagged", "Sample labeled", "Chain of Custody completed"], record, "moldSecureOutdoor-", true)}`;
+        } else {
+          subtitle = "Review the sampling sequence and save the internal field record.";
+          const sample1 = moldSampleInfo(record, "sample1");
+          const sample2 = moldSampleInfo(record, "sample2");
+          const outdoor = moldSampleInfo(record, "outdoor");
+          content = `<div class="guided-help-complete"><h4>MOLD AIR SAMPLING COMPLETE</h4><p>Review the locations and final notes before completing the procedure.</p></div><div class="guided-help-summary"><div><span>Indoor Sample #1</span><strong>${escapeHtml(f.sample1Location || f.primaryArea || "Not recorded")}</strong></div><div><span>Indoor Sample #2</span><strong>${escapeHtml(f.sample2Location || "Not recorded")}</strong></div><div><span>Outdoor control</span><strong>${escapeHtml(f.outdoorLocation || "Not recorded")}</strong></div><div><span>Sampling method</span><strong>15 LPM × 5 minutes = 75 liters per sample</strong></div></div>${guidedList(["Primary concern documented", "Indoor Sample #1 completed", "Property investigated", "Basement checked if present", "HVAC / AC checked", "Attic checked if accessible", "Indoor Sample #2 completed", "Outdoor control completed", "Thermal imaging used", "Moisture meter used where warranted", "Samples sealed and labeled", "Chain of Custody completed"])}${guidedTextField("finalNotes", "Final inspector notes", f.finalNotes, { multiline: true, rows: 4, maxlength: 1200, placeholder: "Relevant moisture, HVAC, attic, basement, sampling, or limitation notes" })}<button class="decode-btn guided-help-action" type="button" data-mold-action="complete"${record.completedAt ? " disabled" : ""}>${record.completedAt ? "MOLD AIR SAMPLING RECORDED" : "COMPLETE MOLD AIR SAMPLING"}</button>`;
+        }
+        moldSamplingStepHost.innerHTML = guidedStepShell(step, 15, MOLD_STEP_TITLES[step - 1], subtitle, content);
+        moldSamplingProgressTitle.textContent = record.completedAt ? "Mold air sampling recorded" : MOLD_STEP_TITLES[step - 1];
+        moldSamplingProgressCount.textContent = `Step ${step} of 15`;
+        moldSamplingStatus.textContent = record.completedAt ? "Complete" : step > 1 || record.startedAt ? "In progress" : "Not started";
+        moldSamplingStatus.classList.toggle("is-ready", Boolean(record.completedAt));
+        moldSamplingHelpCard.classList.toggle("is-complete", Boolean(record.completedAt));
+        moldSamplingBack.disabled = step === 1;
+        moldSamplingNext.hidden = step === 15;
+        moldSamplingNext.disabled = !moldCanAdvance(record);
+        if (step === 4 && !moldCanAdvance(record)) moldSamplingNext.title = "Confirm the four sample security items first";
+        else if (step === 9 && !moldCanAdvance(record)) moldSamplingNext.title = "Enter the Sample #2 location and reason first";
+        else moldSamplingNext.removeAttribute("title");
+        updateMoldSamplingTimer();
+      }
+
+      function updateMoldSamplingTimer() {
+        const record = loadGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, 15);
+        const activeEntries = Object.entries(record.samples || {}).filter(([, sample]) => sample?.startedAt && !sample?.stoppedAt);
+        if (!activeEntries.length) {
+          if (moldSamplingTimerInterval) window.clearInterval(moldSamplingTimerInterval);
+          moldSamplingTimerInterval = 0;
+          return;
+        }
+        for (const [sampleKey, sample] of activeEntries) {
+          const remaining = Math.max(0, Math.ceil((Number(sample.targetAt) - Date.now()) / 1000));
+          const output = moldSamplingStepHost.querySelector(`[data-mold-countdown="${sampleKey}"]`);
+          if (output) output.textContent = `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(remaining % 60).padStart(2, "0")}`;
+          if (remaining === 0 && !sample.targetReachedAt) {
+            sample.targetReachedAt = Date.now();
+            saveGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, record);
+            appendWorkflowEvent("Mold air sample target reached", { sample: sampleKey, startedAt: new Date(sample.startedAt).toISOString(), targetReachedAt: new Date(sample.targetReachedAt).toISOString(), flowRateLpm: 15, targetSeconds: 300, totalLiters: 75 }, loadActiveJob());
+            showTimedAlert({ id: `mold-${sampleKey}-${sample.startedAt}`, title: "MOLD AIR SAMPLE COMPLETE", body: "The five-minute sample is complete. Stop the pump, then return to MPI Field Tools and press SAMPLE STOPPED.", url: "./#sop-guide", job: loadActiveJob() });
+            renderMoldSamplingStep();
+            break;
+          }
+        }
+      }
+
+      function startMoldSamplingTimer(sampleKey, targetStep) {
+        const record = loadGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, 15);
+        const sample = moldSampleInfo(record, sampleKey);
+        if (sample.startedAt && !sample.stoppedAt) return;
+        const startedAt = Date.now();
+        record.startedAt = record.startedAt || startedAt;
+        record.currentStep = targetStep;
+        record.samples[sampleKey] = { startedAt, targetAt: startedAt + 300000, targetReachedAt: 0, stoppedAt: 0, flowRateLpm: 15, targetSeconds: 300, totalLiters: 75 };
+        saveGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, record);
+        appendWorkflowEvent("Mold air sample started", { sample: sampleKey, startedAt: new Date(startedAt).toISOString(), flowRateLpm: 15, targetSeconds: 300, totalLiters: 75 }, loadActiveJob());
+        prepareTimedAlerts();
+        if (moldSamplingTimerInterval) window.clearInterval(moldSamplingTimerInterval);
+        moldSamplingTimerInterval = window.setInterval(updateMoldSamplingTimer, 1000);
+        renderMoldSamplingStep();
+        showToast("Five-minute mold air sample started");
+      }
+
+      function stopMoldSamplingTimer(sampleKey) {
+        const record = loadGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, 15);
+        const sample = moldSampleInfo(record, sampleKey);
+        if (!sample.startedAt || sample.stoppedAt || !sample.targetReachedAt) return;
+        sample.stoppedAt = Date.now();
+        sample.elapsedSeconds = Math.max(0, Math.floor((sample.stoppedAt - sample.startedAt) / 1000));
+        saveGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, record);
+        appendWorkflowEvent("Mold air sample stopped", { sample: sampleKey, stoppedAt: new Date(sample.stoppedAt).toISOString(), elapsedSeconds: sample.elapsedSeconds, flowRateLpm: 15, totalLiters: 75 }, loadActiveJob());
+        renderMoldSamplingStep();
+        showToast("Sample stop recorded");
+      }
+
+      function completeMoldSampling() {
+        const record = loadGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, 15);
+        if (record.completedAt) return;
+        const requiredSamples = ["sample1", "sample2", "outdoor"].every(key => moldSampleInfo(record, key).stoppedAt);
+        if (!requiredSamples) { showToast("Complete and stop all three samples first"); return; }
+        record.completedAt = Date.now();
+        saveGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, record);
+        appendWorkflowEvent("Mold air sampling procedure completed", { sample1Location: record.fields.sample1Location || record.fields.primaryArea || "", sample2Location: record.fields.sample2Location || "", sample2Reason: record.fields.sample2Reason || "", outdoorLocation: record.fields.outdoorLocation || "", flowRateLpm: 15, durationSecondsPerSample: 300, litersPerSample: 75, basementStatus: record.fields.basementStatus || "", hvacStatus: record.fields.hvacStatus || "", atticStatus: record.fields.atticStatus || "", finalNotes: record.fields.finalNotes || "" }, loadActiveJob());
+        renderMoldSamplingStep();
+        showToast("Mold air sampling record completed");
+      }
+
+      function handleGuidedFieldEvent(event, storageKey, totalSteps, render) {
+        const field = event.target.closest("[data-guided-field]");
+        const check = event.target.closest("[data-guided-check]");
+        if (!field && !check) return;
+        const record = loadGuidedRecord(storageKey, totalSteps);
+        record.startedAt = record.startedAt || Date.now();
+        if (field) record.fields[field.dataset.guidedField] = field.type === "checkbox" ? field.checked : field.value;
+        if (check) record.checks[check.dataset.guidedCheck] = check.checked;
+        saveGuidedRecord(storageKey, record);
+        if (event.type === "change" || check) render();
+        else {
+          if (storageKey === MOLD_SAMPLING_STORAGE_KEY) moldSamplingNext.disabled = !moldCanAdvance(record);
+          if (storageKey === ASBESTOS_SAMPLING_STORAGE_KEY) asbestosSamplingNext.disabled = !asbestosCanAdvance(record);
+        }
+      }
+
+      function openMoldSamplingHelp() {
+        moldSamplingHelpCard.open = true;
+        renderMoldSamplingStep();
+        moldSamplingHelpCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      const ASBESTOS_MATERIAL_GUIDANCE = [
+        {
+          name: "Floor tile / sheet flooring / floor covering / mastic",
+          steps: [
+            "Photograph the area before sampling and, where practical, tape around the selected section.",
+            "Cut through or carefully remove a representative portion using the least disruptive method practical.",
+            "Collect relevant flooring layers and/or adhesive where required and place them directly into the sample bag.",
+            "Seal the bag immediately, then tape over or otherwise seal the opening or disturbed section.",
+            "Take a final photograph showing the sampling location sealed."
+          ]
+        },
+        {
+          name: "Insulation",
+          steps: [
+            "Photograph the insulation before disturbing it and select a representative location.",
+            "Carefully remove only enough material for laboratory analysis; do not unnecessarily tear out or expose a large section.",
+            "Minimize disturbance and airborne fibers, place the material directly into the bag, and seal it immediately.",
+            "Document the exact location and seal or protect the disturbed area where practical."
+          ]
+        },
+        {
+          name: "Vermiculite insulation",
+          steps: [
+            "Photograph the overall installation and exact sample location before disturbance; wear appropriate PPE.",
+            "Avoid stirring, sweeping, blowing, or unnecessarily moving this lightweight, loose, porous material.",
+            "Keep the bag close to the sampling point and carefully collect a generous representative quantity.",
+            "Where possible, include material from beneath the top surface so the sample represents the installation.",
+            "Immediately seal the bag and prevent contamination of surrounding areas, tools, clothing, or other samples.",
+            "Document exactly where the sample was taken; protect the area by avoiding further disturbance rather than trying to tape loose insulation."
+          ]
+        },
+        {
+          name: "Exterior siding / cementitious siding / similar brittle exterior material",
+          steps: [
+            "Photograph the siding and exact sample location.",
+            "Carefully break or cut off a representative piece using the least disruptive method practical and minimize dust.",
+            "Place the sample directly into the bag and seal it.",
+            "Because siding is weather-exposed, sealing may not always be necessary; protect the disturbed edge where practical and appropriate.",
+            "Photograph the finished sampling location."
+          ]
+        },
+        {
+          name: "Interior or exterior trim / small brittle components",
+          steps: [
+            "Photograph the material and exact sampling location.",
+            "If a small representative section can be carefully broken off without excessive dust, this may be preferable to cutting.",
+            "Use the least destructive method practical, place the sample immediately into the bag, and seal it.",
+            "Seal or repair the disturbed area where practical and photograph the finished area."
+          ]
+        },
+        {
+          name: "Textured coatings / plaster / joint compound / similar materials",
+          steps: [
+            "Photograph the area and identify the material or layer being sampled.",
+            "Carefully remove enough representative material for analysis while avoiding unnecessary dust.",
+            "Where different layers are present, collect the appropriate layers when required.",
+            "Place the material directly into the bag and seal it immediately.",
+            "Seal or cover the disturbed location where practical and photograph the completed area."
+          ]
+        },
+        {
+          name: "Other material",
+          steps: [
+            "Photograph and document the material and exact location before disturbance.",
+            "Use the least destructive practical method to obtain a representative sample.",
+            "Minimize airborne dust and contamination; place the sample directly into the bag and seal it immediately.",
+            "Seal or protect the disturbed area where practical and appropriate, then photograph the finished location."
+          ]
+        }
+      ];
+
+      const ASBESTOS_FINAL_CHECKS = [
+        "Client / onsite contact spoken to",
+        "Correct material and location confirmed",
+        "PPE used",
+        "Area photographed before sampling",
+        "Sample location documented",
+        "Representative sample collected",
+        "Dust and contamination minimized",
+        "Sample placed directly into sample bag",
+        "Sample bag sealed",
+        "Sample bag labeled",
+        "Sample number recorded",
+        "Sampling location sealed / protected where practical",
+        "Sampling debris cleaned appropriately",
+        "Final photograph taken",
+        "Chain of Custody completed",
+        "Sample ID matches Chain of Custody",
+        "Sample placed inside second transport bag",
+        "Documentation packaged correctly",
+        "All samples accounted for before leaving property"
+      ];
+
+      function asbestosCanAdvance(record) {
+        const step = record.currentStep;
+        const f = record.fields;
+        if (step === 1) return Boolean(String(f.asbMaterial || "").trim() && String(f.asbArea || "").trim());
+        if (step === 2) return Boolean(record.checks["asbBeforePhoto-1"] && record.checks["asbBeforePhoto-2"]);
+        if (step === 5) return Boolean(String(f.asbMaterialCategory || "").trim());
+        if (step === 6) return Boolean(String(f.asbSampleNumber || "").trim() && String(f.asbBagMaterial || f.asbMaterial || "").trim() && String(f.asbBagLocation || f.asbArea || "").trim());
+        if (step === 10) return Boolean(record.checks["asbCoc-1"] && record.checks["asbCoc-2"]);
+        if (step === 11) return moldRequiredChecksComplete(record, "asbTransport-", 5);
+        return true;
+      }
+
+      function asbestosMaterialMarkup(record) {
+        const selected = record.fields.asbMaterialCategory || "";
+        return `<div class="guided-help-fields">${guidedSelectField("asbMaterialCategory", "Closest material type *", selected, ASBESTOS_MATERIAL_GUIDANCE.map(item => item.name))}</div><div class="guided-material-selector">${ASBESTOS_MATERIAL_GUIDANCE.map(item => `<details class="guided-material-card"${item.name === selected ? " open" : ""}><summary>${escapeHtml(item.name)}</summary>${guidedList(item.steps)}</details>`).join("")}</div>`;
+      }
+
+      function renderAsbestosSamplingStep() {
+        const record = loadGuidedRecord(ASBESTOS_SAMPLING_STORAGE_KEY, 12);
+        const step = record.currentStep;
+        const f = record.fields;
+        let content = "";
+        let subtitle = "Follow this step before moving forward.";
+        if (step === 1) {
+          subtitle = "Confirm the requested material, exact area, purpose, and access conditions.";
+          content = `<p>Speak with the client, owner, occupant, contractor, or other onsite contact as appropriate. Explain that a small representative portion will be removed and submitted to the laboratory for asbestos analysis.</p><div class="guided-help-fields">${guidedTextField("asbContact", "Onsite contact", f.asbContact, { placeholder: "Name / role if applicable" })}${guidedTextField("asbMaterial", "Material requiring sampling *", f.asbMaterial, { placeholder: "Suspect material" })}${guidedTextField("asbArea", "Exact sampling area(s) *", f.asbArea, { multiline: true, placeholder: "Room, surface, component, and exact location" })}${guidedTextField("asbReason", "Why the sample is being collected", f.asbReason, { multiline: true, placeholder: "Client request, renovation, damage, due diligence, or other reason" })}${guidedTextField("asbAccess", "Access limitations or concerns", f.asbAccess, { multiline: true, placeholder: "Record restrictions or write None" })}</div>`;
+        } else if (step === 2) {
+          subtitle = "Create a clear visual record before touching the suspect material.";
+          content = `${guidedList(["Take an overall photograph showing the area", "Take a closer photograph showing the exact material", "Document sample location, material type, and condition where relevant"])}${guidedChecklist(["Overall area photograph taken", "Close photograph of exact material taken"], record, "asbBeforePhoto-", true)}<div class="guided-help-fields">${guidedTextField("asbDocumentedLocation", "Documented sample location", f.asbDocumentedLocation || f.asbArea, { multiline: true, placeholder: "Exact location as it will appear on the sample and COC" })}${guidedTextField("asbCondition", "Material condition", f.asbCondition, { multiline: true, placeholder: "Intact, damaged, friable, loose, dusty, layered, or other relevant condition" })}</div>`;
+        } else if (step === 3) {
+          subtitle = "Use appropriate PPE and keep disturbance and contamination as low as practical.";
+          content = `${guidedList(["Avoid unnecessary breaking, tearing, scraping, crushing, or agitation", "Never dry sweep sampling debris and never blow dust from the area", "Keep the sample close to the bag during collection where practical", "Lightly dampen friable or dusty materials where appropriate to reduce airborne dust", "Take extra care with lightweight, friable, porous, or dusty materials such as vermiculite"])}${guidedTextField("asbPpeNotes", "PPE / contamination controls used", f.asbPpeNotes, { multiline: true, placeholder: "Briefly record the controls used" })}`;
+        } else if (step === 4) {
+          subtitle = "Obtain enough representative material using the least destructive practical method.";
+          content = `${guidedList(["Inspect the material and choose a representative area", "Match the collection method and quantity to the material", "Where multiple layers may require analysis, collect the necessary layers where practical", "Do not remove more material than required for laboratory analysis"])}${guidedTextField("asbRepresentativeArea", "Representative area selected", f.asbRepresentativeArea || f.asbArea, { multiline: true, placeholder: "Describe the selected point and why it represents the material" })}`;
+        } else if (step === 5) {
+          subtitle = "Select the closest material type and follow its specific collection method.";
+          content = `<div class="guided-help-callout warning"><strong>Do not use one collection method for every material.</strong> Open the applicable material card below.</div>${asbestosMaterialMarkup(record)}`;
+        } else if (step === 6) {
+          if (!f.asbBagMaterial && f.asbMaterial) f.asbBagMaterial = f.asbMaterial;
+          if (!f.asbBagLocation && (f.asbDocumentedLocation || f.asbArea)) f.asbBagLocation = f.asbDocumentedLocation || f.asbArea;
+          saveGuidedRecord(ASBESTOS_SAMPLING_STORAGE_KEY, record);
+          subtitle = "Seal and identify the sample immediately after collection.";
+          content = `${guidedList(["Place the sample into the designated bag and seal it completely", "Label the bag clearly", "Make the sample identification match the laboratory Chain of Custody"])}<div class="guided-help-fields">${guidedTextField("asbSampleNumber", "Sample number *", f.asbSampleNumber, { placeholder: "Example: A-01" })}${guidedTextField("asbBagMaterial", "Material type *", f.asbBagMaterial, { placeholder: "Material on sample label" })}${guidedTextField("asbBagLocation", "Sample location *", f.asbBagLocation, { multiline: true, placeholder: "Location on sample label and COC" })}</div>`;
+        } else if (step === 7) {
+          subtitle = "Match the protection method to the material and actual sampling location.";
+          content = `<div class="guided-help-callout"><strong>Seal, cover, repair, or otherwise protect the disturbed sampling location where practical and appropriate for the material.</strong></div>${guidedList(["Flooring: tape over the opening", "Interior wall or ceiling material: seal or cover the disturbed area", "Insulation: minimize exposed/disturbed material and protect where practical", "Vermiculite: avoid further disturbance rather than trying to tape loose insulation", "Exterior siding or trim: protect the exposed edge where practical, recognizing this may not always be necessary"])}${guidedTextField("asbProtection", "Protection / repair completed", f.asbProtection, { multiline: true, placeholder: "Describe the tape, cover, repair, protected edge, or why it was not appropriate" })}`;
+        } else if (step === 8) {
+          subtitle = "Remove small debris without creating additional airborne dust.";
+          content = `${guidedList(["Use an appropriate controlled cleanup method", "Do not dry sweep", "Do not use compressed air", "Do not blow debris away", "Leave the sampling location clean and secure"], true)}${guidedTextField("asbCleanup", "Cleanup method / result", f.asbCleanup, { multiline: true, placeholder: "Briefly record how the immediate area was left clean and secure" })}`;
+        } else if (step === 9) {
+          subtitle = "Show the finished location and any protection or temporary seal.";
+          content = `${guidedList(["Photograph the completed sampling location", "Show tape, covering, repair, protected edge, or temporary seal when installed", "Capture enough context to identify the exact sample point later"])}${guidedChecklist(["Final sampling-location photograph taken"], record, "asbFinalPhoto-", false)}${guidedTextField("asbFinalPhotoNotes", "Final photograph / location notes", f.asbFinalPhotoNotes, { multiline: true, placeholder: "Record any detail needed to relocate the sample point" })}`;
+        } else if (step === 10) {
+          subtitle = "Match every bag to the laboratory paperwork before packaging.";
+          content = `${guidedList(["Complete property and client information where required", "Enter inspector, date, sample number, location, and material description", "Complete all other laboratory-required information", "Double-check every sample number against the Chain of Custody before packaging"])}${guidedChecklist(["Chain of Custody completed", "Every sample ID matches the Chain of Custody"], record, "asbCoc-", true)}${guidedTextField("asbCocNotes", "Chain of Custody notes", f.asbCocNotes, { multiline: true, placeholder: "Lab instructions, multiple samples, or other submission notes" })}`;
+        } else if (step === 11) {
+          subtitle = "Use a sealed inner sample bag and a second clean transport bag.";
+          content = `<div class="guided-help-summary"><div><span>Inner bag</span><strong>Sealed, labeled asbestos bulk sample</strong></div><div><span>Outer bag</span><strong>Second clean transport bag with clean, readable submission paperwork</strong></div></div><p>Each sample must remain separately sealed and clearly identified when multiple samples are collected.</p>${guidedChecklist(["Inner sample bag sealed", "Inner sample bag clearly labeled", "Sealed sample placed in second clean bag", "Chain of Custody packaged according to laboratory procedure", "Outer transport bag sealed"], record, "asbTransport-", true)}`;
+        } else {
+          subtitle = "Confirm the complete sample, site, paperwork, and transport package before leaving.";
+          content = `${record.completedAt ? `<div class="guided-help-complete"><h4>ASBESTOS SAMPLING RECORDED</h4><p>The final field verification was completed at ${escapeHtml(workflowClock(record.completedAt))}.</p></div>` : ""}${guidedChecklist(ASBESTOS_FINAL_CHECKS, record, "asbFinal-", true)}${guidedTextField("asbFinalNotes", "Final inspector notes", f.asbFinalNotes, { multiline: true, rows: 4, maxlength: 1200, placeholder: "Record limitations, additional samples, packaging, or material-specific notes" })}<button class="decode-btn guided-help-action" type="button" data-asbestos-action="complete"${record.completedAt ? " disabled" : ""}>${record.completedAt ? "ASBESTOS SAMPLING RECORDED" : "COMPLETE ASBESTOS SAMPLING"}</button>`;
+        }
+        asbestosSamplingStepHost.innerHTML = guidedStepShell(step, 12, ASBESTOS_STEP_TITLES[step - 1], subtitle, content);
+        asbestosSamplingProgressTitle.textContent = record.completedAt ? "Asbestos sampling recorded" : ASBESTOS_STEP_TITLES[step - 1];
+        asbestosSamplingProgressCount.textContent = `Step ${step} of 12`;
+        asbestosSamplingStatus.textContent = record.completedAt ? "Complete" : step > 1 || record.startedAt ? "In progress" : "Not started";
+        asbestosSamplingStatus.classList.toggle("is-ready", Boolean(record.completedAt));
+        asbestosSamplingHelpCard.classList.toggle("is-complete", Boolean(record.completedAt));
+        asbestosSamplingBack.disabled = step === 1;
+        asbestosSamplingNext.hidden = step === 12;
+        asbestosSamplingNext.disabled = !asbestosCanAdvance(record);
+        if (step === 12) {
+          const completeButton = asbestosSamplingStepHost.querySelector('[data-asbestos-action="complete"]');
+          if (completeButton && !record.completedAt) completeButton.disabled = !moldRequiredChecksComplete(record, "asbFinal-", ASBESTOS_FINAL_CHECKS.length);
+        }
+      }
+
+      function completeAsbestosSampling() {
+        const record = loadGuidedRecord(ASBESTOS_SAMPLING_STORAGE_KEY, 12);
+        if (record.completedAt) return;
+        if (!moldRequiredChecksComplete(record, "asbFinal-", ASBESTOS_FINAL_CHECKS.length)) {
+          showToast("Complete the final sample verification first");
+          return;
+        }
+        record.completedAt = Date.now();
+        saveGuidedRecord(ASBESTOS_SAMPLING_STORAGE_KEY, record);
+        appendWorkflowEvent("Asbestos sampling field procedure completed", { material: record.fields.asbMaterial || "", materialCategory: record.fields.asbMaterialCategory || "", sampleNumber: record.fields.asbSampleNumber || "", sampleLocation: record.fields.asbBagLocation || record.fields.asbArea || "", protection: record.fields.asbProtection || "", finalNotes: record.fields.asbFinalNotes || "" }, loadActiveJob());
+        renderAsbestosSamplingStep();
+        showToast("Asbestos sampling record completed");
+      }
+
+      function openAsbestosSamplingHelp() {
+        asbestosSamplingHelpCard.open = true;
+        renderAsbestosSamplingStep();
+        asbestosSamplingHelpCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function initializeSamplingHelp() {
+        renderMoldSamplingStep();
+        renderAsbestosSamplingStep();
+        const moldRecord = loadGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, 15);
+        if (Object.values(moldRecord.samples || {}).some(sample => sample?.startedAt && !sample?.stoppedAt)) {
+          moldSamplingTimerInterval = window.setInterval(updateMoldSamplingTimer, 1000);
+          updateMoldSamplingTimer();
+        }
+      }
+
       function sizeCommentOutput() {
         commentOutput.style.height = "";
         commentOutput.style.overflowY = "auto";
@@ -17824,6 +18485,16 @@
           openWellYieldWorkflow();
           return;
         }
+        const moldSamplingButton = event.target.closest("[data-open-mold-air]");
+        if (moldSamplingButton) {
+          openMoldSamplingHelp();
+          return;
+        }
+        const asbestosSamplingButton = event.target.closest("[data-open-asbestos-sampling]");
+        if (asbestosSamplingButton) {
+          openAsbestosSamplingHelp();
+          return;
+        }
         const button = event.target.closest("[data-sop-query]");
         if (!button) return;
         sopSearch.value = button.dataset.sopQuery;
@@ -17876,6 +18547,68 @@
       copyWellYieldSummary.addEventListener("click", () => copyText(buildWellYieldSummary(), "Well inspection summary copied"));
       resetWellYieldRecord.addEventListener("click", clearWellYieldRecord);
 
+      moldSamplingStepHost.addEventListener("input", event => handleGuidedFieldEvent(event, MOLD_SAMPLING_STORAGE_KEY, 15, renderMoldSamplingStep));
+      moldSamplingStepHost.addEventListener("change", event => handleGuidedFieldEvent(event, MOLD_SAMPLING_STORAGE_KEY, 15, renderMoldSamplingStep));
+      moldSamplingStepHost.addEventListener("click", event => {
+        const action = event.target.closest("[data-mold-action]");
+        if (!action) return;
+        if (action.dataset.moldAction === "start-primary") {
+          const record = loadGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, 15);
+          if (!String(record.fields.sample1Location || record.fields.primaryArea || "").trim()) { showToast("Enter the Sample #1 location first"); return; }
+          startMoldSamplingTimer("sample1", 3);
+        } else if (action.dataset.moldAction === "start-timer") {
+          const step = action.dataset.sampleKey === "sample2" ? 10 : action.dataset.sampleKey === "outdoor" ? 13 : 3;
+          if (action.dataset.sampleKey === "outdoor") {
+            const record = loadGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, 15);
+            if (!String(record.fields.outdoorLocation || "").trim()) { showToast("Enter the outdoor sample location first"); return; }
+          }
+          startMoldSamplingTimer(action.dataset.sampleKey, step);
+        } else if (action.dataset.moldAction === "stop-sample") {
+          stopMoldSamplingTimer(action.dataset.sampleKey);
+        } else if (action.dataset.moldAction === "complete") {
+          completeMoldSampling();
+        }
+      });
+      moldSamplingBack.addEventListener("click", () => {
+        const record = loadGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, 15);
+        record.currentStep = Math.max(1, record.currentStep - 1);
+        saveGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, record);
+        renderMoldSamplingStep();
+        moldSamplingHelpCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      moldSamplingNext.addEventListener("click", () => {
+        const record = loadGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, 15);
+        if (!moldCanAdvance(record)) { showToast("Complete the required field items before continuing"); return; }
+        record.startedAt = record.startedAt || Date.now();
+        record.currentStep = Math.min(15, record.currentStep + 1);
+        saveGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, record);
+        renderMoldSamplingStep();
+        moldSamplingHelpCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      asbestosSamplingStepHost.addEventListener("input", event => handleGuidedFieldEvent(event, ASBESTOS_SAMPLING_STORAGE_KEY, 12, renderAsbestosSamplingStep));
+      asbestosSamplingStepHost.addEventListener("change", event => handleGuidedFieldEvent(event, ASBESTOS_SAMPLING_STORAGE_KEY, 12, renderAsbestosSamplingStep));
+      asbestosSamplingStepHost.addEventListener("click", event => {
+        const action = event.target.closest("[data-asbestos-action]");
+        if (action?.dataset.asbestosAction === "complete") completeAsbestosSampling();
+      });
+      asbestosSamplingBack.addEventListener("click", () => {
+        const record = loadGuidedRecord(ASBESTOS_SAMPLING_STORAGE_KEY, 12);
+        record.currentStep = Math.max(1, record.currentStep - 1);
+        saveGuidedRecord(ASBESTOS_SAMPLING_STORAGE_KEY, record);
+        renderAsbestosSamplingStep();
+        asbestosSamplingHelpCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      asbestosSamplingNext.addEventListener("click", () => {
+        const record = loadGuidedRecord(ASBESTOS_SAMPLING_STORAGE_KEY, 12);
+        if (!asbestosCanAdvance(record)) { showToast("Complete the required field items before continuing"); return; }
+        record.startedAt = record.startedAt || Date.now();
+        record.currentStep = Math.min(12, record.currentStep + 1);
+        saveGuidedRecord(ASBESTOS_SAMPLING_STORAGE_KEY, record);
+        renderAsbestosSamplingStep();
+        asbestosSamplingHelpCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
       setCommentType("defect");
       populateReportItems();
       initializeFieldForms();
@@ -17891,6 +18624,7 @@
       initializeToolGuides();
       initializeSopGuide();
       initializeWellYieldWorkflow();
+      initializeSamplingHelp();
       initializePushStatus();
       initializeOfflineAccess();
       initializeAppUpdates();
