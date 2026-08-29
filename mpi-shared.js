@@ -116,6 +116,7 @@
         .filter(item => item.active !== false)
         .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0))
         .map(item => ({ ...item, receipt: receipts.get(item.id) || null }))
+        .filter(item => !item.receipt?.clearedAt)
     );
     const syncReceiptListeners = () => {
       receiptUnsubscribers.forEach((unsubscribe, updateId) => {
@@ -168,6 +169,17 @@
     }, { merge: true });
   }
 
+  function clearUpdate(updateId, user, profile) {
+    if (!updateId || !user) return Promise.reject(new Error("Sign in first."));
+    return db.collection("officeUpdates").doc(updateId).collection("receipts").doc(user.uid).set({
+      userId: user.uid,
+      userEmail: normalizeEmail(user.email),
+      userName: profile?.name || user.displayName || "MPI Team Member",
+      clearedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  }
+
   window.MPI_SHARED = {
     available: true,
     app,
@@ -186,6 +198,7 @@
     ensureProfile,
     watchSession,
     watchUpdates,
-    setUpdateStatus
+    setUpdateStatus,
+    clearUpdate
   };
 })();

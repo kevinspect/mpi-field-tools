@@ -59,11 +59,10 @@
   }
 
   function updateAction(update) {
-    if (update.receipt?.status === "completed") return { label: "Completed ✓", status: "completed", disabled: true };
-    if (update.receipt?.status === "acknowledged") return { label: "Acknowledged ✓", status: "acknowledged", disabled: true };
+    if (["completed", "acknowledged", "read"].includes(update.receipt?.status)) return { label: "CLEAR FROM MY APP", status: "clear", disabled: false, clear: true };
     if (update.type === "training") return { label: "Mark training complete", status: "completed", disabled: false };
     if (update.requiresAcknowledgement) return { label: "Acknowledge", status: "acknowledged", disabled: false };
-    return { label: update.receipt?.status === "read" ? "Read ✓" : "Mark as read", status: "read", disabled: update.receipt?.status === "read" };
+    return { label: "Mark as read", status: "read", disabled: false };
   }
 
   function renderUpdates(updates) {
@@ -82,7 +81,7 @@
       const action = updateAction(update);
       const due = update.dueDate ? `<span>Due ${escapeHtml(formatDate(update.dueDate))}</span>` : "";
       const link = update.link ? `<a class="mpi-update-link" href="${escapeHtml(update.link)}" target="_blank" rel="noopener noreferrer">Open supporting information ↗</a>` : "";
-      return `<article class="mpi-update-card ${escapeHtml(update.priority || "normal")}" data-update-id="${escapeHtml(update.id)}"><div class="mpi-update-top"><span>${escapeHtml(typeLabel(update.type))}</span>${update.priority && update.priority !== "normal" ? `<strong>${escapeHtml(update.priority)}</strong>` : ""}</div><h3>${escapeHtml(update.title)}</h3><p>${escapeHtml(update.message)}</p><div class="mpi-update-meta">${due}<span>From ${escapeHtml(update.createdByName || "MPI Management")}</span></div>${link}<button class="mpi-update-action" type="button" data-update-status="${action.status}" ${action.disabled ? "disabled" : ""}>${escapeHtml(action.label)}</button></article>`;
+      return `<article class="mpi-update-card ${escapeHtml(update.priority || "normal")}" data-update-id="${escapeHtml(update.id)}"><div class="mpi-update-top"><span>${escapeHtml(typeLabel(update.type))}</span>${update.priority && update.priority !== "normal" ? `<strong>${escapeHtml(update.priority)}</strong>` : ""}</div><h3>${escapeHtml(update.title)}</h3><p>${escapeHtml(update.message)}</p><div class="mpi-update-meta">${due}<span>From ${escapeHtml(update.createdByName || "MPI Management")}</span></div>${link}<button class="mpi-update-action${action.clear ? " clear" : ""}" type="button" data-update-status="${action.status}" ${action.disabled ? "disabled" : ""}>${escapeHtml(action.label)}</button></article>`;
     }).join("") : '<div class="mpi-updates-empty"><strong>You are up to date.</strong><span>No current office messages, instructions, or training assignments are waiting.</span></div>';
   }
 
@@ -141,7 +140,8 @@
     const card = button.closest("[data-update-id]");
     button.disabled = true;
     try {
-      await shared.setUpdateStatus(card.dataset.updateId, currentUser, currentProfile, button.dataset.updateStatus);
+      if (button.dataset.updateStatus === "clear") await shared.clearUpdate(card.dataset.updateId, currentUser, currentProfile);
+      else await shared.setUpdateStatus(card.dataset.updateId, currentUser, currentProfile, button.dataset.updateStatus);
     } catch (_) {
       button.disabled = false;
       button.textContent = "Try again";

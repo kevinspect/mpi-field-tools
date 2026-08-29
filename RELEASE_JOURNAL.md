@@ -1,5 +1,12 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 117 — Clear Finished Office Notifications
+
+- Completed, acknowledged, and read office items now change to a clear **Clear From My App** action.
+- Clearing removes the finished item only from that employee's app while preserving the management record and completion acknowledgement.
+- Cleared items no longer appear in the employee's Home update card or Updates & Assignments list.
+- Updated the visible build, version file, and offline cache identifier to Build 117.
+
 ## Build 116 — Automatic Employee Notification Registration
 
 - A phone's notification identity now attaches automatically to the employee's secure MPI company profile after sign-in.
