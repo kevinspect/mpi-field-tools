@@ -1,5 +1,14 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 115 — Emergency iPhone Freeze Recovery
+
+- Replaced the blocking first-arrival popup with a non-blocking dashboard reminder so the phone interface cannot become trapped behind a dialog.
+- Added an inline Arrival Not Verified message that keeps the rest of the app usable and makes it easy to try ARRIVED again.
+- Added a fail-safe that always restores the ARRIVED button after location verification succeeds, fails, or times out.
+- Shortened phone location and property-verification timeouts so poor reception cannot leave the workflow appearing frozen for an extended period.
+- Migrated prior-build clock sessions into the new Hours Worked model so recorded hours and Clock Off remain available after updating.
+- Updated the visible build, version file, and offline cache identifier to Build 115.
+
 ## Build 114 — Separate Activity and Hours-Worked Start
 
 - Morning Readiness now records the management-only Inspector Activity Start without adding that time to the inspector's Hours Worked total.
