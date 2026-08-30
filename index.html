@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="117">
+  <meta name="app-build" content="118">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -473,7 +473,9 @@
       border-top: 1px solid #e5e7ee;
       font-size: 10px;
     }
-    .home-version-row button { min-height: 42px; padding: 9px 12px; color: var(--bright-blue); background: #f4f7fb; border: 1px solid #ceddea; border-radius: 9px; font-size: 10.5px; font-weight: 900; }
+    .home-version-row button { min-height: 42px; padding: 9px 12px; color: #fff; background: #11186a; border: 2px solid #fff; border-radius: 9px; font-size: 10.5px; font-weight: 900; box-shadow: 0 3px 10px rgba(0,0,0,.22); }
+    .home-version-row button:hover,
+    .home-version-row button:focus-visible { background: #254f9a; outline: 3px solid rgba(255,255,255,.28); outline-offset: 2px; }
 
     .home-search {
       position: relative;
@@ -513,7 +515,10 @@
     }
     .app-update-notice strong { display: block; font-size: 13px; }
     .app-update-notice span { display: block; margin-top: 4px; color: rgba(255,255,255,.72); font-size: 10.5px; line-height: 1.4; }
-    .app-update-notice button { min-height: 44px; padding: 9px 13px; color: #11186a; background: #d7ad48; border: 0; border-radius: 9px; font-size: 10.5px; font-weight: 950; }
+    .app-update-notice button { min-height: 44px; padding: 9px 13px; color: #fff; background: #11186a; border: 2px solid #fff; border-radius: 9px; font-size: 10.5px; font-weight: 950; }
+    .app-update-notice button:hover,
+    .app-update-notice button:focus-visible { background: #254f9a; outline: 3px solid rgba(255,255,255,.28); outline-offset: 2px; }
+    .app-update-notice button:disabled { color: rgba(255,255,255,.62); background: #4f557d; border-color: rgba(255,255,255,.42); cursor: not-allowed; }
 
     .hero {
       position: relative;
@@ -2237,7 +2242,8 @@
     .push-setup-card > p { margin: 8px 0 0; color: rgba(255,255,255,.75); font-size: 11.5px; line-height: 1.55; }
 
     .push-enable-btn,
-    .push-copy-btn {
+    .push-copy-btn,
+    .push-test-btn {
       width: 100%;
       min-height: 46px;
       margin-top: 15px;
@@ -2251,7 +2257,8 @@
     }
 
     .push-enable-btn:hover,
-    .push-copy-btn:hover { background: #dfb74f; }
+    .push-copy-btn:hover,
+    .push-test-btn:hover { background: #dfb74f; }
     .push-enable-btn:disabled { cursor: not-allowed; opacity: .65; }
 
     .push-setup-code {
@@ -2265,6 +2272,8 @@
     .push-setup-code span { color: #f1d98e; font-size: 9px; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; }
     .push-setup-code code { display: block; overflow-wrap: anywhere; margin-top: 7px; color: #fff; font-size: 10px; line-height: 1.45; }
     .push-copy-btn { min-height: 40px; margin-top: 11px; background: #fff; }
+    .push-test-btn { color: #fff; background: #2877b7; border: 1px solid rgba(255,255,255,.32); }
+    .push-test-btn:hover { background: #3691d2; }
     .push-setup-help { color: rgba(255,255,255,.62) !important; font-size: 10.5px !important; }
 
     .request-type-help {
@@ -4530,6 +4539,67 @@
     .workflow-equipment-confirmation { margin: 0 0 18px; padding: 22px 16px; color: var(--forest); background: #eef4fa; border: 1px solid #cbdff1; border-radius: 14px; font-size: 15px; font-weight: 950; line-height: 1.4; text-align: center; }
     .workflow-equipment-confirmation + [hidden] + [hidden] + .workflow-button { width: 100%; }
 
+    .workflow-notification-warning {
+      margin: 0 0 16px;
+      padding: 14px;
+      color: #7c2c27;
+      background: #fff2ef;
+      border: 1px solid #e7c0bc;
+      border-left: 5px solid #bb4d43;
+      border-radius: 12px;
+    }
+    .workflow-notification-warning strong { display: block; font-size: 12px; letter-spacing: .03em; }
+    .workflow-notification-warning span { display: block; margin-top: 5px; font-size: 10.5px; line-height: 1.5; }
+    .workflow-notification-warning a { display: inline-flex; min-height: 42px; align-items: center; margin-top: 10px; padding: 0 12px; color: #fff; background: #11186a; border-radius: 9px; font-size: 10px; font-weight: 900; text-decoration: none; }
+
+    .workflow-lab-card { overflow: hidden; }
+    .workflow-lab-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .workflow-lab-options button,
+    .workflow-lab-action {
+      min-height: 56px;
+      padding: 11px 14px;
+      color: #fff;
+      background: #11186a;
+      border: 0;
+      border-radius: 12px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+    .workflow-lab-options button.secondary { color: #11186a; background: #edf5fc; border: 1px solid #cbdff1; }
+    .workflow-lab-route { display: grid; gap: 12px; }
+    .workflow-lab-destination { padding: 16px; color: #fff; background: linear-gradient(145deg, #0b1050, #11186a 70%, #254f9a); border: 1px solid rgba(180,135,32,.5); border-radius: 14px; }
+    .workflow-lab-destination span { display: block; color: #e4c569; font-size: 9px; font-weight: 950; letter-spacing: .1em; text-transform: uppercase; }
+    .workflow-lab-destination strong { display: block; margin-top: 6px; font-size: 18px; line-height: 1.3; }
+    .workflow-lab-destination small { display: block; margin-top: 5px; color: rgba(255,255,255,.72); font-size: 10.5px; line-height: 1.45; }
+    .workflow-lab-warning { padding: 13px; color: #7c2c27; background: #fff1ef; border: 1px solid #e7c0bc; border-radius: 11px; font-size: 11px; line-height: 1.5; }
+    .workflow-lab-warning strong { display: block; margin-bottom: 4px; }
+    .workflow-lab-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .workflow-lab-actions a { display: inline-flex; min-height: 56px; align-items: center; justify-content: center; padding: 10px 14px; color: #fff; background: #2877b7; border-radius: 12px; font-size: 12px; font-weight: 950; text-align: center; text-decoration: none; }
+    .workflow-lab-actions .workflow-lab-action { grid-column: 1 / -1; }
+    .workflow-lab-complete { padding: 16px; color: #276a55; background: #edf7f4; border: 1px solid #cfe7df; border-radius: 12px; }
+    .workflow-lab-complete strong { display: block; font-size: 13px; }
+    .workflow-lab-complete span { display: block; margin-top: 5px; font-size: 10.5px; line-height: 1.5; }
+
+    .reference-guide-intro { margin: 0 0 14px; padding: 13px 14px; color: var(--forest); background: #eef5fa; border: 1px solid #cbdff1; border-radius: 11px; font-size: 11px; line-height: 1.55; }
+    .reference-guide-steps { display: grid; gap: 9px; }
+    .reference-guide-step { overflow: hidden; background: #fff; border: 1px solid #dfe4ed; border-radius: 12px; }
+    .reference-guide-step > summary { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 56px; padding: 11px 13px; color: var(--forest); cursor: pointer; list-style: none; }
+    .reference-guide-step > summary::-webkit-details-marker { display: none; }
+    .reference-guide-step > summary::after { content: "+"; color: var(--orange-dark); font-size: 20px; font-weight: 950; }
+    .reference-guide-step[open] > summary::after { content: "−"; }
+    .reference-guide-step-number { display: grid; width: 32px; height: 32px; place-items: center; color: #fff; background: #11186a; border-radius: 50%; font-size: 11px; font-weight: 950; }
+    .reference-guide-step > summary strong { font-size: 12px; line-height: 1.35; }
+    .reference-guide-step-body { padding: 0 14px 14px 56px; color: var(--ink-2); font-size: 11px; line-height: 1.55; }
+    .reference-guide-step-body ul { margin: 8px 0 0; padding-left: 18px; }
+    .reference-guide-step-body li + li { margin-top: 5px; }
+    .reference-guide-materials { display: grid; gap: 7px; margin-top: 10px; }
+    .reference-guide-materials details { padding: 10px 12px; background: #f7f9fc; border: 1px solid #e0e5ef; border-radius: 10px; }
+    .reference-guide-materials summary { color: var(--forest); cursor: pointer; font-size: 10.5px; font-weight: 900; }
+    .ac-reference-guide { margin-bottom: 15px; }
+    .ac-reference-guide .reference-guide-step-body { padding-left: 56px; }
+
     .workflow-day-complete { text-align: left; }
     .workflow-day-complete .workflow-card-header { text-align: center; }
     .workflow-day-complete-mark { display: grid; width: 74px; height: 74px; margin: 0 auto 14px; place-items: center; color: #fff; background: #2f846b; border-radius: 50%; font-size: 34px; font-weight: 950; }
@@ -4580,7 +4650,10 @@
       .workflow-template-options,
       .workflow-eta-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .workflow-dialog-actions,
-      .workflow-admin-actions { grid-template-columns: 1fr; }
+      .workflow-admin-actions,
+      .workflow-lab-options,
+      .workflow-lab-actions { grid-template-columns: 1fr; }
+      .workflow-lab-actions .workflow-lab-action { grid-column: auto; }
       .workflow-log-entry { grid-template-columns: 63px minmax(0, 1fr); }
       .workflow-schedule-tools { align-items: flex-start; flex-direction: column; }
     }
@@ -4824,7 +4897,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">112</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">118</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -4955,6 +5028,11 @@
               <li>Required batteries and devices are charged.</li>
             </ul>
           </div>
+          <div class="workflow-notification-warning" id="workflowNotificationWarning" hidden>
+            <strong>IMPORTANT NOTIFICATIONS DISABLED</strong>
+            <span>Departure and field-timer alerts may not be heard. Open Settings and run Test Alarm Sound before beginning today’s inspections.</span>
+            <a href="#settings">OPEN NOTIFICATION SETTINGS</a>
+          </div>
           <button class="workflow-button" id="workflowReadyBtn" type="button">READY FOR WORK</button>
         </section>
 
@@ -5023,6 +5101,40 @@
           <div id="workflowEquipmentChecklist" hidden></div>
           <div id="workflowSpecialtyEquipment" hidden></div>
           <button class="workflow-button" id="workflowEquipmentCompleteBtn" type="button">CONFIRM</button>
+        </section>
+
+        <section class="workflow-card workflow-lab-card" id="workflowLabCard" aria-labelledby="workflow-lab-title" hidden>
+          <div class="workflow-card-header">
+            <span class="workflow-profile-badge" id="workflowLabBadge">Optional stop</span>
+            <h3 id="workflow-lab-title">Lab stop</h3>
+            <p id="workflowLabIntro">Choose a lab only when samples need to be delivered. A lab stop is not treated as another inspection.</p>
+          </div>
+          <div id="workflowLabChooser">
+            <div class="workflow-lab-options">
+              <button type="button" data-workflow-lab-choice="water-tech">WATER TECH</button>
+              <button type="button" data-workflow-lab-choice="ims">IMS</button>
+              <button type="button" data-workflow-lab-choice="both">BOTH LABS</button>
+              <button class="secondary" type="button" data-workflow-lab-choice="none" id="workflowNoLabBtn">CONTINUE TO NEXT JOB</button>
+            </div>
+          </div>
+          <div class="workflow-lab-route" id="workflowLabRoute" hidden>
+            <div class="workflow-lab-destination">
+              <span id="workflowLabStepLabel">Next lab</span>
+              <strong id="workflowLabName">Laboratory</strong>
+              <small id="workflowLabAddress"></small>
+            </div>
+            <div class="workflow-lab-warning" id="workflowLabWarning" hidden></div>
+            <div class="workflow-lab-actions">
+              <a id="workflowLabDirections" href="https://maps.apple.com/" target="_blank" rel="noopener">DIRECTIONS</a>
+              <button class="workflow-lab-action" id="workflowLabArrivedBtn" type="button">ARRIVED AT LAB</button>
+              <button class="workflow-lab-action" id="workflowLabCompleteBtn" type="button" hidden>LAB VISIT COMPLETE</button>
+              <button class="workflow-lab-action" id="workflowLabContinueBtn" type="button" hidden>CONTINUE TO NEXT DESTINATION</button>
+            </div>
+            <div class="workflow-lab-complete" id="workflowLabCompleteMessage" hidden>
+              <strong>LAB VISIT COMPLETE</strong>
+              <span>Head to your final destination. Remember to complete your End-of-Day Equipment Check and Clock Out when you arrive.</span>
+            </div>
+          </div>
         </section>
 
         <section class="workflow-card workflow-day-complete" id="workflowDayCompleteCard" aria-labelledby="workflow-day-complete-title" hidden>
@@ -6006,6 +6118,25 @@
           <span class="daily-readiness-status">Offline</span>
         </summary>
         <div class="report-quality-body temp-diff-body">
+          <div class="reference-guide-intro"><strong>AC TEMPERATURE DIFFERENTIAL — REFERENCE GUIDE</strong><br>Follow the four field steps, then use the calculator. The guide is for quick reference and does not create duplicate inspection records.</div>
+          <div class="reference-guide-steps ac-reference-guide">
+            <details class="reference-guide-step" open>
+              <summary><span class="reference-guide-step-number">1</span><strong>Run the AC for at least 15 minutes</strong></summary>
+              <div class="reference-guide-step-body">Start the air-conditioning system and allow it to operate continuously for a minimum of 15 minutes before measuring the temperature differential.</div>
+            </details>
+            <details class="reference-guide-step">
+              <summary><span class="reference-guide-step-number">2</span><strong>Measure return air at the filter housing</strong></summary>
+              <div class="reference-guide-step-body">Go to the HVAC filter housing. Remove the filter only as necessary to obtain the return-air temperature at the filter housing, then record the reading in the calculator below.</div>
+            </details>
+            <details class="reference-guide-step">
+              <summary><span class="reference-guide-step-number">3</span><strong>Restore the filter before continuing</strong></summary>
+              <div class="reference-guide-step-body">Reinstall the filter correctly and close the filter housing. Return the system to its normal operating configuration. Do not leave the filter removed while measuring supply air.</div>
+            </details>
+            <details class="reference-guide-step">
+              <summary><span class="reference-guide-step-number">4</span><strong>Measure supply air and calculate</strong></summary>
+              <div class="reference-guide-step-body">Measure supply-air temperature at the first suitable supply register. Enter both readings below; the app calculates return minus supply and gives the configured field-screen interpretation.</div>
+            </details>
+          </div>
           <div class="field">
             <label for="tempDifferenceMode">System mode</label>
             <div class="select-wrap">
@@ -6058,7 +6189,7 @@
                 <div class="well-calc-value"><span>Average yield</span><output id="wellQuickAverageGpm">—</output></div>
                 <p class="well-calc-note" id="wellQuickCalculationNote">Enter the initial and final totalizer readings. Average GPM uses the configured test duration.</p>
               </div>
-              <p class="well-alert-note" id="wellAlertReadiness">Starting the test will request notification permission. While the app remains active, completion uses an alarm sound, vibration where supported, and a prominent notification.</p>
+              <p class="well-alert-note" id="wellAlertReadiness">Starting the test uses a loud in-app alarm plus a phone-level Calendar backup. Complete the one-time alarm setup in Settings and keep Calendar notifications enabled.</p>
               <div class="well-early-fields" id="wellQuickEarlyFields" hidden>
                 <div class="well-entry-grid"><div class="field"><label for="wellQuickStopReason">Reason test ended early</label><input class="damage-input" id="wellQuickStopReason" data-well-field type="text" maxlength="220" placeholder="Describe the unsafe or abnormal condition"></div><div class="field"><label for="wellQuickStopConditions">Conditions observed</label><textarea class="damage-action-input" id="wellQuickStopConditions" data-well-field maxlength="500"></textarea></div></div>
               </div>
@@ -6180,8 +6311,8 @@
         <div class="guided-help-body">
           <p class="guided-help-reminder"><strong>Three standard air samples:</strong> 15 LPM × 5 minutes = 75 liters per sample. Indoor Sample #1 normally follows the client’s primary concern. Indoor Sample #2 is selected from the inspector’s findings—never automatically assigned to the basement.</p>
           <div class="guided-help-progress">
-            <div><strong id="moldSamplingProgressTitle">Ready to begin</strong><span>Notes, findings, sample locations, and timer progress stay saved on this company phone.</span></div>
-            <b id="moldSamplingProgressCount">Step 1 of 15</b>
+            <div><strong id="moldSamplingProgressTitle">Ready to begin</strong><span>Quick field reference only. Record the inspection and samples in the normal approved system.</span></div>
+            <b id="moldSamplingProgressCount">Section 1 of 15</b>
           </div>
           <div id="moldSamplingStepHost" aria-live="polite"></div>
           <div class="guided-help-nav">
@@ -6199,8 +6330,8 @@
         <div class="guided-help-body">
           <p class="guided-help-reminder"><strong>Sampling methods vary depending on the material.</strong> Minimize disturbance, control dust, document the location thoroughly, and obtain a representative sample using the least destructive practical method.<br><br><strong>Do not automatically use the flooring/tape method</strong> for insulation, vermiculite, siding, trim, or other materials. Follow the applicable material-specific guidance.</p>
           <div class="guided-help-progress">
-            <div><strong id="asbestosSamplingProgressTitle">Ready to begin</strong><span>Field entries and checklist progress stay saved on this company phone.</span></div>
-            <b id="asbestosSamplingProgressCount">Step 1 of 12</b>
+            <div><strong id="asbestosSamplingProgressTitle">Ready to begin</strong><span>Quick field reference only. Record the sample and Chain of Custody in the approved systems.</span></div>
+            <b id="asbestosSamplingProgressCount">Section 1 of 12</b>
           </div>
           <div id="asbestosSamplingStepHost" aria-live="polite"></div>
           <div class="guided-help-nav">
@@ -7184,7 +7315,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 117</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 118</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7216,14 +7347,15 @@
             <span class="push-status" id="pushStatus">Not enabled</span>
           </div>
           <h3 id="push-setup-title">Company notifications</h3>
-          <p>Receive company reminders on this phone even when MPI Field Tools is closed. Notifications open directly to Messages.</p>
+          <p>Receive company reminders and field alerts on this phone. The app uses its strongest available in-app alert and can add free phone-level backup alarms through the connected MPI calendar.</p>
           <button class="push-enable-btn" id="enablePushBtn" type="button">Enable MPI notifications</button>
+          <button class="push-test-btn" id="testAlarmSoundBtn" type="button">TEST ALARM SOUND</button>
           <div class="push-setup-code" id="pushSetupCode" hidden>
             <span>This phone's setup code</span>
             <code id="pushTokenValue"></code>
             <button class="push-copy-btn" id="copyPushTokenBtn" type="button">Copy setup code</button>
           </div>
-          <p class="push-setup-help" id="pushSetupHelp">On iPhone or iPad, first add MPI Field Tools to the Home Screen, then open it from the MPI icon and tap Enable.</p>
+          <p class="push-setup-help" id="pushSetupHelp">On iPhone or iPad, add MPI Field Tools to the Home Screen, enable notifications, and run the alarm test. The first test may request calendar access for closed-app backup alarms.</p>
         </section>
       </div>
     </section>
@@ -7939,6 +8071,7 @@
       const workflowReadinessCard = document.getElementById("workflowReadinessCard");
       const workflowReadinessInspector = document.getElementById("workflowReadinessInspector");
       const workflowReadinessChecks = [...document.querySelectorAll("[data-workflow-readiness]")];
+      const workflowNotificationWarning = document.getElementById("workflowNotificationWarning");
       const workflowReadyBtn = document.getElementById("workflowReadyBtn");
       const workflowTodayCard = document.getElementById("workflowTodayCard");
       const workflowTodayInspector = document.getElementById("workflowTodayInspector");
@@ -7980,6 +8113,21 @@
       const workflowEquipmentChecks = [...document.querySelectorAll("[data-workflow-equipment]")];
       const workflowSpecialtyEquipment = document.getElementById("workflowSpecialtyEquipment");
       const workflowEquipmentCompleteBtn = document.getElementById("workflowEquipmentCompleteBtn");
+      const workflowLabCard = document.getElementById("workflowLabCard");
+      const workflowLabBadge = document.getElementById("workflowLabBadge");
+      const workflowLabIntro = document.getElementById("workflowLabIntro");
+      const workflowLabChooser = document.getElementById("workflowLabChooser");
+      const workflowNoLabBtn = document.getElementById("workflowNoLabBtn");
+      const workflowLabRoute = document.getElementById("workflowLabRoute");
+      const workflowLabStepLabel = document.getElementById("workflowLabStepLabel");
+      const workflowLabName = document.getElementById("workflowLabName");
+      const workflowLabAddress = document.getElementById("workflowLabAddress");
+      const workflowLabWarning = document.getElementById("workflowLabWarning");
+      const workflowLabDirections = document.getElementById("workflowLabDirections");
+      const workflowLabArrivedBtn = document.getElementById("workflowLabArrivedBtn");
+      const workflowLabCompleteBtn = document.getElementById("workflowLabCompleteBtn");
+      const workflowLabContinueBtn = document.getElementById("workflowLabContinueBtn");
+      const workflowLabCompleteMessage = document.getElementById("workflowLabCompleteMessage");
       const workflowDayCompleteCard = document.getElementById("workflowDayCompleteCard");
       const workflowEndOfDayChecklist = document.getElementById("workflowEndOfDayChecklist");
       const workflowEndOfDayChecks = [...document.querySelectorAll("[data-workflow-eod-equipment]")];
@@ -8282,6 +8430,7 @@
       const pushSetupCode = document.getElementById("pushSetupCode");
       const pushTokenValue = document.getElementById("pushTokenValue");
       const copyPushTokenBtn = document.getElementById("copyPushTokenBtn");
+      const testAlarmSoundBtn = document.getElementById("testAlarmSoundBtn");
       const pushSetupHelp = document.getElementById("pushSetupHelp");
       const requestForm = document.getElementById("requestForm");
       const requestInspector = document.getElementById("requestInspector");
@@ -8320,12 +8469,14 @@
       const calendarSelectorWrap = document.getElementById("calendarSelectorWrap");
       const calendarSelector = document.getElementById("calendarSelector");
       const GOOGLE_CALENDAR_CLIENT_ID = "554165263334-vu09dc5eldpr8k0rjobl867oggq9rfrg.apps.googleusercontent.com";
-      const GOOGLE_CALENDAR_SCOPES = "https://www.googleapis.com/auth/calendar.events.readonly https://www.googleapis.com/auth/calendar.calendarlist.readonly";
+      const GOOGLE_CALENDAR_SCOPES = "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.calendarlist.readonly";
       const CALENDAR_TOKEN_KEY = "mpiCalendarAccessTokenV1";
       const CALENDAR_TOKEN_EXPIRY_KEY = "mpiCalendarAccessTokenExpiryV1";
       const CALENDAR_AUTHORIZED_KEY = "mpiCalendarAuthorizedV1";
       const CALENDAR_ID_KEY = "mpiScheduleCalendarIdV1";
       const CALENDAR_NAME_KEY = "mpiScheduleCalendarNameV1";
+      const FIELD_ALARM_READY_KEY = "mpiFieldAlarmReadyV1";
+      const FIELD_ALARM_REGISTRY_KEY = "mpiFieldAlarmRegistryV1";
 
       function mirrorOfflineStatus() {
         if (settingsOfflineStatus) settingsOfflineStatus.textContent = offlineStatus.textContent;
@@ -8337,7 +8488,13 @@
       const WELL_YIELD_TIMER_KEY = "mpiWellYieldTimerV1";
       const MOLD_SAMPLING_STORAGE_KEY = "mpiMoldAirSamplingHelpV1";
       const ASBESTOS_SAMPLING_STORAGE_KEY = "mpiAsbestosSamplingHelpV1";
+      const WORKFLOW_LAB_STOP_STORAGE_KEY = "mpiWorkflowLabStopV1";
       const WORKFLOW_DEFAULT_DRIVE_MINUTES = 30;
+      const WORKFLOW_LAB_VISIT_MINUTES = 15;
+      const WORKFLOW_LABS = {
+        "water-tech": { id: "water-tech", name: "Water Tech", address: "718 S Michigan Ave, Howell, MI 48843" },
+        ims: { id: "ims", name: "IMS Laboratory", address: "3130 Old Farm Lane, Suite 1, Commerce Township, MI 48390" }
+      };
       let commentType = "defect";
       let copyPayload = "";
       let toastTimer;
@@ -12647,10 +12804,15 @@
         });
       }
 
-      async function calendarApi(path, token = savedCalendarToken()) {
+      async function calendarApi(path, token = savedCalendarToken(), options = {}) {
         if (!token) throw new Error("RECONNECT");
+        const method = String(options.method || "GET").toUpperCase();
+        const headers = { Authorization: `Bearer ${token}` };
+        if (options.body != null) headers["Content-Type"] = "application/json";
         const response = await fetch(`https://www.googleapis.com/calendar/v3${path}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          method,
+          headers,
+          body: options.body == null ? undefined : JSON.stringify(options.body),
           cache: "no-store"
         });
         if (response.status === 401) {
@@ -12661,7 +12823,98 @@
           const body = await response.json().catch(() => ({}));
           throw new Error(body.error?.message || `Calendar request failed (${response.status})`);
         }
+        if (response.status === 204) return {};
         return response.json();
+      }
+
+      function fieldAlarmReady() {
+        try { return localStorage.getItem(FIELD_ALARM_READY_KEY) === "yes"; }
+        catch (_) { return false; }
+      }
+
+      function setFieldAlarmReady(ready) {
+        try {
+          if (ready) localStorage.setItem(FIELD_ALARM_READY_KEY, "yes");
+          else localStorage.removeItem(FIELD_ALARM_READY_KEY);
+        } catch (_) {}
+        renderWorkflowNotificationReadiness();
+      }
+
+      function loadFieldAlarmRegistry() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(FIELD_ALARM_REGISTRY_KEY) || "{}");
+          return saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
+        } catch (_) {
+          return {};
+        }
+      }
+
+      function saveFieldAlarmRegistry(registry) {
+        try { localStorage.setItem(FIELD_ALARM_REGISTRY_KEY, JSON.stringify(registry)); } catch (_) {}
+      }
+
+      function fieldAlarmSignature(alerts) {
+        return (alerts || []).map(alert => `${alert.id}|${new Date(alert.at).toISOString()}|${alert.title}`).join("||");
+      }
+
+      async function createCalendarFieldAlarm(groupId, alert, token) {
+        const alarmAt = new Date(alert.at);
+        if (!Number.isFinite(alarmAt.getTime()) || alarmAt.getTime() <= Date.now() + 10000) return null;
+        const endAt = new Date(alarmAt.getTime() + 60000);
+        const event = await calendarApi("/calendars/primary/events?sendUpdates=none", token, {
+          method: "POST",
+          body: {
+            summary: `MPI · ${alert.title}`,
+            description: `${alert.title}\n\n${alert.body}\n\nCreated automatically by MPI Field Tools.`,
+            start: { dateTime: alarmAt.toISOString(), timeZone: "America/Detroit" },
+            end: { dateTime: endAt.toISOString(), timeZone: "America/Detroit" },
+            transparency: "transparent",
+            visibility: "private",
+            reminders: { useDefault: false, overrides: [{ method: "popup", minutes: 0 }] },
+            extendedProperties: { private: { mpiFieldAlarm: "true", mpiAlarmGroup: groupId, mpiAlarmId: String(alert.id || "") } }
+          }
+        });
+        return event?.id ? { id: event.id, at: alarmAt.toISOString(), title: alert.title } : null;
+      }
+
+      async function deleteCalendarFieldAlarm(eventId, token) {
+        if (!eventId || !token) return;
+        try {
+          await calendarApi(`/calendars/primary/events/${encodeURIComponent(eventId)}?sendUpdates=none`, token, { method: "DELETE" });
+        } catch (_) {}
+      }
+
+      async function cancelFieldAlarmGroup(groupId) {
+        const registry = loadFieldAlarmRegistry();
+        const existing = registry[groupId];
+        if (!existing) return;
+        const token = savedCalendarToken();
+        if (token) await Promise.all((existing.events || []).map(item => deleteCalendarFieldAlarm(item.id, token)));
+        delete registry[groupId];
+        saveFieldAlarmRegistry(registry);
+      }
+
+      async function syncFieldAlarmGroup(groupId, alerts, { token = savedCalendarToken(), force = false } = {}) {
+        const futureAlerts = (alerts || []).filter(alert => new Date(alert.at).getTime() > Date.now() + 10000);
+        const registry = loadFieldAlarmRegistry();
+        const signature = fieldAlarmSignature(futureAlerts);
+        if (!force && registry[groupId]?.signature === signature && registry[groupId]?.events?.length === futureAlerts.length) return { scheduled: futureAlerts.length, unchanged: true };
+        if (!token) return { scheduled: 0, needsSetup: true };
+        if (registry[groupId]) await Promise.all((registry[groupId].events || []).map(item => deleteCalendarFieldAlarm(item.id, token)));
+        const created = [];
+        try {
+          for (const alert of futureAlerts) {
+            const event = await createCalendarFieldAlarm(groupId, alert, token);
+            if (event) created.push(event);
+          }
+          registry[groupId] = { signature, events: created, updatedAt: new Date().toISOString() };
+          saveFieldAlarmRegistry(registry);
+          if (created.length || !futureAlerts.length) setFieldAlarmReady(true);
+          return { scheduled: created.length };
+        } catch (error) {
+          setFieldAlarmReady(false);
+          return { scheduled: created.length, needsSetup: true, error };
+        }
       }
 
       function preferredScheduleCalendar(calendars) {
@@ -13981,6 +14234,212 @@
         }
       }
 
+      function renderWorkflowNotificationReadiness() {
+        if (!workflowNotificationWarning) return;
+        const browserNotifications = "Notification" in window && Notification.permission === "granted";
+        workflowNotificationWarning.hidden = browserNotifications && fieldAlarmReady();
+      }
+
+      function loadWorkflowLabStop() {
+        try {
+          const record = JSON.parse(localStorage.getItem(WORKFLOW_LAB_STOP_STORAGE_KEY) || "null");
+          return record?.date === localDateKey() ? record : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function saveWorkflowLabStop(record) {
+        try {
+          if (record) localStorage.setItem(WORKFLOW_LAB_STOP_STORAGE_KEY, JSON.stringify(record));
+          else localStorage.removeItem(WORKFLOW_LAB_STOP_STORAGE_KEY);
+        } catch (_) {}
+      }
+
+      function workflowDepartureAlarmGroup(job) {
+        return `departure-${String(job?.calendarEventId || job?.property || "job").replace(/[^a-z0-9_-]+/gi, "-").slice(0, 100)}`;
+      }
+
+      function workflowLabTravelMinutes(left, right) {
+        const miles = workflowDistanceFeet(left, right) / 5280;
+        return Math.max(5, Math.ceil((miles / 45) * 60 * 1.22 + 4));
+      }
+
+      async function workflowAddressCoordinates(address) {
+        const key = workflowAddressCacheKey(address);
+        const cached = loadWorkflowGeocodeCache()[key];
+        if (Number.isFinite(Number(cached?.latitude)) && Number.isFinite(Number(cached?.longitude))) return cached;
+        const resolved = await censusGeocodeWorkflowAddress(address);
+        saveWorkflowGeocode(address, resolved);
+        return resolved;
+      }
+
+      async function updateWorkflowLabTravelPlan() {
+        const record = loadWorkflowLabStop();
+        if (!record || record.stage === "choose" || !record.labs?.length) return;
+        try {
+          const destinations = [record.sourceProperty, ...record.labs.map(id => WORKFLOW_LABS[id]?.address).filter(Boolean)];
+          if (record.nextProperty) destinations.push(record.nextProperty);
+          const coordinates = [];
+          for (const address of destinations) coordinates.push(await workflowAddressCoordinates(address));
+          let driveMinutes = 0;
+          for (let index = 1; index < coordinates.length; index += 1) driveMinutes += workflowLabTravelMinutes(coordinates[index - 1], coordinates[index]);
+          const visitMinutes = record.labs.length * WORKFLOW_LAB_VISIT_MINUTES;
+          const projectedNextArrival = record.nextScheduledStart
+            ? new Date(Date.now() + (driveMinutes + visitMinutes) * 60000).toISOString()
+            : "";
+          const lateByMinutes = record.nextScheduledStart
+            ? Math.max(0, Math.ceil((new Date(projectedNextArrival).getTime() - new Date(record.nextScheduledStart).getTime()) / 60000))
+            : 0;
+          record.travelPlan = { driveMinutes, visitMinutes, projectedNextArrival, lateByMinutes, calculatedAt: new Date().toISOString(), source: "MPI route-planning estimate" };
+          saveWorkflowLabStop(record);
+          appendWorkflowEvent("Lab route calculated", record.travelPlan, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
+          renderWorkflowLabStop(record);
+        } catch (_) {
+          record.travelPlan = { source: "Open Apple Maps for current road conditions", calculatedAt: new Date().toISOString() };
+          saveWorkflowLabStop(record);
+          renderWorkflowLabStop(record);
+        }
+      }
+
+      function beginWorkflowLabDecision(completedJob) {
+        const next = nextWorkflowAppointment(completedJob);
+        const record = {
+          date: localDateKey(),
+          stage: "choose",
+          sourceJobId: String(completedJob?.calendarEventId || ""),
+          sourceProperty: String(completedJob?.property || ""),
+          nextJobId: String(next?.id || ""),
+          nextProperty: String(next?.location || ""),
+          nextScheduledStart: String(next?.start?.dateTime || next?.start?.date || ""),
+          finalStop: !next,
+          labs: [],
+          currentIndex: 0,
+          createdAt: new Date().toISOString()
+        };
+        saveWorkflowLabStop(record);
+        cancelFieldAlarmGroup(workflowDepartureAlarmGroup(completedJob));
+        renderWorkflowApp();
+      }
+
+      function chooseWorkflowLabStop(choice) {
+        const record = loadWorkflowLabStop();
+        if (!record) return;
+        if (choice === "none") {
+          appendWorkflowEvent(record.finalStop ? "No final lab stop required" : "Lab stop skipped", {
+            nextJobId: record.nextJobId,
+            nextProperty: record.nextProperty
+          }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
+          saveWorkflowLabStop(null);
+          renderWorkflowApp();
+          return;
+        }
+        record.labs = choice === "both" ? ["water-tech", "ims"] : [choice];
+        record.stage = "travel";
+        record.currentIndex = 0;
+        record.selectedAt = new Date().toISOString();
+        record.travelStartedAt = record.selectedAt;
+        saveWorkflowLabStop(record);
+        appendWorkflowEvent("Lab selected", {
+          selectedAt: record.selectedAt,
+          labs: record.labs.map(id => WORKFLOW_LABS[id]?.name).filter(Boolean),
+          nextJobId: record.nextJobId,
+          nextProperty: record.nextProperty
+        }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
+        renderWorkflowLabStop(record);
+        updateWorkflowLabTravelPlan();
+      }
+
+      function currentWorkflowLab(record = loadWorkflowLabStop()) {
+        return record ? WORKFLOW_LABS[record.labs?.[record.currentIndex]] || null : null;
+      }
+
+      function renderWorkflowLabStop(record = loadWorkflowLabStop()) {
+        if (!record || !workflowLabCard) return;
+        workflowIdentityCard.hidden = true;
+        workflowReadinessCard.hidden = true;
+        workflowTodayCard.hidden = true;
+        workflowJobCard.hidden = true;
+        workflowEquipmentCard.hidden = true;
+        workflowLabCard.hidden = true;
+        workflowDayCompleteCard.hidden = true;
+        workflowLabCard.hidden = false;
+        workflowLabChooser.hidden = record.stage !== "choose";
+        workflowLabRoute.hidden = record.stage === "choose";
+        workflowLabBadge.textContent = record.finalStop ? "Final inspection complete" : "Before the next job";
+        workflowLabIntro.textContent = record.finalStop
+          ? "Do you need to visit a lab today? Complete any required lab delivery before the end-of-day equipment check and Clock Out."
+          : `Continue directly to ${record.nextProperty || "the next job"}, or choose an optional lab stop.`;
+        workflowNoLabBtn.textContent = record.finalStop ? "NO LAB TODAY" : "CONTINUE TO NEXT JOB";
+        if (record.stage === "choose") return;
+        const lab = currentWorkflowLab(record);
+        const isDone = record.stage === "done";
+        workflowLabStepLabel.textContent = isDone ? "All selected labs complete" : `Lab ${record.currentIndex + 1} of ${record.labs.length}`;
+        workflowLabName.textContent = isDone ? "Lab route complete" : lab?.name || "Laboratory";
+        workflowLabAddress.textContent = isDone
+          ? (record.finalStop ? "Continue to your approved final destination." : `Continue to ${record.nextProperty || "the next inspection"}.`)
+          : lab?.address || "";
+        workflowLabDirections.hidden = isDone;
+        if (lab) workflowLabDirections.href = workflowMapsUrl(lab.address);
+        workflowLabArrivedBtn.hidden = record.stage !== "travel";
+        workflowLabCompleteBtn.hidden = record.stage !== "arrived";
+        workflowLabContinueBtn.hidden = !isDone;
+        workflowLabCompleteMessage.hidden = !isDone;
+        workflowLabCompleteMessage.querySelector("span").textContent = record.finalStop
+          ? "Head to your final destination. Remember to complete your End-of-Day Equipment Check and Clock Out when you arrive."
+          : `Continue to ${record.nextProperty || "your next scheduled inspection"}. The normal inspector workflow will resume.`;
+        const plan = record.travelPlan || {};
+        workflowLabWarning.hidden = !plan.lateByMinutes;
+        workflowLabWarning.innerHTML = plan.lateByMinutes
+          ? `<strong>LAB STOP MAY AFFECT NEXT APPOINTMENT</strong>Based on the current planning estimate, this route may make you about ${plan.lateByMinutes} minute${plan.lateByMinutes === 1 ? "" : "s"} late for the ${escapeHtml(workflowClock(record.nextScheduledStart))} inspection.`
+          : "";
+      }
+
+      function markWorkflowLabArrived() {
+        const record = loadWorkflowLabStop();
+        const lab = currentWorkflowLab(record);
+        if (!record || !lab || record.stage !== "travel") return;
+        const arrivedAt = new Date().toISOString();
+        const driveMinutes = record.travelStartedAt ? Math.max(0, Math.round((Date.now() - new Date(record.travelStartedAt).getTime()) / 60000)) : "";
+        record.stage = "arrived";
+        record.arrivals = { ...(record.arrivals || {}), [lab.id]: arrivedAt };
+        saveWorkflowLabStop(record);
+        appendWorkflowEvent("Arrived at lab", { lab: lab.name, address: lab.address, arrivedAt, driveMinutes }, { property: lab.address, calendarEventId: record.sourceJobId });
+        renderWorkflowLabStop(record);
+      }
+
+      function completeWorkflowLabVisit() {
+        const record = loadWorkflowLabStop();
+        const lab = currentWorkflowLab(record);
+        if (!record || !lab || record.stage !== "arrived") return;
+        const completedAt = new Date().toISOString();
+        record.completions = { ...(record.completions || {}), [lab.id]: completedAt };
+        appendWorkflowEvent("Lab visit completed", { lab: lab.name, address: lab.address, completedAt }, { property: lab.address, calendarEventId: record.sourceJobId });
+        if (record.currentIndex < record.labs.length - 1) {
+          record.currentIndex += 1;
+          record.stage = "travel";
+          record.travelStartedAt = completedAt;
+        } else {
+          record.stage = "done";
+          record.completedAt = completedAt;
+        }
+        saveWorkflowLabStop(record);
+        renderWorkflowLabStop(record);
+      }
+
+      function continueAfterWorkflowLab() {
+        const record = loadWorkflowLabStop();
+        if (!record || record.stage !== "done") return;
+        appendWorkflowEvent("Lab route departure / continuation", {
+          departedAt: new Date().toISOString(),
+          nextJobId: record.nextJobId,
+          nextProperty: record.nextProperty,
+          finalDestination: record.finalStop
+        }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
+        saveWorkflowLabStop(null);
+        renderWorkflowApp();
+      }
+
       function updateWorkflowReadinessButton() {
         workflowReadyBtn.disabled = false;
         workflowReadyBtn.textContent = "READY FOR WORK";
@@ -14165,13 +14624,14 @@
           estimatedDriveMinutes,
           leaveBy: new Date(leaveBy).toISOString(),
           warningAt: new Date(leaveBy - 30 * 60000).toISOString(),
+          hardStopAt: new Date(leaveBy - 5 * 60000).toISOString(),
           source: scheduledMinutes ? "Company schedule drive estimate" : "30-minute planning estimate",
           refreshedAt: new Date().toISOString()
         };
       }
 
       function refreshWorkflowDeparturePlan(job, { logChanges = false } = {}) {
-        if (!job?.property || job.workflowStatus !== "in-progress") return null;
+        if (!job?.property || !["arrived", "in-progress"].includes(job.workflowStatus)) return null;
         const previous = job.departurePlan;
         const plan = calculateWorkflowDeparturePlan(job);
         job.departurePlan = plan;
@@ -14186,6 +14646,7 @@
               leaveBy: plan.leaveBy,
               previousLeaveBy: previous.leaveBy
             }, job);
+            scheduleWorkflowDeparturePhoneAlerts(job, plan);
           }
         }
         storeActiveJob(job);
@@ -14217,24 +14678,25 @@
         } catch (_) {}
       }
 
-      function playTimedAlertSound() {
+      function playTimedAlertSound(urgent = false) {
         try {
           const AudioContextClass = window.AudioContext || window.webkitAudioContext;
           if (!AudioContextClass) return;
           if (!timedAlertAudioContext) timedAlertAudioContext = new AudioContextClass();
           const context = timedAlertAudioContext;
           context.resume?.();
-          [0, .32, .64, .96].forEach((delay, index) => {
+          const pattern = urgent ? [0, .22, .44, .66, .88, 1.1, 1.32, 1.54] : [0, .32, .64, .96];
+          pattern.forEach((delay, index) => {
             const oscillator = context.createOscillator();
             const gain = context.createGain();
             oscillator.type = index % 2 ? "square" : "sawtooth";
             oscillator.frequency.value = index % 2 ? 740 : 1040;
             gain.gain.setValueAtTime(.0001, context.currentTime + delay);
-            gain.gain.exponentialRampToValueAtTime(.42, context.currentTime + delay + .02);
-            gain.gain.exponentialRampToValueAtTime(.0001, context.currentTime + delay + .24);
+            gain.gain.exponentialRampToValueAtTime(urgent ? .62 : .42, context.currentTime + delay + .02);
+            gain.gain.exponentialRampToValueAtTime(.0001, context.currentTime + delay + (urgent ? .18 : .24));
             oscillator.connect(gain).connect(context.destination);
             oscillator.start(context.currentTime + delay);
-            oscillator.stop(context.currentTime + delay + .26);
+            oscillator.stop(context.currentTime + delay + (urgent ? .2 : .26));
           });
         } catch (_) {}
       }
@@ -14258,7 +14720,7 @@
 
       function repeatTimedAlert() {
         if (!activeTimedAlert) return;
-        playTimedAlertSound();
+        playTimedAlertSound(Boolean(activeTimedAlert.urgent));
         try { navigator.vibrate?.([500, 180, 500, 180, 900]); } catch (_) {}
         postTimedNotification(activeTimedAlert);
       }
@@ -14272,6 +14734,38 @@
         else timedAlertDialog.setAttribute("open", "");
         repeatTimedAlert();
         timedAlertRepeatInterval = window.setInterval(repeatTimedAlert, 60000);
+      }
+
+      async function scheduleWorkflowDeparturePhoneAlerts(job, plan) {
+        const groupId = workflowDepartureAlarmGroup(job);
+        if (!plan) {
+          await cancelFieldAlarmGroup(groupId);
+          return;
+        }
+        const alerts = [
+          {
+            id: "departure-30",
+            at: plan.warningAt,
+            title: "30 MINUTES REMAINING",
+            body: `You need to leave by ${workflowClock(plan.leaveBy)} for your ${workflowClock(plan.nextAppointment)} appointment. Estimated drive: ${plan.estimatedDriveMinutes} minutes.`
+          },
+          {
+            id: "departure-5",
+            at: plan.hardStopAt,
+            title: "HARD STOP IN 5 MINUTES",
+            body: `Wrap up and prepare to leave for your ${workflowClock(plan.nextAppointment)} appointment. Leave by ${workflowClock(plan.leaveBy)}.`
+          }
+        ];
+        const result = await syncFieldAlarmGroup(groupId, alerts, { url: "./#job-companion" });
+        if (result?.scheduled) {
+          appendWorkflowEvent("Phone backup alarms scheduled", {
+            alarmType: "Departure",
+            warningAt: plan.warningAt,
+            hardStopAt: plan.hardStopAt,
+            nextAppointment: plan.nextAppointment
+          }, job);
+        }
+        renderWorkflowNotificationReadiness();
       }
 
       function acknowledgeTimedAlert() {
@@ -14290,26 +14784,28 @@
         job = loadActiveJob() || job;
         const now = Date.now();
         const warningAt = new Date(plan.warningAt).getTime();
+        const hardStopAt = new Date(plan.hardStopAt).getTime();
         const leaveBy = new Date(plan.leaveBy).getTime();
         job.workflowAlerts = { ...(job.workflowAlerts || {}) };
-        if (now >= leaveBy && !job.workflowAlerts.leaveNow) {
-          job.workflowAlerts.leaveNow = new Date().toISOString();
+        if (now >= hardStopAt && !job.workflowAlerts.departure5) {
+          job.workflowAlerts.departure5 = new Date().toISOString();
           storeActiveJob(job);
-          appendWorkflowEvent("Leave-now warning issued", plan, job);
+          appendWorkflowEvent("5-minute hard-stop warning issued", plan, job);
           showTimedAlert({
-            id: `leave-now-${job.calendarEventId || job.property}`,
-            title: "LEAVE FOR NEXT JOB",
-            body: `Next Appointment: ${workflowClock(plan.nextAppointment)}\nEstimated Drive: ${plan.estimatedDriveMinutes} min\nYou should leave now.`,
+            id: `departure-5-${job.calendarEventId || job.property}`,
+            title: "HARD STOP IN 5 MINUTES",
+            body: `Wrap up and prepare to leave for your ${workflowClock(plan.nextAppointment)} appointment.\nEstimated Drive: ${plan.estimatedDriveMinutes} min\nLeave By: ${workflowClock(plan.leaveBy)}`,
             url: "./#job-companion",
+            urgent: true,
             job
           });
-        } else if (now >= warningAt && now < leaveBy && !job.workflowAlerts.departure30) {
+        } else if (now >= warningAt && now < hardStopAt && !job.workflowAlerts.departure30) {
           job.workflowAlerts.departure30 = new Date().toISOString();
           storeActiveJob(job);
           appendWorkflowEvent("30-minute departure warning issued", plan, job);
           showTimedAlert({
             id: `departure-30-${job.calendarEventId || job.property}`,
-            title: "30 MINUTES UNTIL YOU NEED TO LEAVE",
+            title: "30 MINUTES REMAINING",
             body: `Next Appointment: ${workflowClock(plan.nextAppointment)}\nEstimated Drive: ${plan.estimatedDriveMinutes} min\nLeave By: ${workflowClock(plan.leaveBy)}`,
             url: "./#job-companion",
             job
@@ -14509,6 +15005,11 @@
           performance: performance.label
         }, arrivedJob || job);
         if (firstHoursStart) startWorkflowHoursAtVerifiedArrival(arrivedJob || job, arrivalAt, location, arrivalVerification);
+        const departurePlan = refreshWorkflowDeparturePlan(arrivedJob || job);
+        if (departurePlan) {
+          appendWorkflowEvent("Departure time calculated", departurePlan, arrivedJob || job);
+          scheduleWorkflowDeparturePhoneAlerts(arrivedJob || job, departurePlan);
+        }
         clearWorkflowArrivalError();
         renderWorkflowTimeClock();
         showToast(firstHoursStart ? `Arrival verified · Hours Worked started at ${workflowClock(arrivalAt)}` : "Arrival time recorded");
@@ -14523,7 +15024,10 @@
           spectoraJobId: job.spectoraJobId || ""
         });
         const departurePlan = refreshWorkflowDeparturePlan(job);
-        if (departurePlan) appendWorkflowEvent("Departure time calculated", departurePlan, job);
+        if (departurePlan) {
+          appendWorkflowEvent("Departure time calculated", departurePlan, job);
+          scheduleWorkflowDeparturePhoneAlerts(job, departurePlan);
+        }
         prepareTimedAlerts();
         monitorWorkflowDeparture();
         showToast("Inspection start time recorded");
@@ -14576,13 +15080,14 @@
         const completed = updateWorkflowStage(job, "completed", "Used tools back on truck confirmed", { confirmedAt });
         if (!completed) return;
         appendWorkflowEvent("Final job completion", { usedToolsConfirmedAt: confirmedAt }, completed);
+        cancelFieldAlarmGroup(workflowDepartureAlarmGroup(completed));
         storeWorkflowHistory(completed);
         try { localStorage.setItem(LAST_CLEARED_JOB_STORAGE_KEY, JSON.stringify({ job: completed, clearedAt: new Date().toISOString() })); } catch (_) {}
         try { localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY); } catch (_) {}
         renderActiveJob(null);
         renderWorkflowTodayJobs();
-        renderWorkflowApp();
-        showToast("Job closed — used tools confirmed back on the truck");
+        beginWorkflowLabDecision(completed);
+        showToast("Job closed — choose whether a lab stop is needed");
       }
 
       function updateWorkflowDayCompleteButton() {
@@ -14708,6 +15213,17 @@
         "Well test target duration reached": "Well test target duration reached",
         "Well test stopped early": "Well test stopped early",
         "Well test completed": "Well test completed",
+        "Lab selected": "Lab stop selected",
+        "Lab route calculated": "Lab route calculated",
+        "Lab directions selected": "Lab directions selected",
+        "Arrived at lab": "Arrived at lab",
+        "Lab visit completed": "Lab visit completed",
+        "Lab route departure / continuation": "Continued after lab stop",
+        "Lab stop skipped": "Continued without a lab stop",
+        "No final lab stop required": "No final lab stop required",
+        "30-minute departure warning issued": "30-minute departure warning issued",
+        "5-minute hard-stop warning issued": "5-minute hard-stop warning issued",
+        "Phone backup alarms scheduled": "Phone backup alarms scheduled",
         "Clocked on": "Clocked on for work",
         "Clocked off": "Clocked off from work",
         "End-of-day equipment check completed": "Equipment confirmed",
@@ -14733,7 +15249,15 @@
         "Well test started",
         "Well test target duration reached",
         "Well test stopped early",
-        "Well test completed"
+        "Well test completed",
+        "Lab selected",
+        "Lab route calculated",
+        "Lab directions selected",
+        "Arrived at lab",
+        "Lab visit completed",
+        "Lab route departure / continuation",
+        "Lab stop skipped",
+        "No final lab stop required"
       ]);
 
       function workflowEmailAddressIndex() {
@@ -15331,7 +15855,13 @@
         workflowTodayInspector.textContent = profile.name;
         if (!readiness) {
           workflowReadinessCard.hidden = false;
+          renderWorkflowNotificationReadiness();
           updateWorkflowReadinessButton();
+          return;
+        }
+        const labStop = loadWorkflowLabStop();
+        if (labStop) {
+          renderWorkflowLabStop(labStop);
           return;
         }
         if (active?.property) {
@@ -15367,6 +15897,19 @@
           renderWorkflowTodayJobs();
         });
         workflowEquipmentCompleteBtn.addEventListener("click", completeWorkflowEquipment);
+        workflowLabChooser.addEventListener("click", event => {
+          const button = event.target.closest("[data-workflow-lab-choice]");
+          if (button) chooseWorkflowLabStop(button.dataset.workflowLabChoice);
+        });
+        workflowLabDirections.addEventListener("click", () => {
+          const record = loadWorkflowLabStop();
+          const lab = currentWorkflowLab(record);
+          if (!record || !lab) return;
+          appendWorkflowEvent("Lab directions selected", { lab: lab.name, destination: lab.address }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
+        });
+        workflowLabArrivedBtn.addEventListener("click", markWorkflowLabArrived);
+        workflowLabCompleteBtn.addEventListener("click", completeWorkflowLabVisit);
+        workflowLabContinueBtn.addEventListener("click", continueAfterWorkflowLab);
         workflowEndOfDayChecklist.addEventListener("change", updateWorkflowDayCompleteButton);
         workflowDayCompleteBtn.addEventListener("click", completeWorkflowDay);
         window.addEventListener("online", () => {
@@ -16996,6 +17539,54 @@
         }
       }
 
+      async function testFieldAlarmSound() {
+        testAlarmSoundBtn.disabled = true;
+        testAlarmSoundBtn.textContent = "SETTING TEST ALARM…";
+        try {
+          await prepareTimedAlerts();
+          showTimedAlert({
+            id: `alarm-test-${Date.now()}`,
+            title: "MPI FIELD ALARM TEST",
+            body: "This is the loud in-app field alarm. Tap Acknowledge to stop it.",
+            url: "./#settings",
+            urgent: true,
+            job: loadActiveJob()
+          });
+          const groupId = `alarm-test-${localDateKey()}`;
+          const alarmAt = new Date(Date.now() + 2 * 60000).toISOString();
+          let token = savedCalendarToken();
+          let result = await syncFieldAlarmGroup(groupId, [{
+            id: "phone-test",
+            at: alarmAt,
+            title: "MPI PHONE ALARM TEST",
+            body: "MPI Field Tools phone-level backup alerts are working."
+          }], { token, force: true });
+          if (result?.needsSetup) {
+            token = await requestCalendarAccess();
+            result = await syncFieldAlarmGroup(groupId, [{
+              id: "phone-test",
+              at: alarmAt,
+              title: "MPI PHONE ALARM TEST",
+              body: "MPI Field Tools phone-level backup alerts are working."
+            }], { token, force: true });
+          }
+          if (result?.scheduled) {
+            appendWorkflowEvent("Phone backup alarms scheduled", { alarmType: "Test", alarmAt }, loadActiveJob());
+            showToast("Alarm sounded · phone backup set for 2 minutes");
+          } else {
+            showToast("In-app alarm sounded · phone backup needs Settings");
+          }
+        } catch (error) {
+          setFieldAlarmReady(false);
+          showToast("In-app alarm sounded · reconnect Calendar for phone backup");
+          console.warn("MPI alarm test setup failed", error);
+        } finally {
+          renderWorkflowNotificationReadiness();
+          testAlarmSoundBtn.disabled = false;
+          testAlarmSoundBtn.textContent = "TEST ALARM SOUND";
+        }
+      }
+
       function normalizeSopText(value) {
         return String(value || "")
           .normalize("NFKD")
@@ -17859,6 +18450,7 @@
             title: "WELL TEST COMPLETE",
             body: `The well test has reached the required ${timer.targetMinutes}-minute test duration. Return to MPI Field Tools and complete the well test record.`,
             url: "./#sop-guide",
+            urgent: true,
             job: loadActiveJob()
           });
         }
@@ -17886,6 +18478,7 @@
         const startedAt = Date.now();
         const profile = loadWorkflowProfile();
         const job = loadActiveJob();
+        const alarmGroup = `well-test-${startedAt}`;
         storeWellYieldTimer({
           startedAt,
           targetMinutes,
@@ -17895,10 +18488,20 @@
           inspector: profile?.name || job?.inspector || loadRememberedInspector() || "Unknown inspector",
           inspectorId: profile?.id || "",
           jobId: job?.calendarEventId || job?.spectoraJobId || "",
-          property: job?.property || ""
+          property: job?.property || "",
+          phoneAlarmGroup: alarmGroup
         });
         appendWorkflowEvent("Well test started", { startedAt: new Date(startedAt).toISOString(), targetMinutes }, job);
         prepareTimedAlerts();
+        syncFieldAlarmGroup(alarmGroup, [{
+          id: "well-test-complete",
+          at: new Date(startedAt + targetMinutes * 60000).toISOString(),
+          title: "100-MINUTE WELL TEST COMPLETE",
+          body: "The required well-test duration has been reached. Stop the test equipment and return to MPI Field Tools."
+        }]).then(result => {
+          if (result?.scheduled) appendWorkflowEvent("Phone backup alarms scheduled", { alarmType: "Well test", targetMinutes }, job);
+          renderWorkflowNotificationReadiness();
+        });
         wellYieldTimerInterval = window.setInterval(updateWellYieldTimer, 1000);
         updateWellYieldTimer();
         showToast(`${targetMinutes}-minute well test started`);
@@ -17906,6 +18509,8 @@
 
       function resetWellYieldTimerOnly() {
         if (!window.confirm("Reset the well-test timer? The inspection entries will remain.")) return;
+        const timer = loadWellYieldTimer();
+        if (timer?.phoneAlarmGroup) cancelFieldAlarmGroup(timer.phoneAlarmGroup);
         if (wellYieldTimerInterval) window.clearInterval(wellYieldTimerInterval);
         wellYieldTimerInterval = 0;
         storeWellYieldTimer(null);
@@ -17917,6 +18522,7 @@
         const timer = loadWellYieldTimer();
         if (!timer?.startedAt || timer.stoppedAt || timer.targetReachedAt || timer.actualCompletedAt) return;
         timer.stoppedAt = Date.now();
+        if (timer.phoneAlarmGroup) cancelFieldAlarmGroup(timer.phoneAlarmGroup);
         storeWellYieldTimer(timer);
         appendWorkflowEvent("Well test stopped early", { stoppedAt: new Date(timer.stoppedAt).toISOString(), elapsedSeconds: Math.floor((timer.stoppedAt - timer.startedAt) / 1000) }, loadActiveJob());
         storeWellYieldRecord();
@@ -17934,6 +18540,7 @@
           return;
         }
         timer.actualCompletedAt = Date.now();
+        if (timer.phoneAlarmGroup) cancelFieldAlarmGroup(timer.phoneAlarmGroup);
         const elapsedSeconds = Math.max(0, Math.floor((timer.actualCompletedAt - timer.startedAt) / 1000));
         storeWellYieldTimer(timer);
         storeWellYieldRecord();
@@ -18481,14 +19088,122 @@
         asbestosSamplingHelpCard.scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
+      const MOLD_REFERENCE_GUIDE = [
+        {
+          subtitle: "Begin with the client’s concern; this normally determines Indoor Sample #1.",
+          items: ["Ask about musty odors, visible suspected growth, previous/current leaks, flooding, condensation, HVAC leakage, water damage, remediation, and repairs.", "Identify the exact primary room or location of concern before placing equipment."]
+        },
+        {
+          subtitle: "Collect Indoor Sample #1 in the client’s primary area of concern.",
+          items: ["Position the sampler in the room and close the door where practical.", "Avoid disturbing dust or materials and document the exact sample location.", "Standard method: 15 LPM for 5 minutes = 75 liters."]
+        },
+        {
+          subtitle: "Use the five-minute sample period to investigate without creating air movement.",
+          items: ["Use thermal imaging, visual inspection, and a moisture meter where warranted.", "Look for thermal anomalies, elevated moisture, staining, damaged finishes, window/exterior-wall moisture, plumbing or HVAC conditions, condensation, suspected growth, and odors.", "At five minutes, stop the pump promptly and secure the cassette."]
+        },
+        {
+          subtitle: "Protect the integrity and identity of Indoor Sample #1.",
+          items: ["Remove and immediately reseal the cassette.", "Bag and label the sample, record the exact location, and complete the corresponding Chain of Custody entry."]
+        },
+        {
+          subtitle: "Investigate the property before deciding where Indoor Sample #2 belongs.",
+          items: ["Walk the home with thermal imaging and visual inspection; use a moisture meter when an area warrants further investigation.", "Focus on adjacent rooms, bathrooms, kitchens, laundry, plumbing fixtures, exterior walls, ceilings below wet rooms, previous leak locations, windows, basement, HVAC, and attic.", "Document moisture, staining, leakage, or another significant condition and consider the affected occupied area for Sample #2."]
+        },
+        {
+          subtitle: "Inspect the basement if one is present, but do not automatically use it for Sample #2.",
+          items: ["Check for current/previous intrusion, seepage, damp walls/floors, efflorescence, plumbing leaks, sump or drain issues, condensation, damaged finishes, odors, suspected growth, and remediation evidence.", "Use the basement for comparison only when its findings make it the most useful location."]
+        },
+        {
+          subtitle: "Always inspect accessible HVAC and AC condensate components.",
+          items: ["Check the evaporator-coil area, condensate drain, cabinet, insulation, ductwork, standing water, leakage, rust/corrosion, and accessible contamination.", "If a significant moisture condition exists, consider an occupied area influenced by that HVAC system for Sample #2."]
+        },
+        {
+          subtitle: "Inspect the attic only when safely and reasonably accessible.",
+          items: ["Check for roof leaks, staining, ventilation deficiencies, blocked soffits, missing baffles, bath exhaust discharge, condensation, elevated moisture, darkened/deteriorated sheathing, suspected growth, wet insulation, and disturbance.", "Do not routinely collect a standard occupied-space air sample in an attic."]
+        },
+        {
+          subtitle: "Indoor Sample #2 is findings-driven and remains the inspector’s decision.",
+          items: ["Choose the location that will provide the most useful information: an adjacent room, an occupied room with moisture damage, an area associated with an HVAC concern, the basement when warranted, or another relevant occupied space.", "Connect the selected location to an actual inspection finding; never force the basement."]
+        },
+        {
+          subtitle: "Collect Indoor Sample #2 at the findings-based location.",
+          items: ["Document the exact location and avoid unnecessary dust or air movement.", "Run the standard method at 15 LPM for 5 minutes for a 75-liter sample.", "Stop the pump promptly when the five-minute period ends."]
+        },
+        {
+          subtitle: "Secure Indoor Sample #2 immediately.",
+          items: ["Reseal the cassette, bag and label the sample, record the exact location, and complete its Chain of Custody entry."]
+        },
+        {
+          subtitle: "Do not routinely collect occupied-space samples in attics or crawlspaces.",
+          warning: true,
+          items: ["These spaces have different airflow and environmental conditions and can naturally contain higher fungal levels.", "Use visual inspection, moisture assessment, and thermal imaging where appropriate; document suspected growth or intrusion and recommend specialized testing when warranted."]
+        },
+        {
+          subtitle: "Collect an outside control representative of air entering the home.",
+          items: ["Use a suitable exterior location or an area near an identifiable fresh-air intake when appropriate.", "Avoid dryer, bathroom, furnace, and vehicle exhaust; compost; heavy vegetation/debris; and other localized contamination sources.", "Run 15 LPM for 5 minutes for a 75-liter outdoor control."]
+        },
+        {
+          subtitle: "Secure and identify the outdoor control.",
+          items: ["Immediately reseal and bag the cassette.", "Label it as the exterior/outdoor control, record the exact location, and complete the Chain of Custody entry."]
+        },
+        {
+          subtitle: "Before leaving, verify that the investigation and all three samples are complete.",
+          items: ["Primary concern and Indoor Sample #1 documented.", "Property, basement if present, HVAC/AC, and accessible attic investigated.", "Findings-driven Indoor Sample #2 and outdoor control completed.", "Thermal imaging used; moisture meter used where warranted.", "All samples sealed, labeled, and matched to the Chain of Custody."]
+        }
+      ];
+
+      const ASBESTOS_REFERENCE_GUIDE = [
+        { subtitle: "Confirm what is being sampled before disturbing it.", items: ["Speak with the client, owner, occupant, contractor, or onsite contact.", "Confirm the material, exact area, reason for sampling, and access limitations.", "Explain that a small representative portion will be removed for laboratory analysis."] },
+        { subtitle: "Create a clear location record first.", items: ["Take an overall area photograph and a close photograph of the exact material.", "Document the exact location, material type, and relevant condition before touching it."] },
+        { subtitle: "Use appropriate PPE and control dust and cross-contamination.", items: ["Avoid unnecessary breaking, tearing, scraping, crushing, or agitation.", "Never dry sweep, use compressed air, or blow debris away.", "Keep the sample close to the bag and lightly dampen friable/dusty material where appropriate.", "Use extra care with loose, porous, friable material such as vermiculite."] },
+        { subtitle: "Choose a representative area and use the least destructive practical method.", items: ["Collect enough material for laboratory analysis without removing more than needed.", "Include relevant layers where separate or combined layer analysis is required."] },
+        { subtitle: "Use the method that matches the material—not a single flooring method for everything.", materialGuide: true },
+        { subtitle: "Seal and identify every sample immediately.", items: ["Place the sample directly into its designated bag and seal it completely.", "Clearly label the sample number, material, and exact location.", "Make the identification match the laboratory Chain of Custody."] },
+        { subtitle: "Protect the disturbed area where practical and appropriate for that material.", items: ["Flooring: tape or cover the opening.", "Interior wall/ceiling: seal or cover the disturbed point.", "Insulation: minimize exposure and protect where practical.", "Vermiculite: prevent further disturbance rather than trying to tape loose material.", "Exterior siding/trim: protect the exposed edge where practical; it may not always be necessary."] },
+        { subtitle: "Clean the immediate area using a controlled method.", items: ["Remove small debris without dry sweeping, compressed air, blowing, or additional disturbance.", "Leave the sampling area clean and secure."] },
+        { subtitle: "Photograph the completed location.", items: ["Show the exact sample point and any tape, cover, repair, protected edge, or temporary seal.", "Capture enough context to relocate the sample point later."] },
+        { subtitle: "Complete and cross-check the laboratory Chain of Custody.", items: ["Enter required property, client, inspector, date, sample number, location, and material information.", "Double-check that every bag ID exactly matches the paperwork."] },
+        { subtitle: "Use a clean two-bag transport system.", items: ["Keep each sample separately sealed and labeled in its inner bag.", "Place sealed samples in a second clean transport bag with clean, readable paperwork according to the laboratory procedure.", "Seal the outer bag for transport and keep all samples identifiable."] },
+        { subtitle: "Before leaving, verify the site, samples, paperwork, and transport package.", items: ["Correct material/location confirmed; PPE and contamination controls used.", "Before and final photographs completed; representative sample collected.", "Bag sealed and labeled; sample number matches Chain of Custody.", "Sampling point protected where practical; debris cleaned appropriately.", "Second transport bag and documentation complete; all samples accounted for."] }
+      ];
+
+      function referenceGuideMaterialMarkup() {
+        return `<div class="guided-help-callout warning"><strong>Sampling methods vary by material.</strong> Minimize disturbance, control dust, document thoroughly, and use the least destructive practical method.</div><div class="guided-material-selector">${ASBESTOS_MATERIAL_GUIDANCE.map(item => `<details class="guided-material-card"><summary>${escapeHtml(item.name)}</summary>${guidedList(item.steps)}</details>`).join("")}</div>`;
+      }
+
+      function renderReferenceGuideStep({ key, total, titles, guide, host, progressTitle, progressCount, status, card, back, next }) {
+        const record = loadGuidedRecord(key, total);
+        const step = record.currentStep;
+        const entry = guide[step - 1];
+        const content = entry.materialGuide ? referenceGuideMaterialMarkup() : guidedList(entry.items, Boolean(entry.warning));
+        host.innerHTML = `<div class="reference-guide-intro"><strong>FIELD REFERENCE</strong><span>No entries or completion checks are required here.</span></div>${guidedStepShell(step, total, titles[step - 1], entry.subtitle, content)}`;
+        progressTitle.textContent = titles[step - 1];
+        progressCount.textContent = `Section ${step} of ${total}`;
+        status.textContent = "Reference guide";
+        status.classList.remove("is-ready");
+        card.classList.remove("is-complete");
+        back.disabled = step === 1;
+        next.hidden = step === total;
+        next.disabled = false;
+      }
+
+      function moldCanAdvance() { return true; }
+
+      function asbestosCanAdvance() { return true; }
+
+      function renderMoldSamplingStep() {
+        renderReferenceGuideStep({ key: MOLD_SAMPLING_STORAGE_KEY, total: 15, titles: MOLD_STEP_TITLES, guide: MOLD_REFERENCE_GUIDE, host: moldSamplingStepHost, progressTitle: moldSamplingProgressTitle, progressCount: moldSamplingProgressCount, status: moldSamplingStatus, card: moldSamplingHelpCard, back: moldSamplingBack, next: moldSamplingNext });
+      }
+
+      function renderAsbestosSamplingStep() {
+        renderReferenceGuideStep({ key: ASBESTOS_SAMPLING_STORAGE_KEY, total: 12, titles: ASBESTOS_STEP_TITLES, guide: ASBESTOS_REFERENCE_GUIDE, host: asbestosSamplingStepHost, progressTitle: asbestosSamplingProgressTitle, progressCount: asbestosSamplingProgressCount, status: asbestosSamplingStatus, card: asbestosSamplingHelpCard, back: asbestosSamplingBack, next: asbestosSamplingNext });
+      }
+
       function initializeSamplingHelp() {
         renderMoldSamplingStep();
         renderAsbestosSamplingStep();
-        const moldRecord = loadGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, 15);
-        if (Object.values(moldRecord.samples || {}).some(sample => sample?.startedAt && !sample?.stoppedAt)) {
-          moldSamplingTimerInterval = window.setInterval(updateMoldSamplingTimer, 1000);
-          updateMoldSamplingTimer();
-        }
+        if (moldSamplingTimerInterval) window.clearInterval(moldSamplingTimerInterval);
+        moldSamplingTimerInterval = 0;
       }
 
       function sizeCommentOutput() {
@@ -18766,6 +19481,7 @@
       safetyOtherInformedName.addEventListener("input", () => updateSafetyInformedSelection());
       safetyNoticeForm.addEventListener("submit", validateSafetyNoticeSubmission);
       enablePushBtn.addEventListener("click", enablePushNotifications);
+      testAlarmSoundBtn.addEventListener("click", testFieldAlarmSound);
       copyPushTokenBtn.addEventListener("click", () => {
         const token = pushTokenValue.textContent.trim();
         if (token) copyText(token, "Phone setup code copied");
