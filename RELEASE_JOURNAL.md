@@ -1,5 +1,14 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 118 — Consolidated Field Testing and Phone Alarm Backup
+
+- Added a lightweight post-job lab-stop choice for Water Tech, IMS Laboratory, both labs, or no lab stop, with direct Apple Maps directions, arrival/completion timestamps, route-time estimates, and a lateness warning before the next inspection.
+- Added phone-level backup alarms through the connected MPI Google Calendar for the 30-minute departure reminder, five-minute hard stop, and timed well-test completion, while keeping the louder in-app alarm, vibration, and acknowledgement screen.
+- Added a Test Alarm Sound control in Settings and a prominent Morning Readiness warning when notification or phone-backup setup is incomplete.
+- Replaced the mold and asbestos data-entry workflows with non-blocking step-by-step field reference guides that do not require duplicate notes, forms, or completion checks.
+- Added a four-step AC temperature-differential reference guide while retaining the existing calculator.
+- Restyled the app-update controls in MPI dark blue and white, updated the visible build, and refreshed the offline cache to Build 118.
+
 ## Build 117 — Clear Finished Office Notifications
 
 - Completed, acknowledged, and read office items now change to a clear **Clear From My App** action.
