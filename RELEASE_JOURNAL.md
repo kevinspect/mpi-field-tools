@@ -1,5 +1,12 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 121 — Reliable Office Dashboard Return
+
+- Changed the Admin **Inspector app** link to open the field app in office mode.
+- Kept the **Office Dashboard** return button visible for that office session even when the standalone inspector app has not yet refreshed its Google sign-in state.
+- Admin access remains protected by the existing Owner/Admin account check.
+- Updated the visible build and refreshed the offline app shell to Build 121.
+
 ## Build 120 — Hours Worked Recovery and Admin Return
 
 - Fixed the Hours Worked card so verified-arrival sessions from earlier builds and interrupted app updates remain countable instead of falling back to `0:00`.
