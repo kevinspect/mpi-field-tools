@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="MPI Office">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-  <title>MPI Office Console</title>
+  <title>MPI Inspector Operations</title>
   <style>
     :root { --navy:#11186a; --navy-2:#202977; --blue:#2775b9; --gold:#c89b27; --ink:#161b3f; --muted:#626a8a; --line:#dce3ee; --paper:#fff; --soft:#f3f6fa; --green:#28765e; --red:#9b3838; color-scheme:light; font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
     * { box-sizing:border-box; }
@@ -84,6 +84,65 @@
     .person-controls select { min-height:40px; padding:0 9px; border:1px solid var(--line); border-radius:9px; }
     .empty { padding:34px 20px; color:var(--muted); background:#f8fafc; border:1px dashed #cad3e2; border-radius:14px; text-align:center; }
     .notice { padding:14px 16px; color:#634d0f; background:#fff8df; border:1px solid #edd891; border-radius:12px; font-size:11px; line-height:1.5; }
+    .operations-toolbar { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,330px); gap:14px; align-items:end; }
+    .range-picker { display:flex; flex-wrap:wrap; gap:7px; }
+    .range-picker button { min-height:42px; padding:0 13px; color:var(--blue); background:#edf5fb; border:1px solid #cbdff0; border-radius:999px; font-size:10px; font-weight:900; }
+    .range-picker button.active { color:#fff; background:var(--navy); border-color:var(--navy); }
+    .team-overview { display:grid; gap:11px; margin-top:16px; }
+    .inspector-row { display:grid; grid-template-columns:minmax(170px,1.25fr) minmax(135px,.8fr) repeat(4,minmax(105px,.62fr)) 34px; align-items:center; gap:12px; width:100%; padding:16px; color:var(--ink); background:#fff; border:1px solid var(--line); border-left:5px solid var(--blue); border-radius:15px; text-align:left; box-shadow:0 7px 20px rgba(17,24,106,.05); }
+    .inspector-row.has-alert { border-left-color:#b94b42; }
+    .inspector-row strong,.inspector-row span,.inspector-row small { display:block; }
+    .inspector-row strong { color:var(--navy); font-size:15px; }
+    .inspector-row small { margin-top:4px; color:var(--muted); font-size:9.5px; line-height:1.4; }
+    .row-metric span { color:var(--muted); font-size:8px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+    .row-metric b { display:block; margin-top:5px; color:var(--ink); font-size:12px; }
+    .status-badge { display:inline-flex !important; width:max-content; max-width:100%; min-height:28px; align-items:center; padding:4px 9px; color:#0e5b48; background:#e2f2eb; border-radius:999px; font-size:8px !important; font-weight:950; letter-spacing:.04em; text-transform:uppercase; }
+    .status-badge.waiting { color:#735813; background:#fff3cf; }
+    .status-badge.alert { color:#8f332e; background:#ffe9e6; }
+    .status-badge.neutral { color:#47516d; background:#edf1f6; }
+    .row-open { color:var(--gold); font-size:24px; font-weight:900; }
+    .detail-shell { display:grid; gap:16px; margin-top:16px; }
+    .detail-hero { display:grid; grid-template-columns:minmax(0,1.5fr) auto; gap:18px; align-items:center; padding:22px; color:#fff; background:linear-gradient(135deg,#0c1259,#192379 62%,#2873b6); border:1px solid rgba(200,155,39,.6); border-radius:18px; }
+    .detail-hero h2 { margin:7px 0 4px; font-size:31px; }
+    .detail-hero p { margin:0; color:#dfe4f4; font-size:11px; }
+    .detail-hero .status-badge { color:#10165f; background:#f2d57e; }
+    .detail-back { min-height:42px; color:#fff; background:rgba(255,255,255,.11); border:1px solid rgba(255,255,255,.24); border-radius:10px; font-size:10px; font-weight:900; }
+    .ops-grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:14px; }
+    .ops-card { grid-column:span 4; padding:19px; background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 22px rgba(17,24,106,.05); }
+    .ops-card.span-6 { grid-column:span 6; }
+    .ops-card.span-8 { grid-column:span 8; }
+    .ops-card.full { grid-column:1/-1; }
+    .ops-card h3 { margin:0 0 13px; color:var(--navy); font-size:15px; }
+    .ops-eyebrow { margin:0 0 6px; color:#a67911; font-size:8px; font-weight:950; letter-spacing:.13em; text-transform:uppercase; }
+    .ops-primary { display:block; color:var(--navy); font-size:20px; line-height:1.25; }
+    .ops-sub { margin:6px 0 0; color:var(--muted); font-size:10.5px; line-height:1.5; }
+    .fact-list { display:grid; gap:9px; }
+    .fact { display:flex; align-items:flex-start; justify-content:space-between; gap:13px; padding-bottom:9px; border-bottom:1px solid #edf0f5; }
+    .fact:last-child { padding-bottom:0; border-bottom:0; }
+    .fact span { color:var(--muted); font-size:9.5px; }
+    .fact strong { color:var(--navy); font-size:10.5px; text-align:right; }
+    .job-list,.timeline,.message-history,.correction-history { display:grid; gap:9px; }
+    .job-line { display:grid; grid-template-columns:70px minmax(0,1fr) auto; gap:12px; align-items:center; padding:12px; background:#f6f8fb; border-radius:12px; }
+    .job-line time { color:var(--blue); font-size:10px; font-weight:900; }
+    .job-line strong { color:var(--navy); font-size:11px; }
+    .job-line small { display:block; margin-top:3px; color:var(--muted); font-size:9px; }
+    .timeline-row { display:grid; grid-template-columns:72px 12px minmax(0,1fr); gap:9px; align-items:start; }
+    .timeline-row time { color:var(--blue); font-size:9.5px; font-weight:900; }
+    .timeline-dot { width:9px; height:9px; margin-top:3px; background:var(--gold); border-radius:50%; box-shadow:0 0 0 4px #fff4d8; }
+    .timeline-row strong { display:block; color:var(--navy); font-size:10.5px; }
+    .timeline-row small { display:block; margin-top:3px; color:var(--muted); font-size:9px; line-height:1.4; }
+    .alert-list { display:grid; gap:8px; }
+    .alert-item { padding:11px 13px; color:#81322e; background:#fff0ee; border-left:4px solid #ba4f46; border-radius:9px; font-size:10px; line-height:1.45; }
+    .clear-item { padding:11px 13px; color:#276853; background:#eaf6f1; border-radius:9px; font-size:10px; }
+    .quick-messages { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:11px; }
+    .quick-messages button { min-height:36px; padding:0 10px; color:var(--blue); background:#edf5fb; border:1px solid #cbdff0; border-radius:999px; font-size:9px; font-weight:900; }
+    .message-history article,.correction-history article { padding:12px; background:#f7f9fc; border:1px solid #e3e7ef; border-radius:11px; }
+    .message-history strong,.correction-history strong { color:var(--navy); font-size:10.5px; }
+    .message-history p,.correction-history p { margin:5px 0 0; color:var(--muted); font-size:9.5px; line-height:1.45; }
+    .compact-form { display:grid; gap:10px; }
+    .compact-form textarea { min-height:92px; }
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .sync-note { margin:10px 0 0; color:var(--muted); font-size:9px; text-align:right; }
     [hidden] { display:none !important; }
     @media (max-width:760px) {
       body { background:linear-gradient(180deg,#11186a 0 330px,#f4f6fa 330px 100%); }
@@ -103,18 +162,23 @@
       .person-card { display:grid; }
       .person-controls { justify-content:space-between; }
       .tabbar { position:sticky; z-index:10; top:65px; }
+      .operations-toolbar,.detail-hero,.two-col { grid-template-columns:1fr; }
+      .inspector-row { grid-template-columns:1fr 1fr; }
+      .inspector-row > :first-child,.inspector-row > :nth-child(2),.inspector-row .row-open { grid-column:1/-1; }
+      .row-open { display:none; }
+      .ops-card,.ops-card.span-6,.ops-card.span-8 { grid-column:1/-1; }
     }
   </style>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><img src="./mpi-logo.png" alt=""><div><strong>Michigan Property Inspections</strong><span>Office Console</span></div></div>
+    <div class="brand"><img src="./mpi-logo.png" alt=""><div><strong>Michigan Property Inspections</strong><span>Inspector Operations</span></div></div>
     <div class="top-actions"><a href="./#home">Inspector app</a><button id="adminSignOut" type="button" hidden>Sign out</button></div>
   </header>
 
   <main class="shell">
     <section class="hero">
-      <div><p class="eyebrow">Owner and office administration</p><h1>MPI Office Console</h1><p>Publish information once, direct it to the right inspector, and see what has been read or completed from a phone or desktop.</p></div>
+      <div><p class="eyebrow">Owner and office administration</p><h1>Inspector Operations</h1><p>See the working day across the team, open one inspector for full detail, send messages, and manage company information from phone or desktop.</p></div>
       <div class="account-pill" id="adminAccountPill" hidden><span class="account-avatar" id="adminInitial">K</span><div><strong id="adminAccountName">Owner</strong><small id="adminAccountEmail"></small></div></div>
     </section>
 
@@ -128,17 +192,31 @@
 
     <section class="dashboard" id="adminDashboard" hidden>
       <div class="stat-grid">
-        <article class="panel stat"><span>Active inspectors</span><strong id="statInspectors">0</strong></article>
-        <article class="panel stat"><span>Open updates</span><strong id="statUpdates">0</strong></article>
-        <article class="panel stat"><span>Acknowledged</span><strong id="statAcknowledged">0</strong></article>
-        <article class="panel stat"><span>Due soon</span><strong id="statDueSoon">0</strong></article>
+        <article class="panel stat"><span>Inspectors working</span><strong id="statWorking">0</strong></article>
+        <article class="panel stat"><span>Jobs completed</span><strong id="statJobs">0</strong></article>
+        <article class="panel stat"><span>Hours today</span><strong id="statHours">0:00</strong></article>
+        <article class="panel stat"><span>Needs attention</span><strong id="statAlerts">0</strong></article>
       </div>
 
       <nav class="panel tabbar" aria-label="Office Console sections">
-        <button class="active" type="button" data-admin-view="publish">Publish information</button>
+        <button class="active" type="button" data-admin-view="operations">Today’s operations</button>
+        <button type="button" data-admin-view="publish">Publish information</button>
         <button type="button" data-admin-view="updates">Sent updates</button>
         <button type="button" data-admin-view="people">Inspectors</button>
       </nav>
+
+      <section class="console-view active" data-admin-panel="operations">
+        <div class="panel content-panel">
+          <div class="section-head"><div><h2>Inspector Operations Dashboard</h2><p>See the whole team at a glance, then open one inspector for their complete operational day.</p></div></div>
+          <div class="operations-toolbar">
+            <div><p class="ops-eyebrow">Reporting period</p><div class="range-picker" id="adminRangePicker"><button class="active" type="button" data-range="today">Today</button><button type="button" data-range="yesterday">Yesterday</button><button type="button" data-range="week">This week</button></div></div>
+            <div class="field"><label for="adminInspectorSelector">Inspector</label><select id="adminInspectorSelector"><option value="all">All inspectors</option></select></div>
+          </div>
+          <p class="sync-note" id="adminOperationsSync">Waiting for inspector devices to sync.</p>
+          <div class="team-overview" id="adminTeamOverview"><div class="empty">No inspector activity has synced yet.</div></div>
+          <div class="detail-shell" id="adminInspectorDetail" hidden></div>
+        </div>
+      </section>
 
       <section class="console-view active" data-admin-panel="publish">
         <div class="panel content-panel">
@@ -173,7 +251,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
-  <script src="./mpi-shared.js"></script>
-  <script src="./admin.js"></script>
+  <script src="./mpi-shared.js?build=119"></script>
+  <script src="./admin.js?build=119"></script>
 </body>
 </html>

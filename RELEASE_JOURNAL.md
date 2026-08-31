@@ -1,5 +1,16 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 119 — Inspector Operations Dashboard
+
+- Rebuilt the Admin Desktop around a live all-inspector operations overview with team status, jobs completed, hours worked, drive time, next appointments, punctuality, and meaningful alerts.
+- Added a same-page inspector selector and detailed dashboard for current/next jobs, weekly hours, activity window, drive-time breakdown, complete daily schedule, timeline, lab activity, readiness, end-of-day status, and exceptions.
+- Added direct admin-to-inspector messaging with reviewed quick templates, custom messages, delivery/read history, and a separate message record that does not pollute the activity timeline.
+- Added append-only admin corrections with the original value, corrected value, manager identity, correction time, and mandatory reason preserved for audit.
+- Added secure daily operational synchronization from each signed-in company phone to its existing MPI user record so owner/admin accounts can view the current day without exposing management data to inspectors.
+- Kept completed jobs visible for the full calendar day, retained final Hours Worked after clock-out, separated Activity Time from Hours Worked, and added the daily drive-time summary to the closeout payload.
+- Simplified the lab workflow so between-job lab stops are optional from Today’s Jobs while the final inspection still requires a lab/no-lab decision before end-of-day checks.
+- Updated the visible build and refreshed the offline app shell to Build 119.
+
 ## Build 118 — Consolidated Field Testing and Phone Alarm Backup
 
 - Added a lightweight post-job lab-stop choice for Water Tech, IMS Laboratory, both labs, or no lab stop, with direct Apple Maps directions, arrival/completion timestamps, route-time estimates, and a lateness warning before the next inspection.

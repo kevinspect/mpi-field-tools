@@ -48,7 +48,7 @@
   }
 
   function typeLabel(value) {
-    return ({ announcement: "Company update", instruction: "Instruction", training: "Training", "job-note": "Job note", procedure: "Procedure", equipment: "Equipment" })[value] || "Office update";
+    return ({ message: "Office message", announcement: "Company update", instruction: "Instruction", training: "Training", "job-note": "Job note", procedure: "Procedure", equipment: "Equipment" })[value] || "Office update";
   }
 
   function formatDate(value) {
@@ -113,6 +113,7 @@
     updatesGate.hidden = true;
     updatesContent.hidden = false;
     registerPushDevice(user, profile).catch(() => {});
+    window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail: { userId: user.uid, role: profile.role || "inspector" } }));
     unsubscribeUpdates?.();
     unsubscribeUpdates = shared.watchUpdates(user, profile, renderUpdates);
   }

@@ -23,6 +23,7 @@
   const auth = app.auth();
   const db = app.firestore();
   const serverTimestamp = window.firebase.firestore.FieldValue.serverTimestamp;
+  const arrayUnion = window.firebase.firestore.FieldValue.arrayUnion;
 
   auth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
   db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
@@ -180,12 +181,37 @@
     }, { merge: true });
   }
 
+  function cleanOperationsValue(value) {
+    return JSON.parse(JSON.stringify(value, (_, item) => item === undefined ? null : item));
+  }
+
+  async function syncOperationsSnapshot(snapshot) {
+    const user = auth.currentUser;
+    if (!user || !snapshot?.date) return false;
+    const ref = db.collection("users").doc(user.uid);
+    const current = await ref.get();
+    const existingDays = Array.isArray(current.data()?.operationsDays) ? current.data().operationsDays : [];
+    const clean = cleanOperationsValue(snapshot);
+    const days = existingDays
+      .filter(day => day?.date && day.date !== clean.date)
+      .concat(clean)
+      .sort((left, right) => String(left.date).localeCompare(String(right.date)))
+      .slice(-8);
+    await ref.set({
+      operationsCurrent: clean,
+      operationsDays: days,
+      operationsUpdatedAt: serverTimestamp()
+    }, { merge: true });
+    return true;
+  }
+
   window.MPI_SHARED = {
     available: true,
     app,
     auth,
     db,
     serverTimestamp,
+    arrayUnion,
     ownerEmail: MPI_OWNER_EMAILS[0],
     ownerEmails: [...MPI_OWNER_EMAILS],
     companyDomain: MPI_COMPANY_DOMAIN,
@@ -199,6 +225,7 @@
     watchSession,
     watchUpdates,
     setUpdateStatus,
-    clearUpdate
+    clearUpdate,
+    syncOperationsSnapshot
   };
 })();
