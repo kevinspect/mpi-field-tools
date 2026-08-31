@@ -1,5 +1,13 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 120 — Hours Worked Recovery and Admin Return
+
+- Fixed the Hours Worked card so verified-arrival sessions from earlier builds and interrupted app updates remain countable instead of falling back to `0:00`.
+- Added automatic same-day recovery from the phone activity record and the inspector’s secure synced operations record when the paid-hours session is missing.
+- Preserved a complete time-clock backup with the end-of-day receipt before the phone activity log is cleared.
+- Added a persistent **Office Dashboard** return button in the inspector app for Owner/Admin accounts only; inspectors do not see it.
+- Updated the visible build and refreshed the offline app shell to Build 120.
+
 ## Build 119 — Inspector Operations Dashboard
 
 - Rebuilt the Admin Desktop around a live all-inspector operations overview with team status, jobs completed, hours worked, drive time, next appointments, punctuality, and meaningful alerts.

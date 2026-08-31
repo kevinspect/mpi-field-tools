@@ -8,6 +8,7 @@
   const homeDetail = document.getElementById("mpiHomeUpdatesDetail");
   const officeConsoleCard = document.getElementById("officeConsoleCard");
   const settingsAdminLink = document.getElementById("mpiSettingsAdminLink");
+  const adminReturnLink = document.getElementById("mpiAdminReturn");
   const accountCard = document.getElementById("mpiAccountCard");
   const accountStatus = document.getElementById("mpiAccountStatus");
   const accountName = document.getElementById("mpiAccountName");
@@ -97,6 +98,7 @@
       signOutButtons.forEach(button => { button.hidden = true; });
       officeConsoleCard.hidden = true;
       settingsAdminLink.hidden = true;
+      if (adminReturnLink) adminReturnLink.hidden = true;
       updatesGate.hidden = false;
       updatesContent.hidden = true;
       homeCard.hidden = true;
@@ -110,6 +112,7 @@
     signOutButtons.forEach(button => { button.hidden = false; });
     officeConsoleCard.hidden = !shared.isAdminRole(profile);
     settingsAdminLink.hidden = !shared.isAdminRole(profile);
+    if (adminReturnLink) adminReturnLink.hidden = !shared.isAdminRole(profile);
     updatesGate.hidden = true;
     updatesContent.hidden = false;
     registerPushDevice(user, profile).catch(() => {});

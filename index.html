@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="119">
+  <meta name="app-build" content="120">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -167,6 +167,21 @@
     }
 
     .sop-jump:hover, .sop-jump:focus-visible { border-color: var(--orange); outline: none; }
+
+    .admin-return {
+      display: inline-grid;
+      min-height: 40px;
+      place-items: center;
+      padding: 0 13px;
+      color: #11186a;
+      background: #fff;
+      border: 1px solid rgba(255,255,255,.72);
+      border-radius: 9px;
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: .035em;
+      text-decoration: none;
+    }
 
     .screen-nav {
       display: flex;
@@ -3066,6 +3081,7 @@
       .topbar-actions { gap: 10px; }
       .sop-jump { font-size: 10px; }
       .topbar-actions .sop-jump:not(:first-child) { display: none; }
+      .admin-return { min-height: 38px; padding-inline: 10px; font-size: 9px; }
       .screen-nav { position: relative; justify-content: center; min-height: 54px; padding: 5px 64px; }
       .screen-back { position: absolute; left: 12px; justify-content: center; width: 44px; min-height: 44px; font-size: 0; }
       .screen-back::before { font-size: 24px; }
@@ -4830,6 +4846,7 @@
       <span class="brand-name"><strong>Michigan Property</strong><small>Inspections · Field Tools</small></span>
     </div>
     <div class="topbar-actions">
+      <a class="admin-return" id="mpiAdminReturn" href="./admin.html" hidden>OFFICE DASHBOARD</a>
       <a class="sop-jump" href="#home">All tools</a>
       <a class="sop-jump" href="#damage-report">Damage form</a>
       <a class="sop-jump" href="#sop-guide">SOP guide</a>
@@ -4899,7 +4916,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">119</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">120</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -7318,7 +7335,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 119</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 120</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -13869,7 +13886,10 @@
           const record = JSON.parse(localStorage.getItem(WORKFLOW_TIME_CLOCK_STORAGE_KEY) || "null");
           const profile = loadWorkflowProfile();
           if (!record || record.date !== localDateKey() || !Array.isArray(record.sessions)) return null;
-          if (profile?.id && record.inspectorId && record.inspectorId !== profile.id) return null;
+          if (profile?.id && record.inspectorId && record.inspectorId !== profile.id) {
+            const sameInspector = String(record.inspector || "").trim().toLowerCase() === String(profile.name || "").trim().toLowerCase();
+            if (!sameInspector) return null;
+          }
           const sessions = record.sessions.slice(0, 12).map(session => ({
             clockedInAt: String(session?.clockedInAt || ""),
             clockedOutAt: String(session?.clockedOutAt || ""),
@@ -13902,6 +13922,80 @@
         try { localStorage.setItem(WORKFLOW_TIME_CLOCK_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
       }
 
+      function isWorkflowPaidSession(session) {
+        const source = String(session?.startSource || "legacy-manual-clock");
+        return Boolean(session?.clockedInAt) && !["morning-readiness", "activity-only"].includes(source);
+      }
+
+      function hasWorkflowNumericValue(value) {
+        return value !== null && value !== undefined && String(value).trim() !== "" && Number.isFinite(Number(value));
+      }
+
+      function recoverWorkflowTimeClockRecord(record, activity = loadWorkflowActivity(), completion = workflowDayCompleteRecord()) {
+        if (!record || (record.sessions || []).some(isWorkflowPaidSession)) return false;
+        const backupSessions = Array.isArray(completion?.timeClockBackup?.sessions)
+          ? completion.timeClockBackup.sessions.filter(isWorkflowPaidSession).map(session => ({ ...session }))
+          : [];
+        if (backupSessions.length) {
+          record.sessions = backupSessions;
+          record.hoursWorkedStartedAt = String(completion.timeClockBackup.hoursWorkedStartedAt || backupSessions[0].clockedInAt || "");
+          record.hoursWorkedJobId ||= String(completion.timeClockBackup.hoursWorkedJobId || backupSessions[0].jobId || "");
+          record.hoursWorkedProperty ||= String(completion.timeClockBackup.hoursWorkedProperty || backupSessions[0].property || "");
+          return true;
+        }
+        const todayEvents = (Array.isArray(activity) ? activity : [])
+          .filter(item => item?.date === localDateKey() && item?.timestamp)
+          .sort((left, right) => new Date(left.timestamp) - new Date(right.timestamp));
+        const hoursEvent = todayEvents.find(item => item.action === "Hours worked started");
+        const verifiedArrival = todayEvents.find(item => item.action === "Arrived" && (
+          item.data?.gpsVerified === true
+          || hasWorkflowNumericValue(item.data?.distanceFeet)
+          || (hasWorkflowNumericValue(item.data?.latitude) && hasWorkflowNumericValue(item.data?.longitude))
+        ));
+        const sourceEvent = hoursEvent || verifiedArrival;
+        const startedAt = String(
+          record.hoursWorkedStartedAt
+          || sourceEvent?.data?.startedAt
+          || sourceEvent?.data?.timestamp
+          || sourceEvent?.timestamp
+          || ""
+        );
+        if (!startedAt || !Number.isFinite(new Date(startedAt).getTime())) return false;
+        const clockedOffEvent = todayEvents.filter(item => item.action === "Clocked off" && new Date(item.timestamp) >= new Date(startedAt)).at(-1);
+        const completedAt = String(
+          clockedOffEvent?.data?.clockedOutAt
+          || clockedOffEvent?.timestamp
+          || completion?.completedAt
+          || ""
+        );
+        const latitude = Number(sourceEvent?.data?.latitude);
+        const longitude = Number(sourceEvent?.data?.longitude);
+        const accuracyFeet = Number(sourceEvent?.data?.accuracyFeet) || 0;
+        const clockInLocation = hasWorkflowNumericValue(sourceEvent?.data?.latitude) && hasWorkflowNumericValue(sourceEvent?.data?.longitude)
+          ? { status: "recorded", latitude, longitude, accuracyFeet, recordedAt: startedAt }
+          : { status: hoursEvent ? String(hoursEvent.data?.locationStatus || "recorded") : "recorded", recordedAt: startedAt };
+        const jobId = String(sourceEvent?.calendarEventId || sourceEvent?.jobId || record.hoursWorkedJobId || "");
+        const property = String(sourceEvent?.property || record.hoursWorkedProperty || "");
+        record.hoursWorkedStartedAt = startedAt;
+        record.hoursWorkedJobId ||= jobId;
+        record.hoursWorkedProperty ||= property;
+        record.sessions.push({
+          clockedInAt: startedAt,
+          clockedOutAt: completedAt && new Date(completedAt) > new Date(startedAt) ? completedAt : "",
+          startSource: "recovered-verified-arrival",
+          jobId,
+          property,
+          clockInLocation,
+          clockOutLocation: null,
+          arrivalVerification: {
+            recovered: true,
+            distanceFeet: sourceEvent?.data?.distanceFeet || "",
+            approvedGeofenceFeet: sourceEvent?.data?.approvedGeofenceFeet || WORKFLOW_ARRIVAL_GEOFENCE_FEET
+          }
+        });
+        return true;
+      }
+
       function ensureWorkflowTimeClockRecord(profile = loadWorkflowProfile(), readiness = workflowReadinessRecord()) {
         if (!profile) return null;
         const existing = loadWorkflowTimeClock();
@@ -13925,12 +14019,47 @@
           record.activityStartedAt = readiness.completedAt;
           record.activityStartSource = "morning-readiness";
         }
+        recoverWorkflowTimeClockRecord(record);
         saveWorkflowTimeClock(record);
         return record;
       }
 
       function workflowPaySessions(record = loadWorkflowTimeClock()) {
-        return (record?.sessions || []).filter(session => ["verified-first-arrival", "management-override", "reopened-workday-arrival", "legacy-manual-clock"].includes(session.startSource));
+        return (record?.sessions || []).filter(isWorkflowPaidSession);
+      }
+
+      async function recoverWorkflowTimeClockFromCompanyAccount(event) {
+        const userId = String(event?.detail?.userId || "");
+        if (!userId || !window.MPI_SHARED?.db || !loadWorkflowProfile()) return false;
+        try {
+          const userRecord = await window.MPI_SHARED.db.collection("users").doc(userId).get();
+          const data = userRecord.data() || {};
+          const candidates = [data.operationsCurrent, ...(Array.isArray(data.operationsDays) ? data.operationsDays : [])];
+          const remote = candidates.filter(day => day?.date === localDateKey()).at(-1);
+          if (!remote) return false;
+          const record = ensureWorkflowTimeClockRecord();
+          if (!record || workflowPaySessions(record).length) return false;
+          const remoteSessions = Array.isArray(remote.timeClock?.sessions)
+            ? remote.timeClock.sessions.filter(isWorkflowPaidSession).map(session => ({ ...session }))
+            : [];
+          if (remoteSessions.length) {
+            record.sessions = remoteSessions;
+            record.hoursWorkedStartedAt = String(remote.timeClock?.hoursWorkedStartedAt || remoteSessions[0].clockedInAt || "");
+            record.hoursWorkedJobId ||= String(remoteSessions[0].jobId || "");
+            record.hoursWorkedProperty ||= String(remoteSessions[0].property || "");
+          } else {
+            record.hoursWorkedStartedAt ||= String(remote.timeClock?.hoursWorkedStartedAt || "");
+            recoverWorkflowTimeClockRecord(record, remote.activity, remote.dayComplete);
+          }
+          if (!workflowPaySessions(record).length) return false;
+          saveWorkflowTimeClock(record);
+          renderWorkflowTimeClock();
+          queueWorkflowOperationsSync();
+          showToast("Today’s Hours Worked record was restored");
+          return true;
+        } catch (_) {
+          return false;
+        }
       }
 
       function workflowActiveClockSession(record = loadWorkflowTimeClock()) {
@@ -15323,6 +15452,7 @@
 
       function clearDeliveredWorkflowLogs(record) {
         const completedJobIds = [...workflowCompletedEventIds()];
+        const timeClockBackup = loadWorkflowTimeClock();
         const receipt = {
           date: record.date,
           completedAt: record.completedAt,
@@ -15330,6 +15460,7 @@
           emailedAt: record.emailedAt,
           equipmentConfirmed: true,
           completedJobIds,
+          timeClockBackup: timeClockBackup ? { ...timeClockBackup, sessions: workflowPaySessions(timeClockBackup).map(session => ({ ...session })) } : null,
           closeoutNumber: Number(record.closeoutNumber) || Math.max(1, todayArchivedCloseouts().length + 1)
         };
         try {
@@ -16100,7 +16231,9 @@
           updateWorkflowDayCompleteButton();
           renderWorkflowDayComplete();
         });
-        window.addEventListener("mpi-company-session-ready", queueWorkflowOperationsSync);
+        window.addEventListener("mpi-company-session-ready", event => {
+          recoverWorkflowTimeClockFromCompanyAccount(event).finally(queueWorkflowOperationsSync);
+        });
         workflowMessageTemplates.addEventListener("click", selectWorkflowMessageTemplate);
         workflowEtaTime.addEventListener("input", selectWorkflowEta);
         workflowCancelMessage.addEventListener("click", cancelWorkflowMessage);
