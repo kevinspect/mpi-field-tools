@@ -1,5 +1,14 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 122 — Office Sign-In Return Fix
+
+- Waits for durable local Firebase authentication persistence before opening the MPI Google sign-in window.
+- Explicitly completes and validates Google redirect sign-in when the browser returns to the Office Dashboard.
+- Confirms the returned account has an Owner/Admin profile before reporting sign-in as complete.
+- Displays the actual account email when the wrong inspector-only Google account is selected instead of silently returning to the sign-in card.
+- Added build-specific script loading so the repaired authentication code bypasses older cached copies immediately.
+- Updated the visible build and refreshed the offline app shell to Build 122.
+
 ## Build 121 — Reliable Office Dashboard Return
 
 - Changed the Admin **Inspector app** link to open the field app in office mode.

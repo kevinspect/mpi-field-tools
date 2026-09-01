@@ -575,7 +575,16 @@
   signInButton.addEventListener("click", async () => {
     signInButton.disabled = true;
     authStatus.textContent = "Opening company sign-in…";
-    try { await shared.signIn(); } catch (error) { authStatus.textContent = error.message || "Sign-in did not finish."; }
+    try {
+      const result = await shared.signIn();
+      if (result?.user) {
+        const profile = await shared.ensureProfile(result.user);
+        if (!shared.isAdminRole(profile)) throw new Error(`${result.user.email || "This account"} has inspector access only.`);
+        authStatus.textContent = "Signed in. Loading the office dashboard…";
+      }
+    } catch (error) {
+      authStatus.textContent = error.message || "Sign-in did not finish.";
+    }
     signInButton.disabled = false;
   });
   signOutButton.addEventListener("click", () => shared.signOut());
@@ -629,6 +638,10 @@
     return;
   }
 
+  shared.completeRedirectSignIn?.().catch(error => {
+    authStatus.textContent = error.message || "Google sign-in returned without completing. Please try again.";
+  });
+
   shared.watchSession(({ user, profile, error }) => {
     currentUser = user;
     currentProfile = profile;
@@ -638,7 +651,7 @@
       accountPill.hidden = true;
       signOutButton.hidden = !user;
       authCard.hidden = false;
-      if (user && profile && !shared.isAdminRole(profile)) authStatus.textContent = "This account has inspector access only.";
+      if (user && profile && !shared.isAdminRole(profile)) authStatus.textContent = `${user.email || "This account"} has inspector access only. Sign out and use kev@michiganpropertyinspections.com.`;
       unsubscribePeople?.();
       unsubscribeUpdates?.();
       return;

@@ -25,7 +25,7 @@
   const serverTimestamp = window.firebase.firestore.FieldValue.serverTimestamp;
   const arrayUnion = window.firebase.firestore.FieldValue.arrayUnion;
 
-  auth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+  const authPersistenceReady = auth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL).catch(() => false);
   db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 
   function normalizeEmail(value) {
@@ -46,6 +46,7 @@
   }
 
   async function signIn() {
+    await authPersistenceReady;
     const provider = new window.firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
     try {
@@ -60,6 +61,13 @@
       await auth.signInWithRedirect(provider);
       return null;
     }
+  }
+
+  async function completeRedirectSignIn() {
+    await authPersistenceReady;
+    const result = await auth.getRedirectResult();
+    if (result?.user) await ensureProfile(result.user);
+    return result;
   }
 
   function signOut() {
@@ -220,6 +228,7 @@
     isOwnerEmail,
     isAdminRole,
     signIn,
+    completeRedirectSignIn,
     signOut,
     ensureProfile,
     watchSession,
