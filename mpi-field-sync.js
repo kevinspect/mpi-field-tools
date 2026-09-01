@@ -117,11 +117,15 @@
     updatesGate.hidden = true;
     updatesContent.hidden = false;
     registerPushDevice(user, profile).catch(() => {});
-    window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail: {
+    const sessionDetail = {
       userId: user.uid,
       role: profile.role || "inspector",
-      inspectorId: String(profile.inspectorId || "").trim()
-    } }));
+      inspectorId: String(profile.inspectorId || "").trim(),
+      inspectorName: String(profile.name || user.displayName || "").trim(),
+      inspectorEmail: String(user.email || profile.email || "").trim()
+    };
+    window.MPI_COMPANY_SESSION = sessionDetail;
+    window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail: sessionDetail }));
     unsubscribeUpdates?.();
     unsubscribeUpdates = shared.watchUpdates(user, profile, renderUpdates);
   }

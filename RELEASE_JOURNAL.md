@@ -1,5 +1,13 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 124 — New-Inspector Phone Readiness
+
+- Corrected the app’s internal and visible build number so installed phones no longer repeatedly offer the release they already loaded.
+- A signed-in MPI company account now creates or updates the matching company-phone workflow profile automatically.
+- Corey’s signed-in account therefore supplies both his name and **NACHI26090138** without duplicate setup entry.
+- Preserved the separate one-time Google Calendar connection, location permission, notification permission, and Home Screen installation checks required on each physical company phone.
+- Updated the offline app shell to Build 124.
+
 ## Build 123 — Corey Inspector Number Sync
 
 - Assigned Corey’s company inspector number as **NACHI26090138**.
