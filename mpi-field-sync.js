@@ -117,7 +117,11 @@
     updatesGate.hidden = true;
     updatesContent.hidden = false;
     registerPushDevice(user, profile).catch(() => {});
-    window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail: { userId: user.uid, role: profile.role || "inspector" } }));
+    window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail: {
+      userId: user.uid,
+      role: profile.role || "inspector",
+      inspectorId: String(profile.inspectorId || "").trim()
+    } }));
     unsubscribeUpdates?.();
     unsubscribeUpdates = shared.watchUpdates(user, profile, renderUpdates);
   }

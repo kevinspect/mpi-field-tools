@@ -11,6 +11,10 @@
   };
   const MPI_OWNER_EMAILS = ["kev@michiganpropertyinspections.com"];
   const MPI_COMPANY_DOMAIN = "michiganpropertyinspections.com";
+  const MPI_INSPECTOR_NUMBERS = {
+    "corey@michiganpropertyinspections.com": "NACHI26090138",
+    "correy@michiganpropertyinspections.com": "NACHI26090138"
+  };
 
   if (!window.firebase?.initializeApp || !window.firebase?.auth || !window.firebase?.firestore) {
     window.MPI_SHARED = { available: false };
@@ -43,6 +47,13 @@
 
   function isAdminRole(profile) {
     return ["owner", "admin"].includes(String(profile?.role || "").toLowerCase()) && profile?.active !== false;
+  }
+
+  function knownInspectorNumber(profile) {
+    const email = normalizeEmail(profile?.email);
+    if (MPI_INSPECTOR_NUMBERS[email]) return MPI_INSPECTOR_NUMBERS[email];
+    const name = String(profile?.name || "").trim().toLowerCase();
+    return /\bcor+ey\b/.test(name) ? "NACHI26090138" : "";
   }
 
   async function signIn() {
@@ -78,20 +89,24 @@
     if (!user || !isCompanyEmail(user.email)) throw new Error("Use an approved MPI company account.");
     const ref = db.collection("users").doc(user.uid);
     const snapshot = await ref.get();
+    const inspectorNumber = knownInspectorNumber({ email: user.email, name: user.displayName });
     if (!snapshot.exists) {
       const owner = isOwnerEmail(user.email);
       await ref.set({
         name: user.displayName || normalizeEmail(user.email).split("@")[0],
         email: normalizeEmail(user.email),
+        ...(inspectorNumber ? { inspectorId: inspectorNumber } : {}),
         role: owner ? "owner" : "inspector",
         active: true,
         createdAt: serverTimestamp(),
         lastSeenAt: serverTimestamp()
       });
     } else {
+      const savedInspectorNumber = String(snapshot.data().inspectorId || inspectorNumber || "").trim();
       await ref.set({
         name: snapshot.data().name || user.displayName || "MPI Team Member",
         email: normalizeEmail(user.email),
+        ...(savedInspectorNumber ? { inspectorId: savedInspectorNumber } : {}),
         lastSeenAt: serverTimestamp()
       }, { merge: true });
     }
@@ -227,6 +242,7 @@
     isCompanyEmail,
     isOwnerEmail,
     isAdminRole,
+    knownInspectorNumber,
     signIn,
     completeRedirectSignIn,
     signOut,

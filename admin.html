@@ -81,7 +81,8 @@
     .person-main strong { color:var(--navy); }
     .person-main small { margin-top:4px; color:var(--muted); font-size:10px; }
     .person-controls { display:flex; gap:8px; align-items:center; }
-    .person-controls select { min-height:40px; padding:0 9px; border:1px solid var(--line); border-radius:9px; }
+    .person-controls input,.person-controls select { min-height:40px; padding:0 9px; border:1px solid var(--line); border-radius:9px; }
+    .person-controls input { width:180px; }
     .empty { padding:34px 20px; color:var(--muted); background:#f8fafc; border:1px dashed #cad3e2; border-radius:14px; text-align:center; }
     .notice { padding:14px 16px; color:#634d0f; background:#fff8df; border:1px solid #edd891; border-radius:12px; font-size:11px; line-height:1.5; }
     .operations-toolbar { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,330px); gap:14px; align-items:end; }
@@ -160,7 +161,8 @@
       .content-panel { padding:17px; }
       .section-head { display:block; }
       .person-card { display:grid; }
-      .person-controls { justify-content:space-between; }
+      .person-controls { justify-content:space-between; flex-wrap:wrap; }
+      .person-controls input { width:100%; }
       .tabbar { position:sticky; z-index:10; top:65px; }
       .operations-toolbar,.detail-hero,.two-col { grid-template-columns:1fr; }
       .inspector-row { grid-template-columns:1fr 1fr; }
@@ -251,7 +253,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
-  <script src="./mpi-shared.js?build=122"></script>
-  <script src="./admin.js?build=122"></script>
+  <script src="./mpi-shared.js?build=123"></script>
+  <script src="./admin.js?build=123"></script>
 </body>
 </html>

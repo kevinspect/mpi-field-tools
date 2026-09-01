@@ -1,5 +1,12 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 123 — Corey Inspector Number Sync
+
+- Assigned Corey’s company inspector number as **NACHI26090138**.
+- Added the inspector number to Corey’s secure company profile and automatically synchronizes it to his company-phone workflow profile after sign-in.
+- Added an editable Inspector Number field to the Admin **Inspectors** screen so management can maintain numbers without changing source code.
+- Updated the visible build and refreshed the offline app shell to Build 123.
+
 ## Build 122 — Office Sign-In Return Fix
 
 - Waits for durable local Firebase authentication persistence before opening the MPI Google sign-in window.

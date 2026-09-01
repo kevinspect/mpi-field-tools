@@ -218,8 +218,9 @@
     renderInspectorSelector();
     peopleList.innerHTML = people.length ? people.map(person => `
       <article class="person-card" data-person-id="${escapeHtml(person.id)}">
-        <div class="person-main"><strong>${escapeHtml(person.name || "MPI Team Member")}</strong><small>${escapeHtml(person.email)}</small></div>
+        <div class="person-main"><strong>${escapeHtml(person.name || "MPI Team Member")}</strong><small>${escapeHtml(person.email)}</small><small>${person.inspectorId ? `Inspector number: ${escapeHtml(person.inspectorId)}` : "Inspector number not assigned"}</small></div>
         <div class="person-controls">
+          <input data-person-inspector-id aria-label="Inspector number for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.inspectorId || "")}" maxlength="40" placeholder="Inspector number" ${person.role === "owner" ? "disabled" : ""}>
           <select data-person-role aria-label="Role for ${escapeHtml(person.name || person.email)}" ${person.role === "owner" ? "disabled" : ""}>
             <option value="inspector" ${person.role === "inspector" ? "selected" : ""}>Inspector</option>
             <option value="admin" ${person.role === "admin" ? "selected" : ""}>Office admin</option>
@@ -412,6 +413,12 @@
     unsubscribeUpdates?.();
     unsubscribePeople = shared.db.collection("users").orderBy("name").onSnapshot(snapshot => {
       people = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      people.forEach(person => {
+        const inspectorId = String(person.inspectorId || shared.knownInspectorNumber?.(person) || "").trim();
+        if (inspectorId && inspectorId !== person.inspectorId) {
+          shared.db.collection("users").doc(person.id).set({ inspectorId, updatedAt: shared.serverTimestamp(), updatedBy: currentUser?.uid || "system" }, { merge: true }).catch(() => {});
+        }
+      });
       renderPeople();
     }, error => { authStatus.textContent = error.message; });
     unsubscribeUpdates = shared.db.collection("officeUpdates").orderBy("createdAt", "desc").limit(200).onSnapshot(snapshot => {
@@ -529,8 +536,9 @@
     if (!person || person.role === "owner") return;
     const role = card.querySelector("[data-person-role]").value;
     const active = card.querySelector("[data-person-active]").checked;
+    const inspectorId = card.querySelector("[data-person-inspector-id]").value.trim().slice(0, 40);
     try {
-      await shared.db.collection("users").doc(person.id).set({ role, active, updatedAt: shared.serverTimestamp(), updatedBy: currentUser.uid }, { merge: true });
+      await shared.db.collection("users").doc(person.id).set({ role, active, inspectorId, updatedAt: shared.serverTimestamp(), updatedBy: currentUser.uid }, { merge: true });
     } catch (error) {
       authStatus.textContent = error.message || "The account change could not be saved.";
     }
@@ -618,7 +626,7 @@
     });
     people = [
       { id: "preview-kevin", name: "Kevin Cave", email: "kev@michiganpropertyinspections.com", role: "owner", active: true, operationsCurrent: makeDay("Kevin Cave", "KC", "INSPECTION IN PROGRESS"), operationsUpdatedAt: new Date() },
-      { id: "preview-corey", name: "Corey Inspector", email: "corey@michiganpropertyinspections.com", role: "inspector", active: true, operationsCurrent: makeDay("Corey Inspector", "CI", "DRIVING TO JOB", 6), operationsUpdatedAt: new Date() }
+      { id: "preview-corey", name: "Corey Inspector", email: "corey@michiganpropertyinspections.com", inspectorId: "NACHI26090138", role: "inspector", active: true, operationsCurrent: makeDay("Corey Inspector", "NACHI26090138", "DRIVING TO JOB", 6), operationsUpdatedAt: new Date() }
     ];
     currentUser = { uid: "preview", email: "kev@michiganpropertyinspections.com", displayName: "Kevin Cave" };
     currentProfile = { name: "Kevin Cave", role: "owner", active: true };
