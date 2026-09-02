@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="132">
+  <meta name="app-build" content="133">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4606,6 +4606,18 @@
     .workflow-lab-destination small { display: block; margin-top: 5px; color: rgba(255,255,255,.72); font-size: 10.5px; line-height: 1.45; }
     .workflow-lab-warning { padding: 13px; color: #7c2c27; background: #fff1ef; border: 1px solid #e7c0bc; border-radius: 11px; font-size: 11px; line-height: 1.5; }
     .workflow-lab-warning strong { display: block; margin-bottom: 4px; }
+    .workflow-lab-coc { padding: 15px; background: #f7f9fc; border: 1px solid #dce4ef; border-radius: 13px; }
+    .workflow-lab-coc > strong { display: block; color: #11186a; font-size: 13px; }
+    .workflow-lab-coc > p { margin: 5px 0 12px; color: #515b82; font-size: 10.5px; line-height: 1.5; }
+    .workflow-lab-coc-upload { display: flex; min-height: 54px; align-items: center; justify-content: center; padding: 10px 14px; color: #fff; background: #2877b7; border-radius: 11px; font-size: 11px; font-weight: 950; text-align: center; cursor: pointer; }
+    .workflow-lab-coc-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    .workflow-lab-coc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 11px; }
+    .workflow-lab-coc-photo { position: relative; overflow: hidden; min-height: 120px; background: #eaf2f8; border: 1px solid #d4deea; border-radius: 10px; }
+    .workflow-lab-coc-photo img { display: block; width: 100%; height: 105px; object-fit: cover; }
+    .workflow-lab-coc-photo span { display: block; padding: 7px 9px; color: #11186a; font-size: 9px; font-weight: 850; }
+    .workflow-lab-coc-photo button { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; color: #fff; background: rgba(91,25,20,.88); border: 0; border-radius: 50%; font-size: 18px; font-weight: 900; cursor: pointer; }
+    .workflow-lab-coc-status { margin: 9px 0 0; color: #7c2c27; font-size: 10px; font-weight: 800; line-height: 1.45; }
+    .workflow-lab-coc-status.ready { color: #276a55; }
     .workflow-lab-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .workflow-lab-actions a { display: inline-flex; min-height: 56px; align-items: center; justify-content: center; padding: 10px 14px; color: #fff; background: #2877b7; border-radius: 12px; font-size: 12px; font-weight: 950; text-align: center; text-decoration: none; }
     .workflow-lab-actions .workflow-lab-action { grid-column: 1 / -1; }
@@ -5191,6 +5203,16 @@
               <small id="workflowLabAddress"></small>
             </div>
             <div class="workflow-lab-warning" id="workflowLabWarning" hidden></div>
+            <div class="workflow-lab-coc" id="workflowLabCocPanel" hidden>
+              <strong>CHAIN OF CUSTODY PHOTOS</strong>
+              <p>Photograph every COC being delivered. Add more than one photo when separate or multi-page forms are present.</p>
+              <label class="workflow-lab-coc-upload" for="workflowLabCocInput">
+                ADD COC PHOTO(S)
+                <input id="workflowLabCocInput" type="file" accept="image/*" multiple>
+              </label>
+              <div class="workflow-lab-coc-list" id="workflowLabCocList"></div>
+              <p class="workflow-lab-coc-status" id="workflowLabCocStatus">At least one COC photo is required before completing this lab visit.</p>
+            </div>
             <div class="workflow-lab-actions">
               <a id="workflowLabDirections" href="https://maps.apple.com/" target="_blank" rel="noopener">DIRECTIONS</a>
               <button class="workflow-lab-action" id="workflowLabArrivedBtn" type="button">ARRIVED AT LAB</button>
@@ -7397,7 +7419,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 132</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 133</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7527,9 +7549,9 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=132"></script>
-  <script src="./mpi-field-sync.js?build=132"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=132"></script>
+  <script src="./mpi-shared.js?build=133"></script>
+  <script src="./mpi-field-sync.js?build=133"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=133"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -8220,6 +8242,10 @@
       const workflowLabName = document.getElementById("workflowLabName");
       const workflowLabAddress = document.getElementById("workflowLabAddress");
       const workflowLabWarning = document.getElementById("workflowLabWarning");
+      const workflowLabCocPanel = document.getElementById("workflowLabCocPanel");
+      const workflowLabCocInput = document.getElementById("workflowLabCocInput");
+      const workflowLabCocList = document.getElementById("workflowLabCocList");
+      const workflowLabCocStatus = document.getElementById("workflowLabCocStatus");
       const workflowLabDirections = document.getElementById("workflowLabDirections");
       const workflowLabArrivedBtn = document.getElementById("workflowLabArrivedBtn");
       const workflowLabCompleteBtn = document.getElementById("workflowLabCompleteBtn");
@@ -13821,6 +13847,11 @@
       const WORKFLOW_CLOSEOUT_HISTORY_STORAGE_KEY = "mpiWorkflowCloseoutHistoryV1";
       const WORKFLOW_TIME_CLOCK_STORAGE_KEY = "mpiWorkflowTimeClockV1";
       const WORKFLOW_GEOCODE_CACHE_STORAGE_KEY = "mpiWorkflowGeocodeCacheV1";
+      const WORKFLOW_DOCUMENT_DB_NAME = "mpiWorkflowDocumentsV1";
+      const WORKFLOW_DOCUMENT_STORE_NAME = "labCocPhotos";
+      const WORKFLOW_COC_MAX_PER_LAB = 8;
+      const WORKFLOW_COC_MAX_PER_DAY = 12;
+      const WORKFLOW_COC_MAX_BYTES = 600000;
       const WORKFLOW_CLOCK_MODEL = "verified-first-arrival-v2";
       const WORKFLOW_ARRIVAL_GEOFENCE_FEET = 600;
       const WORKFLOW_ARRIVAL_ACCURACY_ALLOWANCE_FEET = 200;
@@ -13843,6 +13874,8 @@
       let workflowTimeClockInFlight = false;
       let workflowTimeClockInterval = 0;
       let workflowOperationsSyncTimer = 0;
+      let workflowDocumentDbPromise = null;
+      const workflowCocPreviewUrls = new Set();
       const FORM_DRAFT_CONFIG = [
         { form: damageForm, key: "mpiDraftDamageV1", status: damageSubmitStatus, photoReminder: true },
         { form: toolCheckForm, key: "mpiDraftToolCheckV1", status: toolCheckSubmitStatus },
@@ -14024,35 +14057,78 @@
       }
 
       function workflowDriveTimeSummary(activity = loadWorkflowActivity().filter(item => item.date === localDateKey())) {
-        const events = activity.slice().sort((left, right) => new Date(left.timestamp) - new Date(right.timestamp));
-        const arrivals = events.filter(item => item.action === "Arrived");
+        const events = activity
+          .filter(item => Number.isFinite(new Date(item?.timestamp || "").getTime()))
+          .slice()
+          .sort((left, right) => new Date(left.timestamp) - new Date(right.timestamp));
+        const eventTime = item => new Date(item?.timestamp || "").getTime();
+        const destinationEvents = events.filter(item => ["Arrived", "Arrived at lab", "Arrived home / end location"].includes(item.action));
         let morningMinutes = 0;
         let betweenJobMinutes = 0;
-        arrivals.forEach((arrival, index) => {
-          const departure = events.slice(0, events.indexOf(arrival)).reverse().find(item =>
-            item.action === "On My Way selected"
-            && String(item.calendarEventId || item.jobId || "") === String(arrival.calendarEventId || arrival.jobId || "")
-          );
-          const minutes = Number(arrival.data?.driveMinutes) || workflowMinutesBetween(departure?.timestamp, arrival.timestamp);
-          if (index === 0) morningMinutes += minutes;
+        let labMinutes = 0;
+        let finalMinutes = 0;
+        let previousDestinationAt = 0;
+        let firstJobArrivalRecorded = false;
+
+        destinationEvents.forEach(arrival => {
+          const arrivalAt = eventTime(arrival);
+          if (arrival.action === "Arrived" && !firstJobArrivalRecorded) {
+            const arrivalJobId = String(arrival.calendarEventId || arrival.jobId || "");
+            const onMyWay = events.filter(item =>
+              item.action === "On My Way selected"
+              && eventTime(item) < arrivalAt
+              && (!arrivalJobId || String(item.calendarEventId || item.jobId || "") === arrivalJobId)
+            ).at(-1);
+            const labDeparture = events.filter(item => item.action === "Lab visit completed" && eventTime(item) < arrivalAt).at(-1);
+            const departure = labDeparture && (!onMyWay || eventTime(labDeparture) > eventTime(onMyWay)) ? labDeparture : onMyWay;
+            morningMinutes += workflowMinutesBetween(departure?.timestamp, arrival.timestamp);
+            firstJobArrivalRecorded = true;
+            previousDestinationAt = arrivalAt;
+            return;
+          }
+
+          const completion = events.filter(item =>
+            ["Final job completion", "Lab visit completed"].includes(item.action)
+            && eventTime(item) > previousDestinationAt
+            && eventTime(item) < arrivalAt
+          ).at(-1);
+          const fallback = arrival.action === "Arrived at lab"
+            ? events.filter(item => item.action === "Lab selected" && eventTime(item) > previousDestinationAt && eventTime(item) < arrivalAt).at(-1)
+            : arrival.action === "Arrived"
+              ? events.filter(item => item.action === "On My Way selected" && eventTime(item) > previousDestinationAt && eventTime(item) < arrivalAt).at(-1)
+              : null;
+          const departure = completion || fallback;
+          const minutes = workflowMinutesBetween(departure?.timestamp, arrival.timestamp);
+          if (arrival.action === "Arrived home / end location") finalMinutes += minutes;
+          else if (arrival.action === "Arrived at lab" || completion?.action === "Lab visit completed") labMinutes += minutes;
           else betweenJobMinutes += minutes;
+          if (arrival.action === "Arrived") firstJobArrivalRecorded = true;
+          previousDestinationAt = arrivalAt;
         });
-        const labMinutes = events
-          .filter(item => item.action === "Arrived at lab")
-          .reduce((total, item) => total + (Number(item.data?.driveMinutes) || 0), 0);
-        const clockedOff = events.filter(item => item.action === "Clocked off").at(-1);
-        const finalDeparture = events.filter(item => item.action === "Proceed home selected").at(-1) || events.filter(item =>
-          item.action === "Lab route departure / continuation" && item.data?.finalDestination
-        ).at(-1) || events.filter(item => item.action === "Final job completion").at(-1);
-        const finalMinutes = clockedOff ? workflowMinutesBetween(finalDeparture?.timestamp, clockedOff.timestamp) : 0;
+
+        const finalDeparture = events.filter(item => item.action === "Proceed home selected").at(-1);
+        const finalArrival = events.filter(item => item.action === "Arrived home / end location" && (!finalDeparture || eventTime(item) >= eventTime(finalDeparture))).at(-1);
+        const legacyClockOff = events.filter(item => item.action === "Clocked off" && finalDeparture && eventTime(item) >= eventTime(finalDeparture)).at(-1);
+        if (finalDeparture && !finalArrival && legacyClockOff) finalMinutes += workflowMinutesBetween(finalDeparture.timestamp, legacyClockOff.timestamp);
         return {
           morningMinutes,
           betweenJobMinutes,
           labMinutes,
           finalMinutes,
-          finalPending: Boolean(finalDeparture && !clockedOff),
+          finalPending: Boolean(finalDeparture && !finalArrival && !legacyClockOff),
           totalMinutes: morningMinutes + betweenJobMinutes + labMinutes + finalMinutes
         };
+      }
+
+      function workflowDriveTimeWithArchives(activity = loadWorkflowActivity().filter(item => item.date === localDateKey())) {
+        const summary = workflowDriveTimeSummary(activity);
+        const latestSaved = todayArchivedCloseouts().map(record => record?.driveTimeBackup).filter(Boolean).at(-1);
+        if (latestSaved) {
+          ["morningMinutes", "betweenJobMinutes", "labMinutes", "finalMinutes", "totalMinutes"].forEach(key => {
+            summary[key] += Math.max(0, Number(latestSaved[key]) || 0);
+          });
+        }
+        return summary;
       }
 
       function workflowLiveStatus(active, readiness, labStop, dayComplete, clockRecord) {
@@ -14147,7 +14223,7 @@
             active: Boolean(workflowActiveClockSession(clock)),
             sessions: workflowPaySessions(clock).map(session => ({ ...session }))
           } : null,
-          driveTime: workflowDriveTimeSummary(activity),
+          driveTime: dayComplete?.driveTimeBackup || workflowDriveTimeWithArchives(activity),
           commentUsage: workflowCommentUsageSnapshot(),
           labStop: labStop ? { ...labStop } : null,
           dayComplete: dayComplete ? { ...dayComplete } : null,
@@ -14970,6 +15046,195 @@
         }
       }
 
+      function openWorkflowDocumentDb() {
+        if (workflowDocumentDbPromise) return workflowDocumentDbPromise;
+        workflowDocumentDbPromise = new Promise((resolve, reject) => {
+          if (!window.indexedDB) {
+            reject(new Error("Photo storage is not supported on this phone."));
+            return;
+          }
+          const request = indexedDB.open(WORKFLOW_DOCUMENT_DB_NAME, 1);
+          request.onupgradeneeded = () => {
+            const db = request.result;
+            const store = db.objectStoreNames.contains(WORKFLOW_DOCUMENT_STORE_NAME)
+              ? request.transaction.objectStore(WORKFLOW_DOCUMENT_STORE_NAME)
+              : db.createObjectStore(WORKFLOW_DOCUMENT_STORE_NAME, { keyPath: "id" });
+            if (!store.indexNames.contains("date")) store.createIndex("date", "date", { unique: false });
+            if (!store.indexNames.contains("labKey")) store.createIndex("labKey", "labKey", { unique: false });
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error || new Error("The COC photo store could not be opened."));
+        });
+        return workflowDocumentDbPromise;
+      }
+
+      async function workflowDocumentRequest(mode, operation) {
+        const db = await openWorkflowDocumentDb();
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction(WORKFLOW_DOCUMENT_STORE_NAME, mode);
+          const store = transaction.objectStore(WORKFLOW_DOCUMENT_STORE_NAME);
+          let request;
+          try { request = operation(store); } catch (error) { reject(error); return; }
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error || new Error("The COC photo could not be saved."));
+        });
+      }
+
+      function workflowCocLabKey(date, labId) {
+        return `${date}|${labId}`;
+      }
+
+      function workflowCocPhotosForDate(date = localDateKey()) {
+        return workflowDocumentRequest("readonly", store => store.index("date").getAll(date));
+      }
+
+      function workflowCocPhotosForLab(labId, date = localDateKey()) {
+        return workflowDocumentRequest("readonly", store => store.index("labKey").getAll(workflowCocLabKey(date, labId)));
+      }
+
+      function saveWorkflowCocPhoto(photo) {
+        return workflowDocumentRequest("readwrite", store => store.put(photo));
+      }
+
+      function deleteWorkflowCocPhoto(id) {
+        return workflowDocumentRequest("readwrite", store => store.delete(id));
+      }
+
+      async function clearWorkflowCocPhotos(date = localDateKey()) {
+        const photos = await workflowCocPhotosForDate(date);
+        await Promise.all(photos.map(photo => deleteWorkflowCocPhoto(photo.id)));
+      }
+
+      function canvasBlob(canvas, quality) {
+        return new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", quality));
+      }
+
+      async function prepareWorkflowCocPhoto(file) {
+        if (!file || (file.type && !file.type.startsWith("image/"))) throw new Error("Choose a photo from the phone camera or Photo Library.");
+        const image = await loadImageFile(file);
+        let maxDimension = 1800;
+        let quality = .78;
+        let blob = null;
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+          const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+          canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+          const context = canvas.getContext("2d");
+          context.fillStyle = "#fff";
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          blob = await canvasBlob(canvas, quality);
+          if (blob && blob.size <= WORKFLOW_COC_MAX_BYTES) break;
+          quality = Math.max(.48, quality - .09);
+          if (attempt >= 2) maxDimension = Math.max(1200, maxDimension - 250);
+        }
+        image.src = "";
+        if (!blob) throw new Error("The phone could not prepare this COC photo.");
+        if (blob.size > WORKFLOW_COC_MAX_BYTES) throw new Error("This photo is too large. Retake it closer to the COC form and try again.");
+        return blob;
+      }
+
+      function clearWorkflowCocPreviewUrls() {
+        workflowCocPreviewUrls.forEach(url => URL.revokeObjectURL(url));
+        workflowCocPreviewUrls.clear();
+      }
+
+      async function renderWorkflowLabCocPanel(record = loadWorkflowLabStop(), lab = currentWorkflowLab(record)) {
+        clearWorkflowCocPreviewUrls();
+        workflowLabCocList.replaceChildren();
+        if (!record || !lab || record.stage !== "arrived") {
+          workflowLabCocPanel.hidden = true;
+          return;
+        }
+        workflowLabCocPanel.hidden = false;
+        workflowLabCompleteBtn.disabled = true;
+        try {
+          const photos = (await workflowCocPhotosForLab(lab.id)).sort((left, right) => new Date(left.createdAt) - new Date(right.createdAt));
+          photos.forEach((photo, index) => {
+            const card = document.createElement("div");
+            card.className = "workflow-lab-coc-photo";
+            const image = document.createElement("img");
+            const url = URL.createObjectURL(photo.blob);
+            workflowCocPreviewUrls.add(url);
+            image.src = url;
+            image.alt = `${lab.name} Chain of Custody photo ${index + 1}`;
+            const label = document.createElement("span");
+            label.textContent = `COC photo ${index + 1}`;
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.dataset.workflowCocRemove = photo.id;
+            remove.setAttribute("aria-label", `Remove COC photo ${index + 1}`);
+            remove.textContent = "×";
+            card.append(image, label, remove);
+            workflowLabCocList.appendChild(card);
+          });
+          const ready = photos.length > 0;
+          workflowLabCompleteBtn.disabled = !ready;
+          workflowLabCompleteBtn.textContent = ready ? "LAB VISIT COMPLETE" : "ADD COC PHOTO TO CONTINUE";
+          workflowLabCocStatus.classList.toggle("ready", ready);
+          workflowLabCocStatus.textContent = ready
+            ? `${photos.length} COC photo${photos.length === 1 ? "" : "s"} saved for the end-of-day report. You can add more before completing the visit.`
+            : "At least one COC photo is required before completing this lab visit.";
+        } catch (error) {
+          workflowLabCocStatus.classList.remove("ready");
+          workflowLabCocStatus.textContent = error?.message || "COC photo storage could not be opened on this phone.";
+        }
+      }
+
+      async function addWorkflowLabCocPhotos(event) {
+        const record = loadWorkflowLabStop();
+        const lab = currentWorkflowLab(record);
+        const files = [...(event.target.files || [])];
+        event.target.value = "";
+        if (!record || !lab || record.stage !== "arrived" || !files.length) return;
+        workflowLabCocInput.disabled = true;
+        workflowLabCompleteBtn.disabled = true;
+        workflowLabCocStatus.classList.remove("ready");
+        workflowLabCocStatus.textContent = "Preparing and saving the selected COC photo(s)…";
+        try {
+          const [labPhotos, dayPhotos] = await Promise.all([workflowCocPhotosForLab(lab.id), workflowCocPhotosForDate()]);
+          const available = Math.min(WORKFLOW_COC_MAX_PER_LAB - labPhotos.length, WORKFLOW_COC_MAX_PER_DAY - dayPhotos.length);
+          if (available <= 0) throw new Error("The daily COC photo limit has been reached. Contact management before leaving the lab.");
+          const selected = files.slice(0, available);
+          for (let index = 0; index < selected.length; index += 1) {
+            const blob = await prepareWorkflowCocPhoto(selected[index]);
+            const sequence = labPhotos.length + index + 1;
+            await saveWorkflowCocPhoto({
+              id: window.crypto?.randomUUID?.() || `coc-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 9)}`,
+              date: localDateKey(),
+              labId: lab.id,
+              labName: lab.name,
+              labKey: workflowCocLabKey(localDateKey(), lab.id),
+              createdAt: new Date().toISOString(),
+              name: `${lab.id}-COC-${sequence}.jpg`,
+              type: "image/jpeg",
+              blob
+            });
+          }
+          appendWorkflowEvent("Chain of Custody photos added", {
+            lab: lab.name,
+            photosAdded: selected.length,
+            totalPhotos: labPhotos.length + selected.length
+          }, { property: lab.address, calendarEventId: record.sourceJobId });
+          if (files.length > selected.length) showToast(`Saved ${selected.length} photo(s); the remaining files exceeded the daily limit`);
+          else showToast(`${selected.length} COC photo${selected.length === 1 ? "" : "s"} saved`);
+        } catch (error) {
+          workflowLabCocStatus.textContent = error?.message || "The selected COC photos could not be saved.";
+          showToast("COC photo not saved");
+        } finally {
+          workflowLabCocInput.disabled = false;
+          renderWorkflowLabCocPanel(record, lab);
+        }
+      }
+
+      async function removeWorkflowLabCocPhoto(event) {
+        const button = event.target.closest("[data-workflow-coc-remove]");
+        if (!button) return;
+        await deleteWorkflowCocPhoto(button.dataset.workflowCocRemove);
+        renderWorkflowLabCocPanel();
+      }
+
       function beginWorkflowLabDecision(completedJob = null) {
         const next = nextWorkflowAppointment(completedJob);
         const record = {
@@ -15088,6 +15353,15 @@
         if (lab) workflowLabDirections.href = workflowMapsUrl(lab.address);
         workflowLabArrivedBtn.hidden = record.stage !== "travel";
         workflowLabCompleteBtn.hidden = record.stage !== "arrived";
+        workflowLabCocPanel.hidden = record.stage !== "arrived";
+        if (record.stage === "arrived") {
+          workflowLabCompleteBtn.disabled = true;
+          workflowLabCompleteBtn.textContent = "CHECKING COC PHOTOS…";
+          renderWorkflowLabCocPanel(record, lab);
+        } else {
+          clearWorkflowCocPreviewUrls();
+          workflowLabCocList.replaceChildren();
+        }
         workflowLabContinueBtn.hidden = !isDone;
         workflowLabCompleteMessage.hidden = !isDone;
         workflowLabCompleteMessage.classList.toggle("clock-off", Boolean(isDone && record.finalStop));
@@ -15117,13 +15391,20 @@
         renderWorkflowLabStop(record);
       }
 
-      function completeWorkflowLabVisit() {
+      async function completeWorkflowLabVisit() {
         const record = normalizeWorkflowLabStop();
         const lab = currentWorkflowLab(record);
         if (!record || !lab || record.stage !== "arrived") return;
+        const cocPhotos = await workflowCocPhotosForLab(lab.id).catch(() => []);
+        if (!cocPhotos.length) {
+          workflowLabCocStatus.classList.remove("ready");
+          workflowLabCocStatus.textContent = "Add at least one Chain of Custody photo before completing this lab visit.";
+          showToast("COC photo required");
+          return;
+        }
         const completedAt = new Date().toISOString();
         record.completions = { ...(record.completions || {}), [lab.id]: completedAt };
-        appendWorkflowEvent("Lab visit completed", { lab: lab.name, address: lab.address, completedAt }, { property: lab.address, calendarEventId: record.sourceJobId });
+        appendWorkflowEvent("Lab visit completed", { lab: lab.name, address: lab.address, completedAt, cocPhotoCount: cocPhotos.length }, { property: lab.address, calendarEventId: record.sourceJobId });
         if (record.currentIndex < record.labs.length - 1) {
           record.currentIndex += 1;
           record.stage = "travel";
@@ -16064,6 +16345,7 @@
       function clearDeliveredWorkflowLogs(record) {
         const completedJobIds = [...workflowCompletedEventIds()];
         const timeClockBackup = loadWorkflowTimeClock();
+        const driveTimeBackup = workflowDriveTimeWithArchives();
         const receipt = {
           date: record.date,
           completedAt: record.completedAt,
@@ -16072,6 +16354,7 @@
           equipmentConfirmed: true,
           completedJobIds,
           timeClockBackup: timeClockBackup ? { ...timeClockBackup, sessions: workflowPaySessions(timeClockBackup).map(session => ({ ...session })) } : null,
+          driveTimeBackup,
           closeoutNumber: Number(record.closeoutNumber) || Math.max(1, todayArchivedCloseouts().length + 1)
         };
         try {
@@ -16127,6 +16410,7 @@
         "Lab route calculated": "Lab route calculated",
         "Lab directions selected": "Lab directions selected",
         "Arrived at lab": "Arrived at lab",
+        "Chain of Custody photos added": "Chain of Custody photos saved",
         "Lab visit completed": "Lab visit completed",
         "Lab route departure / continuation": "Continued after lab stop",
         "Lab stop skipped": "Continued without a lab stop",
@@ -16168,6 +16452,7 @@
         "Lab route calculated",
         "Lab directions selected",
         "Arrived at lab",
+        "Chain of Custody photos added",
         "Lab visit completed",
         "Lab route departure / continuation",
         "Lab stop skipped",
@@ -16247,6 +16532,12 @@
               detail = String(item.data?.reason || "Location was outside the approved arrival area");
             } else if (item.action === "Hours worked started") {
               detail = [item.data?.distanceFeet ? `${item.data.distanceFeet} ft from scheduled property` : "Location verified", item.data?.accuracyFeet ? `GPS accuracy about ${item.data.accuracyFeet} ft` : ""].filter(Boolean).join(" · ");
+            } else if (item.action === "Chain of Custody photos added") {
+              const count = Math.max(1, Number(item.data?.photosAdded) || 1);
+              detail = `${item.data?.lab || "Laboratory"} · ${count} photo${count === 1 ? "" : "s"} added`;
+            } else if (item.action === "Lab visit completed") {
+              const count = Math.max(0, Number(item.data?.cocPhotoCount) || 0);
+              detail = [item.data?.lab || "Laboratory", count ? `${count} COC photo${count === 1 ? "" : "s"}` : ""].filter(Boolean).join(" · ");
             }
             return {
               time: workflowClock(item.timestamp),
@@ -16364,7 +16655,34 @@
         return record.emailRequestId;
       }
 
-      function buildWorkflowCloseoutEmailPayload(record) {
+      function workflowBlobBase64(blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const value = String(reader.result || "");
+            resolve(value.includes(",") ? value.slice(value.indexOf(",") + 1) : value);
+          };
+          reader.onerror = () => reject(reader.error || new Error("A COC photo could not be prepared for email."));
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      async function workflowEmailCocPhotos(date = localDateKey()) {
+        const photos = await workflowCocPhotosForDate(date).catch(() => []);
+        const sorted = photos
+          .filter(photo => photo?.blob instanceof Blob)
+          .sort((left, right) => new Date(left.createdAt) - new Date(right.createdAt))
+          .slice(0, WORKFLOW_COC_MAX_PER_DAY);
+        return Promise.all(sorted.map(async (photo, index) => ({
+          name: String(photo.name || `MPI-COC-${index + 1}.jpg`).replace(/[^a-z0-9._-]+/gi, "-").slice(0, 80),
+          mimeType: "image/jpeg",
+          base64: await workflowBlobBase64(photo.blob),
+          labName: String(photo.labName || "Laboratory").slice(0, 80),
+          capturedAt: String(photo.createdAt || "")
+        })));
+      }
+
+      async function buildWorkflowCloseoutEmailPayload(record) {
         const inspectorName = String(record.inspector || loadWorkflowProfile()?.name || "MPI Inspector").trim().slice(0, 80);
         const date = workflowEmailDisplayDate(record.date);
         const updated = Number(record.closeoutNumber) > 1 || Boolean(record.reopenedAfterCloseout);
@@ -16379,10 +16697,11 @@
           preheader: `${inspectorName} completed the daily inspector closeout for ${date}.`,
           equipment: (record.equipment || []).map(key => WORKFLOW_EMAIL_EQUIPMENT_LABELS[key]).filter(Boolean),
           timeClock: workflowEmailTimeClock(),
-          driveTime: workflowDriveTimeSummary(),
+          driveTime: workflowDriveTimeWithArchives(),
           activity: workflowEmailActivitySummary(),
           jobs: workflowEmailCompletedJobs(),
-          exceptions: workflowEmailExceptions()
+          exceptions: workflowEmailExceptions(),
+          labCocPhotos: await workflowEmailCocPhotos(record.date)
         };
       }
 
@@ -16454,7 +16773,13 @@
           showToast("Sign-off saved — reconnect to send the daily summary");
           return;
         }
-        const payload = buildWorkflowCloseoutEmailPayload(record);
+        let payload;
+        try {
+          payload = await buildWorkflowCloseoutEmailPayload(record);
+        } catch (_) {
+          showToast("COC photos could not be prepared — daily summary not sent");
+          return;
+        }
         record.emailStatus = "sending";
         record.lastEmailAttemptAt = new Date().toISOString();
         saveWorkflowDayCompleteRecord(record);
@@ -16462,7 +16787,7 @@
         updateWorkflowDayCompleteButton();
         renderWorkflowDayComplete();
         const controller = new AbortController();
-        const timeout = window.setTimeout(() => controller.abort(), 20000);
+        const timeout = window.setTimeout(() => controller.abort(), 60000);
         try {
           await sendWorkflowCloseoutEmail(payload, controller.signal);
           const delivered = workflowDayCompleteRecord();
@@ -16472,6 +16797,7 @@
           saveWorkflowDayCompleteRecord(delivered);
           appendWorkflowEvent("Daily summary submitted to management", { submittedAt: delivered.emailedAt });
           await syncWorkflowOperationsNow(workflowOperationsSnapshot());
+          await clearWorkflowCocPhotos(delivered.date).catch(() => {});
           clearDeliveredWorkflowLogs(delivered);
           renderWorkflowAdmin();
           showToast("Summary sent — phone log cleared");
@@ -16858,6 +17184,8 @@
         });
         workflowLabArrivedBtn.addEventListener("click", markWorkflowLabArrived);
         workflowLabCompleteBtn.addEventListener("click", completeWorkflowLabVisit);
+        workflowLabCocInput.addEventListener("change", addWorkflowLabCocPhotos);
+        workflowLabCocList.addEventListener("click", removeWorkflowLabCocPhoto);
         workflowLabContinueBtn.addEventListener("click", continueAfterWorkflowLab);
         workflowProceedHomeBtn.addEventListener("click", startWorkflowHomeJourney);
         workflowArrivedHomeBtn.addEventListener("click", arriveWorkflowHome);
@@ -20365,7 +20693,7 @@
           showToast("MPI comment ready for review");
         } catch (error) {
           commentOutput.value = `Comment not generated\n\n${error?.message || "The secure MPI Comment Builder could not connect. Please try again."}`;
-          commentModeBadge.textContent = navigator.onLine ? "Unavailable" : "Offline";
+          commentModeBadge.textContent = error?.mpiStatus || (navigator.onLine ? "Service error" : "Offline");
           showToast("Comment not generated");
         } finally {
           generateCommentBtn.disabled = false;

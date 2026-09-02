@@ -32,6 +32,7 @@
   const inspectorDetail = document.getElementById("adminInspectorDetail");
   const operationsSync = document.getElementById("adminOperationsSync");
   const commentUsageUsed = document.getElementById("commentUsageUsed");
+  const commentUsagePanel = document.getElementById("commentUsagePanel");
   const commentUsageRemaining = document.getElementById("commentUsageRemaining");
   const commentUsageStatus = document.getElementById("commentUsageStatus");
   const commentUsageProgress = document.getElementById("commentUsageProgress");
@@ -127,6 +128,68 @@
   function formatMinutes(value) {
     const minutes = Math.max(0, Math.round(Number(value) || 0));
     return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
+  }
+
+  function driveTimeForDay(day) {
+    const saved = day?.driveTime || {};
+    const events = (Array.isArray(day?.activity) ? day.activity : [])
+      .filter(item => asDate(item?.timestamp))
+      .slice()
+      .sort((left, right) => asDate(left.timestamp) - asDate(right.timestamp));
+    if (!events.length) return saved;
+    const eventTime = item => asDate(item?.timestamp)?.getTime() || 0;
+    const minutesBetween = (start, end) => {
+      const first = eventTime(start);
+      const last = eventTime(end);
+      return first && last > first ? Math.round((last - first) / 60000) : 0;
+    };
+    const destinations = events.filter(item => ["Arrived", "Arrived at lab", "Arrived home / end location"].includes(item.action));
+    let morningMinutes = 0;
+    let betweenJobMinutes = 0;
+    let labMinutes = 0;
+    let finalMinutes = 0;
+    let previousDestinationAt = 0;
+    let firstJobArrivalRecorded = false;
+    destinations.forEach(arrival => {
+      const arrivalAt = eventTime(arrival);
+      if (arrival.action === "Arrived" && !firstJobArrivalRecorded) {
+        const jobId = String(arrival.calendarEventId || arrival.jobId || "");
+        const onMyWay = events.filter(item => item.action === "On My Way selected" && eventTime(item) < arrivalAt
+          && (!jobId || String(item.calendarEventId || item.jobId || "") === jobId)).at(-1);
+        const labDeparture = events.filter(item => item.action === "Lab visit completed" && eventTime(item) < arrivalAt).at(-1);
+        const departure = labDeparture && (!onMyWay || eventTime(labDeparture) > eventTime(onMyWay)) ? labDeparture : onMyWay;
+        morningMinutes += minutesBetween(departure, arrival);
+        firstJobArrivalRecorded = true;
+        previousDestinationAt = arrivalAt;
+        return;
+      }
+      const completion = events.filter(item => ["Final job completion", "Lab visit completed"].includes(item.action)
+        && eventTime(item) > previousDestinationAt && eventTime(item) < arrivalAt).at(-1);
+      const fallback = arrival.action === "Arrived at lab"
+        ? events.filter(item => item.action === "Lab selected" && eventTime(item) > previousDestinationAt && eventTime(item) < arrivalAt).at(-1)
+        : arrival.action === "Arrived"
+          ? events.filter(item => item.action === "On My Way selected" && eventTime(item) > previousDestinationAt && eventTime(item) < arrivalAt).at(-1)
+          : null;
+      const minutes = minutesBetween(completion || fallback, arrival);
+      if (arrival.action === "Arrived home / end location") finalMinutes += minutes;
+      else if (arrival.action === "Arrived at lab" || completion?.action === "Lab visit completed") labMinutes += minutes;
+      else betweenJobMinutes += minutes;
+      if (arrival.action === "Arrived") firstJobArrivalRecorded = true;
+      previousDestinationAt = arrivalAt;
+    });
+    const finalDeparture = events.filter(item => item.action === "Proceed home selected").at(-1);
+    const finalArrival = events.filter(item => item.action === "Arrived home / end location" && (!finalDeparture || eventTime(item) >= eventTime(finalDeparture))).at(-1);
+    const legacyClockOff = events.filter(item => item.action === "Clocked off" && finalDeparture && eventTime(item) >= eventTime(finalDeparture)).at(-1);
+    if (finalDeparture && !finalArrival && legacyClockOff) finalMinutes += minutesBetween(finalDeparture, legacyClockOff);
+    const calculated = {
+      morningMinutes,
+      betweenJobMinutes,
+      labMinutes,
+      finalMinutes,
+      finalPending: Boolean(finalDeparture && !finalArrival && !legacyClockOff),
+      totalMinutes: morningMinutes + betweenJobMinutes + labMinutes + finalMinutes
+    };
+    return Number(calculated.totalMinutes) >= Number(saved.totalMinutes || 0) ? calculated : saved;
   }
 
   function operativePeople() {
@@ -244,7 +307,7 @@
     const alerts = meaningfulAlerts(person, day);
     const next = nextAppointment(day);
     const hours = selectedDays(person).reduce((total, item) => total + workedMinutes(person, item), 0);
-    const drive = selectedDays(person).reduce((total, item) => total + (Number(item.driveTime?.totalMinutes) || 0), 0);
+    const drive = selectedDays(person).reduce((total, item) => total + (Number(driveTimeForDay(item)?.totalMinutes) || 0), 0);
     const status = day?.liveStatus || "NOT STARTED";
     const punctuality = day?.currentJob?.arrivalPerformance || next?.arrivalPerformance || (alerts.some(item => /late/i.test(item)) ? "Needs review" : "On schedule");
     return `<button class="inspector-row${alerts.length ? " has-alert" : ""}" type="button" data-open-inspector="${escapeHtml(person.id)}">
@@ -270,7 +333,11 @@
   }
 
   function renderCommentUsageAllowance() {
-    if (!commentUsageUsed) return;
+    if (!commentUsageUsed || !shared.isOwnerEmail(currentUser?.email)) {
+      if (commentUsagePanel) commentUsagePanel.hidden = true;
+      return;
+    }
+    commentUsagePanel.hidden = false;
     const now = new Date();
     const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     const used = people.filter(person => person.active !== false).reduce((companyTotal, person) => {
@@ -322,7 +389,7 @@
     const names = [...new Set(labEvents.flatMap(item => item.data?.labs || item.data?.lab || []).filter(Boolean))];
     const arrivals = labEvents.filter(item => item.action === "Arrived at lab");
     const completions = labEvents.filter(item => item.action === "Lab visit completed");
-    return `<div class="fact-list"><div class="fact"><span>Lab selected</span><strong>${escapeHtml(names.join(" + ") || "Recorded")}</strong></div><div class="fact"><span>Arrival</span><strong>${escapeHtml(arrivals.map(item => `${item.data?.lab || "Lab"} ${formatTime(item.timestamp)}`).join(" · ") || "—")}</strong></div><div class="fact"><span>Complete</span><strong>${escapeHtml(completions.map(item => `${item.data?.lab || "Lab"} ${formatTime(item.timestamp)}`).join(" · ") || "—")}</strong></div><div class="fact"><span>Lab drive</span><strong>${formatMinutes(day?.driveTime?.labMinutes)}</strong></div></div>`;
+    return `<div class="fact-list"><div class="fact"><span>Lab selected</span><strong>${escapeHtml(names.join(" + ") || "Recorded")}</strong></div><div class="fact"><span>Arrival</span><strong>${escapeHtml(arrivals.map(item => `${item.data?.lab || "Lab"} ${formatTime(item.timestamp)}`).join(" · ") || "—")}</strong></div><div class="fact"><span>Complete</span><strong>${escapeHtml(completions.map(item => `${item.data?.lab || "Lab"} ${formatTime(item.timestamp)}`).join(" · ") || "—")}</strong></div><div class="fact"><span>Lab drive</span><strong>${formatMinutes(driveTimeForDay(day)?.labMinutes)}</strong></div></div>`;
   }
 
   function messagesFor(person) {
@@ -363,7 +430,8 @@
     const hours = days.reduce((total, item) => total + workedMinutes(person, item), 0);
     const weekly = weeklyMinutes(person);
     const drive = days.reduce((summary, item) => {
-      Object.keys(summary).forEach(key => { summary[key] += Number(item.driveTime?.[key]) || 0; });
+      const dayDrive = driveTimeForDay(item);
+      Object.keys(summary).forEach(key => { summary[key] += Number(dayDrive?.[key]) || 0; });
       return summary;
     }, { morningMinutes: 0, betweenJobMinutes: 0, labMinutes: 0, finalMinutes: 0, totalMinutes: 0 });
     const current = day?.currentJob;
@@ -385,7 +453,7 @@
         <article class="ops-card"><p class="ops-eyebrow">Hours worked</p><strong class="ops-primary">${formatMinutes(hours)}</strong><p class="ops-sub">Started ${formatTime(day?.timeClock?.hoursWorkedStartedAt)} · ${clockOut ? `Frozen at ${formatTime(clockOut)}` : day?.timeClock?.active ? "Running now" : "Not started"}</p></article>
         <article class="ops-card"><p class="ops-eyebrow">Activity window</p><strong class="ops-primary">${formatMinutes(activityMinutes)}</strong><p class="ops-sub">Morning readiness ${formatTime(activityStart)} · End ${formatTime(clockOut)}</p></article>
         <article class="ops-card"><p class="ops-eyebrow">Weekly hours</p><strong class="ops-primary">${formatMinutes(weekly)}</strong><p class="ops-sub">Current Monday-to-today total${weekly >= 38 * 60 ? " · Review threshold approaching" : ""}</p></article>
-        <article class="ops-card span-6"><h3>Drive Time</h3><div class="fact-list"><div class="fact"><span>Morning drive</span><strong>${formatMinutes(drive.morningMinutes)}</strong></div><div class="fact"><span>Between jobs</span><strong>${formatMinutes(drive.betweenJobMinutes)}</strong></div><div class="fact"><span>Lab travel</span><strong>${formatMinutes(drive.labMinutes)}</strong></div><div class="fact"><span>Final drive</span><strong>${day?.driveTime?.finalPending ? "Pending" : formatMinutes(drive.finalMinutes)}</strong></div><div class="fact"><span>Total drive today</span><strong>${formatMinutes(drive.totalMinutes)}</strong></div></div></article>
+        <article class="ops-card span-6"><h3>Drive Time</h3><div class="fact-list"><div class="fact"><span>Morning drive</span><strong>${formatMinutes(drive.morningMinutes)}</strong></div><div class="fact"><span>Between jobs</span><strong>${formatMinutes(drive.betweenJobMinutes)}</strong></div><div class="fact"><span>Lab travel</span><strong>${formatMinutes(drive.labMinutes)}</strong></div><div class="fact"><span>Final drive</span><strong>${driveTimeForDay(day)?.finalPending ? "Pending" : formatMinutes(drive.finalMinutes)}</strong></div><div class="fact"><span>Total drive today</span><strong>${formatMinutes(drive.totalMinutes)}</strong></div></div></article>
         <article class="ops-card span-6"><h3>Day Progress</h3><strong class="ops-primary">${counts.complete} / ${counts.total} complete</strong><p class="ops-sub">Completed jobs remain visible for the full calendar day.</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Completed</span><strong>${counts.complete}</strong></div><div class="fact"><span>Remaining</span><strong>${Math.max(0, counts.total - counts.complete)}</strong></div><div class="fact"><span>Total jobs</span><strong>${counts.total}</strong></div></div></article>
         <article class="ops-card full"><h3>Today’s Jobs</h3><div class="job-list">${(day?.jobs || []).length ? day.jobs.map(jobCard).join("") : '<div class="empty">No scheduled jobs are available for this period.</div>'}</div></article>
         <article class="ops-card span-8"><h3>Activity Timeline</h3><div class="timeline">${timelineHtml(person, day)}</div></article>
@@ -691,6 +759,7 @@
       unsubscribeUpdates?.();
       return;
     }
+    commentUsagePanel.hidden = !shared.isOwnerEmail(user.email);
     authCard.hidden = true;
     dashboard.hidden = false;
     accountPill.hidden = false;

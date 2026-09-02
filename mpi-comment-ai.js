@@ -15,6 +15,7 @@ const APP_CHECK_SITE_KEY = "6Lcw5aMtAAAAABAnHYjZ4xAyWVPiIDfy2622_Z-b";
 const DAILY_LIMIT = 40;
 const MONTHLY_LIMIT = 400;
 const USAGE_STORAGE_KEY = "mpiCommentBuilderUsageV1";
+const COMMENT_TIMEOUT_MS = 35000;
 
 const SYSTEM_INSTRUCTION = `You write inspection report comments for Michigan Property Inspections.
 
@@ -133,9 +134,47 @@ async function getModel() {
           responseSchema: RESPONSE_SCHEMA
         }
       });
+    }).catch(error => {
+      modelPromise = null;
+      throw error;
     });
   }
   return modelPromise;
+}
+
+function commentError(message, status = "Unavailable") {
+  const error = new Error(message);
+  error.mpiStatus = status;
+  return error;
+}
+
+function withTimeout(promise, milliseconds = COMMENT_TIMEOUT_MS) {
+  let timeout;
+  const expired = new Promise((_, reject) => {
+    timeout = window.setTimeout(() => reject(commentError(
+      "The MPI Comment Builder did not respond within 35 seconds. Your Wi-Fi may still be connected; try once more. If it repeats, tell management the comment service timed out.",
+      "Timed out"
+    )), milliseconds);
+  });
+  return Promise.race([promise, expired]).finally(() => window.clearTimeout(timeout));
+}
+
+function friendlyCommentError(error) {
+  if (error?.mpiStatus) return error;
+  const message = String(error?.message || "");
+  const code = String(error?.code || "");
+  const combined = `${code} ${message}`.toLowerCase();
+  if (/sign in|limit|internet|incomplete|enter what you observed/.test(message)) return error;
+  if (!navigator.onLine || /network-request-failed|failed to fetch|networkerror|load failed/.test(combined)) {
+    return commentError("The phone is not reaching the MPI Comment Builder. Check that Wi-Fi or cellular data is working, then try again.", "Offline");
+  }
+  if (/app.?check|recaptcha|403|permission.?denied|unauthori[sz]ed|forbidden/.test(combined)) {
+    return commentError("MPI secure access could not be verified on this phone. Close and reopen MPI Field Tools, then try again. If it repeats, contact management.", "Access check failed");
+  }
+  if (/429|quota|resource.?exhausted|too many|busy|overloaded|503|unavailable/.test(combined)) {
+    return commentError("The MPI Comment Builder is temporarily busy. Wait a minute and try again; your note has not been lost.", "Service busy");
+  }
+  return commentError("The MPI Comment Builder service could not complete this comment. Try again; if it repeats, contact management and keep the note on screen.", "Service error");
 }
 
 function cleanSentence(value) {
@@ -212,14 +251,13 @@ async function generate({ note, component = "auto", mode = "defect" }) {
   const prompt = `Comment type: ${mode === "limit" ? "LIMITATION" : "DEFECT"}\n${componentInstruction}\nInspector note: ${cleanNote}`;
   try {
     const model = await getModel();
-    const result = await model.generateContent(prompt);
+    const result = await withTimeout(model.generateContent(prompt));
     const output = parseResponse(result.response.text(), cleanNote, mode, component);
     recordUsage();
     return output;
   } catch (error) {
-    if (/sign in|limit|internet|incomplete/i.test(error?.message || "")) throw error;
     console.warn("MPI Comment Builder request failed", error);
-    throw new Error("The secure MPI Comment Builder could not connect. Check the signal and try again.");
+    throw friendlyCommentError(error);
   }
 }
 

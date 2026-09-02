@@ -1,5 +1,17 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 133 — Comment Reliability, Lab COC Photos, and Drive-Time Accuracy
+
+- Added a 35-second safety timeout to the MPI Comment Builder so a failed cloud request cannot remain stuck on Creating indefinitely.
+- Replaced the misleading catch-all “no signal” message with distinct timeout, connectivity, secure-access, busy-service, and general service messages while retaining the inspector’s note for retry.
+- Requires at least one Chain of Custody photo after arriving at a selected laboratory, accepts multiple camera or Photo Library images, compresses them for reliable delivery, and labels each image by laboratory.
+- Keeps COC images privately on the phone until the branded daily closeout is confirmed delivered, attaches every selected image to that email, then removes the delivered photo copies from the phone.
+- Updated the company-owned email sender under `kev@michiganpropertyinspections.com` to Version 3 with branded COC documentation and real image attachments.
+- Rebuilt drive-time calculation around actual paired workflow events: On My Way to first arrival, completed job to the next job/lab arrival, completed lab to the next destination, and final completion to home arrival.
+- Preserves drive totals in the sent closeout receipt so later phone synchronization cannot replace a completed day with zero drive time.
+- Restricted the MPI Comment Builder allowance panel to the owner account only; other office-admin accounts do not see it.
+- Updated the offline application shell and visible version to Build 133.
+
 ## Build 124 — New-Inspector Phone Readiness
 
 - Corrected the app’s internal and visible build number so installed phones no longer repeatedly offer the release they already loaded.
