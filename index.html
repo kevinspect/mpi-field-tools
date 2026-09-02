@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="124">
+  <meta name="app-build" content="125">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4921,7 +4921,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">124</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">125</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -4940,6 +4940,7 @@
     </div>
     <nav class="hub-list" aria-label="Field tools">
       <a class="home-tool-card" href="#age-finder"><span class="home-tool-icon icon-age" aria-hidden="true"></span><span class="home-tool-copy"><strong>Equipment Age Finder</strong><small>Decode HVAC, furnace, boiler, and water-heater serial numbers.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
+      <a class="home-tool-card" href="#comment-builder"><span class="home-tool-icon icon-messages" aria-hidden="true"></span><span class="home-tool-copy"><strong>MPI Comment Builder</strong><small>Create a property-specific report comment when the MPI Spectora template does not already contain the right wording.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
       <a class="home-tool-card" href="#sop-guide"><span class="home-tool-icon icon-sop" aria-hidden="true"></span><span class="home-tool-copy"><strong>Field Procedures &amp; Timers</strong><small>Well testing, water tests, system checks, stop conditions, and timed alerts.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
       <a class="home-tool-card" href="#tool-guides"><span class="home-tool-icon icon-tool-guides" aria-hidden="true"></span><span class="home-tool-copy"><strong>Company Tool Guides</strong><small>Operating, safety, care, and documentation steps for MPI equipment.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
       <a class="home-tool-card" href="#equipment-record"><span class="home-tool-icon icon-record" aria-hidden="true"></span><span class="home-tool-copy"><strong>Equipment Photo Record</strong><small>Document thermostat and furnace condition before and after inspection.</small></span><span class="home-tool-arrow" aria-hidden="true">→</span></a>
@@ -5527,11 +5528,11 @@
 
     <p class="offline-setup-note app-screen-view" data-app-screen="age-finder"><strong>Offline setup:</strong> Open this site once while connected and wait for “Offline access is now ready.” Then add it to the phone’s Home Screen. The age finder, SOP prompts, training, and published company messages will reopen without cell service. Submission forms wait until the phone is online.</p>
 
-    <section class="comment-builder" id="comment-builder" aria-labelledby="comment-builder-title" hidden>
+    <section class="comment-builder app-screen-view" id="comment-builder" data-app-screen="comment-builder" aria-labelledby="comment-builder-title">
       <div class="comment-heading">
         <div>
           <p class="eyebrow">MPI report-writing tool</p>
-          <h2 id="comment-builder-title">Build a defect comment.</h2>
+          <h2 id="comment-builder-title">MPI Comment Builder.</h2>
         </div>
         <p id="comment-builder-description">Describe what you observed in plain language. The tool identifies the component and condition, then builds a specific MPI observation, implication, and recommendation without adding property facts you did not enter.</p>
       </div>
@@ -5543,7 +5544,7 @@
               <h2 id="comment-note-title">Enter the inspection note</h2>
               <p id="comment-note-help">Enter the visible condition or test result in plain language.</p>
             </div>
-            <span class="step-count" id="commentModeBadge">Offline</span>
+            <span class="step-count" id="commentModeBadge">Online</span>
           </div>
 
           <div class="comment-type-switch" role="group" aria-label="Comment type">
@@ -5574,7 +5575,7 @@
             <button class="decode-btn" id="generateCommentBtn" type="submit">Generate MPI defect</button>
             <button class="secondary-btn" id="clearCommentBtn" type="button">Clear</button>
           </div>
-          <p class="privacy-note" id="commentPrivacyNote">The note stays on this device. The generated comment is read-only; update the note and generate it again if changes are needed.</p>
+          <p class="privacy-note" id="commentPrivacyNote">Internet and MPI company sign-in are required. Use this only when the approved Spectora template does not already contain the right comment.</p>
         </form>
 
         <section class="panel comment-result-panel" aria-labelledby="comment-result-title">
@@ -5587,7 +5588,7 @@
           </div>
           <textarea class="comment-output" id="commentOutput" aria-label="Generated read-only inspection comment" placeholder="Your formatted comment will appear here after you enter the inspection details." readonly></textarea>
           <div class="comment-result-actions" id="commentResultActions">
-              <small id="comment-result-note">The observation uses only your note. The implication and recommendation come from MPI component-and-condition rules.</small>
+              <small id="comment-result-note">Review the complete wording for property-specific accuracy before copying it into Spectora.</small>
             <button class="copy-comment-btn" id="copyCommentBtn" type="button" disabled>Copy full comment</button>
           </div>
         </section>
@@ -7340,7 +7341,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 124</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 125</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7365,6 +7366,17 @@
             <p class="report-quality-note">Setup information stays on this company phone and is not part of the inspector’s daily workflow.</p>
           </div>
         </details>
+
+        <section class="panel settings-card" id="phonePracticeCard">
+          <h2>New inspector phone trial</h2>
+          <p>Run a safe practice inspection when the inspector has no scheduled jobs. It checks Location and the full job-button flow without contacting a client, sending a closeout email, or adding the practice run to management records.</p>
+          <div class="settings-status"><strong>Practice status</strong><span id="phonePracticeStatus">Not run</span></div>
+          <div class="phone-setup-actions">
+            <button id="startPhonePracticeBtn" type="button">START SAFE PRACTICE INSPECTION</button>
+            <button id="clearPhonePracticeBtn" type="button" hidden>REMOVE PRACTICE</button>
+          </div>
+          <p class="report-quality-note" id="phonePracticeHelp">Stand where the phone will be tested, then start the practice. The current phone location becomes the temporary practice property so ARRIVED can be verified safely.</p>
+        </section>
 
         <section class="push-setup-card" aria-labelledby="push-setup-title">
           <div class="push-setup-topline">
@@ -7459,8 +7471,9 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=124"></script>
-  <script src="./mpi-field-sync.js?build=124"></script>
+  <script src="./mpi-shared.js?build=125"></script>
+  <script src="./mpi-field-sync.js?build=125"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=125"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -7476,6 +7489,7 @@
         "field-tools": "Field Tools",
         "contact-mpi": "Contact MPI",
         "age-finder": "Equipment Age Finder",
+        "comment-builder": "MPI Comment Builder",
         "damage-report": "Damaged Item Notice",
         "equipment-record": "Equipment Photo Record",
         "tool-guides": "Company Tool Guides",
@@ -7495,7 +7509,7 @@
       const activeJobContextProperty = document.getElementById("activeJobContextProperty");
       const activeJobContextInspector = document.getElementById("activeJobContextInspector");
       const bottomNavLinks = [...document.querySelectorAll("[data-bottom-screen]")];
-      const toolScreens = new Set(["field-tools", "age-finder", "damage-report", "equipment-record", "tool-guides", "sop-guide"]);
+      const toolScreens = new Set(["field-tools", "age-finder", "comment-builder", "damage-report", "equipment-record", "tool-guides", "sop-guide"]);
       const contactScreens = new Set(["contact-mpi", "office-updates", "team-messages", "safety-notice", "requests-feedback"]);
 
       function updateJobContextBanner(activeScreen, job) {
@@ -8398,6 +8412,10 @@
       const phoneSetupCalendar = document.getElementById("phoneSetupCalendar");
       const phoneSetupTraining = document.getElementById("phoneSetupTraining");
       const refreshPhoneSetupBtn = document.getElementById("refreshPhoneSetupBtn");
+      const phonePracticeStatus = document.getElementById("phonePracticeStatus");
+      const phonePracticeHelp = document.getElementById("phonePracticeHelp");
+      const startPhonePracticeBtn = document.getElementById("startPhonePracticeBtn");
+      const clearPhonePracticeBtn = document.getElementById("clearPhonePracticeBtn");
       const onboardingForm = document.getElementById("onboardingForm");
       const onboardingChecks = [...document.querySelectorAll("[data-onboarding-id]")];
       const onboardingStages = [...document.querySelectorAll("[data-onboarding-stage]")];
@@ -13579,11 +13597,128 @@
         renderPhoneSetup();
       }
 
+      function loadPhonePracticeRecord() {
+        try {
+          const record = JSON.parse(localStorage.getItem(PHONE_PRACTICE_STORAGE_KEY) || "null");
+          return record && typeof record === "object" ? record : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function renderPhonePractice() {
+        if (!phonePracticeStatus) return;
+        const active = loadActiveJob();
+        const record = loadPhonePracticeRecord();
+        const running = Boolean(active?.isPractice);
+        phonePracticeStatus.textContent = running
+          ? "Practice in progress"
+          : record?.completedAt
+            ? `Passed ${new Date(record.completedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+            : "Not run";
+        startPhonePracticeBtn.textContent = running ? "OPEN PRACTICE INSPECTION" : "START SAFE PRACTICE INSPECTION";
+        clearPhonePracticeBtn.hidden = !running && !record;
+        phonePracticeHelp.textContent = running
+          ? "Open My Day and continue the practice. Finish with JOB COMPLETE and CONFIRM to remove it automatically."
+          : record?.completedAt
+            ? "Location and the job-button flow were completed successfully. Run it again at any time without affecting real company records."
+            : "Stand where the phone will be tested, then start the practice. The current phone location becomes the temporary practice property so ARRIVED can be verified safely.";
+      }
+
+      async function startPhonePractice() {
+        const existing = loadActiveJob();
+        if (existing?.isPractice) {
+          window.location.hash = "#job-companion";
+          renderAppScreen();
+          renderWorkflowApp();
+          return;
+        }
+        if (existing?.property) {
+          showToast("Finish the current real job before starting a phone trial");
+          return;
+        }
+        if (!loadWorkflowProfile() || !window.MPI_COMPANY_SESSION?.inspectorEmail) {
+          phonePracticeHelp.textContent = "Sign in with the inspector’s MPI company account and save the company-phone profile first.";
+          showToast("Complete the MPI account and inspector profile first");
+          return;
+        }
+        startPhonePracticeBtn.disabled = true;
+        startPhonePracticeBtn.textContent = "CHECKING LOCATION…";
+        phonePracticeHelp.textContent = "Allow Location when the phone asks. This confirms that geolocated ARRIVED can work on this device.";
+        const location = await requestWorkflowClockLocation();
+        if (location.status !== "recorded") {
+          startPhonePracticeBtn.disabled = false;
+          phonePracticeHelp.textContent = location.status === "denied"
+            ? "Location was blocked. On iPhone open Settings → Privacy & Security → Location Services → MPI Field Tools, choose While Using the App, then try again."
+            : "The phone could not obtain a location. Move near a window or outside, confirm Location Services is on, then try again.";
+          renderPhonePractice();
+          showToast("Location is required for the safe practice inspection");
+          return;
+        }
+        const startedAt = new Date().toISOString();
+        const profile = loadWorkflowProfile();
+        const practiceJob = {
+          inspector: profile.name,
+          property: "MPI PHONE SETUP PRACTICE — CURRENT LOCATION",
+          calendarEventId: `practice-${localDateKey()}-${Date.now()}`,
+          calendarSummary: "Safe phone setup practice",
+          scheduledStart: startedAt,
+          scheduledEnd: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+          startedAt: "",
+          workflowStatus: "scheduled",
+          workflowTimestamps: {},
+          clientName: "Practice only — no client contact",
+          clientPhone: "",
+          agentName: "",
+          agentPhone: "",
+          serviceNames: ["Company phone setup test"],
+          jobNotes: ["Practice mode does not sync to management or send email."],
+          spectoraJobId: "",
+          spectoraLink: "",
+          estimatedDriveMinutes: 0,
+          departurePlan: null,
+          workflowAlerts: {},
+          steps: [],
+          quality: [],
+          services: [],
+          rooms: [],
+          readings: [],
+          isPractice: true,
+          propertyCoordinates: {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            matchedAddress: "Current phone location",
+            provider: "Phone setup practice"
+          }
+        };
+        storeActiveJob(practiceJob);
+        try { localStorage.setItem(PHONE_PRACTICE_STORAGE_KEY, JSON.stringify({ startedAt, completedAt: "", status: "in-progress" })); } catch (_) {}
+        appendWorkflowEvent("Phone setup practice opened", { practice: true, locationStatus: location.status }, practiceJob);
+        startPhonePracticeBtn.disabled = false;
+        window.location.hash = "#job-companion";
+        renderAppScreen();
+        renderWorkflowApp();
+        showToast("Safe practice inspection is ready");
+      }
+
+      function clearPhonePractice() {
+        const active = loadActiveJob();
+        if (active?.isPractice) {
+          try { localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY); } catch (_) {}
+          renderActiveJob(null);
+        }
+        try { localStorage.removeItem(PHONE_PRACTICE_STORAGE_KEY); } catch (_) {}
+        renderPhonePractice();
+        renderWorkflowApp();
+        showToast("Practice inspection removed");
+      }
+
       const ACTIVE_JOB_STORAGE_KEY = "mpiActiveJobV1";
       const LAST_CLEARED_JOB_STORAGE_KEY = "mpiLastClearedJobV1";
       const DAILY_READINESS_STORAGE_KEY = "mpiDailyReadinessV1";
       const SHIFT_RESET_STORAGE_KEY = "mpiShiftResetV1";
       const PHONE_SETUP_STORAGE_KEY = "mpiPhoneSetupV1";
+      const PHONE_PRACTICE_STORAGE_KEY = "mpiPhonePracticeV1";
       const WORKFLOW_PROFILE_STORAGE_KEY = "mpiWorkflowProfileV1";
       const WORKFLOW_ACTIVITY_STORAGE_KEY = "mpiWorkflowActivityV1";
       const WORKFLOW_HISTORY_STORAGE_KEY = "mpiWorkflowJobHistoryV1";
@@ -13765,6 +13900,7 @@
 
       function appendWorkflowEvent(action, data = {}, job = loadActiveJob()) {
         const profile = loadWorkflowProfile();
+        const practice = Boolean(job?.isPractice || data?.practice);
         const event = {
           id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           timestamp: new Date().toISOString(),
@@ -13775,13 +13911,14 @@
           calendarEventId: job?.calendarEventId || "",
           property: job?.property || "",
           action: String(action),
-          data: data && typeof data === "object" ? { ...data } : {}
+          data: data && typeof data === "object" ? { ...data, ...(practice ? { practice: true } : {}) } : (practice ? { practice: true } : {})
         };
+        if (practice) return event;
         const activity = loadWorkflowActivity();
         activity.push(event);
         try { localStorage.setItem(WORKFLOW_ACTIVITY_STORAGE_KEY, JSON.stringify(activity.slice(-5000))); } catch (_) {}
         renderWorkflowAdmin();
-        queueWorkflowOperationsSync();
+        if (!practice) queueWorkflowOperationsSync();
         return event;
       }
 
@@ -13843,10 +13980,11 @@
       function workflowOperationsSnapshot() {
         const profile = loadWorkflowProfile();
         if (!profile) return null;
-        const activity = loadWorkflowActivity().filter(item => item.date === localDateKey()).slice(-180);
+        const activity = loadWorkflowActivity().filter(item => item.date === localDateKey() && item.data?.practice !== true).slice(-180);
         const jobs = workflowScheduleJobs().slice().sort((left, right) => scheduleJobTimestamp(left, "start") - scheduleJobTimestamp(right, "start"));
         const completed = workflowCompletedEventIds();
-        const active = loadActiveJob();
+        const activeJob = loadActiveJob();
+        const active = activeJob?.isPractice ? null : activeJob;
         const readiness = workflowReadinessRecord();
         const clock = loadWorkflowTimeClock();
         const labStop = loadWorkflowLabStop();
@@ -14801,7 +14939,9 @@
         workflowTodayInspector.textContent = profile?.name || "Inspector";
         workflowScheduleStatus.textContent = workflowCurrentJobs.length
           ? `${remainingJobs.length} ${remainingJobs.length === 1 ? "job" : "jobs"} remaining · ${calendarName || "Company schedule"}${cached ? " · saved on this phone" : ""}`
-          : "Connect the MPI schedule once on this company phone.";
+          : savedCalendarToken()
+            ? "No inspection jobs were found for today. Refresh if the schedule changes."
+            : "Connect the MPI schedule once on this company phone.";
         workflowConnectSchedule.textContent = savedCalendarToken() ? "Connected ✓" : "Connect schedule";
         workflowRefreshSchedule.hidden = !savedCalendarToken() && !workflowCurrentJobs.length;
         workflowOptionalLabBtn.hidden = !(completedJobs.length && remainingJobs.length && !loadActiveJob());
@@ -14818,6 +14958,11 @@
           complete.className = "workflow-next-job";
           complete.innerHTML = "<span>Today’s schedule</span><h4>No jobs remaining</h4><p>Completed properties remain listed below for the rest of today. Continue to the end-of-day workflow.</p>";
           workflowNextJob.appendChild(complete);
+        } else {
+          const empty = document.createElement("div");
+          empty.className = "workflow-next-job";
+          empty.innerHTML = "<span>Today’s schedule</span><h4>No jobs scheduled</h4><p>If this is a new company phone, run the safe practice inspection from Settings without creating company records.</p><a class=\"workflow-button\" href=\"#settings\">OPEN PHONE TRIAL</a>";
+          workflowNextJob.appendChild(empty);
         }
         workflowJobsList.replaceChildren();
         if (remainingJobs.length) {
@@ -15217,7 +15362,7 @@
         workflowArrivedBtn.hidden = status !== "on-my-way";
         workflowStartInspectionBtn.hidden = status !== "arrived";
         workflowJobCompleteBtn.hidden = status !== "in-progress";
-        workflowDirectionsBtn.hidden = !["scheduled", "on-my-way", "arrived"].includes(status);
+        workflowDirectionsBtn.hidden = job.isPractice || !["scheduled", "on-my-way", "arrived"].includes(status);
         workflowCallClientBtn.hidden = !["scheduled", "on-my-way", "arrived"].includes(status);
         workflowMessageClientBtn.hidden = !["scheduled", "on-my-way"].includes(status);
         workflowOnMyWayBtn.textContent = "ON MY WAY";
@@ -15261,6 +15406,39 @@
       async function setWorkflowArrived() {
         const job = loadActiveJob();
         if (!job?.property) return;
+        if (job.isPractice) {
+          clearWorkflowArrivalError();
+          workflowArrivedBtn.disabled = true;
+          workflowArrivedBtn.textContent = "VERIFYING LOCATION…";
+          const result = await verifyWorkflowFirstArrival(job).catch(() => ({
+            verified: false,
+            location: { status: "unavailable" },
+            reason: "The phone could not complete the practice location check."
+          }));
+          workflowArrivedBtn.disabled = false;
+          workflowArrivedBtn.textContent = "ARRIVED";
+          if (!result.verified) {
+            appendWorkflowEvent("Practice arrival verification failed", {
+              practice: true,
+              reason: result.reason,
+              locationStatus: result.location?.status || "unavailable"
+            }, job);
+            showWorkflowArrivalError(`Practice location was not verified.${result.reason ? `\n\n${result.reason}` : ""}`);
+            showToast("Practice arrival not verified");
+            return;
+          }
+          updateWorkflowStage(job, "arrived", "Practice arrival verified", {
+            practice: true,
+            gpsVerified: true,
+            latitude: result.location?.latitude || "",
+            longitude: result.location?.longitude || "",
+            accuracyFeet: result.location?.accuracyFeet || "",
+            distanceFeet: result.verification?.distanceFeet || ""
+          });
+          clearWorkflowArrivalError();
+          showToast("Practice location verified — paid hours were not started");
+          return;
+        }
         const timeClock = ensureWorkflowTimeClockRecord();
         const firstHoursStart = !workflowHoursHaveStarted(timeClock);
         const reopenedHoursStart = !firstHoursStart && !workflowActiveClockSession(timeClock) && !workflowDayCompleteRecord() && todayArchivedCloseouts().length > 0;
@@ -15401,6 +15579,25 @@
         const confirmedAt = new Date().toISOString();
         const completed = updateWorkflowStage(job, "completed", "Used tools back on truck confirmed", { confirmedAt });
         if (!completed) return;
+        if (completed.isPractice) {
+          appendWorkflowEvent("Phone setup practice completed", { practice: true, completedAt: confirmedAt, locationVerified: true }, completed);
+          try {
+            localStorage.setItem(PHONE_PRACTICE_STORAGE_KEY, JSON.stringify({
+              startedAt: loadPhonePracticeRecord()?.startedAt || "",
+              completedAt: confirmedAt,
+              status: "passed",
+              locationVerified: true
+            }));
+            localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY);
+          } catch (_) {}
+          renderActiveJob(null);
+          window.location.hash = "#settings";
+          renderAppScreen();
+          renderPhonePractice();
+          renderWorkflowApp();
+          showToast("Practice passed — no company records or email were created");
+          return;
+        }
         appendWorkflowEvent("Final job completion", { usedToolsConfirmedAt: confirmedAt }, completed);
         cancelFieldAlarmGroup(workflowDepartureAlarmGroup(completed));
         storeWorkflowHistory(completed);
@@ -16182,6 +16379,10 @@
         }
         workflowReadinessInspector.textContent = profile.name;
         workflowTodayInspector.textContent = profile.name;
+        if (active?.isPractice) {
+          renderWorkflowJob(active);
+          return;
+        }
         if (!readiness) {
           workflowReadinessCard.hidden = false;
           renderWorkflowNotificationReadiness();
@@ -16423,7 +16624,11 @@
               location: String(reading?.location || "").trim().slice(0, 120),
               value: String(reading?.value || "").trim().slice(0, 80),
               note: String(reading?.note || "").trim().slice(0, 180)
-            })).filter(reading => reading.type && reading.location && reading.value) : []
+            })).filter(reading => reading.type && reading.location && reading.value) : [],
+            isPractice: Boolean(saved.isPractice),
+            propertyCoordinates: saved.propertyCoordinates && typeof saved.propertyCoordinates === "object"
+              ? { ...saved.propertyCoordinates }
+              : null
           };
         } catch (_) {
           return null;
@@ -17944,6 +18149,7 @@
         const screens = [
           { title: "My Day", detail: "Morning Ready, today’s jobs, client contact, inspection timing, and equipment accountability", route: "#job-companion", aliases: "calendar job companion property closeout current inspection address route navigation maps today workflow" },
           { title: "Equipment Age Finder", detail: "HVAC, furnace, boiler, and water-heater serial numbers", route: "#age-finder", aliases: "serial date manufacturer manufacture age trane ducane" },
+          { title: "MPI Comment Builder", detail: "Secure online property-specific defect and limitation wording", route: "#comment-builder", aliases: "comment defect observation implication recommendation limitation report wording online" },
           { title: "Damaged Item Notice", detail: "Inspection-related property or equipment damage, photographs, action, and people informed", route: "#damage-report", aliases: "broken damage incident attic hatch disturbed property protection" },
           { title: "Equipment Photo Record", detail: "Thermostat and furnace Before/After documentation", route: "#equipment-record", aliases: "before after restored cover photo" },
           { title: "Company Tool Guides", detail: "Operating, safety, care, and readiness instructions", route: "#tool-guides", aliases: "manual equipment purchased tool how to use" },
@@ -19565,11 +19771,11 @@
         const limitation = type === "limit";
         defectModeBtn.setAttribute("aria-pressed", String(type === "defect"));
         limitationModeBtn.setAttribute("aria-pressed", String(limitation));
-        commentModeBadge.textContent = "Offline";
-        commentBuilderTitle.textContent = limitation ? "Build a limitation comment." : "Build a defect comment.";
+        commentModeBadge.textContent = "Online";
+        commentBuilderTitle.textContent = "MPI Comment Builder.";
         commentBuilderDescription.textContent = limitation
-          ? "Describe what prevented full visibility, access, or operation. The tool matches your note to the established limitation comments in your MPI report template."
-          : "Describe what you observed in plain language. The tool identifies the component and condition, then builds a specific MPI observation, implication, and recommendation without adding property facts you did not enter.";
+          ? "Describe what prevented full visibility, access, or operation. The secure online builder creates property-specific limitation wording for review in Spectora."
+          : "Describe what you observed in plain language. The secure online builder creates a specific observation, implication, and recommendation without deliberately adding property facts you did not enter.";
         commentNoteTitle.textContent = limitation ? "Enter the inspection limitation" : "Enter the inspection note";
         commentNoteHelp.textContent = limitation
           ? "Enter what prevented visibility, access, or operation in plain language."
@@ -19585,9 +19791,9 @@
           ? "Your formatted limitation comment will appear here after you enter the inspection note."
           : "Your formatted defect comment will appear here after you enter the inspection note.";
         commentResultNote.textContent = limitation
-          ? "The limitation is based only on your note. Compatible MPI report language is used for the effect and recommendation."
-          : "The observation uses only your note. The implication and recommendation come from MPI component-and-condition rules.";
-        commentPrivacyNote.textContent = "The note stays on this device. The generated comment is read-only; update the note and generate it again if changes are needed.";
+          ? "Review the limitation, effect, and recommendation for property-specific accuracy before copying it into Spectora."
+          : "Review the observation, implication, and recommendation for property-specific accuracy before copying it into Spectora.";
+        commentPrivacyNote.textContent = "Internet and MPI company sign-in are required. Use this only when the approved Spectora template does not already contain the right comment.";
         commentOutput.value = "";
         commentOutput.scrollTop = 0;
         commentOutput.scrollLeft = 0;
@@ -19703,7 +19909,7 @@
       });
       homeSearchResults.addEventListener("click", openHomeSearchResult);
 
-      commentForm.addEventListener("submit", event => {
+      commentForm.addEventListener("submit", async event => {
         event.preventDefault();
         const note = defectInput.value.trim();
         if (!note) {
@@ -19711,12 +19917,33 @@
           showToast("Enter an inspection note first");
           return;
         }
-        commentOutput.value = buildMpiComment(note, commentArea.value, commentType);
-        sizeCommentOutput();
-        commentOutput.scrollTop = 0;
-        commentOutput.scrollLeft = 0;
-        copyCommentBtn.disabled = false;
-        if (window.innerWidth < 861) commentOutput.closest(".comment-result-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+        generateCommentBtn.disabled = true;
+        generateCommentBtn.textContent = "Creating MPI comment…";
+        commentModeBadge.textContent = "Connecting…";
+        commentOutput.value = "";
+        copyCommentBtn.disabled = true;
+        try {
+          if (!window.MPI_COMMENT_AI?.generate) throw new Error("The secure MPI Comment Builder is still loading. Wait a moment and try again.");
+          commentOutput.value = await window.MPI_COMMENT_AI.generate({
+            note,
+            component: commentArea.value,
+            mode: commentType
+          });
+          copyCommentBtn.disabled = false;
+          commentModeBadge.textContent = "Ready";
+          showToast("MPI comment ready for review");
+        } catch (error) {
+          commentOutput.value = `Comment not generated\n\n${error?.message || "The secure MPI Comment Builder could not connect. Please try again."}`;
+          commentModeBadge.textContent = navigator.onLine ? "Unavailable" : "Offline";
+          showToast("Comment not generated");
+        } finally {
+          generateCommentBtn.disabled = false;
+          generateCommentBtn.textContent = commentType === "limit" ? "Generate MPI limitation" : "Generate MPI defect";
+          sizeCommentOutput();
+          commentOutput.scrollTop = 0;
+          commentOutput.scrollLeft = 0;
+          if (window.innerWidth < 861) commentOutput.closest(".comment-result-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+        }
       });
 
       jobContextForm.addEventListener("submit", saveActiveJob);
@@ -19816,6 +20043,8 @@
         renderPhoneSetup();
         showToast("Company phone setup refreshed");
       });
+      startPhonePracticeBtn.addEventListener("click", startPhonePractice);
+      clearPhonePracticeBtn.addEventListener("click", clearPhonePractice);
       onboardingChecks.forEach(check => check.addEventListener("change", () => updateOnboardingMilestone(check)));
       onboardingForm.addEventListener("submit", validateOnboardingSubmission);
       messageAckForm.addEventListener("submit", validateMessageAcknowledgement);
@@ -20062,6 +20291,7 @@
       updateToolCheckResult();
       initializeTraining();
       renderPhoneSetup();
+      renderPhonePractice();
       initializeOnboarding();
       initializeMessageAcknowledgements();
       initializeToolGuides();
