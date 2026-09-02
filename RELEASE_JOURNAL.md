@@ -1,5 +1,17 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 134 — Office Admin Messaging and Report Access
+
+- Added a simple in-app reply control to every office message so inspectors can respond without leaving MPI Field Tools.
+- Shows inspector replies in both Sent Updates and each inspector's direct Message History in the Admin Console.
+- Refreshes replies automatically while the Admin Console is open, making a live office-to-field messaging trial practical.
+- Copies branded end-of-day closeout emails to `admin@michiganpropertyinspections.com` while keeping Kevin as the primary recipient.
+- Copies the existing damage, equipment, safety, training, acknowledgement, and staff-request email forms to the office-admin mailbox.
+- Preserves owner-only visibility for the MPI Comment Builder allowance; office-admin accounts cannot see it.
+- Corrected drive-time pairing when a dynamically inserted calendar job gives the departure and arrival different identifiers.
+- Corrected weekly hours by preferring the latest same-day sync and preventing an unfinished historical session from continuing to count through the present day.
+- Updated the offline application shell and visible version to Build 134.
+
 ## Build 133 — Comment Reliability, Lab COC Photos, and Drive-Time Accuracy
 
 - Added a 35-second safety timeout to the MPI Comment Builder so a failed cloud request cannot remain stuck on Creating indefinitely.

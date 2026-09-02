@@ -45,6 +45,7 @@
     hours: document.getElementById("statHours"),
     alerts: document.getElementById("statAlerts")
   };
+  const statHoursLabel = document.getElementById("statHoursLabel");
   const actionLabels = {
     "Morning readiness completed": "Morning Readiness Complete",
     "Inspector activity started": "Activity tracking started",
@@ -75,6 +76,8 @@
   let selectedInspectorId = "all";
   let unsubscribePeople = null;
   let unsubscribeUpdates = null;
+  let replyRefreshTimer = 0;
+  let repliesRefreshing = false;
   const messageReceiptCache = new Map();
 
   function escapeHtml(value) {
@@ -154,8 +157,11 @@
       const arrivalAt = eventTime(arrival);
       if (arrival.action === "Arrived" && !firstJobArrivalRecorded) {
         const jobId = String(arrival.calendarEventId || arrival.jobId || "");
-        const onMyWay = events.filter(item => item.action === "On My Way selected" && eventTime(item) < arrivalAt
+        const matchedOnMyWay = events.filter(item => item.action === "On My Way selected" && eventTime(item) < arrivalAt
           && (!jobId || String(item.calendarEventId || item.jobId || "") === jobId)).at(-1);
+        const recentOnMyWay = events.filter(item => item.action === "On My Way selected"
+          && eventTime(item) > previousDestinationAt && eventTime(item) < arrivalAt).at(-1);
+        const onMyWay = matchedOnMyWay || recentOnMyWay;
         const labDeparture = events.filter(item => item.action === "Lab visit completed" && eventTime(item) < arrivalAt).at(-1);
         const departure = labDeparture && (!onMyWay || eventTime(labDeparture) > eventTime(onMyWay)) ? labDeparture : onMyWay;
         morningMinutes += minutesBetween(departure, arrival);
@@ -197,9 +203,12 @@
   }
 
   function operationDays(person) {
-    const values = Array.isArray(person?.operationsDays) ? person.operationsDays.slice() : [];
-    if (person?.operationsCurrent?.date && !values.some(day => day.date === person.operationsCurrent.date)) values.push(person.operationsCurrent);
-    return values.filter(day => day?.date);
+    const daysByDate = new Map();
+    (Array.isArray(person?.operationsDays) ? person.operationsDays : []).forEach(day => {
+      if (day?.date) daysByDate.set(day.date, day);
+    });
+    if (person?.operationsCurrent?.date) daysByDate.set(person.operationsCurrent.date, person.operationsCurrent);
+    return [...daysByDate.values()];
   }
 
   function selectedDays(person) {
@@ -221,18 +230,23 @@
     const corrected = correctionsFor(person, day).filter(item => item.targetAction === "Clocked off").at(-1);
     if (corrected?.correctedValue) return corrected.correctedValue;
     const sessions = day?.timeClock?.sessions || [];
-    return sessions.at(-1)?.clockedOutAt || "";
+    const savedClockOut = sessions.at(-1)?.clockedOutAt;
+    if (savedClockOut) return savedClockOut;
+    const activityClockOut = (day?.activity || []).filter(item => item.action === "Clocked off").at(-1);
+    return activityClockOut?.data?.clockedOutAt || activityClockOut?.timestamp || day?.dayComplete?.completedAt || "";
   }
 
   function workedMinutes(person, day) {
     if (!day?.timeClock) return 0;
     const correction = effectiveClockOut(person, day);
-    return (day.timeClock.sessions || []).reduce((total, session, index, sessions) => {
+    const isToday = day.date === dateKey();
+    const calculated = (day.timeClock.sessions || []).reduce((total, session, index, sessions) => {
       const start = asDate(session.clockedInAt)?.getTime();
       const isLast = index === sessions.length - 1;
-      const end = asDate(session.clockedOutAt || (isLast ? correction : ""))?.getTime() || (day.timeClock.active && isLast ? Date.now() : 0);
+      const end = asDate(session.clockedOutAt || (isLast ? correction : ""))?.getTime() || (isToday && day.timeClock.active && isLast ? Date.now() : 0);
       return total + (start && end > start ? Math.floor((end - start) / 60000) : 0);
-    }, 0) || Number(day.timeClock.workedMinutes) || 0;
+    }, 0);
+    return calculated || Number(day.timeClock.workedMinutes) || 0;
   }
 
   function weeklyMinutes(person) {
@@ -327,6 +341,7 @@
     stats.working.textContent = String(days.filter(item => !["NOT STARTED", "CLOCKED OUT"].includes(item.day.liveStatus)).length);
     stats.jobs.textContent = String(days.reduce((total, item) => total + jobCounts(item.day).complete, 0));
     const totalMinutes = days.reduce((total, item) => total + selectedDays(item.person).reduce((sum, day) => sum + workedMinutes(item.person, day), 0), 0);
+    statHoursLabel.textContent = currentRange === "week" ? "Hours this week" : currentRange === "yesterday" ? "Hours yesterday" : "Hours today";
     stats.hours.textContent = `${Math.floor(totalMinutes / 60)}:${String(totalMinutes % 60).padStart(2, "0")}`;
     stats.alerts.textContent = String(days.reduce((total, item) => total + meaningfulAlerts(item.person, item.day).length, 0));
     renderCommentUsageAllowance();
@@ -401,7 +416,8 @@
     return messages.length ? messages.slice(0, 20).map(message => {
       const receipt = messageReceiptCache.get(message.id);
       const state = receipt?.status ? receipt.status.replace(/-/g, " ") : "Sent to app";
-      return `<article><strong>${escapeHtml(formatDateTime(message.createdAt))} · ${escapeHtml(message.createdByName || "MPI Office")}</strong><p>${escapeHtml(message.message)}</p><p><b>Status:</b> ${escapeHtml(state)}</p></article>`;
+      const reply = receipt?.replyText ? `<p><b>Reply from ${escapeHtml(receipt.userName || person.name || "inspector")}:</b> ${escapeHtml(receipt.replyText)}</p>` : "";
+      return `<article><strong>${escapeHtml(formatDateTime(message.createdAt))} · ${escapeHtml(message.createdByName || "MPI Office")}</strong><p>${escapeHtml(message.message)}</p><p><b>Status:</b> ${escapeHtml(state)}</p>${reply}</article>`;
     }).join("") : '<div class="empty">No direct messages sent to this inspector.</div>';
   }
 
@@ -450,7 +466,7 @@
       <div class="ops-grid">
         <article class="ops-card span-6"><p class="ops-eyebrow">Current job</p><strong class="ops-primary">${escapeHtml(current?.property || "No job currently open")}</strong><p class="ops-sub">${current ? `Scheduled ${formatTime(current.scheduledStart)} · ${escapeHtml(current.arrivalPerformance || "Arrival not recorded")} · ${escapeHtml(String(current.status || "scheduled").replace(/-/g, " "))}` : "The inspector is not inside an active job workflow."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Arrived</span><strong>${escapeHtml(formatTime(current?.arrivedAt))}</strong></div><div class="fact"><span>Inspection started</span><strong>${escapeHtml(formatTime(current?.inspectionStartedAt))}</strong></div><div class="fact"><span>Time at property</span><strong>${timeAtProperty}</strong></div></div></article>
         <article class="ops-card span-6"><p class="ops-eyebrow">Next appointment</p><strong class="ops-primary">${escapeHtml(next?.property || "No remaining appointment")}</strong><p class="ops-sub">${next ? `${formatTime(next.scheduledStart)} · ${escapeHtml(next.arrivalPerformance || "On schedule")}` : "The scheduled job list is complete."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Estimated drive</span><strong>${current?.departurePlan?.estimatedDriveMinutes ? `${current.departurePlan.estimatedDriveMinutes} min` : "—"}</strong></div><div class="fact"><span>Required departure</span><strong>${escapeHtml(formatTime(current?.departurePlan?.leaveBy))}</strong></div><div class="fact"><span>Schedule status</span><strong>${alerts.some(item => /late|affect next/i.test(item)) ? "ATTENTION REQUIRED" : "ON SCHEDULE"}</strong></div></div></article>
-        <article class="ops-card"><p class="ops-eyebrow">Hours worked</p><strong class="ops-primary">${formatMinutes(hours)}</strong><p class="ops-sub">Started ${formatTime(day?.timeClock?.hoursWorkedStartedAt)} · ${clockOut ? `Frozen at ${formatTime(clockOut)}` : day?.timeClock?.active ? "Running now" : "Not started"}</p></article>
+        <article class="ops-card"><p class="ops-eyebrow">${currentRange === "week" ? "Hours worked this week" : currentRange === "yesterday" ? "Hours worked yesterday" : "Hours worked today"}</p><strong class="ops-primary">${formatMinutes(hours)}</strong><p class="ops-sub">${currentRange === "week" ? `${days.length} recorded day${days.length === 1 ? "" : "s"} included` : `Started ${formatTime(day?.timeClock?.hoursWorkedStartedAt)} · ${clockOut ? `Frozen at ${formatTime(clockOut)}` : day?.timeClock?.active ? "Running now" : "Not started"}`}</p></article>
         <article class="ops-card"><p class="ops-eyebrow">Activity window</p><strong class="ops-primary">${formatMinutes(activityMinutes)}</strong><p class="ops-sub">Morning readiness ${formatTime(activityStart)} · End ${formatTime(clockOut)}</p></article>
         <article class="ops-card"><p class="ops-eyebrow">Weekly hours</p><strong class="ops-primary">${formatMinutes(weekly)}</strong><p class="ops-sub">Current Monday-to-today total${weekly >= 38 * 60 ? " · Review threshold approaching" : ""}</p></article>
         <article class="ops-card span-6"><h3>Drive Time</h3><div class="fact-list"><div class="fact"><span>Morning drive</span><strong>${formatMinutes(drive.morningMinutes)}</strong></div><div class="fact"><span>Between jobs</span><strong>${formatMinutes(drive.betweenJobMinutes)}</strong></div><div class="fact"><span>Lab travel</span><strong>${formatMinutes(drive.labMinutes)}</strong></div><div class="fact"><span>Final drive</span><strong>${driveTimeForDay(day)?.finalPending ? "Pending" : formatMinutes(drive.finalMinutes)}</strong></div><div class="fact"><span>Total drive today</span><strong>${formatMinutes(drive.totalMinutes)}</strong></div></div></article>
@@ -487,9 +503,9 @@
     try {
       const snapshot = await shared.db.collection("officeUpdates").doc(updateId).collection("receipts").get();
       const values = snapshot.docs.map(doc => doc.data());
-      return { total: values.length, acknowledged: values.filter(item => ["acknowledged", "completed", "read"].includes(item.status)).length, completed: values.filter(item => item.status === "completed").length };
+      return { total: values.length, acknowledged: values.filter(item => ["acknowledged", "completed", "read", "replied"].includes(item.status)).length, completed: values.filter(item => item.status === "completed").length, replies: values.filter(item => item.replyText) };
     } catch (_) {
-      return { total: 0, acknowledged: 0, completed: 0 };
+      return { total: 0, acknowledged: 0, completed: 0, replies: [] };
     }
   }
 
@@ -498,7 +514,8 @@
     updatesList.innerHTML = updates.length ? updates.map((update, index) => {
       const summary = summaries[index];
       const recipient = update.audience === "all" ? "All inspectors" : update.targetName || update.targetEmail || "One inspector";
-      return `<article class="update-card"><div class="update-top"><div><span class="type-badge">${escapeHtml(String(update.type || "update").replace("-", " "))}</span>${update.priority !== "normal" ? `<span class="priority-badge">${escapeHtml(update.priority)}</span>` : ""}<h3>${escapeHtml(update.title)}</h3></div><span class="role-badge">${escapeHtml(recipient)}</span></div><p>${escapeHtml(update.message)}</p><div class="update-meta"><span>Published ${escapeHtml(formatDateTime(update.createdAt))}</span><span>Due ${escapeHtml(formatDate(update.dueDate))}</span><span>${summary.total} response${summary.total === 1 ? "" : "s"}</span><span>${summary.acknowledged} read / acknowledged</span></div></article>`;
+      const replies = summary.replies.length ? `<div class="admin-update-replies"><strong>Inspector replies</strong>${summary.replies.map(reply => `<p><b>${escapeHtml(reply.userName || reply.userEmail || "Inspector")}:</b> ${escapeHtml(reply.replyText)}</p>`).join("")}</div>` : "";
+      return `<article class="update-card"><div class="update-top"><div><span class="type-badge">${escapeHtml(String(update.type || "update").replace("-", " "))}</span>${update.priority !== "normal" ? `<span class="priority-badge">${escapeHtml(update.priority)}</span>` : ""}<h3>${escapeHtml(update.title)}</h3></div><span class="role-badge">${escapeHtml(recipient)}</span></div><p>${escapeHtml(update.message)}</p><div class="update-meta"><span>Published ${escapeHtml(formatDateTime(update.createdAt))}</span><span>Due ${escapeHtml(formatDate(update.dueDate))}</span><span>${summary.total} response${summary.total === 1 ? "" : "s"}</span><span>${summary.acknowledged} read / acknowledged</span></div>${replies}</article>`;
     }).join("") : '<div class="empty">No office updates have been published.</div>';
     if (selectedInspectorId !== "all") renderOperations();
   }
@@ -520,6 +537,19 @@
       updates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       renderUpdates();
     }, error => { publishStatus.textContent = error.message; publishStatus.className = "status error"; });
+    if (!replyRefreshTimer) {
+      replyRefreshTimer = window.setInterval(async () => {
+        if (dashboard.hidden || repliesRefreshing || !updates.length) return;
+        repliesRefreshing = true;
+        try {
+          await renderUpdates();
+          const person = people.find(item => item.id === selectedInspectorId);
+          if (person) await hydrateMessageReceipts(person);
+        } finally {
+          repliesRefreshing = false;
+        }
+      }, 12000);
+    }
   }
 
   async function publishUpdate(event) {
@@ -757,6 +787,10 @@
       if (user && profile && !shared.isAdminRole(profile)) authStatus.textContent = `${user.email || "This account"} has inspector access only. Sign out and use kev@michiganpropertyinspections.com.`;
       unsubscribePeople?.();
       unsubscribeUpdates?.();
+      if (replyRefreshTimer) {
+        window.clearInterval(replyRefreshTimer);
+        replyRefreshTimer = 0;
+      }
       return;
     }
     commentUsagePanel.hidden = !shared.isOwnerEmail(user.email);

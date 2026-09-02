@@ -61,7 +61,7 @@
   }
 
   function updateAction(update) {
-    if (["completed", "acknowledged", "read"].includes(update.receipt?.status)) return { label: "CLEAR FROM MY APP", status: "clear", disabled: false, clear: true };
+    if (["completed", "acknowledged", "read", "replied"].includes(update.receipt?.status)) return { label: "CLEAR FROM MY APP", status: "clear", disabled: false, clear: true };
     if (update.type === "training") return { label: "Mark training complete", status: "completed", disabled: false };
     if (update.requiresAcknowledgement) return { label: "Acknowledge", status: "acknowledged", disabled: false };
     return { label: "Mark as read", status: "read", disabled: false };
@@ -83,7 +83,10 @@
       const action = updateAction(update);
       const due = update.dueDate ? `<span>Due ${escapeHtml(formatDate(update.dueDate))}</span>` : "";
       const link = update.link ? `<a class="mpi-update-link" href="${escapeHtml(update.link)}" target="_blank" rel="noopener noreferrer">Open supporting information ↗</a>` : "";
-      return `<article class="mpi-update-card ${escapeHtml(update.priority || "normal")}" data-update-id="${escapeHtml(update.id)}"><div class="mpi-update-top"><span>${escapeHtml(typeLabel(update.type))}</span>${update.priority && update.priority !== "normal" ? `<strong>${escapeHtml(update.priority)}</strong>` : ""}</div><h3>${escapeHtml(update.title)}</h3><p>${escapeHtml(update.message)}</p><div class="mpi-update-meta">${due}<span>From ${escapeHtml(update.createdByName || "MPI Management")}</span></div>${link}<button class="mpi-update-action${action.clear ? " clear" : ""}" type="button" data-update-status="${action.status}" ${action.disabled ? "disabled" : ""}>${escapeHtml(action.label)}</button></article>`;
+      const reply = update.receipt?.replyText
+        ? `<div class="mpi-update-reply-sent"><strong>Your reply was sent to the office</strong><span>${escapeHtml(update.receipt.replyText)}</span></div>`
+        : `<details class="mpi-update-reply"><summary>Reply to office</summary><form data-update-reply-form><label>Message for management<textarea maxlength="1000" required placeholder="Type your reply here"></textarea></label><button type="submit">SEND REPLY</button><span role="status"></span></form></details>`;
+      return `<article class="mpi-update-card ${escapeHtml(update.priority || "normal")}" data-update-id="${escapeHtml(update.id)}"><div class="mpi-update-top"><span>${escapeHtml(typeLabel(update.type))}</span>${update.priority && update.priority !== "normal" ? `<strong>${escapeHtml(update.priority)}</strong>` : ""}</div><h3>${escapeHtml(update.title)}</h3><p>${escapeHtml(update.message)}</p><div class="mpi-update-meta">${due}<span>From ${escapeHtml(update.createdByName || "MPI Management")}</span></div>${link}${reply}<button class="mpi-update-action${action.clear ? " clear" : ""}" type="button" data-update-status="${action.status}" ${action.disabled ? "disabled" : ""}>${escapeHtml(action.label)}</button></article>`;
     }).join("") : '<div class="mpi-updates-empty"><strong>You are up to date.</strong><span>No current office messages, instructions, or training assignments are waiting.</span></div>';
   }
 
@@ -161,6 +164,27 @@
     }
   }
 
+  async function handleUpdateReply(event) {
+    const form = event.target.closest("[data-update-reply-form]");
+    if (!form || !currentUser) return;
+    event.preventDefault();
+    const card = form.closest("[data-update-id]");
+    const textarea = form.querySelector("textarea");
+    const button = form.querySelector("button");
+    const status = form.querySelector("[role=status]");
+    const message = textarea.value.trim();
+    if (!message) return;
+    button.disabled = true;
+    status.textContent = "Sending…";
+    try {
+      await shared.replyToUpdate(card.dataset.updateId, currentUser, currentProfile, message);
+      status.textContent = "Reply sent to MPI management.";
+    } catch (error) {
+      button.disabled = false;
+      status.textContent = error?.message || "Reply could not be sent. Try again.";
+    }
+  }
+
   if (!shared?.available) {
     renderSession(null, null, new Error("Reconnect to load the secure company connection."));
     signInButtons.forEach(button => { button.disabled = true; });
@@ -170,6 +194,7 @@
   signInButtons.forEach(button => button.addEventListener("click", () => signIn(button)));
   signOutButtons.forEach(button => button.addEventListener("click", () => shared.signOut()));
   updatesList.addEventListener("click", handleUpdateAction);
+  updatesList.addEventListener("submit", handleUpdateReply);
   window.addEventListener("mpi-push-token-ready", event => {
     if (currentUser && currentProfile) registerPushDevice(currentUser, currentProfile, event.detail?.token).catch(() => {});
   });

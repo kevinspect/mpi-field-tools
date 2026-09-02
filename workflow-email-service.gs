@@ -1,5 +1,6 @@
 var MPI_EMAIL = Object.freeze({
   RECIPIENT: "kev@michiganpropertyinspections.com",
+  ADMIN_COPY: "admin@michiganpropertyinspections.com",
   REPLY_TO: "kev@michiganpropertyinspections.com",
   SOURCE: "mpi-field-tools-daily-closeout",
   LOGO_URL: "https://kevinspect.github.io/mpi-field-tools/mpi-logo.png",
@@ -44,6 +45,7 @@ function doPost(event) {
       var attachments = attachmentBlobs_(input.labCocPhotos);
       MailApp.sendEmail({
         to: MPI_EMAIL.RECIPIENT,
+        cc: MPI_EMAIL.ADMIN_COPY,
         replyTo: MPI_EMAIL.REPLY_TO,
         name: "Michigan Property Inspections",
         subject: "Daily Inspector Closeout | " + payload.inspectorName + " | " + payload.date,

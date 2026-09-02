@@ -148,6 +148,9 @@
     .message-history article,.correction-history article { padding:12px; background:#f7f9fc; border:1px solid #e3e7ef; border-radius:11px; }
     .message-history strong,.correction-history strong { color:var(--navy); font-size:10.5px; }
     .message-history p,.correction-history p { margin:5px 0 0; color:var(--muted); font-size:9.5px; line-height:1.45; }
+    .admin-update-replies { display:grid; gap:7px; margin-top:14px; padding:13px; color:#276853; background:#eaf6f1; border:1px solid #c9e5da; border-radius:11px; }
+    .admin-update-replies > strong { font-size:10px; text-transform:uppercase; letter-spacing:.06em; }
+    .admin-update-replies p { margin:0; color:#345c51; font-size:10px; line-height:1.45; }
     .compact-form { display:grid; gap:10px; }
     .compact-form textarea { min-height:92px; }
     .two-col { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -210,7 +213,7 @@
       <div class="stat-grid">
         <article class="panel stat"><span>Inspectors working</span><strong id="statWorking">0</strong></article>
         <article class="panel stat"><span>Jobs completed</span><strong id="statJobs">0</strong></article>
-        <article class="panel stat"><span>Hours today</span><strong id="statHours">0:00</strong></article>
+        <article class="panel stat"><span id="statHoursLabel">Hours today</span><strong id="statHours">0:00</strong></article>
         <article class="panel stat"><span>Needs attention</span><strong id="statAlerts">0</strong></article>
       </div>
 
@@ -275,7 +278,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
-  <script src="./mpi-shared.js?build=133"></script>
-  <script src="./admin.js?build=133"></script>
+  <script src="./mpi-shared.js?build=134"></script>
+  <script src="./admin.js?build=134"></script>
 </body>
 </html>

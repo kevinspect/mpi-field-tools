@@ -204,6 +204,20 @@
     }, { merge: true });
   }
 
+  function replyToUpdate(updateId, user, profile, message) {
+    const replyText = String(message || "").trim().slice(0, 1000);
+    if (!updateId || !user || !replyText) return Promise.reject(new Error("Write a reply first."));
+    return db.collection("officeUpdates").doc(updateId).collection("receipts").doc(user.uid).set({
+      userId: user.uid,
+      userEmail: normalizeEmail(user.email),
+      userName: profile?.name || user.displayName || "MPI Team Member",
+      status: "replied",
+      replyText,
+      repliedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  }
+
   function cleanOperationsValue(value) {
     return JSON.parse(JSON.stringify(value, (_, item) => item === undefined ? null : item));
   }
@@ -251,6 +265,7 @@
     watchUpdates,
     setUpdateStatus,
     clearUpdate,
+    replyToUpdate,
     syncOperationsSnapshot
   };
 })();

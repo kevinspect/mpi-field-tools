@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="133">
+  <meta name="app-build" content="134">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4825,6 +4825,19 @@
     .mpi-update-action { display:grid; width:100%; min-height:46px; place-items:center; margin-top:15px; color:#fff; background:var(--forest); border:0; border-radius:10px; font-size:10px; font-weight:950; }
     .mpi-update-action:disabled { color:#276a55; background:#dff1ea; }
     .mpi-update-action.clear { color:#11186a; background:#eef3f9; border:1px solid #cbd6e5; }
+    .mpi-update-reply { margin-top:14px; overflow:hidden; border:1px solid #d7e0ec; border-radius:11px; background:#f7f9fc; }
+    .mpi-update-reply > summary { min-height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 13px; color:var(--forest); cursor:pointer; list-style:none; font-size:10px; font-weight:950; }
+    .mpi-update-reply > summary::-webkit-details-marker { display:none; }
+    .mpi-update-reply > summary::after { content:"+"; color:var(--orange-dark); font-size:18px; }
+    .mpi-update-reply[open] > summary::after { content:"−"; }
+    .mpi-update-reply form { display:grid; gap:9px; padding:13px; border-top:1px solid #d7e0ec; }
+    .mpi-update-reply label { display:grid; gap:7px; color:var(--forest); font-size:9.5px; font-weight:900; }
+    .mpi-update-reply textarea { min-height:78px; width:100%; padding:11px; color:var(--ink); background:#fff; border:1px solid #cbd4e2; border-radius:9px; font:inherit; font-size:11px; resize:vertical; }
+    .mpi-update-reply button { min-height:44px; color:#fff; background:var(--bright-blue); border:0; border-radius:9px; font-size:10px; font-weight:950; }
+    .mpi-update-reply [role=status] { color:#276a55; font-size:9.5px; font-weight:850; }
+    .mpi-update-reply-sent { display:grid; gap:5px; margin-top:14px; padding:12px 13px; color:#276a55; background:#e8f5ef; border:1px solid #c9e5da; border-radius:10px; }
+    .mpi-update-reply-sent strong { font-size:10px; }
+    .mpi-update-reply-sent span { color:#3f5f56; font-size:10.5px; line-height:1.45; white-space:pre-wrap; }
     .mpi-updates-empty { display:grid; gap:5px; padding:30px 20px; color:var(--ink-2); background:#fff; border:1px dashed #cbd4e2; border-radius:15px; text-align:center; }
     .mpi-updates-empty strong { color:var(--forest); }
     .mpi-updates-gate { max-width:680px; margin:0 auto; padding:28px; text-align:center; }
@@ -4970,7 +4983,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">132</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">134</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -5685,6 +5698,7 @@
       <div class="damage-grid">
         <form class="panel damage-form" id="damageForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" enctype="multipart/form-data" novalidate>
           <input type="hidden" name="_subject" id="damageEmailSubject" value="MPI Damaged Item Notice">
+          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
           <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?damage-sent=1#damage-report">
@@ -5824,6 +5838,7 @@
       <div class="workflow-grid">
         <form class="panel damage-form" id="equipmentForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" enctype="multipart/form-data" novalidate>
           <input type="hidden" name="_subject" id="equipmentEmailSubject" value="MPI Thermostat &amp; Furnace Photo Record">
+          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
           <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?equipment-sent=1#equipment-record">
@@ -5922,6 +5937,7 @@
       <div class="workflow-grid">
         <form class="panel damage-form" id="toolCheckForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
           <input type="hidden" name="_subject" id="toolCheckEmailSubject" value="MPI End-of-Job Tool Check">
+          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
           <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?tool-check-sent=1#tool-check">
@@ -6083,6 +6099,7 @@
         </summary>
         <form class="damage-form" id="toolCommissionForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
           <input type="hidden" name="_subject" id="toolCommissionSubject" value="MPI New Tool Commissioning Record">
+          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
           <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?tool-commission-sent=1#tool-guides">
@@ -6550,6 +6567,7 @@
         <div class="report-quality-body">
           <form id="trainingProgressShareForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
             <input type="hidden" name="_subject" id="trainingShareSubject" value="MPI Refresher Progress">
+            <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
             <input type="hidden" name="_template" value="box">
             <input type="hidden" name="_captcha" value="false">
             <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?refresher-progress-sent=1#training-center">
@@ -6581,6 +6599,7 @@
 
           <form id="onboardingForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
             <input type="hidden" name="_subject" id="onboardingSubject" value="MPI Inspector Onboarding Progress">
+            <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
             <input type="hidden" name="_template" value="box">
             <input type="hidden" name="_captcha" value="false">
             <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?onboarding-sent=1#training-center">
@@ -7133,6 +7152,7 @@
             <summary id="messageAckSummary">Acknowledge the required message</summary>
             <form class="message-ack-form" id="messageAckForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
               <input type="hidden" name="_subject" id="messageAckSubject" value="MPI Required Message Acknowledgement">
+              <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
               <input type="hidden" name="_template" value="box">
               <input type="hidden" name="_captcha" value="false">
               <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?message-ack-sent=photo-restoration-2026-08-25#team-messages">
@@ -7152,6 +7172,7 @@
 
         <form class="panel damage-form support-panel" id="teamQuestionForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
           <input type="hidden" name="_subject" id="teamQuestionSubject" value="MPI Inspector Field Question">
+          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
           <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?question-sent=1#team-messages">
@@ -7201,6 +7222,7 @@
       <div class="workflow-grid">
         <form class="panel damage-form" id="safetyNoticeForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
           <input type="hidden" name="_subject" id="safetyNoticeSubject" value="MPI Safety and Near-Miss Notice">
+          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
           <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?safety-sent=1#safety-notice">
@@ -7313,6 +7335,7 @@
       <div class="workflow-grid">
         <form class="panel damage-form" id="requestForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
           <input type="hidden" name="_subject" id="requestEmailSubject" value="MPI Inspector Request">
+          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
           <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?request-sent=1#requests-feedback">
@@ -7419,7 +7442,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 133</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 134</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7549,9 +7572,9 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=133"></script>
-  <script src="./mpi-field-sync.js?build=133"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=133"></script>
+  <script src="./mpi-shared.js?build=134"></script>
+  <script src="./mpi-field-sync.js?build=134"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=134"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -14074,11 +14097,17 @@
           const arrivalAt = eventTime(arrival);
           if (arrival.action === "Arrived" && !firstJobArrivalRecorded) {
             const arrivalJobId = String(arrival.calendarEventId || arrival.jobId || "");
-            const onMyWay = events.filter(item =>
+            const matchedOnMyWay = events.filter(item =>
               item.action === "On My Way selected"
               && eventTime(item) < arrivalAt
               && (!arrivalJobId || String(item.calendarEventId || item.jobId || "") === arrivalJobId)
             ).at(-1);
+            const recentOnMyWay = events.filter(item =>
+              item.action === "On My Way selected"
+              && eventTime(item) > previousDestinationAt
+              && eventTime(item) < arrivalAt
+            ).at(-1);
+            const onMyWay = matchedOnMyWay || recentOnMyWay;
             const labDeparture = events.filter(item => item.action === "Lab visit completed" && eventTime(item) < arrivalAt).at(-1);
             const departure = labDeparture && (!onMyWay || eventTime(labDeparture) > eventTime(onMyWay)) ? labDeparture : onMyWay;
             morningMinutes += workflowMinutesBetween(departure?.timestamp, arrival.timestamp);
