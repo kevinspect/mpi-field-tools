@@ -752,7 +752,7 @@
     });
     people = [
       { id: "preview-kevin", name: "Kevin Cave", email: "kev@michiganpropertyinspections.com", role: "owner", active: true, operationsCurrent: makeDay("Kevin Cave", "KC", "INSPECTION IN PROGRESS"), operationsUpdatedAt: new Date() },
-      { id: "preview-corey", name: "Corey Inspector", email: "corey@michiganpropertyinspections.com", inspectorId: "NACHI26090138", role: "inspector", active: true, operationsCurrent: makeDay("Corey Inspector", "NACHI26090138", "DRIVING TO JOB", 6), operationsUpdatedAt: new Date() }
+      { id: "preview-cory", name: "Cory Inspector", email: "cory@michiganpropertyinspections.com", inspectorId: "NACHI26090138", role: "inspector", active: true, operationsCurrent: makeDay("Cory Inspector", "NACHI26090138", "DRIVING TO JOB", 6), operationsUpdatedAt: new Date() }
     ];
     currentUser = { uid: "preview", email: "kev@michiganpropertyinspections.com", displayName: "Kevin Cave" };
     currentProfile = { name: "Kevin Cave", role: "owner", active: true };

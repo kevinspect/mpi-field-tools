@@ -1,5 +1,12 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 136 — Cory Account Identity Repair
+
+- Corrected the inspector identity spelling to **Cory Leese** and matched his real company account, `cory@michiganpropertyinspections.com`.
+- Automatically assigns Cory's inspector number, **NACHI26090138**, to his existing profile without deleting or recreating the account.
+- Keeps Cory visible as an active inspector even when he is clocked out or has no scheduled jobs.
+- Updated the offline application shell and visible version to Build 136.
+
 ## Build 135 — Office Admin Permission Guard
 
 - Keeps full inspector operations, reporting, messaging, and account-management access available to office admins.
@@ -35,14 +42,14 @@
 
 - Corrected the app’s internal and visible build number so installed phones no longer repeatedly offer the release they already loaded.
 - A signed-in MPI company account now creates or updates the matching company-phone workflow profile automatically.
-- Corey’s signed-in account therefore supplies both his name and **NACHI26090138** without duplicate setup entry.
+- Cory’s signed-in account therefore supplies both his name and **NACHI26090138** without duplicate setup entry.
 - Preserved the separate one-time Google Calendar connection, location permission, notification permission, and Home Screen installation checks required on each physical company phone.
 - Updated the offline app shell to Build 124.
 
-## Build 123 — Corey Inspector Number Sync
+## Build 123 — Cory Inspector Number Sync
 
-- Assigned Corey’s company inspector number as **NACHI26090138**.
-- Added the inspector number to Corey’s secure company profile and automatically synchronizes it to his company-phone workflow profile after sign-in.
+- Assigned Cory’s company inspector number as **NACHI26090138**.
+- Added the inspector number to Cory’s secure company profile and automatically synchronizes it to his company-phone workflow profile after sign-in.
 - Added an editable Inspector Number field to the Admin **Inspectors** screen so management can maintain numbers without changing source code.
 - Updated the visible build and refreshed the offline app shell to Build 123.
 

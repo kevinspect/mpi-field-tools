@@ -12,8 +12,7 @@
   const MPI_OWNER_EMAILS = ["kev@michiganpropertyinspections.com"];
   const MPI_COMPANY_DOMAIN = "michiganpropertyinspections.com";
   const MPI_INSPECTOR_NUMBERS = {
-    "corey@michiganpropertyinspections.com": "NACHI26090138",
-    "correy@michiganpropertyinspections.com": "NACHI26090138"
+    "cory@michiganpropertyinspections.com": "NACHI26090138"
   };
 
   if (!window.firebase?.initializeApp || !window.firebase?.auth || !window.firebase?.firestore) {
@@ -53,7 +52,7 @@
     const email = normalizeEmail(profile?.email);
     if (MPI_INSPECTOR_NUMBERS[email]) return MPI_INSPECTOR_NUMBERS[email];
     const name = String(profile?.name || "").trim().toLowerCase();
-    return /\bcor+ey\b/.test(name) ? "NACHI26090138" : "";
+    return /\bcory\b/.test(name) ? "NACHI26090138" : "";
   }
 
   async function signIn() {
