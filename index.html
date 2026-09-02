@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="128">
+  <meta name="app-build" content="129">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4794,10 +4794,12 @@
       grid-template-columns: repeat(4, 1fr);
       min-height: calc(64px + env(safe-area-inset-bottom));
       padding: 6px max(8px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(8px, env(safe-area-inset-left));
-      background: rgba(255,255,255,.97);
+      background: #fff;
       border-top: 1px solid #d9dfeb;
       box-shadow: 0 -8px 26px rgba(17,24,106,.12);
-      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      isolation: isolate;
     }
     .app-bottom-nav a { display: grid; place-items: center; align-content: center; gap: 3px; min-height: 54px; color: #666d8a; border-radius: 11px; font-size: 9.5px; font-weight: 850; text-decoration: none; }
     .app-bottom-nav a::before { font-size: 19px; line-height: 1; }
@@ -4921,7 +4923,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">128</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">129</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -7341,7 +7343,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 128</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 129</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7471,9 +7473,9 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=128"></script>
-  <script src="./mpi-field-sync.js?build=128"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=128"></script>
+  <script src="./mpi-shared.js?build=129"></script>
+  <script src="./mpi-field-sync.js?build=129"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=129"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
