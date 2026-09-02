@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="130">
+  <meta name="app-build" content="131">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4614,6 +4614,20 @@
     .workflow-lab-complete span { display: block; margin-top: 5px; font-size: 10.5px; line-height: 1.5; }
     .workflow-lab-complete.clock-off { color: #7d241f; background: #fff2bd; border: 3px solid #e4b93f; text-align: center; }
     .workflow-lab-complete.clock-off strong { font-size: clamp(20px, 5vw, 27px); line-height: 1.1; }
+    .workflow-home-card { overflow: hidden; text-align: center; }
+    .workflow-home-state {
+      margin: 0 0 16px;
+      padding: 22px 18px;
+      color: #fff;
+      background: linear-gradient(145deg, #0b1050, #11186a 70%, #254f9a);
+      border: 1px solid rgba(180,135,32,.55);
+      border-radius: 15px;
+    }
+    .workflow-home-state span { display: block; color: #e4c569; font-size: 9px; font-weight: 950; letter-spacing: .12em; text-transform: uppercase; }
+    .workflow-home-state strong { display: block; margin-top: 8px; font-size: clamp(24px, 6vw, 34px); line-height: 1.08; }
+    .workflow-home-state p { margin: 10px auto 0; max-width: 540px; color: rgba(255,255,255,.78); font-size: 11.5px; line-height: 1.55; }
+    .workflow-home-card .workflow-button { width: 100%; min-height: 62px; font-size: 15px; }
+    .workflow-home-note { margin: 12px 0 0; color: var(--ink-2); font-size: 10px; line-height: 1.5; }
 
     .reference-guide-intro { margin: 0 0 14px; padding: 13px 14px; color: var(--forest); background: #eef5fa; border: 1px solid #cbdff1; border-radius: 11px; font-size: 11px; line-height: 1.55; }
     .reference-guide-steps { display: grid; gap: 9px; }
@@ -4938,7 +4952,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">130</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">131</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -5182,6 +5196,17 @@
               <span>Head to your final destination. Remember to complete your End-of-Day Equipment Check and Clock Out when you arrive.</span>
             </div>
           </div>
+        </section>
+
+        <section class="workflow-card workflow-home-card" id="workflowHomeCard" aria-labelledby="workflow-home-title" hidden>
+          <div class="workflow-home-state">
+            <span id="workflowHomeEyebrow">End of inspections</span>
+            <strong id="workflow-home-title">INSPECTIONS COMPLETE</strong>
+            <p id="workflowHomeMessage">No lab stop required. Proceed home. When you arrive, complete your End-of-Day Equipment Check and Clock Out.</p>
+          </div>
+          <button class="workflow-button" id="workflowProceedHomeBtn" type="button">PROCEED HOME</button>
+          <button class="workflow-button" id="workflowArrivedHomeBtn" type="button" hidden>ARRIVED HOME / END LOCATION</button>
+          <p class="workflow-home-note" id="workflowHomeNote">You remain clocked in during the final journey.</p>
         </section>
 
         <section class="workflow-card workflow-day-complete" id="workflowDayCompleteCard" aria-labelledby="workflow-day-complete-title" hidden>
@@ -7362,7 +7387,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 130</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 131</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7492,9 +7517,9 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=130"></script>
-  <script src="./mpi-field-sync.js?build=130"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=130"></script>
+  <script src="./mpi-shared.js?build=131"></script>
+  <script src="./mpi-field-sync.js?build=131"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=131"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -8190,6 +8215,13 @@
       const workflowLabCompleteBtn = document.getElementById("workflowLabCompleteBtn");
       const workflowLabContinueBtn = document.getElementById("workflowLabContinueBtn");
       const workflowLabCompleteMessage = document.getElementById("workflowLabCompleteMessage");
+      const workflowHomeCard = document.getElementById("workflowHomeCard");
+      const workflowHomeEyebrow = document.getElementById("workflowHomeEyebrow");
+      const workflowHomeTitle = document.getElementById("workflow-home-title");
+      const workflowHomeMessage = document.getElementById("workflowHomeMessage");
+      const workflowProceedHomeBtn = document.getElementById("workflowProceedHomeBtn");
+      const workflowArrivedHomeBtn = document.getElementById("workflowArrivedHomeBtn");
+      const workflowHomeNote = document.getElementById("workflowHomeNote");
       const workflowDayCompleteCard = document.getElementById("workflowDayCompleteCard");
       const workflowEndOfDayChecklist = document.getElementById("workflowEndOfDayChecklist");
       const workflowEndOfDayChecks = [...document.querySelectorAll("[data-workflow-eod-equipment]")];
@@ -13987,7 +14019,7 @@
           .filter(item => item.action === "Arrived at lab")
           .reduce((total, item) => total + (Number(item.data?.driveMinutes) || 0), 0);
         const clockedOff = events.filter(item => item.action === "Clocked off").at(-1);
-        const finalDeparture = events.filter(item =>
+        const finalDeparture = events.filter(item => item.action === "Proceed home selected").at(-1) || events.filter(item =>
           item.action === "Lab route departure / continuation" && item.data?.finalDestination
         ).at(-1) || events.filter(item => item.action === "Final job completion").at(-1);
         const finalMinutes = clockedOff ? workflowMinutesBetween(finalDeparture?.timestamp, clockedOff.timestamp) : 0;
@@ -14006,6 +14038,9 @@
         if (labStop) {
           if (labStop.stage === "travel") return "DRIVING TO LAB";
           if (labStop.stage === "arrived") return "AT LAB";
+          if (labStop.stage === "proceed-home") return "READY TO DRIVE HOME";
+          if (labStop.stage === "driving-home") return "DRIVING HOME";
+          if (labStop.stage === "home-arrived") return "END-OF-DAY CHECKS";
           if (labStop.stage === "done") return labStop.finalStop ? "DRIVING HOME / FINAL DESTINATION" : "DRIVING TO NEXT JOB";
           return "LAB STOP";
         }
@@ -14525,7 +14560,7 @@
         if (!activeClock || !allJobsComplete) return false;
         const labStop = loadWorkflowLabStop();
         if (!labStop) return true;
-        return Boolean(labStop.finalStop && labStop.stage === "done");
+        return Boolean(labStop.finalStop && ["proceed-home", "driving-home", "home-arrived"].includes(labStop.stage));
       }
 
       function renderWorkflowTimeClock() {
@@ -14553,12 +14588,30 @@
                 ? "Activity tracking is active for management. Paid hours begin at the first verified arrival."
                 : "Complete Morning Readiness to begin the working-day activity record.";
         workflowHoursPending.hidden = !readiness || hoursStarted;
-        if (workflowClockHomeReminder) workflowClockHomeReminder.hidden = !workflowFinalTravelNeedsClockOff();
+        const jobs = workflowScheduleJobs();
+        const completed = workflowCompletedEventIds();
+        const allJobsComplete = jobs.length > 0 && jobs.every(job => completed.has(job.id));
+        const finalReturn = loadWorkflowLabStop();
+        const returnedHome = finalReturn?.finalStop && finalReturn.stage === "home-arrived";
+        const equipmentConfirmed = workflowEndOfDayChecks.length > 0 && workflowEndOfDayChecks.every(check => check.checked);
+        const finalCloseoutBlocked = Boolean(active && allJobsComplete && (!returnedHome || !equipmentConfirmed));
+        if (workflowClockHomeReminder) {
+          workflowClockHomeReminder.hidden = !workflowFinalTravelNeedsClockOff();
+          const heading = workflowClockHomeReminder.querySelector("strong");
+          const copy = workflowClockHomeReminder.querySelector("span");
+          if (heading) heading.textContent = returnedHome ? "COMPLETE THE EQUIPMENT CHECK" : "CLOCK OFF WHEN YOU ARRIVE HOME";
+          if (copy) copy.textContent = returnedHome
+            ? "Confirm the end-of-day equipment below. Clock Off will unlock when every required item is accounted for."
+            : "Keep the clock running during the final journey. Confirm arrival before completing the equipment check and Clocking Out.";
+        }
         workflowArrivalReminderAckBtn.hidden = !readiness || hoursStarted || Boolean(record?.firstArrivalReminderAcknowledgedAt);
         if (hoursStarted) clearWorkflowArrivalError();
         workflowClockOnBtn.hidden = true;
         workflowClockOnBtn.disabled = true;
-        workflowClockOffBtn.disabled = !active || workflowTimeClockInFlight;
+        workflowClockOffBtn.disabled = !active || workflowTimeClockInFlight || finalCloseoutBlocked;
+        workflowClockOffBtn.textContent = finalCloseoutBlocked
+          ? returnedHome ? "COMPLETE EQUIPMENT CHECK" : "CLOCK OFF AT HOME"
+          : "CLOCK OFF";
         workflowClockOffBtn.hidden = !hoursStarted;
         workflowClockRetryLocationBtn.hidden = true;
         workflowClockRetryLocationBtn.disabled = workflowTimeClockInFlight;
@@ -14602,6 +14655,20 @@
         const record = loadWorkflowTimeClock();
         const active = workflowActiveClockSession(record);
         if (!record || !active) return;
+        const jobs = workflowScheduleJobs();
+        const completed = workflowCompletedEventIds();
+        const allJobsComplete = jobs.length > 0 && jobs.every(job => completed.has(job.id));
+        if (allJobsComplete) {
+          const finalReturn = loadWorkflowLabStop();
+          if (!finalReturn?.finalStop || finalReturn.stage !== "home-arrived") {
+            showToast("Confirm ARRIVED HOME before Clocking Out");
+            return;
+          }
+          if (!workflowEndOfDayChecks.length || !workflowEndOfDayChecks.every(check => check.checked)) {
+            showToast("Complete the end-of-day equipment check before Clocking Out");
+            return;
+          }
+        }
         workflowTimeClockInFlight = true;
         renderWorkflowTimeClock();
         const clockedOutAt = new Date().toISOString();
@@ -14755,6 +14822,86 @@
         } catch (_) {}
       }
 
+      function workflowRemainingScheduledJobs() {
+        const completed = workflowCompletedEventIds();
+        return workflowScheduleJobs()
+          .filter(job => job?.id && !completed.has(job.id))
+          .slice()
+          .sort((left, right) => scheduleJobTimestamp(left, "start") - scheduleJobTimestamp(right, "start"));
+      }
+
+      function normalizeWorkflowLabStop(record = loadWorkflowLabStop()) {
+        if (!record) return null;
+        const remaining = workflowRemainingScheduledJobs();
+        const postJob = record.entryPoint !== "morning-readiness"
+          && (record.entryPoint === "after-job" || Boolean(record.sourceJobId) || Boolean(record.finalStop));
+        const homeJourneyStarted = ["proceed-home", "driving-home", "home-arrived"].includes(record.stage);
+        if (postJob && homeJourneyStarted && remaining.length) {
+          const next = remaining[0];
+          saveWorkflowLabStop(null);
+          appendWorkflowEvent("Final return cancelled for added appointment", {
+            nextJobId: next.id || "",
+            nextProperty: next.location || ""
+          }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
+          return null;
+        }
+        let changed = false;
+        if (postJob && !homeJourneyStarted) {
+          const next = remaining[0] || null;
+          const shouldBeFinal = !next;
+          if (Boolean(record.finalStop) !== shouldBeFinal) {
+            record.finalStop = shouldBeFinal;
+            changed = true;
+          }
+          const nextJobId = String(next?.id || "");
+          const nextProperty = String(next?.location || "");
+          const nextScheduledStart = String(next?.start?.dateTime || next?.start?.date || "");
+          if (record.nextJobId !== nextJobId || record.nextProperty !== nextProperty || record.nextScheduledStart !== nextScheduledStart) {
+            record.nextJobId = nextJobId;
+            record.nextProperty = nextProperty;
+            record.nextScheduledStart = nextScheduledStart;
+            changed = true;
+          }
+          if (shouldBeFinal && record.stage === "done") {
+            record.stage = "proceed-home";
+            changed = true;
+          }
+        }
+        if (changed) saveWorkflowLabStop(record);
+        return record;
+      }
+
+      function ensureWorkflowFinalReturnState() {
+        let record = normalizeWorkflowLabStop();
+        const jobs = workflowScheduleJobs();
+        const completed = workflowCompletedEventIds();
+        const allJobsComplete = jobs.length > 0 && jobs.every(job => completed.has(job.id));
+        const dayComplete = workflowDayCompleteRecord();
+        if (record || !allJobsComplete || dayComplete?.completedAt || loadActiveJob()?.property) return record;
+        const clock = loadWorkflowTimeClock();
+        const hoursStarted = Boolean(clock?.hoursWorkedStartedAt || workflowPaySessions(clock).length);
+        const activeClock = Boolean(workflowActiveClockSession(clock));
+        const recoveredAt = new Date().toISOString();
+        const lastCompleted = loadWorkflowHistory().filter(item => item.date === localDateKey()).at(-1)?.job || null;
+        record = {
+          date: localDateKey(),
+          stage: hoursStarted && !activeClock ? "home-arrived" : "proceed-home",
+          sourceJobId: String(lastCompleted?.calendarEventId || ""),
+          sourceProperty: String(lastCompleted?.property || ""),
+          nextJobId: "",
+          nextProperty: "",
+          nextScheduledStart: "",
+          finalStop: true,
+          entryPoint: "recovered-final-day",
+          labs: [],
+          currentIndex: 0,
+          recoveredAt
+        };
+        saveWorkflowLabStop(record);
+        appendWorkflowEvent("Final return workflow recovered", { recoveredAt, hoursPreserved: hoursStarted }, lastCompleted);
+        return record;
+      }
+
       function workflowDepartureAlarmGroup(job) {
         return `departure-${String(job?.calendarEventId || job?.property || "job").replace(/[^a-z0-9_-]+/gi, "-").slice(0, 100)}`;
       }
@@ -14775,7 +14922,7 @@
 
       async function updateWorkflowLabTravelPlan() {
         const record = loadWorkflowLabStop();
-        if (!record || record.stage === "choose" || !record.labs?.length) return;
+        if (!record || !["travel", "arrived"].includes(record.stage) || !record.labs?.length) return;
         try {
           const destinations = [record.sourceProperty, ...record.labs.map(id => WORKFLOW_LABS[id]?.address).filter(Boolean)].filter(Boolean);
           if (record.nextProperty) destinations.push(record.nextProperty);
@@ -14823,13 +14970,24 @@
       }
 
       function chooseWorkflowLabStop(choice) {
-        const record = loadWorkflowLabStop();
+        const record = normalizeWorkflowLabStop();
         if (!record) return;
         if (choice === "none") {
           appendWorkflowEvent(record.finalStop ? "No final lab stop required" : "Lab stop skipped", {
             nextJobId: record.nextJobId,
             nextProperty: record.nextProperty
           }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
+          if (record.finalStop) {
+            record.stage = "proceed-home";
+            record.noLab = true;
+            record.noLabSelectedAt = new Date().toISOString();
+            record.nextJobId = "";
+            record.nextProperty = "";
+            record.nextScheduledStart = "";
+            saveWorkflowLabStop(record);
+            renderWorkflowApp();
+            return;
+          }
           saveWorkflowLabStop(null);
           renderWorkflowApp();
           return;
@@ -14856,12 +15014,28 @@
 
       function renderWorkflowLabStop(record = loadWorkflowLabStop()) {
         if (!record || !workflowLabCard) return;
+        record = normalizeWorkflowLabStop(record);
+        if (!record) {
+          renderWorkflowApp();
+          return;
+        }
+        if (record.finalStop && ["proceed-home", "driving-home"].includes(record.stage)) {
+          renderWorkflowHomeReturn(record);
+          return;
+        }
+        if (record.finalStop && record.stage === "home-arrived") {
+          workflowLabCard.hidden = true;
+          workflowHomeCard.hidden = true;
+          renderWorkflowDayComplete();
+          return;
+        }
         workflowIdentityCard.hidden = true;
         workflowReadinessCard.hidden = true;
         workflowTodayCard.hidden = true;
         workflowJobCard.hidden = true;
         workflowEquipmentCard.hidden = true;
         workflowLabCard.hidden = true;
+        workflowHomeCard.hidden = true;
         workflowDayCompleteCard.hidden = true;
         workflowLabCard.hidden = false;
         workflowLabChooser.hidden = record.stage !== "choose";
@@ -14922,7 +15096,7 @@
       }
 
       function completeWorkflowLabVisit() {
-        const record = loadWorkflowLabStop();
+        const record = normalizeWorkflowLabStop();
         const lab = currentWorkflowLab(record);
         if (!record || !lab || record.stage !== "arrived") return;
         const completedAt = new Date().toISOString();
@@ -14933,17 +15107,27 @@
           record.stage = "travel";
           record.travelStartedAt = completedAt;
         } else {
-          record.stage = "done";
+          record.stage = record.finalStop ? "proceed-home" : "done";
           record.completedAt = completedAt;
         }
         saveWorkflowLabStop(record);
-        renderWorkflowTimeClock();
-        renderWorkflowLabStop(record);
+        renderWorkflowApp();
       }
 
       function continueAfterWorkflowLab() {
-        const record = loadWorkflowLabStop();
-        if (!record || record.stage !== "done") return;
+        const record = normalizeWorkflowLabStop();
+        if (!record) return;
+        if (record.finalStop || !workflowRemainingScheduledJobs().length) {
+          record.finalStop = true;
+          record.stage = "proceed-home";
+          record.nextJobId = "";
+          record.nextProperty = "";
+          record.nextScheduledStart = "";
+          saveWorkflowLabStop(record);
+          renderWorkflowApp();
+          return;
+        }
+        if (record.stage !== "done") return;
         appendWorkflowEvent("Lab route departure / continuation", {
           departedAt: new Date().toISOString(),
           nextJobId: record.nextJobId,
@@ -14952,6 +15136,59 @@
         }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
         saveWorkflowLabStop(null);
         renderWorkflowApp();
+      }
+
+      function renderWorkflowHomeReturn(record = loadWorkflowLabStop()) {
+        if (!record || !workflowHomeCard) return;
+        const driving = record.stage === "driving-home";
+        workflowIdentityCard.hidden = true;
+        workflowReadinessCard.hidden = true;
+        workflowTodayCard.hidden = true;
+        workflowJobCard.hidden = true;
+        workflowEquipmentCard.hidden = true;
+        workflowLabCard.hidden = true;
+        workflowDayCompleteCard.hidden = true;
+        workflowHomeCard.hidden = false;
+        workflowHomeEyebrow.textContent = driving ? "Final journey" : "End of inspections";
+        workflowHomeTitle.textContent = driving ? "DRIVING HOME" : "INSPECTIONS COMPLETE";
+        workflowHomeMessage.textContent = driving
+          ? "Your final drive is being tracked. When you arrive at your approved home or end location, return here and confirm arrival."
+          : record.noLab
+            ? "No lab stop required. Proceed home. When you arrive, complete your End-of-Day Equipment Check and Clock Out."
+            : "The required lab visit is complete. Proceed home. When you arrive, complete your End-of-Day Equipment Check and Clock Out.";
+        workflowProceedHomeBtn.hidden = driving;
+        workflowArrivedHomeBtn.hidden = !driving;
+        workflowHomeNote.textContent = driving
+          ? "You remain clocked in. Do not Clock Out until you arrive and complete the equipment check."
+          : "You remain clocked in during the final journey.";
+      }
+
+      function startWorkflowHomeJourney() {
+        const record = normalizeWorkflowLabStop();
+        if (!record || !record.finalStop || record.stage !== "proceed-home") return;
+        const departedAt = new Date().toISOString();
+        record.stage = "driving-home";
+        record.homeDepartureAt = departedAt;
+        saveWorkflowLabStop(record);
+        appendWorkflowEvent("Proceed home selected", {
+          departedAt,
+          labStopCompleted: Boolean(record.labs?.length),
+          noLab: Boolean(record.noLab)
+        }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
+        renderWorkflowApp();
+        showToast("Final drive started — remain clocked in");
+      }
+
+      function arriveWorkflowHome() {
+        const record = loadWorkflowLabStop();
+        if (!record || !record.finalStop || record.stage !== "driving-home") return;
+        const arrivedAt = new Date().toISOString();
+        record.stage = "home-arrived";
+        record.homeArrivedAt = arrivedAt;
+        saveWorkflowLabStop(record);
+        appendWorkflowEvent("Arrived home / end location", { arrivedAt }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
+        renderWorkflowApp();
+        showToast("Arrival recorded — complete the equipment check, then Clock Out");
       }
 
       function updateWorkflowReadinessButton() {
@@ -15162,10 +15399,12 @@
 
       function nextWorkflowAppointment(job) {
         const jobs = workflowScheduleJobs().slice().sort((a, b) => scheduleJobTimestamp(a, "start") - scheduleJobTimestamp(b, "start"));
-        const index = jobs.findIndex(item => String(item.id || "") === String(job?.calendarEventId || ""));
-        if (index >= 0) return jobs[index + 1] || null;
+        const completed = workflowCompletedEventIds();
+        const currentId = String(job?.calendarEventId || job?.id || "");
+        const remaining = jobs.filter(item => String(item.id || "") !== currentId && !completed.has(item.id));
+        if (!remaining.length) return null;
         const currentStart = new Date(job?.scheduledStart || 0).getTime();
-        return jobs.find(item => scheduleJobTimestamp(item, "start") > currentStart) || null;
+        return remaining.find(item => scheduleJobTimestamp(item, "start") > currentStart) || remaining[0] || null;
       }
 
       function calculateWorkflowDeparturePlan(job) {
@@ -15420,6 +15659,8 @@
         workflowTodayCard.hidden = true;
         workflowEquipmentCard.hidden = job.workflowStatus !== "equipment";
         workflowJobCard.hidden = job.workflowStatus === "equipment";
+        workflowLabCard.hidden = true;
+        workflowHomeCard.hidden = true;
         workflowDayCompleteCard.hidden = true;
         if (job.workflowStatus === "equipment") {
           renderWorkflowEquipment(job);
@@ -15656,6 +15897,8 @@
         workflowTodayCard.hidden = true;
         workflowJobCard.hidden = true;
         workflowEquipmentCard.hidden = false;
+        workflowLabCard.hidden = true;
+        workflowHomeCard.hidden = true;
         workflowDayCompleteCard.hidden = true;
         workflowEquipmentJob.textContent = `${job?.property || "Current job"} · ${workflowServiceLabel(job)}`;
         updateWorkflowEquipmentButton();
@@ -15741,8 +15984,13 @@
         const jobs = workflowScheduleJobs();
         const complete = workflowCompletedEventIds();
         const active = loadActiveJob();
-        const ready = jobs.length > 0 && jobs.every(job => complete.has(job.id)) && !active?.property;
         const record = workflowDayCompleteRecord();
+        const finalReturn = loadWorkflowLabStop();
+        const returnedHome = finalReturn?.finalStop && finalReturn.stage === "home-arrived";
+        const scheduleFinished = jobs.length ? jobs.every(job => complete.has(job.id)) : returnedHome;
+        const ready = scheduleFinished
+          && !active?.property
+          && (Boolean(record?.completedAt) || returnedHome);
         workflowDayCompleteCard.hidden = !ready;
         if (record?.equipment?.length) {
           workflowEndOfDayChecks.forEach(check => { check.checked = record.equipment.includes(check.dataset.workflowEodEquipment); });
@@ -15842,6 +16090,10 @@
         "Lab route departure / continuation": "Continued after lab stop",
         "Lab stop skipped": "Continued without a lab stop",
         "No final lab stop required": "No final lab stop required",
+        "Proceed home selected": "Final drive home started",
+        "Arrived home / end location": "Arrived at final destination",
+        "Final return workflow recovered": "End-of-day workflow restored",
+        "Final return cancelled for added appointment": "Final journey cancelled — appointment added",
         "30-minute departure warning issued": "30-minute departure warning issued",
         "5-minute hard-stop warning issued": "5-minute hard-stop warning issued",
         "Phone backup alarms scheduled": "Phone backup alarms scheduled",
@@ -16227,6 +16479,7 @@
         saveWorkflowDayCompleteRecord(record);
         appendWorkflowEvent("End-of-day equipment check completed", { equipment, completedAt });
         appendWorkflowEvent("Signed off for day", { completedAt });
+        saveWorkflowLabStop(null);
         renderWorkflowDayComplete();
         submitWorkflowDailySummary(record);
       }
@@ -16461,13 +16714,15 @@
         const readiness = workflowReadinessRecord();
         const active = loadActiveJob();
         workflowIdentityCard.hidden = Boolean(profile);
-        renderWorkflowTimeClock();
         workflowReadinessCard.hidden = true;
         workflowTodayCard.hidden = true;
         workflowJobCard.hidden = true;
         workflowEquipmentCard.hidden = true;
+        workflowLabCard.hidden = true;
+        workflowHomeCard.hidden = true;
         workflowDayCompleteCard.hidden = true;
         if (!profile) {
+          renderWorkflowTimeClock();
           workflowInspectorName.value = loadRememberedInspector();
           workflowInspectorId.value = "";
           workflowInspectorPhone.value = "";
@@ -16476,6 +16731,7 @@
         }
         workflowReadinessInspector.textContent = profile.name;
         workflowTodayInspector.textContent = profile.name;
+        renderWorkflowTimeClock();
         if (active?.isPractice) {
           renderWorkflowJob(active);
           return;
@@ -16486,8 +16742,17 @@
           updateWorkflowReadinessButton();
           return;
         }
-        const labStop = loadWorkflowLabStop();
+        const labStop = ensureWorkflowFinalReturnState();
+        renderWorkflowTimeClock();
         if (labStop) {
+          if (labStop.finalStop && ["proceed-home", "driving-home"].includes(labStop.stage)) {
+            renderWorkflowHomeReturn(labStop);
+            return;
+          }
+          if (labStop.finalStop && labStop.stage === "home-arrived") {
+            renderWorkflowDayComplete();
+            return;
+          }
           renderWorkflowLabStop(labStop);
           return;
         }
@@ -16547,7 +16812,12 @@
         workflowLabArrivedBtn.addEventListener("click", markWorkflowLabArrived);
         workflowLabCompleteBtn.addEventListener("click", completeWorkflowLabVisit);
         workflowLabContinueBtn.addEventListener("click", continueAfterWorkflowLab);
-        workflowEndOfDayChecklist.addEventListener("change", updateWorkflowDayCompleteButton);
+        workflowProceedHomeBtn.addEventListener("click", startWorkflowHomeJourney);
+        workflowArrivedHomeBtn.addEventListener("click", arriveWorkflowHome);
+        workflowEndOfDayChecklist.addEventListener("change", () => {
+          updateWorkflowDayCompleteButton();
+          renderWorkflowTimeClock();
+        });
         workflowDayCompleteBtn.addEventListener("click", completeWorkflowDay);
         window.addEventListener("mpi-comment-usage-updated", queueWorkflowOperationsSync);
         window.addEventListener("online", () => {
