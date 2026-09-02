@@ -1,5 +1,12 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 135 — Office Admin Permission Guard
+
+- Keeps full inspector operations, reporting, messaging, and account-management access available to office admins.
+- Removes the Owner role choice from office-admin accounts so only the owner can grant owner-only access.
+- Keeps the MPI Comment Builder allowance visible only to `kev@michiganpropertyinspections.com`.
+- Updated the offline application shell and visible version to Build 135.
+
 ## Build 134 — Office Admin Messaging and Report Access
 
 - Added a simple in-app reply control to every office message so inspectors can respond without leaving MPI Field Tools.

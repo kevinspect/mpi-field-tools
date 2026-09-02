@@ -307,7 +307,7 @@
           <select data-person-role aria-label="Role for ${escapeHtml(person.name || person.email)}" ${person.role === "owner" ? "disabled" : ""}>
             <option value="inspector" ${person.role === "inspector" ? "selected" : ""}>Inspector</option>
             <option value="admin" ${person.role === "admin" ? "selected" : ""}>Office admin</option>
-            <option value="owner" ${person.role === "owner" ? "selected" : ""}>Owner</option>
+            ${shared.isOwnerEmail(currentUser?.email) ? `<option value="owner" ${person.role === "owner" ? "selected" : ""}>Owner</option>` : ""}
           </select>
           <label class="check" style="padding:8px"><input data-person-active type="checkbox" ${person.active !== false ? "checked" : ""} ${person.role === "owner" ? "disabled" : ""}><span>Active</span></label>
         </div>
@@ -660,6 +660,7 @@
     const person = people.find(item => item.id === card.dataset.personId);
     if (!person || person.role === "owner") return;
     const role = card.querySelector("[data-person-role]").value;
+    if (role === "owner" && !shared.isOwnerEmail(currentUser?.email)) return;
     const active = card.querySelector("[data-person-active]").checked;
     const inspectorId = card.querySelector("[data-person-inspector-id]").value.trim().slice(0, 40);
     try {
