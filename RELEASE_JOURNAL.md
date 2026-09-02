@@ -1,5 +1,15 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 137 — Office File Attachments
+
+- Added a branded drag-and-drop file area to the Admin Console publishing form for PDFs and common image formats.
+- Allows up to five files per update, with clear file-size checks, a selected-file list, and remove controls before publishing.
+- Delivers attachments securely only to the selected inspector or all inspectors, matching the update audience.
+- Lets inspectors open attached PDFs and images directly from Office Updates on their phones; office staff can also reopen attachments from Sent Updates.
+- Stores files in the existing no-cost MPI data service in manageable chunks, avoiding a new paid storage service.
+- Prevents live dashboard refreshes from erasing an admin correction while the date, time, job, or reason is being entered.
+- Updated the offline application shell and visible version to Build 137.
+
 ## Build 136 — Cory Account Identity Repair
 
 - Corrected the inspector identity spelling to **Cory Leese** and matched his real company account, `cory@michiganpropertyinspections.com`.

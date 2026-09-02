@@ -21,6 +21,9 @@
   const messageInput = document.getElementById("adminUpdateMessage");
   const linkInput = document.getElementById("adminUpdateLink");
   const dueInput = document.getElementById("adminUpdateDue");
+  const attachmentInput = document.getElementById("adminUpdateFiles");
+  const attachmentDrop = document.getElementById("adminAttachmentDrop");
+  const attachmentList = document.getElementById("adminAttachmentList");
   const ackInput = document.getElementById("adminUpdateAck");
   const publishButton = document.getElementById("adminPublishButton");
   const publishStatus = document.getElementById("adminPublishStatus");
@@ -78,10 +81,133 @@
   let unsubscribeUpdates = null;
   let replyRefreshTimer = 0;
   let repliesRefreshing = false;
+  let selectedFiles = [];
   const messageReceiptCache = new Map();
+  const MAX_ATTACHMENT_FILES = 5;
+  const MAX_ATTACHMENT_BYTES = 8 * 1024 * 1024;
+  const MAX_ATTACHMENT_TOTAL_BYTES = 12 * 1024 * 1024;
+  const ATTACHMENT_CHUNK_LENGTH = 560000;
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
+  }
+
+  function formatFileSize(value) {
+    const bytes = Math.max(0, Number(value) || 0);
+    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function attachmentKind(file) {
+    return String(file?.type || "").includes("pdf") || /\.pdf$/i.test(file?.name || "") ? "PDF" : "IMG";
+  }
+
+  function validAttachment(file) {
+    return /^(application\/pdf|image\/(jpeg|png|webp|heic|heif))$/i.test(file?.type || "") || /\.(pdf|jpe?g|png|webp|heic|heif)$/i.test(file?.name || "");
+  }
+
+  function renderSelectedFiles() {
+    attachmentList.innerHTML = selectedFiles.map((file, index) => `<div class="attachment-item"><span class="attachment-kind">${attachmentKind(file)}</span><span><strong>${escapeHtml(file.name)}</strong><small>${escapeHtml(formatFileSize(file.size))}</small></span><button class="attachment-remove" type="button" data-remove-attachment="${index}">REMOVE</button></div>`).join("");
+  }
+
+  function addSelectedFiles(files) {
+    publishStatus.textContent = "";
+    publishStatus.className = "status";
+    for (const file of [...files]) {
+      if (!validAttachment(file)) {
+        publishStatus.textContent = `${file.name} is not a supported PDF or image.`;
+        publishStatus.className = "status error";
+        continue;
+      }
+      if (file.size > MAX_ATTACHMENT_BYTES) {
+        publishStatus.textContent = `${file.name} is larger than 8 MB.`;
+        publishStatus.className = "status error";
+        continue;
+      }
+      const duplicate = selectedFiles.some(item => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified);
+      if (!duplicate) selectedFiles.push(file);
+    }
+    if (selectedFiles.length > MAX_ATTACHMENT_FILES) {
+      selectedFiles = selectedFiles.slice(0, MAX_ATTACHMENT_FILES);
+      publishStatus.textContent = "A maximum of 5 files can be attached to one update.";
+      publishStatus.className = "status error";
+    }
+    while (selectedFiles.reduce((total, file) => total + file.size, 0) > MAX_ATTACHMENT_TOTAL_BYTES) selectedFiles.pop();
+    if ([...files].length && selectedFiles.reduce((total, file) => total + file.size, 0) >= MAX_ATTACHMENT_TOTAL_BYTES) {
+      publishStatus.textContent = "Attachments are limited to 12 MB total per update.";
+      publishStatus.className = "status error";
+    }
+    attachmentInput.value = "";
+    renderSelectedFiles();
+  }
+
+  function fileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || "").split(",").pop() || "");
+      reader.onerror = () => reject(new Error(`${file.name} could not be read.`));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function uploadAttachments(updateRef, files, audience, targetEmail) {
+    const attachments = [];
+    for (let fileIndex = 0; fileIndex < files.length; fileIndex += 1) {
+      const file = files[fileIndex];
+      publishStatus.textContent = `Uploading ${fileIndex + 1} of ${files.length}: ${file.name}`;
+      const encoded = await fileAsBase64(file);
+      const pieces = [];
+      for (let offset = 0; offset < encoded.length; offset += ATTACHMENT_CHUNK_LENGTH) pieces.push(encoded.slice(offset, offset + ATTACHMENT_CHUNK_LENGTH));
+      const attachmentRef = updateRef.collection("attachments").doc();
+      const metadata = {
+        id: attachmentRef.id,
+        name: String(file.name || "MPI attachment").slice(0, 160),
+        type: file.type || (/\.pdf$/i.test(file.name) ? "application/pdf" : "application/octet-stream"),
+        size: file.size,
+        chunkCount: pieces.length
+      };
+      await attachmentRef.set({ ...metadata, audience, targetEmail, active: true, createdAt: shared.serverTimestamp(), createdBy: currentUser.uid });
+      for (let start = 0; start < pieces.length; start += 6) {
+        await Promise.all(pieces.slice(start, start + 6).map((data, part) => attachmentRef.collection("chunks").doc(String(start + part).padStart(4, "0")).set({ index: start + part, data, audience, targetEmail, active: true })));
+      }
+      attachments.push(metadata);
+    }
+    return attachments;
+  }
+
+  function adminAttachmentsHtml(update) {
+    const attachments = Array.isArray(update?.attachments) ? update.attachments : [];
+    if (!attachments.length) return "";
+    return `<div class="admin-attachments"><strong>${attachments.length} attached file${attachments.length === 1 ? "" : "s"}</strong>${attachments.map(file => `<button class="admin-attachment-open" type="button" data-open-admin-attachment="${escapeHtml(file.id)}" data-update-id="${escapeHtml(update.id)}"><span>${escapeHtml(attachmentKind(file))} · ${escapeHtml(file.name)} · ${escapeHtml(formatFileSize(file.size))}</span><span>OPEN ↗</span></button>`).join("")}</div>`;
+  }
+
+  async function openAdminAttachment(button) {
+    const update = updates.find(item => item.id === button.dataset.updateId);
+    const attachment = update?.attachments?.find(item => item.id === button.dataset.openAdminAttachment);
+    if (!update || !attachment) return;
+    const viewer = window.open("about:blank", "_blank");
+    button.disabled = true;
+    const prior = button.lastElementChild?.textContent || "OPEN ↗";
+    if (button.lastElementChild) button.lastElementChild.textContent = "LOADING…";
+    try {
+      const blob = await shared.loadOfficeAttachment(update.id, attachment);
+      const url = URL.createObjectURL(blob);
+      if (viewer) viewer.location.replace(url);
+      else {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = attachment.name || "MPI attachment";
+        link.click();
+      }
+      window.setTimeout(() => URL.revokeObjectURL(url), 5 * 60 * 1000);
+    } catch (error) {
+      viewer?.close();
+      publishStatus.textContent = error.message || "The attachment could not be opened.";
+      publishStatus.className = "status error";
+    } finally {
+      button.disabled = false;
+      if (button.lastElementChild) button.lastElementChild.textContent = prior;
+    }
   }
 
   function asDate(value) {
@@ -280,6 +406,18 @@
   function showView(name) {
     tabButtons.forEach(button => button.classList.toggle("active", button.dataset.adminView === name));
     panels.forEach(panel => panel.classList.toggle("active", panel.dataset.adminPanel === name));
+  }
+
+  function correctionDraftIsActive() {
+    const correctionForm = document.getElementById("adminCorrectionForm");
+    if (!correctionForm) return false;
+    if (correctionForm.contains(document.activeElement)) return true;
+    return Boolean(
+      correctionForm.querySelector("#adminCorrectionValue")?.value
+      || correctionForm.querySelector("#adminCorrectionReason")?.value.trim()
+      || correctionForm.querySelector("#adminCorrectionJob")?.value
+      || correctionForm.querySelector("#adminCorrectionAction")?.selectedIndex > 0
+    );
   }
 
   function renderTargetOptions() {
@@ -486,6 +624,7 @@
   }
 
   function renderOperations() {
+    const preserveCorrectionDraft = selectedInspectorId !== "all" && correctionDraftIsActive();
     renderOperationsStats();
     rangePicker.querySelectorAll("button").forEach(button => button.classList.toggle("active", button.dataset.range === currentRange));
     const syncDates = operativePeople().map(person => asDate(person.operationsUpdatedAt)).filter(Boolean);
@@ -494,8 +633,8 @@
     if (selectedInspectorId === "all") renderTeamOverview();
     else {
       const person = people.find(item => item.id === selectedInspectorId);
-      if (person) renderInspectorDetail(person);
-      else renderTeamOverview();
+      if (!person) renderTeamOverview();
+      else if (!preserveCorrectionDraft) renderInspectorDetail(person);
     }
   }
 
@@ -515,7 +654,7 @@
       const summary = summaries[index];
       const recipient = update.audience === "all" ? "All inspectors" : update.targetName || update.targetEmail || "One inspector";
       const replies = summary.replies.length ? `<div class="admin-update-replies"><strong>Inspector replies</strong>${summary.replies.map(reply => `<p><b>${escapeHtml(reply.userName || reply.userEmail || "Inspector")}:</b> ${escapeHtml(reply.replyText)}</p>`).join("")}</div>` : "";
-      return `<article class="update-card"><div class="update-top"><div><span class="type-badge">${escapeHtml(String(update.type || "update").replace("-", " "))}</span>${update.priority !== "normal" ? `<span class="priority-badge">${escapeHtml(update.priority)}</span>` : ""}<h3>${escapeHtml(update.title)}</h3></div><span class="role-badge">${escapeHtml(recipient)}</span></div><p>${escapeHtml(update.message)}</p><div class="update-meta"><span>Published ${escapeHtml(formatDateTime(update.createdAt))}</span><span>Due ${escapeHtml(formatDate(update.dueDate))}</span><span>${summary.total} response${summary.total === 1 ? "" : "s"}</span><span>${summary.acknowledged} read / acknowledged</span></div>${replies}</article>`;
+      return `<article class="update-card"><div class="update-top"><div><span class="type-badge">${escapeHtml(String(update.type || "update").replace("-", " "))}</span>${update.priority !== "normal" ? `<span class="priority-badge">${escapeHtml(update.priority)}</span>` : ""}<h3>${escapeHtml(update.title)}</h3></div><span class="role-badge">${escapeHtml(recipient)}</span></div><p>${escapeHtml(update.message)}</p>${adminAttachmentsHtml(update)}<div class="update-meta"><span>Published ${escapeHtml(formatDateTime(update.createdAt))}</span><span>Due ${escapeHtml(formatDate(update.dueDate))}</span><span>${summary.total} response${summary.total === 1 ? "" : "s"}</span><span>${summary.acknowledged} read / acknowledged</span></div>${replies}</article>`;
     }).join("") : '<div class="empty">No office updates have been published.</div>';
     if (selectedInspectorId !== "all") renderOperations();
   }
@@ -534,7 +673,7 @@
       renderPeople();
     }, error => { authStatus.textContent = error.message; });
     unsubscribeUpdates = shared.db.collection("officeUpdates").orderBy("createdAt", "desc").limit(200).onSnapshot(snapshot => {
-      updates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      updates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(update => !update.hidden);
       renderUpdates();
     }, error => { publishStatus.textContent = error.message; publishStatus.className = "status error"; });
     if (!replyRefreshTimer) {
@@ -564,11 +703,14 @@
       return;
     }
     const targetPerson = people.find(person => shared.normalizeEmail(person.email) === targetEmail);
+    const filesToUpload = [...selectedFiles];
     publishButton.disabled = true;
     publishStatus.textContent = "Publishing…";
     publishStatus.className = "status";
+    let updateRef = null;
     try {
-      await shared.db.collection("officeUpdates").add({
+      updateRef = shared.db.collection("officeUpdates").doc();
+      await updateRef.set({
         type: typeInput.value,
         priority: priorityInput.value,
         audience: audience === "all" ? "all" : "inspector",
@@ -579,13 +721,22 @@
         link: linkInput.value.trim(),
         dueDate: dueInput.value,
         requiresAcknowledgement: ackInput.checked,
-        active: true,
+        active: filesToUpload.length === 0,
+        attachmentUploadStatus: filesToUpload.length ? "uploading" : "complete",
+        attachmentCount: filesToUpload.length,
+        attachments: [],
         createdAt: shared.serverTimestamp(),
         createdBy: currentUser.uid,
         createdByEmail: shared.normalizeEmail(currentUser.email),
         createdByName: currentProfile.name || currentUser.displayName || "MPI Management"
       });
+      if (filesToUpload.length) {
+        const attachments = await uploadAttachments(updateRef, filesToUpload, audience === "all" ? "all" : "inspector", targetEmail);
+        await updateRef.update({ attachments, attachmentUploadStatus: "complete", active: true, publishedAt: shared.serverTimestamp() });
+      }
       form.reset();
+      selectedFiles = [];
+      renderSelectedFiles();
       ackInput.checked = true;
       audienceInput.value = "all";
       targetField.hidden = true;
@@ -593,6 +744,7 @@
       publishStatus.className = "status success";
       showView("updates");
     } catch (error) {
+      if (updateRef) updateRef.set({ active: false, attachmentUploadStatus: "failed", attachmentUploadError: String(error?.message || "Upload failed").slice(0, 240) }, { merge: true }).catch(() => {});
       publishStatus.textContent = error.message || "The update could not be published.";
       publishStatus.className = "status error";
     } finally {
@@ -672,7 +824,27 @@
 
   tabButtons.forEach(button => button.addEventListener("click", () => showView(button.dataset.adminView)));
   audienceInput.addEventListener("change", () => { targetField.hidden = audienceInput.value !== "inspector"; });
+  attachmentInput.addEventListener("change", () => addSelectedFiles(attachmentInput.files || []));
+  attachmentDrop.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      attachmentInput.click();
+    }
+  });
+  ["dragenter", "dragover"].forEach(name => attachmentDrop.addEventListener(name, event => { event.preventDefault(); attachmentDrop.classList.add("dragging"); }));
+  ["dragleave", "drop"].forEach(name => attachmentDrop.addEventListener(name, event => { event.preventDefault(); attachmentDrop.classList.remove("dragging"); }));
+  attachmentDrop.addEventListener("drop", event => addSelectedFiles(event.dataTransfer?.files || []));
+  attachmentList.addEventListener("click", event => {
+    const button = event.target.closest("[data-remove-attachment]");
+    if (!button) return;
+    selectedFiles.splice(Number(button.dataset.removeAttachment), 1);
+    renderSelectedFiles();
+  });
   form.addEventListener("submit", publishUpdate);
+  updatesList.addEventListener("click", event => {
+    const button = event.target.closest("[data-open-admin-attachment]");
+    if (button) openAdminAttachment(button);
+  });
   peopleList.addEventListener("change", updatePerson);
   inspectorSelector.addEventListener("change", () => { selectedInspectorId = inspectorSelector.value; renderOperations(); });
   rangePicker.addEventListener("click", event => {

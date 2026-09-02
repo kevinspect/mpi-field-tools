@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="136">
+  <meta name="app-build" content="137">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4822,6 +4822,17 @@
     .mpi-update-card p { margin:8px 0 0; color:var(--ink-2); font-size:11.5px; line-height:1.55; white-space:pre-wrap; }
     .mpi-update-meta { display:flex; flex-wrap:wrap; gap:8px 15px; margin-top:12px; color:#6b7188; font-size:9.5px; font-weight:750; }
     .mpi-update-link { display:inline-flex; margin-top:12px; color:var(--bright-blue); font-size:10.5px; font-weight:900; }
+    .mpi-update-attachments { display:grid; gap:8px; margin-top:13px; padding:12px; background:#f4f8fc; border:1px solid #d7e3ef; border-radius:12px; }
+    .mpi-update-attachments > strong { color:var(--forest); font-size:10px; }
+    .mpi-update-attachments > small { color:#6b7188; font-size:9px; line-height:1.4; }
+    .mpi-update-attachment { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:9px; align-items:center; width:100%; min-height:48px; padding:8px 10px; color:var(--forest); background:#fff; border:1px solid #cbd9e8; border-radius:10px; text-align:left; }
+    .mpi-update-attachment-kind { display:grid; width:34px; height:34px; place-items:center; color:#fff; background:var(--bright-blue); border-radius:8px; font-size:8px; font-weight:950; }
+    .mpi-update-attachment-copy { min-width:0; }
+    .mpi-update-attachment-copy strong,.mpi-update-attachment-copy small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .mpi-update-attachment-copy strong { color:var(--forest); font-size:10px; }
+    .mpi-update-attachment-copy small { margin-top:3px; color:#6b7188; font-size:8.5px; }
+    .mpi-update-attachment-open { color:var(--bright-blue); font-size:9px; font-weight:950; white-space:nowrap; }
+    .mpi-update-attachment:disabled { opacity:.68; }
     .mpi-update-action { display:grid; width:100%; min-height:46px; place-items:center; margin-top:15px; color:#fff; background:var(--forest); border:0; border-radius:10px; font-size:10px; font-weight:950; }
     .mpi-update-action:disabled { color:#276a55; background:#dff1ea; }
     .mpi-update-action.clear { color:#11186a; background:#eef3f9; border:1px solid #cbd6e5; }
@@ -4983,7 +4994,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">136</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">137</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -7442,7 +7453,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 136</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 137</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7572,9 +7583,9 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=136"></script>
-  <script src="./mpi-field-sync.js?build=136"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=136"></script>
+  <script src="./mpi-shared.js?build=137"></script>
+  <script src="./mpi-field-sync.js?build=137"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=137"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {

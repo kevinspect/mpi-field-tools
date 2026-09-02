@@ -217,6 +217,24 @@
     }, { merge: true });
   }
 
+  async function loadOfficeAttachment(updateId, attachment) {
+    const updateKey = String(updateId || "").trim();
+    const attachmentKey = String(attachment?.id || "").trim();
+    if (!updateKey || !attachmentKey) throw new Error("This attachment is missing its secure file reference.");
+    const snapshot = await db.collection("officeUpdates").doc(updateKey)
+      .collection("attachments").doc(attachmentKey).collection("chunks")
+      .orderBy("index", "asc").get();
+    const chunks = snapshot.docs.map(doc => doc.data()).sort((left, right) => Number(left.index) - Number(right.index));
+    if (!chunks.length || (attachment.chunkCount && chunks.length !== Number(attachment.chunkCount))) {
+      throw new Error("The complete file has not synchronized yet. Reconnect and try again.");
+    }
+    const encoded = chunks.map(chunk => String(chunk.data || "")).join("");
+    const binary = window.atob(encoded);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+    return new Blob([bytes], { type: attachment.type || "application/octet-stream" });
+  }
+
   function cleanOperationsValue(value) {
     return JSON.parse(JSON.stringify(value, (_, item) => item === undefined ? null : item));
   }
@@ -265,6 +283,7 @@
     setUpdateStatus,
     clearUpdate,
     replyToUpdate,
+    loadOfficeAttachment,
     syncOperationsSnapshot
   };
 })();

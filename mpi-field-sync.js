@@ -60,6 +60,22 @@
     return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(date);
   }
 
+  function formatFileSize(value) {
+    const bytes = Math.max(0, Number(value) || 0);
+    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function attachmentKind(file) {
+    return String(file?.type || "").includes("pdf") || /\.pdf$/i.test(file?.name || "") ? "PDF" : "IMG";
+  }
+
+  function updateAttachmentsHtml(update) {
+    const attachments = Array.isArray(update?.attachments) ? update.attachments : [];
+    if (!attachments.length) return "";
+    return `<div class="mpi-update-attachments"><strong>Files from MPI Office</strong>${attachments.map(file => `<button class="mpi-update-attachment" type="button" data-office-attachment="${escapeHtml(file.id)}"><span class="mpi-update-attachment-kind">${escapeHtml(attachmentKind(file))}</span><span class="mpi-update-attachment-copy"><strong>${escapeHtml(file.name)}</strong><small>${escapeHtml(formatFileSize(file.size))}</small></span><span class="mpi-update-attachment-open">OPEN ↗</span></button>`).join("")}<small>Open each file once while connected so the phone can retain it for later use.</small></div>`;
+  }
+
   function updateAction(update) {
     if (["completed", "acknowledged", "read", "replied"].includes(update.receipt?.status)) return { label: "CLEAR FROM MY APP", status: "clear", disabled: false, clear: true };
     if (update.type === "training") return { label: "Mark training complete", status: "completed", disabled: false };
@@ -86,7 +102,7 @@
       const reply = update.receipt?.replyText
         ? `<div class="mpi-update-reply-sent"><strong>Your reply was sent to the office</strong><span>${escapeHtml(update.receipt.replyText)}</span></div>`
         : `<details class="mpi-update-reply"><summary>Reply to office</summary><form data-update-reply-form><label>Message for management<textarea maxlength="1000" required placeholder="Type your reply here"></textarea></label><button type="submit">SEND REPLY</button><span role="status"></span></form></details>`;
-      return `<article class="mpi-update-card ${escapeHtml(update.priority || "normal")}" data-update-id="${escapeHtml(update.id)}"><div class="mpi-update-top"><span>${escapeHtml(typeLabel(update.type))}</span>${update.priority && update.priority !== "normal" ? `<strong>${escapeHtml(update.priority)}</strong>` : ""}</div><h3>${escapeHtml(update.title)}</h3><p>${escapeHtml(update.message)}</p><div class="mpi-update-meta">${due}<span>From ${escapeHtml(update.createdByName || "MPI Management")}</span></div>${link}${reply}<button class="mpi-update-action${action.clear ? " clear" : ""}" type="button" data-update-status="${action.status}" ${action.disabled ? "disabled" : ""}>${escapeHtml(action.label)}</button></article>`;
+      return `<article class="mpi-update-card ${escapeHtml(update.priority || "normal")}" data-update-id="${escapeHtml(update.id)}"><div class="mpi-update-top"><span>${escapeHtml(typeLabel(update.type))}</span>${update.priority && update.priority !== "normal" ? `<strong>${escapeHtml(update.priority)}</strong>` : ""}</div><h3>${escapeHtml(update.title)}</h3><p>${escapeHtml(update.message)}</p><div class="mpi-update-meta">${due}<span>From ${escapeHtml(update.createdByName || "MPI Management")}</span></div>${link}${updateAttachmentsHtml(update)}${reply}<button class="mpi-update-action${action.clear ? " clear" : ""}" type="button" data-update-status="${action.status}" ${action.disabled ? "disabled" : ""}>${escapeHtml(action.label)}</button></article>`;
     }).join("") : '<div class="mpi-updates-empty"><strong>You are up to date.</strong><span>No current office messages, instructions, or training assignments are waiting.</span></div>';
   }
 
@@ -164,6 +180,39 @@
     }
   }
 
+  async function handleAttachmentOpen(event) {
+    const button = event.target.closest("[data-office-attachment]");
+    if (!button) return;
+    const card = button.closest("[data-update-id]");
+    const update = currentUpdates.find(item => item.id === card?.dataset.updateId);
+    const attachment = update?.attachments?.find(item => item.id === button.dataset.officeAttachment);
+    if (!update || !attachment) return;
+    const viewer = window.open("about:blank", "_blank");
+    const label = button.querySelector(".mpi-update-attachment-open");
+    button.disabled = true;
+    if (label) label.textContent = "LOADING…";
+    try {
+      const blob = await shared.loadOfficeAttachment(update.id, attachment);
+      const url = URL.createObjectURL(blob);
+      if (viewer) viewer.location.replace(url);
+      else {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = attachment.name || "MPI attachment";
+        link.click();
+      }
+      window.setTimeout(() => URL.revokeObjectURL(url), 5 * 60 * 1000);
+    } catch (error) {
+      viewer?.close();
+      if (label) label.textContent = "TRY AGAIN";
+      button.title = error?.message || "The file could not be opened.";
+      button.disabled = false;
+      return;
+    }
+    if (label) label.textContent = "OPEN ↗";
+    button.disabled = false;
+  }
+
   async function handleUpdateReply(event) {
     const form = event.target.closest("[data-update-reply-form]");
     if (!form || !currentUser) return;
@@ -194,6 +243,7 @@
   signInButtons.forEach(button => button.addEventListener("click", () => signIn(button)));
   signOutButtons.forEach(button => button.addEventListener("click", () => shared.signOut()));
   updatesList.addEventListener("click", handleUpdateAction);
+  updatesList.addEventListener("click", handleAttachmentOpen);
   updatesList.addEventListener("submit", handleUpdateReply);
   window.addEventListener("mpi-push-token-ready", event => {
     if (currentUser && currentProfile) registerPushDevice(currentUser, currentProfile, event.detail?.token).catch(() => {});
