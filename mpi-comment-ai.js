@@ -125,14 +125,41 @@ function cleanResponse(value, fallback = "") {
   return cleanSentence(String(value || fallback).replace(/^(?:Observation|Implication|Recommendation|Limitation|Effect on Inspection):\s*/i, ""));
 }
 
-function parseResponse(text, note, mode) {
+function reportSelection(component) {
+  const value = String(component || "");
+  if (value.startsWith("report:")) {
+    const [section = "", item = ""] = value.slice(7).split("::");
+    return { section: decodeURIComponent(section), item: decodeURIComponent(item) };
+  }
+  if (value.startsWith("item:")) return { section: "", item: decodeURIComponent(value.slice(5)) };
+  return { section: "", item: "" };
+}
+
+function reportTitlePrefix(component) {
+  const { section, item } = reportSelection(component);
+  if (!item) return "";
+  if (["General", "General/Overview"].includes(item)) return section;
+  return item.replace(/^OPTIONAL\s*-\s*/i, "");
+}
+
+function matchReportTitle(title, component) {
+  const prefix = reportTitlePrefix(component);
+  const cleanTitle = String(title || "").trim().replace(/[\r\n]+/g, " ").slice(0, 140);
+  if (!prefix) return cleanTitle;
+  const normalizedTitle = cleanTitle.toLowerCase();
+  const normalizedPrefix = prefix.toLowerCase();
+  if (normalizedTitle === normalizedPrefix || normalizedTitle.startsWith(`${normalizedPrefix} - `)) return cleanTitle;
+  return `${prefix} - ${cleanTitle}`.slice(0, 140);
+}
+
+function parseResponse(text, note, mode, component) {
   let data;
   try {
     data = JSON.parse(String(text || "").replace(/^```json\s*|\s*```$/g, ""));
   } catch (_) {
     throw new Error("The MPI Comment Builder returned an incomplete result. Please try again.");
   }
-  const title = String(data.title || "").trim().replace(/[\r\n]+/g, " ").slice(0, 140);
+  const title = matchReportTitle(data.title, component);
   const observation = cleanResponse(data.observation, note);
   const implication = cleanResponse(data.implication);
   const recommendation = cleanResponse(data.recommendation);
@@ -151,14 +178,18 @@ async function generate({ note, component = "auto", mode = "defect" }) {
   assertWithinUsageLimit();
   const cleanNote = String(note || "").trim().slice(0, 900);
   if (!cleanNote) throw new Error("Enter what you observed first.");
-  const componentInstruction = component && component !== "auto"
-    ? `Selected report item/component: ${component}`
-    : "Selected report item/component: Auto-detect only from the inspector note.";
+  const selection = reportSelection(component);
+  const prefix = reportTitlePrefix(component);
+  const componentInstruction = selection.item
+    ? `Selected MPI report section: ${selection.section || "Not specified"}\nSelected MPI report item: ${selection.item}\nThe title must begin exactly with "${prefix}" followed by " - " and a short condition description.`
+    : component && component !== "auto"
+      ? `Selected report item/component: ${component}`
+      : "Selected report item/component: Auto-detect only from the inspector note.";
   const prompt = `Comment type: ${mode === "limit" ? "LIMITATION" : "DEFECT"}\n${componentInstruction}\nInspector note: ${cleanNote}`;
   try {
     const model = await getModel();
     const result = await model.generateContent(prompt);
-    const output = parseResponse(result.response.text(), cleanNote, mode);
+    const output = parseResponse(result.response.text(), cleanNote, mode, component);
     recordUsage();
     return output;
   } catch (error) {

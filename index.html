@@ -5559,7 +5559,7 @@
                 <option value="auto">Auto-detect from the note</option>
               </select>
             </div>
-            <p class="rule-hint">Choose the matching component category from your MPI report template, or leave Auto-detect selected.</p>
+            <p class="rule-hint">Choose the exact report section and item. The generated title will use that report item name, or leave Auto-detect selected.</p>
           </div>
 
           <div class="field">
@@ -7341,7 +7341,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 126</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 127</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7471,9 +7471,9 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=126"></script>
-  <script src="./mpi-field-sync.js?build=126"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=126"></script>
+  <script src="./mpi-shared.js?build=127"></script>
+  <script src="./mpi-field-sync.js?build=127"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=127"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -10450,15 +10450,34 @@
         select.appendChild(option);
       }
 
+      function parseReportSelection(selected) {
+        const value = String(selected || "");
+        if (value.startsWith("report:")) {
+          const [section = "", item = ""] = value.slice(7).split("::");
+          return { section: decodeURIComponent(section), item: decodeURIComponent(item) };
+        }
+        if (value.startsWith("item:")) return { section: "", item: decodeURIComponent(value.slice(5)) };
+        return { section: "", item: "" };
+      }
+
       function populateReportItems() {
-        const uniqueItems = [...new Set(REPORT_TAXONOMY.flatMap(({ items }) => items))]
-          .filter(item => item !== "Additional photos")
-          .sort((first, second) => first.localeCompare(second));
-        uniqueItems.forEach(item => addSelectOption(commentArea, `item:${encodeURIComponent(item)}`, item));
+        REPORT_TAXONOMY.forEach(({ section, items }) => {
+          const reportItems = items.filter(item => item !== "Additional photos");
+          if (!reportItems.length) return;
+          const group = document.createElement("optgroup");
+          group.label = section;
+          reportItems.forEach(item => {
+            const option = document.createElement("option");
+            option.value = `report:${encodeURIComponent(section)}::${encodeURIComponent(item)}`;
+            option.textContent = item;
+            group.appendChild(option);
+          });
+          commentArea.appendChild(group);
+        });
       }
 
       function componentFromReportSelection(note, selected) {
-        const item = decodeURIComponent(selected.slice(5));
+        const { item } = parseReportSelection(selected);
         const lower = defectMatchText(note);
         const itemKey = item.toLowerCase()
           .replace(/&/g, "and")
@@ -10633,7 +10652,7 @@
 
       function inferComponent(note, selected) {
         if (selected && selected !== "auto") {
-          if (selected.startsWith("item:")) return componentFromReportSelection(note, selected);
+          if (selected.startsWith("item:") || selected.startsWith("report:")) return componentFromReportSelection(note, selected);
           return selected;
         }
         const text = affirmativeDefectText(note);
@@ -11711,7 +11730,7 @@
       }
 
       function selectedReportItem(selectedArea) {
-        return selectedArea?.startsWith("item:") ? decodeURIComponent(selectedArea.slice(5)) : "";
+        return parseReportSelection(selectedArea).item;
       }
 
       function deniedObservationConcepts(note) {
