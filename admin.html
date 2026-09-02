@@ -45,6 +45,14 @@
     .stat { padding:18px; }
     .stat span { display:block; color:var(--muted); font-size:10px; font-weight:850; letter-spacing:.07em; text-transform:uppercase; }
     .stat strong { display:block; margin-top:8px; color:var(--navy); font-size:30px; }
+    .comment-usage-panel { display:grid; grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(120px,.55fr)); gap:16px; align-items:center; padding:20px; }
+    .comment-usage-copy h2 { margin:0; color:var(--navy); font-size:20px; }
+    .comment-usage-copy p { margin:6px 0 0; color:var(--muted); font-size:10.5px; line-height:1.5; }
+    .comment-usage-metric { padding:13px; background:#f5f7fb; border:1px solid var(--line); border-radius:12px; }
+    .comment-usage-metric span { display:block; color:var(--muted); font-size:8.5px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+    .comment-usage-metric strong { display:block; margin-top:6px; color:var(--navy); font-size:22px; }
+    .comment-usage-progress { grid-column:1/-1; height:10px; overflow:hidden; background:#e7ebf2; border-radius:99px; }
+    .comment-usage-progress span { display:block; width:0; height:100%; background:linear-gradient(90deg,#28765e,#c89b27 78%,#a33d36); border-radius:inherit; transition:width .25s ease; }
     .tabbar { display:flex; gap:8px; overflow:auto; padding:7px; }
     .tabbar button { min-height:43px; padding:0 15px; color:var(--muted); background:transparent; border:0; border-radius:10px; font-weight:850; white-space:nowrap; }
     .tabbar button.active { color:#fff; background:var(--navy); }
@@ -159,6 +167,9 @@
       .hero h1 { font-size:40px; }
       .account-pill { max-width:none; }
       .stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .comment-usage-panel { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .comment-usage-copy { grid-column:1/-1; }
+      .comment-usage-metric:last-of-type { grid-column:1/-1; }
       .form-grid { grid-template-columns:1fr; }
       .field.wide { grid-column:auto; }
       .content-panel { padding:17px; }
@@ -202,6 +213,14 @@
         <article class="panel stat"><span>Hours today</span><strong id="statHours">0:00</strong></article>
         <article class="panel stat"><span>Needs attention</span><strong id="statAlerts">0</strong></article>
       </div>
+
+      <section class="panel comment-usage-panel" aria-labelledby="commentUsageTitle">
+        <div class="comment-usage-copy"><h2 id="commentUsageTitle">MPI Comment Builder allowance</h2><p id="commentUsageNote">Approximate company usage recorded by signed-in Field Tools devices. Google’s exact free quota is dynamic; this counter does not enable billing.</p></div>
+        <div class="comment-usage-metric"><span>Used this month</span><strong id="commentUsageUsed">0</strong></div>
+        <div class="comment-usage-metric"><span>Approx. remaining</span><strong id="commentUsageRemaining">400</strong></div>
+        <div class="comment-usage-metric"><span>Status</span><strong id="commentUsageStatus">Healthy</strong></div>
+        <div class="comment-usage-progress" aria-hidden="true"><span id="commentUsageProgress"></span></div>
+      </section>
 
       <nav class="panel tabbar" aria-label="Office Console sections">
         <button class="active" type="button" data-admin-view="operations">Today’s operations</button>
@@ -256,7 +275,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
-  <script src="./mpi-shared.js?build=129"></script>
-  <script src="./admin.js?build=129"></script>
+  <script src="./mpi-shared.js?build=130"></script>
+  <script src="./admin.js?build=130"></script>
 </body>
 </html>

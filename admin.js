@@ -31,6 +31,11 @@
   const teamOverview = document.getElementById("adminTeamOverview");
   const inspectorDetail = document.getElementById("adminInspectorDetail");
   const operationsSync = document.getElementById("adminOperationsSync");
+  const commentUsageUsed = document.getElementById("commentUsageUsed");
+  const commentUsageRemaining = document.getElementById("commentUsageRemaining");
+  const commentUsageStatus = document.getElementById("commentUsageStatus");
+  const commentUsageProgress = document.getElementById("commentUsageProgress");
+  const commentUsageNote = document.getElementById("commentUsageNote");
   const tabButtons = [...document.querySelectorAll("[data-admin-view]")];
   const panels = [...document.querySelectorAll("[data-admin-panel]")];
   const stats = {
@@ -65,6 +70,7 @@
   let people = [];
   let updates = [];
   let currentRange = "today";
+  const COMMENT_MONTHLY_PLANNING_ALLOWANCE = 400;
   let selectedInspectorId = "all";
   let unsubscribePeople = null;
   let unsubscribeUpdates = null;
@@ -260,6 +266,27 @@
     const totalMinutes = days.reduce((total, item) => total + selectedDays(item.person).reduce((sum, day) => sum + workedMinutes(item.person, day), 0), 0);
     stats.hours.textContent = `${Math.floor(totalMinutes / 60)}:${String(totalMinutes % 60).padStart(2, "0")}`;
     stats.alerts.textContent = String(days.reduce((total, item) => total + meaningfulAlerts(item.person, item.day).length, 0));
+    renderCommentUsageAllowance();
+  }
+
+  function renderCommentUsageAllowance() {
+    if (!commentUsageUsed) return;
+    const now = new Date();
+    const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const used = people.filter(person => person.active !== false).reduce((companyTotal, person) => {
+      const snapshots = [person.operationsCurrent, ...(Array.isArray(person.operationsDays) ? person.operationsDays : [])]
+        .map(item => item?.commentUsage)
+        .filter(item => item?.month === month);
+      const deviceEstimate = snapshots.reduce((highest, item) => Math.max(highest, Number(item.monthlyUsed) || 0), 0);
+      return companyTotal + deviceEstimate;
+    }, 0);
+    const remaining = Math.max(0, COMMENT_MONTHLY_PLANNING_ALLOWANCE - used);
+    const percent = Math.min(100, Math.round((used / COMMENT_MONTHLY_PLANNING_ALLOWANCE) * 100));
+    commentUsageUsed.textContent = String(used);
+    commentUsageRemaining.textContent = String(remaining);
+    commentUsageStatus.textContent = percent >= 100 ? "Review now" : percent >= 80 ? "Running low" : "Healthy";
+    commentUsageProgress.style.width = `${percent}%`;
+    commentUsageNote.textContent = `${percent}% of the MPI 400-comment monthly planning allowance is recorded. This is an approximate device count; Google’s exact no-cost quota is dynamic and this panel never enables billing.`;
   }
 
   function renderTeamOverview() {

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="129">
+  <meta name="app-build" content="130">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4416,6 +4416,18 @@
     }
     .workflow-hours-pending strong { display: block; color: #8d6815; font-size: 11px; letter-spacing: .04em; }
     .workflow-hours-pending span { display: block; margin-top: 4px; font-size: 10px; line-height: 1.45; }
+    .workflow-clock-home-reminder {
+      margin: 14px 0;
+      padding: 18px 16px;
+      color: #201a09;
+      background: #fff2bd;
+      border: 3px solid #e4b93f;
+      border-radius: 15px;
+      box-shadow: 0 0 0 4px rgba(228,185,63,.14);
+      text-align: center;
+    }
+    .workflow-clock-home-reminder strong { display: block; color: #7d241f; font-size: clamp(20px, 5vw, 28px); line-height: 1.08; letter-spacing: .02em; }
+    .workflow-clock-home-reminder span { display: block; margin-top: 8px; font-size: 11px; font-weight: 800; line-height: 1.5; }
     .workflow-inline-ack {
       width: 100%;
       min-height: 46px;
@@ -4460,6 +4472,7 @@
     .workflow-job-meta { display: flex; flex-wrap: wrap; gap: 7px; margin: 14px 0 0; }
     .workflow-job-meta span { padding: 7px 9px; color: var(--forest); background: #fff; border-radius: 999px; font-size: 10px; font-weight: 900; }
     .workflow-next-job .workflow-button { width: 100%; margin-top: 17px; }
+    #workflowOptionalLabBtn { width: 100%; margin-top: 12px; min-height: 58px; color: #11186a; background: #fff5d6; border-color: #e0c467; }
 
     .workflow-jobs-list { display: grid; gap: 10px; margin-top: 16px; }
     .workflow-job-row { display: grid; grid-template-columns: 68px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 14px; background: #f7f9fc; border: 1px solid #e0e5ef; border-radius: 13px; }
@@ -4599,6 +4612,8 @@
     .workflow-lab-complete { padding: 16px; color: #276a55; background: #edf7f4; border: 1px solid #cfe7df; border-radius: 12px; }
     .workflow-lab-complete strong { display: block; font-size: 13px; }
     .workflow-lab-complete span { display: block; margin-top: 5px; font-size: 10.5px; line-height: 1.5; }
+    .workflow-lab-complete.clock-off { color: #7d241f; background: #fff2bd; border: 3px solid #e4b93f; text-align: center; }
+    .workflow-lab-complete.clock-off strong { font-size: clamp(20px, 5vw, 27px); line-height: 1.1; }
 
     .reference-guide-intro { margin: 0 0 14px; padding: 13px 14px; color: var(--forest); background: #eef5fa; border: 1px solid #cbdff1; border-radius: 11px; font-size: 11px; line-height: 1.55; }
     .reference-guide-steps { display: grid; gap: 9px; }
@@ -4923,7 +4938,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">129</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">130</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -5027,6 +5042,10 @@
             <span>Tap ARRIVED when you reach your first scheduled inspection.</span>
             <button class="workflow-inline-ack" id="workflowArrivalReminderAckBtn" type="button">UNDERSTOOD</button>
           </div>
+          <div class="workflow-clock-home-reminder" id="workflowClockHomeReminder" role="alert" hidden>
+            <strong>CLOCK OFF WHEN YOU ARRIVE HOME</strong>
+            <span>Keep the clock running during the final journey. When you arrive home, return here and tap CLOCK OFF.</span>
+          </div>
           <div class="workflow-arrival-error" id="workflowArrivalError" role="alert" hidden>
             <strong>ARRIVAL NOT VERIFIED</strong>
             <span id="workflowArrivalErrorBody">You must be at the scheduled inspection property before starting your Hours Worked clock.</span>
@@ -5070,7 +5089,7 @@
             <p id="workflowScheduleStatus">Connect the MPI schedule once on this company phone.</p>
           </div>
           <div id="workflowNextJob"></div>
-          <button class="workflow-secondary" id="workflowOptionalLabBtn" type="button" hidden>LAB STOP</button>
+          <button class="workflow-secondary" id="workflowOptionalLabBtn" type="button" hidden>GO TO WATER TECH OR IMS LAB</button>
           <div class="workflow-jobs-list" id="workflowJobsList"></div>
           <div class="workflow-schedule-tools">
             <p>Jobs remain available offline after the day’s schedule has been loaded.</p>
@@ -7343,7 +7362,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 129</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 130</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7473,9 +7492,9 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=129"></script>
-  <script src="./mpi-field-sync.js?build=129"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=129"></script>
+  <script src="./mpi-shared.js?build=130"></script>
+  <script src="./mpi-field-sync.js?build=130"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=130"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -8103,6 +8122,7 @@
       const workflowTimeClockValue = document.getElementById("workflowTimeClockValue");
       const workflowTimeClockDetail = document.getElementById("workflowTimeClockDetail");
       const workflowHoursPending = document.getElementById("workflowHoursPending");
+      const workflowClockHomeReminder = document.getElementById("workflowClockHomeReminder");
       const workflowArrivalReminderAckBtn = document.getElementById("workflowArrivalReminderAckBtn");
       const workflowArrivalError = document.getElementById("workflowArrivalError");
       const workflowArrivalErrorBody = document.getElementById("workflowArrivalErrorBody");
@@ -13998,6 +14018,26 @@
         return "NOT STARTED";
       }
 
+      function workflowCommentUsageSnapshot() {
+        const now = new Date();
+        const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+        const day = `${month}-${String(now.getDate()).padStart(2, "0")}`;
+        try {
+          const record = JSON.parse(localStorage.getItem("mpiCommentBuilderUsageV1") || "{}");
+          const monthlyUsed = Math.max(0, Number(record?.months?.[month] || 0));
+          return {
+            month,
+            monthlyUsed,
+            usedToday: Math.max(0, Number(record?.days?.[day] || 0)),
+            planningAllowance: 400,
+            approximateRemaining: Math.max(0, 400 - monthlyUsed),
+            lastUsedAt: String(record?.lastUsedAt || "")
+          };
+        } catch (_) {
+          return { month, monthlyUsed: 0, usedToday: 0, planningAllowance: 400, approximateRemaining: 400, lastUsedAt: "" };
+        }
+      }
+
       function workflowOperationsSnapshot() {
         const profile = loadWorkflowProfile();
         if (!profile) return null;
@@ -14051,6 +14091,7 @@
             sessions: workflowPaySessions(clock).map(session => ({ ...session }))
           } : null,
           driveTime: workflowDriveTimeSummary(activity),
+          commentUsage: workflowCommentUsageSnapshot(),
           labStop: labStop ? { ...labStop } : null,
           dayComplete: dayComplete ? { ...dayComplete } : null,
           alerts: workflowExceptionFlags(),
@@ -14476,6 +14517,17 @@
         }
       }
 
+      function workflowFinalTravelNeedsClockOff() {
+        const activeClock = Boolean(workflowActiveClockSession());
+        const jobs = workflowScheduleJobs();
+        const completed = workflowCompletedEventIds();
+        const allJobsComplete = jobs.length > 0 && jobs.every(job => completed.has(job.id));
+        if (!activeClock || !allJobsComplete) return false;
+        const labStop = loadWorkflowLabStop();
+        if (!labStop) return true;
+        return Boolean(labStop.finalStop && labStop.stage === "done");
+      }
+
       function renderWorkflowTimeClock() {
         if (!workflowTimeClockCard) return;
         const profile = loadWorkflowProfile();
@@ -14501,6 +14553,7 @@
                 ? "Activity tracking is active for management. Paid hours begin at the first verified arrival."
                 : "Complete Morning Readiness to begin the working-day activity record.";
         workflowHoursPending.hidden = !readiness || hoursStarted;
+        if (workflowClockHomeReminder) workflowClockHomeReminder.hidden = !workflowFinalTravelNeedsClockOff();
         workflowArrivalReminderAckBtn.hidden = !readiness || hoursStarted || Boolean(record?.firstArrivalReminderAcknowledgedAt);
         if (hoursStarted) clearWorkflowArrivalError();
         workflowClockOnBtn.hidden = true;
@@ -14724,7 +14777,7 @@
         const record = loadWorkflowLabStop();
         if (!record || record.stage === "choose" || !record.labs?.length) return;
         try {
-          const destinations = [record.sourceProperty, ...record.labs.map(id => WORKFLOW_LABS[id]?.address).filter(Boolean)];
+          const destinations = [record.sourceProperty, ...record.labs.map(id => WORKFLOW_LABS[id]?.address).filter(Boolean)].filter(Boolean);
           if (record.nextProperty) destinations.push(record.nextProperty);
           const coordinates = [];
           for (const address of destinations) coordinates.push(await workflowAddressCoordinates(address));
@@ -14748,7 +14801,7 @@
         }
       }
 
-      function beginWorkflowLabDecision(completedJob) {
+      function beginWorkflowLabDecision(completedJob = null) {
         const next = nextWorkflowAppointment(completedJob);
         const record = {
           date: localDateKey(),
@@ -14759,12 +14812,13 @@
           nextProperty: String(next?.location || ""),
           nextScheduledStart: String(next?.start?.dateTime || next?.start?.date || ""),
           finalStop: !next,
+          entryPoint: completedJob?.property ? "after-job" : "morning-readiness",
           labs: [],
           currentIndex: 0,
           createdAt: new Date().toISOString()
         };
         saveWorkflowLabStop(record);
-        cancelFieldAlarmGroup(workflowDepartureAlarmGroup(completedJob));
+        if (completedJob?.property) cancelFieldAlarmGroup(workflowDepartureAlarmGroup(completedJob));
         renderWorkflowApp();
       }
 
@@ -14812,11 +14866,20 @@
         workflowLabCard.hidden = false;
         workflowLabChooser.hidden = record.stage !== "choose";
         workflowLabRoute.hidden = record.stage === "choose";
-        workflowLabBadge.textContent = record.finalStop ? "Final inspection complete" : "Before the next job";
-        workflowLabIntro.textContent = record.finalStop
-          ? "Do you need to visit a lab today? Complete any required lab delivery before the end-of-day equipment check and Clock Out."
-          : `Continue directly to ${record.nextProperty || "the next job"}, or choose an optional lab stop.`;
-        workflowNoLabBtn.textContent = record.finalStop ? "NO LAB TODAY" : "CONTINUE TO NEXT JOB";
+        const morningLabChoice = record.entryPoint === "morning-readiness";
+        workflowLabBadge.textContent = morningLabChoice
+          ? record.nextProperty ? "Before the first job" : "Morning lab visit"
+          : record.finalStop ? "Final inspection complete" : "Before the next job";
+        workflowLabIntro.textContent = morningLabChoice
+          ? record.nextProperty
+            ? `Start with ${record.nextProperty}, or choose a laboratory visit before the first inspection.`
+            : "Choose Water Tech, IMS, or both laboratories for today’s required deliveries."
+          : record.finalStop
+            ? "Do you need to visit a lab today? Complete any required lab delivery before the end-of-day equipment check and Clock Out."
+            : `Continue directly to ${record.nextProperty || "the next job"}, or choose an optional lab stop.`;
+        workflowNoLabBtn.textContent = morningLabChoice
+          ? record.nextProperty ? "START FIRST JOB INSTEAD" : "BACK TO TODAY'S JOBS"
+          : record.finalStop ? "NO LAB TODAY" : "CONTINUE TO NEXT JOB";
         if (record.stage === "choose") return;
         const lab = currentWorkflowLab(record);
         const isDone = record.stage === "done";
@@ -14831,8 +14894,12 @@
         workflowLabCompleteBtn.hidden = record.stage !== "arrived";
         workflowLabContinueBtn.hidden = !isDone;
         workflowLabCompleteMessage.hidden = !isDone;
+        workflowLabCompleteMessage.classList.toggle("clock-off", Boolean(isDone && record.finalStop));
+        workflowLabCompleteMessage.querySelector("strong").textContent = isDone && record.finalStop
+          ? "CLOCK OFF WHEN YOU ARRIVE HOME"
+          : "LAB VISIT COMPLETE";
         workflowLabCompleteMessage.querySelector("span").textContent = record.finalStop
-          ? "Head to your final destination. Remember to complete your End-of-Day Equipment Check and Clock Out when you arrive."
+          ? "Keep the clock running during the final journey. When you arrive home, return to MPI Field Tools and tap CLOCK OFF."
           : `Continue to ${record.nextProperty || "your next scheduled inspection"}. The normal inspector workflow will resume.`;
         const plan = record.travelPlan || {};
         workflowLabWarning.hidden = !plan.lateByMinutes;
@@ -14870,6 +14937,7 @@
           record.completedAt = completedAt;
         }
         saveWorkflowLabStop(record);
+        renderWorkflowTimeClock();
         renderWorkflowLabStop(record);
       }
 
@@ -14965,14 +15033,22 @@
             : "Connect the MPI schedule once on this company phone.";
         workflowConnectSchedule.textContent = savedCalendarToken() ? "Connected ✓" : "Connect schedule";
         workflowRefreshSchedule.hidden = !savedCalendarToken() && !workflowCurrentJobs.length;
-        workflowOptionalLabBtn.hidden = !(completedJobs.length && remainingJobs.length && !loadActiveJob());
+        workflowOptionalLabBtn.hidden = Boolean(loadActiveJob()) || Boolean(workflowDayCompleteRecord());
+        workflowOptionalLabBtn.textContent = completedJobs.length
+          ? remainingJobs.length
+            ? "GO TO WATER TECH OR IMS LAB BEFORE NEXT JOB"
+            : "GO TO WATER TECH OR IMS LAB"
+          : remainingJobs.length
+            ? "GO TO WATER TECH OR IMS LAB BEFORE FIRST JOB"
+            : "GO TO WATER TECH OR IMS LAB";
         workflowNextJob.replaceChildren();
         if (next) {
           const nextCard = document.createElement("article");
           nextCard.className = "workflow-next-job";
           const time = eventTimeLabel(next).time;
           const hasNotes = workflowJobNotesFor(next).length > 0;
-          nextCard.innerHTML = `<span>Next job</span><h4>${escapeHtml(next.location || next.summary || "Inspection appointment")}</h4><p>${escapeHtml(time)} · ${escapeHtml(workflowServiceLabel(next))}</p><div class="workflow-job-meta">${next.clientName ? `<span>${escapeHtml(next.clientName)}</span>` : ""}${next.spectoraJobId ? `<span>Job ${escapeHtml(next.spectoraJobId)}</span>` : ""}${hasNotes ? "<span>Job notes</span>" : ""}</div><button class="workflow-button" type="button" data-workflow-open-job="${escapeHtml(next.id || "")}">OPEN NEXT JOB</button>`;
+          const openLabel = completedJobs.length ? "OPEN NEXT JOB" : "START FIRST JOB";
+          nextCard.innerHTML = `<span>Next job</span><h4>${escapeHtml(next.location || next.summary || "Inspection appointment")}</h4><p>${escapeHtml(time)} · ${escapeHtml(workflowServiceLabel(next))}</p><div class="workflow-job-meta">${next.clientName ? `<span>${escapeHtml(next.clientName)}</span>` : ""}${next.spectoraJobId ? `<span>Job ${escapeHtml(next.spectoraJobId)}</span>` : ""}${hasNotes ? "<span>Job notes</span>" : ""}</div><button class="workflow-button" type="button" data-workflow-open-job="${escapeHtml(next.id || "")}">${openLabel}</button>`;
           workflowNextJob.appendChild(nextCard);
         } else if (workflowCurrentJobs.length) {
           const complete = document.createElement("div");
@@ -16451,12 +16527,12 @@
         workflowOptionalLabBtn.addEventListener("click", () => {
           try {
             const receipt = JSON.parse(localStorage.getItem(LAST_CLEARED_JOB_STORAGE_KEY) || "null");
-            if (receipt?.job?.property) {
+            if (receipt?.job?.property && receipt.clearedAt && localDateKey(new Date(receipt.clearedAt)) === localDateKey()) {
               beginWorkflowLabDecision(receipt.job);
               return;
             }
           } catch (_) {}
-          showToast("Complete a job before adding a lab stop");
+          beginWorkflowLabDecision();
         });
         workflowLabChooser.addEventListener("click", event => {
           const button = event.target.closest("[data-workflow-lab-choice]");
@@ -16473,6 +16549,7 @@
         workflowLabContinueBtn.addEventListener("click", continueAfterWorkflowLab);
         workflowEndOfDayChecklist.addEventListener("change", updateWorkflowDayCompleteButton);
         workflowDayCompleteBtn.addEventListener("click", completeWorkflowDay);
+        window.addEventListener("mpi-comment-usage-updated", queueWorkflowOperationsSync);
         window.addEventListener("online", () => {
           updateWorkflowDayCompleteButton();
           renderWorkflowDayComplete();

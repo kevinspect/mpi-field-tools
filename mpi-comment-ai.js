@@ -80,6 +80,30 @@ function recordUsage() {
   record.months[keys.month] = Number(record.months[keys.month] || 0) + 1;
   record.lastUsedAt = new Date().toISOString();
   try { localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
+  window.dispatchEvent(new CustomEvent("mpi-comment-usage-updated", {
+    detail: {
+      month: keys.month,
+      monthlyUsed: record.months[keys.month],
+      usedToday: record.days[keys.day],
+      monthlyLimit: MONTHLY_LIMIT,
+      approximateRemaining: Math.max(0, MONTHLY_LIMIT - record.months[keys.month])
+    }
+  }));
+}
+
+function usageSnapshot() {
+  const record = usageRecord();
+  const keys = usageKeys();
+  const monthlyUsed = Math.max(0, Number(record.months?.[keys.month] || 0));
+  return {
+    month: keys.month,
+    usedToday: Math.max(0, Number(record.days?.[keys.day] || 0)),
+    monthlyUsed,
+    dailyLimit: DAILY_LIMIT,
+    monthlyLimit: MONTHLY_LIMIT,
+    approximateRemaining: Math.max(0, MONTHLY_LIMIT - monthlyUsed),
+    lastUsedAt: String(record.lastUsedAt || "")
+  };
 }
 
 function requireCompanySession() {
@@ -199,5 +223,5 @@ async function generate({ note, component = "auto", mode = "defect" }) {
   }
 }
 
-window.MPI_COMMENT_AI = { generate, dailyLimit: DAILY_LIMIT, monthlyLimit: MONTHLY_LIMIT };
+window.MPI_COMMENT_AI = { generate, usageSnapshot, dailyLimit: DAILY_LIMIT, monthlyLimit: MONTHLY_LIMIT };
 window.dispatchEvent(new CustomEvent("mpi-comment-ai-ready"));
