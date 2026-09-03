@@ -20,10 +20,14 @@
   const updatesContent = document.getElementById("mpiUpdatesContent");
   const updatesList = document.getElementById("mpiUpdatesList");
   const updatesSummary = document.getElementById("mpiUpdatesSummary");
+  const teamStatusCard = document.getElementById("workflowTeamStatusCard");
+  const teamStatusList = document.getElementById("workflowTeamStatusList");
+  const teamStatusUpdated = document.getElementById("workflowTeamStatusUpdated");
   let currentUser = null;
   let currentProfile = null;
   let currentUpdates = [];
   let unsubscribeUpdates = null;
+  let unsubscribeTeamPresence = null;
   let registeredPushToken = "";
 
   function savedPushToken() {
@@ -51,6 +55,85 @@
 
   function typeLabel(value) {
     return ({ message: "Office message", announcement: "Company update", instruction: "Instruction", training: "Training", "job-note": "Job note", procedure: "Procedure", equipment: "Equipment" })[value] || "Office update";
+  }
+
+  function teamStatusLabel(value) {
+    return ({
+      "NOT STARTED": "Not started",
+      "READY / WAITING TO DEPART": "Ready / waiting",
+      "DRIVING TO JOB": "On route to job",
+      "ARRIVED AT JOB": "Arrived",
+      "INSPECTION IN PROGRESS": "Inspection started",
+      "FINAL JOB COMPLETE": "Job complete",
+      "LAB STOP": "Choosing lab stop",
+      "DRIVING TO LAB": "On route to lab",
+      "AT LAB": "At lab",
+      "DRIVING TO NEXT JOB": "On route to next job",
+      "READY TO DRIVE HOME": "Ready to head home",
+      "DRIVING HOME": "On route home",
+      "DRIVING HOME / FINAL DESTINATION": "On route home",
+      "END-OF-DAY CHECKS": "End-of-day check",
+      "CLOCKED OUT": "Clocked out"
+    })[String(value || "").toUpperCase()] || "Status unavailable";
+  }
+
+  function teamStatusTone(value) {
+    const status = String(value || "").toUpperCase();
+    if (/DRIVING|ROUTE/.test(status)) return "travel";
+    if (/ARRIVED|IN PROGRESS|AT LAB/.test(status)) return "active";
+    if (/READY|WAITING|CHECK|COMPLETE/.test(status) && status !== "CLOCKED OUT") return "waiting";
+    return "neutral";
+  }
+
+  function teamPresenceDate(item) {
+    const date = item?.updatedAt?.toDate?.() || new Date(item?.updatedAtClient || "");
+    return date && !Number.isNaN(date.getTime()) ? date : null;
+  }
+
+  function teamPresenceAge(item) {
+    const date = teamPresenceDate(item);
+    if (!date) return "Waiting for first sync";
+    const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+    if (minutes < 1) return "Updated just now";
+    if (minutes < 60) return `Updated ${minutes} min ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `Updated ${hours} hr${hours === 1 ? "" : "s"} ago`;
+    return `Updated ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+  }
+
+  function localDateKey(date = new Date()) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+
+  function teamInitials(name) {
+    return String(name || "MPI").trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0)).join("").toUpperCase() || "MPI";
+  }
+
+  function renderTeamPresence(records, error = null) {
+    if (!teamStatusCard || !teamStatusList) return;
+    const inspectorView = currentUser && currentProfile && ["owner", "inspector"].includes(String(currentProfile.role || "").toLowerCase());
+    teamStatusCard.hidden = !inspectorView;
+    if (!inspectorView) return;
+    if (error) {
+      teamStatusList.innerHTML = '<div class="workflow-team-empty">Team status could not refresh. Your own workflow is unaffected.</div>';
+      teamStatusUpdated.textContent = "Reconnect to refresh";
+      return;
+    }
+    const values = [...records].sort((left, right) => {
+      if (left.id === currentUser.uid) return -1;
+      if (right.id === currentUser.uid) return 1;
+      return String(left.name || "").localeCompare(String(right.name || ""));
+    });
+    teamStatusList.innerHTML = values.length ? values.map(item => {
+      const sameDay = item.date === localDateKey();
+      const rawStatus = sameDay ? item.status : "NOT STARTED";
+      const age = teamPresenceAge(item);
+      const updated = teamPresenceDate(item);
+      const stale = sameDay && rawStatus !== "CLOCKED OUT" && updated && Date.now() - updated.getTime() > 20 * 60 * 1000;
+      const photo = item.photoURL ? `<img src="${escapeHtml(item.photoURL)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : "";
+      return `<article class="workflow-team-person${item.id === currentUser.uid ? " is-you" : ""}"><span class="workflow-team-avatar">${photo}<b>${escapeHtml(teamInitials(item.name))}</b></span><div class="workflow-team-copy"><strong>${escapeHtml(item.name || "MPI Inspector")}${item.id === currentUser.uid ? " <small>YOU</small>" : ""}</strong><span>${escapeHtml(stale ? `${age} · confirm status if needed` : age)}</span></div><span class="workflow-team-pill ${teamStatusTone(rawStatus)}${stale ? " stale" : ""}">${escapeHtml(sameDay ? teamStatusLabel(rawStatus) : "Not updated today")}</span></article>`;
+    }).join("") : '<div class="workflow-team-empty">Team members will appear after their company phones load this update.</div>';
+    teamStatusUpdated.textContent = values.length ? `${values.length} field ${values.length === 1 ? "user" : "users"}` : "Waiting for phones";
   }
 
   function formatDate(value) {
@@ -123,6 +206,9 @@
       updatesContent.hidden = true;
       homeCard.hidden = true;
       unsubscribeUpdates?.();
+      unsubscribeTeamPresence?.();
+      unsubscribeTeamPresence = null;
+      if (teamStatusCard) teamStatusCard.hidden = true;
       return;
     }
     accountName.textContent = profile.name || user.displayName || "MPI Team Member";
@@ -147,6 +233,13 @@
     window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail: sessionDetail }));
     unsubscribeUpdates?.();
     unsubscribeUpdates = shared.watchUpdates(user, profile, renderUpdates);
+    unsubscribeTeamPresence?.();
+    unsubscribeTeamPresence = null;
+    if (["owner", "inspector"].includes(String(profile.role || "").toLowerCase()) && shared.watchTeamPresence) {
+      unsubscribeTeamPresence = shared.watchTeamPresence(renderTeamPresence);
+    } else if (teamStatusCard) {
+      teamStatusCard.hidden = true;
+    }
   }
 
   async function signIn(button) {
