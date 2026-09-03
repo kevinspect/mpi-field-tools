@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="138">
+  <meta name="app-build" content="139">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5015,13 +5015,18 @@
         <span class="home-tool-copy"><strong>Contact MPI</strong><small>Company messages, field questions, safety notices, requests, time off, and feedback.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
+      <a class="home-tool-card" href="#job-companion" data-team-status-shortcut>
+        <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
+        <span class="home-tool-copy"><strong>Team Status</strong><small>See who is on route, onsite, at a lab, heading home, or clocked out.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
       <a class="home-tool-card" id="officeConsoleCard" href="./admin.html" hidden>
         <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>Office Console</strong><small>Publish company information, training assignments, job notes, and instructions from this phone or a desktop.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">138</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">139</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -5119,6 +5124,7 @@
             <span id="workflowTimeClockLabel">HOURS WORKED TODAY</span>
             <strong id="workflowTimeClockValue">0:00</strong>
             <small id="workflowTimeClockDetail">Waiting for your first verified arrival.</small>
+            <small id="workflowWeeklyHoursDetail">HOURS WORKED THIS WEEK · 0:00</small>
           </div>
           <div class="workflow-hours-pending" id="workflowHoursPending" hidden>
             <strong>HOURS WORKED HAS NOT STARTED</strong>
@@ -5731,6 +5737,10 @@
               <small id="comment-result-note">Review the complete wording for property-specific accuracy before copying it into Spectora.</small>
             <button class="copy-comment-btn" id="copyCommentBtn" type="button" disabled>Copy full comment</button>
           </div>
+          <div class="comment-actions" id="commentFailureActions" hidden>
+            <button class="decode-btn" id="retryCommentBtn" type="button">TRY AGAIN</button>
+            <button class="secondary-btn" id="keepFieldNoteBtn" type="button">KEEP FIELD NOTE</button>
+          </div>
         </section>
       </div>
     </section>
@@ -5745,16 +5755,10 @@
       </div>
 
       <div class="damage-grid">
-        <form class="panel damage-form" id="damageForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" enctype="multipart/form-data" novalidate>
+        <form class="panel damage-form" id="damageForm" novalidate>
           <input type="hidden" name="_subject" id="damageEmailSubject" value="MPI Damaged Item Notice">
-          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
-          <input type="hidden" name="_template" value="box">
-          <input type="hidden" name="_captcha" value="false">
-          <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?damage-sent=1#damage-report">
-          <input type="hidden" name="_url" value="https://kevinspect.github.io/mpi-field-tools/#damage-report">
           <input type="hidden" name="Submitted at" id="damageSubmittedAt" value="">
           <input id="damageAttachment" name="attachment" type="file" accept="image/jpeg" hidden>
-          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
 
           <div class="panel-heading">
             <div>
@@ -5885,16 +5889,10 @@
       </div>
 
       <div class="workflow-grid">
-        <form class="panel damage-form" id="equipmentForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" enctype="multipart/form-data" novalidate>
+        <form class="panel damage-form" id="equipmentForm" novalidate>
           <input type="hidden" name="_subject" id="equipmentEmailSubject" value="MPI Thermostat &amp; Furnace Photo Record">
-          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
-          <input type="hidden" name="_template" value="box">
-          <input type="hidden" name="_captcha" value="false">
-          <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?equipment-sent=1#equipment-record">
-          <input type="hidden" name="_url" value="https://kevinspect.github.io/mpi-field-tools/#equipment-record">
           <input type="hidden" name="Submitted at" id="equipmentSubmittedAt" value="">
           <input id="equipmentAttachment" name="attachment" type="file" accept="image/jpeg" hidden>
-          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
 
           <div class="panel-heading">
             <div>
@@ -5984,16 +5982,11 @@
       </div>
 
       <div class="workflow-grid">
-        <form class="panel damage-form" id="toolCheckForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+        <form class="panel damage-form" id="toolCheckForm" novalidate>
           <input type="hidden" name="_subject" id="toolCheckEmailSubject" value="MPI End-of-Job Tool Check">
-          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
-          <input type="hidden" name="_template" value="box">
-          <input type="hidden" name="_captcha" value="false">
-          <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?tool-check-sent=1#tool-check">
           <input type="hidden" name="Submitted at" id="toolCheckSubmittedAt" value="">
           <textarea name="Checklist completion" id="toolCheckCompletion" hidden></textarea>
           <textarea name="Unchecked items" id="toolCheckUnchecked" hidden></textarea>
-          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
 
           <div class="panel-heading">
             <div><h2>End-of-job checklist</h2><p>Check each item that is accounted for and secured.</p></div>
@@ -6146,14 +6139,9 @@
         <summary>
           <span><strong>Put a new or replacement tool into service</strong><small>Follow the first-use guide, record the exact equipment, and submit one commissioning record to MPI management.</small></span>
         </summary>
-        <form class="damage-form" id="toolCommissionForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+        <form class="damage-form" id="toolCommissionForm" novalidate>
           <input type="hidden" name="_subject" id="toolCommissionSubject" value="MPI New Tool Commissioning Record">
-          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
-          <input type="hidden" name="_template" value="box">
-          <input type="hidden" name="_captcha" value="false">
-          <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?tool-commission-sent=1#tool-guides">
           <input type="hidden" name="Submitted at" id="toolCommissionSubmittedAt" value="">
-          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
 
           <div class="panel-heading">
             <div><h2>New tool commissioning record</h2><p>Complete once before independent field use. Required fields are marked with an asterisk.</p></div>
@@ -6614,17 +6602,12 @@
           <span class="daily-readiness-status" id="trainingShareSummary">Not sent</span>
         </summary>
         <div class="report-quality-body">
-          <form id="trainingProgressShareForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+          <form id="trainingProgressShareForm" novalidate>
             <input type="hidden" name="_subject" id="trainingShareSubject" value="MPI Refresher Progress">
-            <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
-            <input type="hidden" name="_template" value="box">
-            <input type="hidden" name="_captcha" value="false">
-            <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?refresher-progress-sent=1#training-center">
             <input type="hidden" name="Submitted at" id="trainingShareSubmittedAt" value="">
             <input type="hidden" name="Progress" id="trainingShareProgress" value="">
             <textarea name="Completed MPI refreshers" id="trainingShareCompleted" hidden></textarea>
             <textarea name="Remaining MPI refreshers" id="trainingShareRemaining" hidden></textarea>
-            <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
             <div class="field">
               <label for="trainingShareInspector">Inspector name *</label>
               <input class="damage-input" id="trainingShareInspector" name="Inspector" type="text" autocomplete="name" maxlength="80" required>
@@ -6646,17 +6629,12 @@
           </div>
           <div class="training-progress-track" aria-hidden="true"><div class="training-progress-fill" id="onboardingProgressFill"></div></div>
 
-          <form id="onboardingForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+          <form id="onboardingForm" novalidate>
             <input type="hidden" name="_subject" id="onboardingSubject" value="MPI Inspector Onboarding Progress">
-            <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
-            <input type="hidden" name="_template" value="box">
-            <input type="hidden" name="_captcha" value="false">
-            <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?onboarding-sent=1#training-center">
             <input type="hidden" name="Submitted at" id="onboardingSubmittedAt" value="">
             <input type="hidden" name="Progress" id="onboardingProgressValue" value="">
             <input type="hidden" name="Completed milestones" id="onboardingCompletedValue" value="">
             <input type="hidden" name="Remaining milestones" id="onboardingRemainingValue" value="">
-            <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
 
             <div class="onboarding-stage-grid">
               <section class="onboarding-stage" data-onboarding-stage>
@@ -7199,16 +7177,11 @@
           </div>
           <details class="message-acknowledgement" id="messageAckPanel">
             <summary id="messageAckSummary">Acknowledge the required message</summary>
-            <form class="message-ack-form" id="messageAckForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+            <form class="message-ack-form" id="messageAckForm" novalidate>
               <input type="hidden" name="_subject" id="messageAckSubject" value="MPI Required Message Acknowledgement">
-              <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
-              <input type="hidden" name="_template" value="box">
-              <input type="hidden" name="_captcha" value="false">
-              <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?message-ack-sent=photo-restoration-2026-08-25#team-messages">
               <input type="hidden" name="Submitted at" id="messageAckSubmittedAt" value="">
               <input type="hidden" name="Message ID" value="photo-restoration-2026-08-25">
               <input type="hidden" name="Required message" value="Use Before and After photos">
-              <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
               <div class="field"><label for="messageAckInspector">Inspector name *</label><input class="damage-input" id="messageAckInspector" name="Inspector" type="text" autocomplete="name" maxlength="80" required></div>
               <label class="damage-confirmation"><input id="messageAckConfirmed" type="checkbox" required><span>I read and understand the required Before and After photo reminder and will follow it on applicable inspections.</span></label>
               <button class="decode-btn" id="messageAckSubmitBtn" type="submit">Send acknowledgement</button>
@@ -7219,14 +7192,9 @@
           <p class="free-tool-note">Published messages remain on the phone for offline use. New push alerts require an internet connection and notification permission.</p>
         </section>
 
-        <form class="panel damage-form support-panel" id="teamQuestionForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+        <form class="panel damage-form support-panel" id="teamQuestionForm" novalidate>
           <input type="hidden" name="_subject" id="teamQuestionSubject" value="MPI Inspector Field Question">
-          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
-          <input type="hidden" name="_template" value="box">
-          <input type="hidden" name="_captcha" value="false">
-          <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?question-sent=1#team-messages">
           <input type="hidden" name="Submitted at" id="teamQuestionSubmittedAt" value="">
-          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
           <div class="panel-heading">
             <div><h2>Ask management</h2><p>Use for field questions that do not require emergency services.</p></div>
             <span class="step-count">Online only</span>
@@ -7269,14 +7237,9 @@
       </div>
 
       <div class="workflow-grid">
-        <form class="panel damage-form" id="safetyNoticeForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+        <form class="panel damage-form" id="safetyNoticeForm" novalidate>
           <input type="hidden" name="_subject" id="safetyNoticeSubject" value="MPI Safety and Near-Miss Notice">
-          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
-          <input type="hidden" name="_template" value="box">
-          <input type="hidden" name="_captcha" value="false">
-          <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?safety-sent=1#safety-notice">
           <input type="hidden" name="Submitted at" id="safetyNoticeSubmittedAt" value="">
-          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
 
           <div class="panel-heading">
             <div><h2>Initial safety notice</h2><p>Required fields are marked with an asterisk.</p></div>
@@ -7382,14 +7345,9 @@
       </div>
 
       <div class="workflow-grid">
-        <form class="panel damage-form" id="requestForm" action="https://formsubmit.co/kev@michiganpropertyinspections.com" method="POST" novalidate>
+        <form class="panel damage-form" id="requestForm" novalidate>
           <input type="hidden" name="_subject" id="requestEmailSubject" value="MPI Inspector Request">
-          <input type="hidden" name="_cc" value="admin@michiganpropertyinspections.com">
-          <input type="hidden" name="_template" value="box">
-          <input type="hidden" name="_captcha" value="false">
-          <input type="hidden" name="_next" value="https://kevinspect.github.io/mpi-field-tools/?request-sent=1#requests-feedback">
           <input type="hidden" name="Submitted at" id="requestSubmittedAt" value="">
-          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
           <div class="panel-heading">
             <div><h2>Inspector request</h2><p>Required fields are marked with an asterisk.</p></div>
             <span class="step-count">Online only</span>
@@ -7433,13 +7391,14 @@
           </div>
           <div class="damage-field-row">
             <div class="field"><label for="requestItem">Item or request *</label><input class="damage-input" id="requestItem" name="Item or request" type="text" maxlength="180" placeholder="Example: Replacement moisture meter" required></div>
-            <div class="field"><label for="requestNeededBy">Needed by</label><input class="damage-input" id="requestNeededBy" name="Needed by" type="date"></div>
+            <div class="field"><label for="requestNeededBy">Needed by</label><input class="damage-input" id="requestNeededBy" name="Needed by" type="date"><label class="damage-check-item" style="margin-top:8px"><input id="requestAsap" name="ASAP" type="checkbox" value="Yes"><span>ASAP — needed as soon as possible</span></label></div>
           </div>
           <div class="field"><label for="requestDetails">Details / reason *</label><textarea id="requestDetails" name="Details and reason" maxlength="1200" placeholder="Explain the size, quantity, current problem, training topic, or reason for the request." required></textarea></div>
           <div class="field"><label for="requestSuggestion">Suggested solution or supplier</label><textarea class="damage-action-input" id="requestSuggestion" name="Suggested solution or supplier" maxlength="700" placeholder="Optional: Add a link, product name, supplier, or idea that may help."></textarea></div>
           <button class="decode-btn" id="requestSubmitBtn" type="submit">Submit request</button>
           <p class="damage-submit-status" id="requestSubmitStatus" role="status" aria-live="polite"></p>
-          <p class="privacy-note">An unsent text draft stays only on this company phone and clears after successful submission. Submitted requests are delivered to MPI management; the app does not maintain an employee order history.</p>
+          <p class="privacy-note">An unsent draft stays on this company phone. Submitted requests remain visible below until management completes them.</p>
+          <div id="requestStatusList" class="workflow-job-list" aria-live="polite"></div>
         </form>
 
         <aside class="panel damage-info-panel" aria-labelledby="request-info-title">
@@ -7452,7 +7411,7 @@
             <li>Training: name the system, procedure, or report-writing skill you want covered.</li>
             <li>Feedback: explain the current friction and the improvement you recommend.</li>
           </ul>
-          <div class="form-success-box" id="requestSuccessBox" hidden><strong>Request submitted.</strong>The structured request was delivered to MPI management.</div>
+          <div class="form-success-box" id="requestSuccessBox" hidden><strong>Request submitted.</strong>It is now in the MPI office to-do list.</div>
         </aside>
       </div>
       <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
@@ -7491,7 +7450,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 138</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 139</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7621,9 +7580,9 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=138"></script>
-  <script src="./mpi-field-sync.js?build=138"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=138"></script>
+  <script src="./mpi-shared.js?build=139"></script>
+  <script src="./mpi-field-sync.js?build=139"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=139"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -8250,6 +8209,7 @@
       const workflowTimeClockLabel = document.getElementById("workflowTimeClockLabel");
       const workflowTimeClockValue = document.getElementById("workflowTimeClockValue");
       const workflowTimeClockDetail = document.getElementById("workflowTimeClockDetail");
+      const workflowWeeklyHoursDetail = document.getElementById("workflowWeeklyHoursDetail");
       const workflowHoursPending = document.getElementById("workflowHoursPending");
       const workflowClockHomeReminder = document.getElementById("workflowClockHomeReminder");
       const workflowArrivalReminderAckBtn = document.getElementById("workflowArrivalReminderAckBtn");
@@ -8463,6 +8423,9 @@
       const commentExampleBtn = document.getElementById("commentExampleBtn");
       const clearCommentBtn = document.getElementById("clearCommentBtn");
       const copyCommentBtn = document.getElementById("copyCommentBtn");
+      const commentFailureActions = document.getElementById("commentFailureActions");
+      const retryCommentBtn = document.getElementById("retryCommentBtn");
+      const keepFieldNoteBtn = document.getElementById("keepFieldNoteBtn");
       const commentResultActions = document.getElementById("commentResultActions");
       const damageForm = document.getElementById("damageForm");
       const damageInspector = document.getElementById("damageInspector");
@@ -8648,12 +8611,14 @@
       const requestType = document.getElementById("requestType");
       const requestItem = document.getElementById("requestItem");
       const requestNeededBy = document.getElementById("requestNeededBy");
+      const requestAsap = document.getElementById("requestAsap");
       const requestDetails = document.getElementById("requestDetails");
       const requestEmailSubject = document.getElementById("requestEmailSubject");
       const requestSubmittedAt = document.getElementById("requestSubmittedAt");
       const requestSubmitBtn = document.getElementById("requestSubmitBtn");
       const requestSubmitStatus = document.getElementById("requestSubmitStatus");
       const requestSuccessBox = document.getElementById("requestSuccessBox");
+      const requestStatusList = document.getElementById("requestStatusList");
       const sopSearch = document.getElementById("sopSearch");
       const sopClearSearch = document.getElementById("sopClearSearch");
       const sopChapter = document.getElementById("sopChapter");
@@ -13947,6 +13912,7 @@
       let workflowTimeClockInterval = 0;
       let workflowOperationsSyncTimer = 0;
       let workflowPresenceHeartbeatInterval = 0;
+      let unsubscribeInspectorRequests = null;
       let workflowDocumentDbPromise = null;
       const workflowCocPreviewUrls = new Set();
       const FORM_DRAFT_CONFIG = [
@@ -14102,17 +14068,26 @@
       function appendWorkflowEvent(action, data = {}, job = loadActiveJob()) {
         const profile = loadWorkflowProfile();
         const practice = Boolean(job?.isPractice || data?.practice);
+        const recordedAt = String(data?.originalTimestamp || data?.timestamp || new Date().toISOString());
+        const recordedOffline = data?.recordedOffline === true || !navigator.onLine;
         const event = {
           id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          timestamp: new Date().toISOString(),
-          date: localDateKey(),
+          timestamp: recordedAt,
+          date: localDateKey(new Date(recordedAt)),
           inspector: profile?.name || job?.inspector || loadRememberedInspector() || "Unknown inspector",
           inspectorId: profile?.id || "",
           jobId: job?.spectoraJobId || job?.calendarEventId || "",
           calendarEventId: job?.calendarEventId || "",
           property: job?.property || "",
           action: String(action),
-          data: data && typeof data === "object" ? { ...data, ...(practice ? { practice: true } : {}) } : (practice ? { practice: true } : {})
+          data: data && typeof data === "object" ? {
+            ...data,
+            originalTimestamp: recordedAt,
+            connectivity: recordedOffline ? "offline" : "online",
+            syncStatus: recordedOffline ? "pending" : "queued",
+            ...(recordedOffline ? { recordedOffline: true } : {}),
+            ...(practice ? { practice: true } : {})
+          } : (practice ? { practice: true } : {})
         };
         if (practice) return event;
         const activity = loadWorkflowActivity();
@@ -14250,6 +14225,15 @@
         }
       }
 
+      function workflowCommentFailureSnapshot() {
+        try {
+          const records = JSON.parse(localStorage.getItem("mpiCommentBuilderTechnicalLogV1") || "[]");
+          return Array.isArray(records) ? records.filter(item => item?.result === "failed").slice(-20) : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
       function workflowOperationsSnapshot() {
         const profile = loadWorkflowProfile();
         if (!profile) return null;
@@ -14304,6 +14288,7 @@
           } : null,
           driveTime: dayComplete?.driveTimeBackup || workflowDriveTimeWithArchives(activity),
           commentUsage: workflowCommentUsageSnapshot(),
+          commentFailures: workflowCommentFailureSnapshot(),
           labStop: labStop ? { ...labStop } : null,
           dayComplete: dayComplete ? { ...dayComplete } : null,
           alerts: workflowExceptionFlags(),
@@ -14313,7 +14298,25 @@
 
       function syncWorkflowOperationsNow(snapshot = workflowOperationsSnapshot()) {
         if (!snapshot || !window.MPI_SHARED?.syncOperationsSnapshot) return Promise.resolve(false);
-        return window.MPI_SHARED.syncOperationsSnapshot(snapshot).catch(() => false);
+        return window.MPI_SHARED.syncOperationsSnapshot(snapshot).then(result => {
+          if (result) markWorkflowEventsSynced();
+          return result;
+        }).catch(() => false);
+      }
+
+      function markWorkflowEventsSynced() {
+        const syncedAt = new Date().toISOString();
+        const activity = loadWorkflowActivity();
+        let changed = false;
+        activity.forEach(item => {
+          if (item.data?.syncStatus !== "synced") {
+            item.data = { ...(item.data || {}), syncStatus: "synced", syncedAt };
+            changed = true;
+          }
+        });
+        if (changed) {
+          try { localStorage.setItem(WORKFLOW_ACTIVITY_STORAGE_KEY, JSON.stringify(activity.slice(-5000))); } catch (_) {}
+        }
       }
 
       function queueWorkflowOperationsSync() {
@@ -14509,11 +14512,19 @@
       }
 
       function workflowWorkedMilliseconds(record = loadWorkflowTimeClock(), endTime = Date.now()) {
-        return workflowPaySessions(record).reduce((total, session) => {
+        const intervals = workflowPaySessions(record).map(session => {
           const start = new Date(session.clockedInAt).getTime();
           const end = session.clockedOutAt ? new Date(session.clockedOutAt).getTime() : endTime;
-          return total + (Number.isFinite(start) && Number.isFinite(end) && end > start ? end - start : 0);
-        }, 0);
+          return { start, end };
+        }).filter(item => Number.isFinite(item.start) && Number.isFinite(item.end) && item.end > item.start)
+          .sort((left, right) => left.start - right.start || left.end - right.end);
+        const merged = [];
+        intervals.forEach(interval => {
+          const previous = merged[merged.length - 1];
+          if (previous && interval.start <= previous.end) previous.end = Math.max(previous.end, interval.end);
+          else merged.push({ ...interval });
+        });
+        return merged.reduce((total, interval) => total + interval.end - interval.start, 0);
       }
 
       function workflowWorkedDuration(record = loadWorkflowTimeClock(), endTime = Date.now()) {
@@ -14526,6 +14537,35 @@
       function workflowWorkedCounter(record = loadWorkflowTimeClock(), endTime = Date.now()) {
         const minutes = Math.max(0, Math.floor(workflowWorkedMilliseconds(record, endTime) / 60000));
         return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`;
+      }
+
+      function workflowWeekDateKeys() {
+        const today = new Date();
+        today.setHours(12, 0, 0, 0);
+        const weekday = today.getDay() || 7;
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - weekday + 1);
+        const keys = [];
+        for (let index = 0; index < 7; index += 1) {
+          const day = new Date(monday);
+          day.setDate(monday.getDate() + index);
+          const key = localDateKey(day);
+          if (key <= localDateKey()) keys.push(key);
+        }
+        return keys;
+      }
+
+      function workflowWeeklyWorkedMinutes() {
+        const keys = new Set(workflowWeekDateKeys());
+        const byDate = new Map();
+        loadWorkflowCloseoutHistory().forEach(record => {
+          if (keys.has(record.date) && record.timeClockBackup) byDate.set(record.date, record.timeClockBackup);
+        });
+        const completedToday = workflowDayCompleteRecord();
+        if (completedToday?.timeClockBackup) byDate.set(completedToday.date, completedToday.timeClockBackup);
+        const current = loadWorkflowTimeClock();
+        if (current?.date && keys.has(current.date)) byDate.set(current.date, current);
+        return [...byDate.values()].reduce((total, record) => total + Math.floor(workflowWorkedMilliseconds(record) / 60000), 0);
       }
 
       function workflowClockLocationDetail(location) {
@@ -14753,6 +14793,10 @@
         workflowTimeClockBadge.textContent = active ? "Hours running" : hoursStarted ? "Clocked off" : readiness ? "Waiting for arrival" : "Not started";
         workflowTimeClockLabel.textContent = "HOURS WORKED TODAY";
         workflowTimeClockValue.textContent = hoursStarted ? workflowWorkedCounter(record) : "0:00";
+        if (workflowWeeklyHoursDetail) {
+          const weekMinutes = workflowWeeklyWorkedMinutes();
+          workflowWeeklyHoursDetail.textContent = `HOURS WORKED THIS WEEK · ${Math.floor(weekMinutes / 60)}:${String(weekMinutes % 60).padStart(2, "0")}`;
+        }
         const lastSession = sessions[sessions.length - 1];
         const lastLocation = active?.clockInLocation || lastSession?.clockOutLocation || lastSession?.clockInLocation;
         workflowTimeClockDetail.textContent = workflowTimeClockInFlight
@@ -14816,6 +14860,8 @@
         });
         saveWorkflowTimeClock(record);
         appendWorkflowEvent("Hours worked started", {
+          originalTimestamp: arrivalAt,
+          recordedOffline: startSource === "offline-first-arrival",
           startedAt: arrivalAt,
           startSource,
           locationStatus: location?.status || "unavailable",
@@ -15764,7 +15810,7 @@
 
       function updateWorkflowStage(job, status, action, data = {}) {
         if (!job?.property || !WORKFLOW_STAGES.includes(status)) return null;
-        const now = new Date().toISOString();
+        const now = String(data?.originalTimestamp || new Date().toISOString());
         job.workflowStatus = status;
         job.workflowTimestamps = { ...(job.workflowTimestamps || {}), [status]: now };
         if (status === "in-progress") job.startedAt = now;
@@ -16127,6 +16173,7 @@
       async function setWorkflowArrived() {
         const job = loadActiveJob();
         if (!job?.property) return;
+        const arrivalTappedAt = new Date().toISOString();
         if (job.isPractice) {
           clearWorkflowArrivalError();
           workflowArrivedBtn.disabled = true;
@@ -16166,6 +16213,7 @@
         const mustVerifyHoursStart = firstHoursStart || reopenedHoursStart;
         let arrivalVerification = null;
         let location = null;
+        let offlineArrival = false;
         if (mustVerifyHoursStart) {
           clearWorkflowArrivalError();
           workflowTimeClockInFlight = true;
@@ -16174,7 +16222,22 @@
           renderWorkflowTimeClock();
           let result;
           try {
-            result = await verifyWorkflowFirstArrival(job);
+            if (!navigator.onLine) {
+              const offlineLocation = await requestWorkflowClockLocation();
+              result = {
+                verified: true,
+                offlineAccepted: true,
+                location: offlineLocation,
+                reason: offlineLocation.status === "recorded" ? "GPS recorded while offline; property geofence will be reviewed after sync." : "LOCATION NOT AVAILABLE – OFFLINE ARRIVAL",
+                verification: {
+                  verifiedAt: arrivalTappedAt,
+                  verificationStatus: offlineLocation.status === "recorded" ? "recorded-offline" : "location-not-available-offline",
+                  approvedGeofenceFeet: WORKFLOW_ARRIVAL_GEOFENCE_FEET
+                }
+              };
+            } else {
+              result = await verifyWorkflowFirstArrival(job);
+            }
           } catch (_) {
             result = {
               verified: false,
@@ -16187,6 +16250,7 @@
             workflowArrivedBtn.textContent = "ARRIVED";
             renderWorkflowTimeClock();
           }
+          offlineArrival = Boolean(result.offlineAccepted);
           if (!result.verified) {
             appendWorkflowEvent("Arrival verification failed", {
               attemptedAt: new Date().toISOString(),
@@ -16206,10 +16270,14 @@
         const onMyWayEvent = loadWorkflowActivity().filter(item => item.date === localDateKey()
           && item.action === "On My Way selected"
           && String(item.calendarEventId || item.jobId || "") === String(job.calendarEventId || job.spectoraJobId || "")).at(-1);
-        const arrivedAtNow = new Date().toISOString();
+        const arrivedAtNow = arrivalTappedAt;
         const arrivedJob = updateWorkflowStage(job, "arrived", "Arrived", {
+          originalTimestamp: arrivalTappedAt,
+          recordedOffline: offlineArrival,
           scheduledStart: job.scheduledStart || "",
-          gpsVerified: mustVerifyHoursStart ? true : "First-job verification already completed",
+          gpsVerified: mustVerifyHoursStart ? !offlineArrival || location?.status === "recorded" : "First-job verification already completed",
+          locationStatus: location?.status || (offlineArrival ? "unavailable" : "not-required"),
+          verificationStatus: arrivalVerification?.verificationStatus || (mustVerifyHoursStart ? "geofence-verified" : "already-completed"),
           latitude: location?.latitude || "",
           longitude: location?.longitude || "",
           accuracyFeet: location?.accuracyFeet || "",
@@ -16225,7 +16293,7 @@
           varianceMinutes: performance.varianceMinutes,
           performance: performance.label
         }, arrivedJob || job);
-        if (mustVerifyHoursStart) startWorkflowHoursAtVerifiedArrival(arrivedJob || job, arrivalAt, location, arrivalVerification, reopenedHoursStart ? "reopened-workday-arrival" : "verified-first-arrival");
+        if (mustVerifyHoursStart) startWorkflowHoursAtVerifiedArrival(arrivedJob || job, arrivalAt, location || { status: "unavailable" }, arrivalVerification || {}, offlineArrival ? "offline-first-arrival" : reopenedHoursStart ? "reopened-workday-arrival" : "verified-first-arrival");
         const departurePlan = refreshWorkflowDeparturePlan(arrivedJob || job);
         if (departurePlan) {
           appendWorkflowEvent("Departure time calculated", departurePlan, arrivedJob || job);
@@ -16233,7 +16301,7 @@
         }
         clearWorkflowArrivalError();
         renderWorkflowTimeClock();
-        showToast(mustVerifyHoursStart ? `Arrival verified · Hours Worked ${reopenedHoursStart ? "resumed" : "started"} at ${workflowClock(arrivalAt)}` : "Arrival time recorded");
+        showToast(mustVerifyHoursStart ? `${offlineArrival ? "Arrival saved offline" : "Arrival verified"} · Hours Worked ${reopenedHoursStart ? "resumed" : "started"} at ${workflowClock(arrivalAt)}` : "Arrival time recorded");
       }
 
       function startWorkflowInspection() {
@@ -16390,8 +16458,8 @@
           const clockedOutAt = lastSession?.clockedOutAt || record.completedAt;
           workflowFinishedClockTime.textContent = workflowClock(clockedOutAt);
           workflowFinishedHours.textContent = workflowWorkedDuration(clock, new Date(clockedOutAt).getTime());
-          workflowTodayCard.hidden = true;
-          workflowTimeClockCard.hidden = true;
+          workflowTodayCard.hidden = false;
+          workflowTimeClockCard.hidden = false;
         }
         if (record?.equipment?.length) {
           workflowEndOfDayChecks.forEach(check => { check.checked = record.equipment.includes(check.dataset.workflowEodEquipment); });
@@ -17190,7 +17258,9 @@
         }
         const completedDay = workflowDayCompleteRecord();
         if (completedDay?.completedAt && !workflowActiveClockSession()) {
-          workflowTimeClockCard.hidden = true;
+          workflowTimeClockCard.hidden = false;
+          workflowTodayCard.hidden = false;
+          renderWorkflowTodayJobs();
           renderWorkflowDayComplete();
           return;
         }
@@ -17285,13 +17355,19 @@
         });
         window.addEventListener("mpi-company-session-ready", event => {
           syncWorkflowCompanyProfile(event);
+          watchInspectorRequests(event.detail);
           recoverWorkflowTimeClockFromCompanyAccount(event).finally(queueWorkflowOperationsSync);
         });
         if (window.MPI_COMPANY_SESSION) {
           syncWorkflowCompanyProfile({ detail: window.MPI_COMPANY_SESSION });
+          watchInspectorRequests(window.MPI_COMPANY_SESSION);
           queueWorkflowOperationsSync();
         }
         workflowMessageTemplates.addEventListener("click", selectWorkflowMessageTemplate);
+        requestAsap?.addEventListener("change", () => {
+          requestNeededBy.disabled = requestAsap.checked;
+          if (requestAsap.checked) requestNeededBy.value = "";
+        });
         workflowEtaTime.addEventListener("input", selectWorkflowEta);
         workflowCancelMessage.addEventListener("click", cancelWorkflowMessage);
         workflowOpenMessages.addEventListener("click", openWorkflowMessagesComposer);
@@ -18294,6 +18370,47 @@
         });
       }
 
+      function workflowFormFields(form) {
+        const grouped = new Map();
+        new FormData(form).forEach((value, key) => {
+          if (key.startsWith("_") || key.toLowerCase() === "submitted at" || value instanceof File || !String(value).trim()) return;
+          const cleanKey = key.replace(/_/g, " ").replace(/\b\w/g, letter => letter.toUpperCase());
+          const values = grouped.get(cleanKey) || [];
+          if (!values.includes(String(value).trim())) values.push(String(value).trim());
+          grouped.set(cleanKey, values);
+        });
+        return [...grouped.entries()].map(([label, values]) => ({ label, value: values.join(", ") }));
+      }
+
+      async function workflowFormAttachment(file, index) {
+        if (!(file instanceof File || file instanceof Blob) || !file.size) return null;
+        return {
+          name: String(file.name || `MPI-document-${index + 1}.jpg`).replace(/[^a-z0-9._-]+/gi, "-").slice(0, 80),
+          mimeType: file.type || "application/octet-stream",
+          base64: await workflowBlobBase64(file)
+        };
+      }
+
+      async function submitBrandedWorkflowForm(form, config = {}, attachments = []) {
+        const submittedAt = new Date().toISOString();
+        const id = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+        const payload = {
+          source: "mpi-field-tools-form-email",
+          requestId: `form-${id}`,
+          formType: config.formType || "MPI Workflow Submission",
+          title: config.title || config.formType || "MPI Workflow Submission",
+          inspectorName: config.inspector || window.MPI_COMPANY_SESSION?.inspectorName || loadRememberedInspector() || "MPI Inspector",
+          submittedAt,
+          status: "Submitted",
+          fields: workflowFormFields(form),
+          formAttachments: (await Promise.all(attachments.map(workflowFormAttachment))).filter(Boolean)
+        };
+        await sendWorkflowCloseoutEmail(payload);
+        const draft = FORM_DRAFT_CONFIG.find(item => item.form === form);
+        if (draft) clearFormDraft(draft.key);
+        return payload;
+      }
+
       async function validateDamageSubmission(event) {
         event.preventDefault();
         damageSubmitStatus.className = "damage-submit-status";
@@ -18332,7 +18449,12 @@
           saveInspectorName(damageInspector.value);
           damageSubmitBtn.textContent = "Sending damage notice…";
           damageSubmitStatus.textContent = "Uploading the form and labeled photo sheet. Keep this page open.";
-          HTMLFormElement.prototype.submit.call(damageForm);
+          await submitBrandedWorkflowForm(damageForm, { formType: "Damaged Item Notice", title: `${damageItem.value.trim()} | ${damageProperty.value.trim()}`, inspector: damageInspector.value.trim() }, [sheet]);
+          damageSubmitStatus.className = "damage-submit-status success";
+          damageSubmitStatus.textContent = "Damaged item notice sent in the branded MPI email format.";
+          damageSuccessBox.hidden = false;
+          damageSubmitBtn.disabled = false;
+          damageSubmitBtn.textContent = "Submit damaged item notice";
         } catch (error) {
           damageSubmitBtn.disabled = false;
           damageSubmitBtn.textContent = "Submit damaged item notice";
@@ -18377,7 +18499,12 @@
           saveInspectorName(equipmentInspector.value);
           equipmentSubmitBtn.textContent = "Sending photo record…";
           equipmentSubmitStatus.textContent = "Uploading the form and four-photo sheet. Keep this page open.";
-          HTMLFormElement.prototype.submit.call(equipmentForm);
+          await submitBrandedWorkflowForm(equipmentForm, { formType: "Equipment Photo Record", title: equipmentProperty.value.trim(), inspector: equipmentInspector.value.trim() }, [sheet]);
+          equipmentSubmitStatus.className = "damage-submit-status success";
+          equipmentSubmitStatus.textContent = "Equipment photo record sent in the branded MPI email format.";
+          equipmentSuccessBox.hidden = false;
+          equipmentSubmitBtn.disabled = false;
+          equipmentSubmitBtn.textContent = "Submit photo record";
         } catch (error) {
           equipmentSubmitBtn.disabled = false;
           equipmentSubmitBtn.textContent = "Submit photo record";
@@ -18616,17 +18743,16 @@
         });
       }
 
-      function validateSimpleEmailForm(event, config) {
+      async function validateSimpleEmailForm(event, config) {
+        event.preventDefault();
         config.status.className = "damage-submit-status";
         config.status.textContent = "";
         if (!config.form.reportValidity()) {
-          event.preventDefault();
           config.status.className = "damage-submit-status error";
           config.status.textContent = "Complete the required fields before submitting.";
           return;
         }
         if (!navigator.onLine) {
-          event.preventDefault();
           config.status.className = "damage-submit-status error";
           config.status.textContent = "Reconnect to the internet before sending this form.";
           showToast("Reconnect before sending");
@@ -18635,9 +18761,30 @@
         config.submittedAt.value = getSubmissionTimestamp();
         config.subject.value = config.subjectText();
         saveInspectorName(config.inspector.value);
+        const defaultLabel = config.submitButton.textContent;
         config.submitButton.disabled = true;
         config.submitButton.textContent = config.pendingText;
-        config.status.textContent = "Submitting the form. Keep this page open.";
+        config.status.textContent = "Sending the branded MPI report. Keep this page open.";
+        try {
+          await submitBrandedWorkflowForm(config.form, {
+            formType: String(config.subject.value || "MPI Workflow Submission").split("—")[0].trim(),
+            title: config.subject.value,
+            inspector: config.inspector.value.trim()
+          });
+          config.status.className = "damage-submit-status success";
+          config.status.textContent = "Sent to MPI management in the branded email format.";
+          if (config.form === messageAckForm) {
+            saveMessageAcknowledgement(REQUIRED_PHOTO_MESSAGE_ID);
+            renderMessageAcknowledgement();
+          }
+          showToast("MPI report sent");
+        } catch (error) {
+          config.status.className = "damage-submit-status error";
+          config.status.textContent = error?.message || "The branded MPI report could not be sent. Your draft remains on this phone.";
+        } finally {
+          config.submitButton.disabled = false;
+          config.submitButton.textContent = defaultLabel;
+        }
       }
 
       function validateTeamQuestionSubmission(event) {
@@ -18674,17 +18821,102 @@
         });
       }
 
-      function validateRequestSubmission(event) {
-        validateSimpleEmailForm(event, {
-          form: requestForm,
-          status: requestSubmitStatus,
-          submittedAt: requestSubmittedAt,
-          subject: requestEmailSubject,
-          inspector: requestInspector,
-          submitButton: requestSubmitBtn,
-          pendingText: "Sending inspector request…",
-          subjectText: () => `MPI Inspector Request — ${requestType.value} — ${requestItem.value.trim()}`.slice(0, 180)
-        });
+      function requestStatusLabel(value) {
+        return ({ new: "NEW", "in-progress": "IN PROGRESS", waiting: "WAITING", completed: "COMPLETED" })[String(value || "new")] || "NEW";
+      }
+
+      function renderInspectorRequests(requests = []) {
+        if (!requestStatusList) return;
+        const ordered = requests.slice().sort((left, right) => String(right.requestedAt || "").localeCompare(String(left.requestedAt || "")));
+        requestStatusList.innerHTML = ordered.length ? `<div class="workflow-list-label">My submitted requests</div>${ordered.map(item => `<article class="workflow-job-row${item.status === "completed" ? " is-complete" : ""}"><time>${escapeHtml(item.asap ? "ASAP" : item.neededBy || "OPEN")}</time><div><strong>${escapeHtml(item.item || "Inspector request")}</strong><small>${escapeHtml(item.type || "Request")} · ${escapeHtml(requestStatusLabel(item.status))}${item.completedAt ? ` · Completed ${escapeHtml(new Date(item.completedAt).toLocaleDateString("en-US"))}` : ""}</small></div></article>`).join("")}` : '<p class="privacy-note">No requests have been submitted from this account yet.</p>';
+      }
+
+      function watchInspectorRequests(session = window.MPI_COMPANY_SESSION) {
+        unsubscribeInspectorRequests?.();
+        unsubscribeInspectorRequests = null;
+        if (!session?.userId || !window.MPI_SHARED?.db) {
+          renderInspectorRequests([]);
+          return;
+        }
+        unsubscribeInspectorRequests = window.MPI_SHARED.db.collection("users").doc(session.userId).onSnapshot(snapshot => {
+          renderInspectorRequests(Array.isArray(snapshot.data()?.fieldRequests) ? snapshot.data().fieldRequests : []);
+        }, () => renderInspectorRequests([]));
+      }
+
+      function sendBrandedRequestEmail(request) {
+        const payload = {
+          source: "mpi-field-tools-form-email",
+          requestId: `request-${request.id}`,
+          formType: "Inspector Request",
+          title: request.item,
+          inspectorName: request.inspector,
+          submittedAt: request.requestedAt,
+          status: "New office to-do",
+          subject: `MPI Inspector Request – ${request.type} – ${request.item} – ${request.inspector}`,
+          fields: [
+            { label: "Request Type", value: request.type },
+            { label: "Needed", value: request.asap ? "ASAP" : request.neededBy || "No date specified" },
+            { label: "Details", value: request.details },
+            ...(request.suggestion ? [{ label: "Suggested Solution / Supplier", value: request.suggestion }] : [])
+          ]
+        };
+        return fetch(WORKFLOW_EMAIL_ENDPOINT, { method: "POST", mode: "no-cors", cache: "no-store", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: JSON.stringify(payload) }).catch(() => false);
+      }
+
+      async function validateRequestSubmission(event) {
+        event.preventDefault();
+        requestSubmitStatus.className = "damage-submit-status";
+        requestSubmitStatus.textContent = "";
+        if (!requestForm.reportValidity()) {
+          requestSubmitStatus.className = "damage-submit-status error";
+          requestSubmitStatus.textContent = "Complete the required fields before submitting.";
+          return;
+        }
+        const session = window.MPI_COMPANY_SESSION;
+        if (!session?.userId || !window.MPI_SHARED?.db) {
+          requestSubmitStatus.className = "damage-submit-status error";
+          requestSubmitStatus.textContent = "Sign in with the inspector’s MPI company account before submitting a request.";
+          return;
+        }
+        const requestedAt = new Date().toISOString();
+        const request = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          type: requestType.value,
+          item: requestItem.value.trim(),
+          inspector: session.inspectorName || requestInspector.value.trim(),
+          inspectorId: session.inspectorId || "",
+          inspectorEmail: session.inspectorEmail || "",
+          requestedAt,
+          neededBy: requestAsap?.checked ? "" : requestNeededBy.value,
+          asap: Boolean(requestAsap?.checked),
+          details: requestDetails.value.trim(),
+          suggestion: document.getElementById("requestSuggestion")?.value.trim() || "",
+          status: "new",
+          assignedAdmin: "",
+          completedAt: "",
+          completedBy: ""
+        };
+        requestSubmitBtn.disabled = true;
+        requestSubmitBtn.textContent = "Saving request…";
+        try {
+          await window.MPI_SHARED.db.collection("users").doc(session.userId).set({ fieldRequests: window.MPI_SHARED.arrayUnion(request), requestsUpdatedAt: window.MPI_SHARED.serverTimestamp() }, { merge: true });
+          appendWorkflowEvent("Inspector request submitted", { requestId: request.id, requestType: request.type, item: request.item, neededBy: request.neededBy, asap: request.asap }, null);
+          sendBrandedRequestEmail(request);
+          clearFormDraft("mpiDraftRequestV1");
+          requestForm.reset();
+          requestNeededBy.disabled = false;
+          requestInspector.value = session.inspectorName || "";
+          requestSuccessBox.hidden = false;
+          requestSubmitStatus.className = "damage-submit-status success";
+          requestSubmitStatus.textContent = navigator.onLine ? "Request added to the MPI office to-do list." : "Request saved. It will synchronize when this phone reconnects.";
+          showToast("Request saved for MPI Office");
+        } catch (error) {
+          requestSubmitStatus.className = "damage-submit-status error";
+          requestSubmitStatus.textContent = error?.message || "The request could not be saved. Your draft is still on this phone.";
+        } finally {
+          requestSubmitBtn.disabled = false;
+          requestSubmitBtn.textContent = "Submit request";
+        }
       }
 
       function validateToolCommissionSubmission(event) {
@@ -20734,7 +20966,15 @@
         commentOutput.scrollLeft = 0;
         sizeCommentOutput();
         copyCommentBtn.disabled = true;
+        commentFailureActions.hidden = true;
         defectInput.focus();
+      });
+
+      retryCommentBtn.addEventListener("click", () => commentForm.requestSubmit());
+      keepFieldNoteBtn.addEventListener("click", () => {
+        commentFailureActions.hidden = true;
+        defectInput.focus();
+        defectInput.scrollIntoView({ behavior: "smooth", block: "center" });
       });
 
       copyCommentBtn.addEventListener("click", () => {
@@ -20775,6 +21015,7 @@
         commentModeBadge.textContent = "Connecting…";
         commentOutput.value = "";
         copyCommentBtn.disabled = true;
+        commentFailureActions.hidden = true;
         try {
           if (!window.MPI_COMMENT_AI?.generate) throw new Error("The secure MPI Comment Builder is still loading. Wait a moment and try again.");
           commentOutput.value = await window.MPI_COMMENT_AI.generate({
@@ -20786,8 +21027,9 @@
           commentModeBadge.textContent = "Ready";
           showToast("MPI comment ready for review");
         } catch (error) {
-          commentOutput.value = `Comment not generated\n\n${error?.message || "The secure MPI Comment Builder could not connect. Please try again."}`;
+          commentOutput.value = `COMMENT GENERATION FAILED\n\nYour original field note has been saved.\n\n${error?.message || "The secure MPI Comment Builder could not connect. Please try again."}${error?.requestId ? `\n\nReference: ${error.requestId}` : ""}`;
           commentModeBadge.textContent = error?.mpiStatus || (navigator.onLine ? "Service error" : "Offline");
+          commentFailureActions.hidden = false;
           showToast("Comment not generated");
         } finally {
           generateCommentBtn.disabled = false;

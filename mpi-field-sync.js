@@ -30,6 +30,10 @@
   let unsubscribeTeamPresence = null;
   let registeredPushToken = "";
 
+  document.querySelector("[data-team-status-shortcut]")?.addEventListener("click", () => {
+    window.setTimeout(() => teamStatusCard?.scrollIntoView({ behavior: "smooth", block: "start" }), 180);
+  });
+
   function savedPushToken() {
     try { return String(localStorage.getItem("mpiPushTokenV1") || "").trim(); }
     catch (_) { return ""; }

@@ -262,20 +262,23 @@
     const user = auth.currentUser;
     if (!user || !snapshot?.date) return false;
     const ref = db.collection("users").doc(user.uid);
-    const current = await ref.get();
-    const existingDays = Array.isArray(current.data()?.operationsDays) ? current.data().operationsDays : [];
     const clean = cleanOperationsValue(snapshot);
-    const days = existingDays
-      .filter(day => day?.date && day.date !== clean.date)
-      .concat(clean)
-      .sort((left, right) => String(left.date).localeCompare(String(right.date)))
-      .slice(-8);
-    await ref.set({
-      operationsCurrent: clean,
-      operationsDays: days,
-      operationsUpdatedAt: serverTimestamp()
-    }, { merge: true });
-    const profile = current.data() || {};
+    let profile = {};
+    await db.runTransaction(async transaction => {
+      const current = await transaction.get(ref);
+      profile = current.data() || {};
+      const existingDays = Array.isArray(profile.operationsDays) ? profile.operationsDays : [];
+      const days = existingDays
+        .filter(day => day?.date && day.date !== clean.date)
+        .concat(clean)
+        .sort((left, right) => String(left.date).localeCompare(String(right.date)))
+        .slice(-14);
+      transaction.set(ref, {
+        operationsCurrent: clean,
+        operationsDays: days,
+        operationsUpdatedAt: serverTimestamp()
+      }, { merge: true });
+    });
     const role = String(profile.role || "inspector").toLowerCase();
     const status = TEAM_STATUS_VALUES.has(String(clean.liveStatus || "")) ? String(clean.liveStatus) : "NOT STARTED";
     const teamVisible = profile.active !== false && ["owner", "inspector"].includes(role);

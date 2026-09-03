@@ -16,6 +16,8 @@ const DAILY_LIMIT = 40;
 const MONTHLY_LIMIT = 400;
 const USAGE_STORAGE_KEY = "mpiCommentBuilderUsageV1";
 const COMMENT_TIMEOUT_MS = 35000;
+const COMMENT_LOG_STORAGE_KEY = "mpiCommentBuilderTechnicalLogV1";
+const COMMENT_RESULT_CACHE_KEY = "mpiCommentBuilderResultCacheV1";
 
 const SYSTEM_INSTRUCTION = `You write inspection report comments for Michigan Property Inspections.
 
@@ -105,6 +107,44 @@ function usageSnapshot() {
     approximateRemaining: Math.max(0, MONTHLY_LIMIT - monthlyUsed),
     lastUsedAt: String(record.lastUsedAt || "")
   };
+}
+
+function requestId() {
+  try { return crypto.randomUUID(); }
+  catch (_) { return `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`; }
+}
+
+function technicalCategory(error) {
+  const text = `${error?.code || ""} ${error?.message || ""}`.toLowerCase();
+  if (!navigator.onLine || /network|failed to fetch|load failed/.test(text)) return "network";
+  if (/app.?check|recaptcha/.test(text)) return "app-check";
+  if (/auth|unauthor|forbidden|permission|401|403/.test(text)) return "auth-session";
+  if (/429|quota|resource.?exhausted|rate/.test(text)) return "rate-limit";
+  if (/timeout|timed out/.test(text)) return "timeout";
+  if (/json|parse|incomplete|malformed/.test(text)) return "malformed-response";
+  if (/503|unavailable|overloaded|busy/.test(text)) return "service-unavailable";
+  return "unknown";
+}
+
+function writeTechnicalLog(entry) {
+  let records = [];
+  try { records = JSON.parse(localStorage.getItem(COMMENT_LOG_STORAGE_KEY) || "[]"); } catch (_) {}
+  if (!Array.isArray(records)) records = [];
+  records.push({ timestamp: new Date().toISOString(), ...entry });
+  try { localStorage.setItem(COMMENT_LOG_STORAGE_KEY, JSON.stringify(records.slice(-100))); } catch (_) {}
+}
+
+function cachedResult(id) {
+  try { return JSON.parse(sessionStorage.getItem(COMMENT_RESULT_CACHE_KEY) || "{}")[id] || ""; }
+  catch (_) { return ""; }
+}
+
+function cacheResult(id, output) {
+  let values = {};
+  try { values = JSON.parse(sessionStorage.getItem(COMMENT_RESULT_CACHE_KEY) || "{}"); } catch (_) {}
+  values[id] = output;
+  const entries = Object.entries(values).slice(-20);
+  try { sessionStorage.setItem(COMMENT_RESULT_CACHE_KEY, JSON.stringify(Object.fromEntries(entries))); } catch (_) {}
 }
 
 function requireCompanySession() {
@@ -235,9 +275,14 @@ function parseResponse(text, note, mode, component) {
   return `${title}\n\n${labels[0]}: ${observation}\n\n${labels[1]}: ${implication}\n\n${labels[2]}: ${recommendation}`;
 }
 
-async function generate({ note, component = "auto", mode = "defect" }) {
-  if (!navigator.onLine) throw new Error("The MPI Comment Builder requires an internet connection. Reconnect and try again.");
-  requireCompanySession();
+async function generate({ note, component = "auto", mode = "defect", id = requestId() }) {
+  if (!navigator.onLine) {
+    const error = commentError("The MPI Comment Builder requires internet access. Your original field note remains saved; reconnect and tap TRY AGAIN.", "Offline");
+    error.requestId = id;
+    writeTechnicalLog({ requestId: id, attempt: 0, result: "failed", category: "offline", connectivity: "offline" });
+    throw error;
+  }
+  const session = requireCompanySession();
   assertWithinUsageLimit();
   const cleanNote = String(note || "").trim().slice(0, 900);
   if (!cleanNote) throw new Error("Enter what you observed first.");
@@ -249,17 +294,45 @@ async function generate({ note, component = "auto", mode = "defect" }) {
       ? `Selected report item/component: ${component}`
       : "Selected report item/component: Auto-detect only from the inspector note.";
   const prompt = `Comment type: ${mode === "limit" ? "LIMITATION" : "DEFECT"}\n${componentInstruction}\nInspector note: ${cleanNote}`;
-  try {
-    const model = await getModel();
-    const result = await withTimeout(model.generateContent(prompt));
-    const output = parseResponse(result.response.text(), cleanNote, mode, component);
-    recordUsage();
-    return output;
-  } catch (error) {
-    console.warn("MPI Comment Builder request failed", error);
-    throw friendlyCommentError(error);
+  const prior = cachedResult(id);
+  if (prior) return prior;
+  let lastError;
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      const model = await getModel();
+      const result = await withTimeout(model.generateContent(`${prompt}\nRequest ID: ${id}`));
+      const output = parseResponse(result.response.text(), cleanNote, mode, component);
+      cacheResult(id, output);
+      recordUsage();
+      writeTechnicalLog({ requestId: id, attempt, result: "success", category: "none", connectivity: "online", inspector: session.inspectorEmail || session.inspectorName || "signed-in" });
+      return output;
+    } catch (error) {
+      lastError = error;
+      const category = technicalCategory(error);
+      writeTechnicalLog({
+        requestId: id,
+        attempt,
+        result: "failed",
+        category,
+        connectivity: navigator.onLine ? "online" : "offline",
+        inspector: session.inspectorEmail || session.inspectorName || "signed-in",
+        code: String(error?.code || "").slice(0, 100),
+        httpStatus: Number(error?.status || error?.httpStatus || 0) || "",
+        message: String(error?.message || "Unknown service error").slice(0, 240)
+      });
+      console.warn("MPI Comment Builder request failed", { requestId: id, attempt, category, error });
+      if (attempt < 2 && navigator.onLine && !["rate-limit"].includes(category)) {
+        if (["auth-session", "app-check", "service-unavailable"].includes(category)) modelPromise = null;
+        await new Promise(resolve => window.setTimeout(resolve, 700));
+        continue;
+      }
+      break;
+    }
   }
+  const friendly = friendlyCommentError(lastError);
+  friendly.requestId = id;
+  throw friendly;
 }
 
-window.MPI_COMMENT_AI = { generate, usageSnapshot, dailyLimit: DAILY_LIMIT, monthlyLimit: MONTHLY_LIMIT };
+window.MPI_COMMENT_AI = { generate, usageSnapshot, technicalLog: () => { try { return JSON.parse(localStorage.getItem(COMMENT_LOG_STORAGE_KEY) || "[]"); } catch (_) { return []; } }, dailyLimit: DAILY_LIMIT, monthlyLimit: MONTHLY_LIMIT };
 window.dispatchEvent(new CustomEvent("mpi-comment-ai-ready"));

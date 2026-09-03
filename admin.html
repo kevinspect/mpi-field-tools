@@ -92,6 +92,14 @@
     .status.success { color:var(--green); }
     .status.error { color:var(--red); }
     .update-list,.people-list { display:grid; gap:11px; }
+    .request-admin-list { display:grid; gap:12px; }
+    .request-admin-card { padding:17px; background:#fff; border:1px solid var(--line); border-left:5px solid var(--gold); border-radius:14px; }
+    .request-admin-card.completed { opacity:.72; border-left-color:var(--green); }
+    .request-admin-top { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+    .request-admin-top h3 { margin:6px 0 0; color:var(--navy); font-size:17px; }
+    .request-admin-card p { color:var(--muted); font-size:10.5px; line-height:1.5; }
+    .request-admin-form { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:13px; padding-top:13px; border-top:1px solid var(--line); }
+    .request-admin-form .wide { grid-column:1/-1; }
     .update-card,.person-card { padding:17px; background:#fff; border:1px solid var(--line); border-radius:14px; }
     .update-top,.person-card { display:flex; align-items:flex-start; justify-content:space-between; gap:15px; }
     .type-badge,.priority-badge,.role-badge { display:inline-flex; align-items:center; min-height:25px; padding:4px 8px; border-radius:999px; font-size:9px; font-weight:950; letter-spacing:.05em; text-transform:uppercase; }
@@ -155,6 +163,9 @@
     .fact:last-child { padding-bottom:0; border-bottom:0; }
     .fact span { color:var(--muted); font-size:9.5px; }
     .fact strong { color:var(--navy); font-size:10.5px; text-align:right; }
+    .ops-breakdown { margin-top:14px; padding-top:11px; border-top:1px solid #e7ebf2; }
+    .ops-breakdown summary { color:var(--blue); font-size:10px; font-weight:900; cursor:pointer; }
+    .ops-breakdown .fact-list { margin-top:11px; }
     .job-list,.timeline,.message-history,.correction-history { display:grid; gap:9px; }
     .job-line { display:grid; grid-template-columns:70px minmax(0,1fr) auto; gap:12px; align-items:center; padding:12px; background:#f6f8fb; border-radius:12px; }
     .job-line time { color:var(--blue); font-size:10px; font-weight:900; }
@@ -254,6 +265,7 @@
 
       <nav class="panel tabbar" aria-label="Office Console sections">
         <button class="active" type="button" data-admin-view="operations">Today’s operations</button>
+        <button type="button" data-admin-view="requests">To-Do Items <span id="adminRequestCount"></span></button>
         <button type="button" data-admin-view="publish">Publish information</button>
         <button type="button" data-admin-view="updates">Sent updates</button>
         <button type="button" data-admin-view="people">Inspectors</button>
@@ -272,7 +284,22 @@
         </div>
       </section>
 
-      <section class="console-view active" data-admin-panel="publish">
+      <section class="console-view" data-admin-panel="requests">
+        <div class="panel content-panel">
+          <div class="section-head"><div><h2>Inspector Requests / To-Do Items</h2><p>Every field request stays here until the office completes it. Internal notes are not shown in the inspector app.</p></div><button class="secondary" id="adminEnableRequestNotifications" type="button">ENABLE DESKTOP ALERTS</button></div>
+          <div class="form-grid" id="adminRequestFilters">
+            <div class="field"><label for="adminRequestStatusFilter">Status</label><select id="adminRequestStatusFilter"><option value="active">All active</option><option value="new">New</option><option value="in-progress">In progress</option><option value="waiting">Waiting</option><option value="completed">Completed</option><option value="all">All history</option></select></div>
+            <div class="field"><label for="adminRequestInspectorFilter">Inspector</label><select id="adminRequestInspectorFilter"><option value="all">All inspectors</option></select></div>
+            <div class="field"><label for="adminRequestTypeFilter">Request type</label><select id="adminRequestTypeFilter"><option value="all">All types</option></select></div>
+            <div class="field"><label for="adminRequestAssigneeFilter">Assigned admin</label><select id="adminRequestAssigneeFilter"><option value="all">All admins</option><option value="unassigned">Unassigned</option></select></div>
+            <div class="field"><label for="adminRequestDateFilter">Requested date</label><input id="adminRequestDateFilter" type="date"></div>
+            <div class="field"><label for="adminRequestSort">Sort</label><select id="adminRequestSort"><option value="priority">ASAP / overdue / newest</option><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></div>
+          </div>
+          <div class="request-admin-list" id="adminRequestList" style="margin-top:16px"><div class="empty">No inspector requests have synchronized yet.</div></div>
+        </div>
+      </section>
+
+      <section class="console-view" data-admin-panel="publish">
         <div class="panel content-panel">
           <div class="section-head"><div><h2>Add information to the field app</h2><p>Send to everybody or one inspector. The information appears on their company device after sign-in and stays available offline after syncing.</p></div></div>
           <form id="adminUpdateForm">
@@ -307,7 +334,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
-  <script src="./mpi-shared.js?build=138"></script>
-  <script src="./admin.js?build=138"></script>
+  <script src="./mpi-shared.js?build=139"></script>
+  <script src="./admin.js?build=139"></script>
 </body>
 </html>

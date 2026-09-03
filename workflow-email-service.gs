@@ -7,7 +7,7 @@ var MPI_EMAIL = Object.freeze({
   MAX_DAILY_SENDS: 50,
   MAX_REQUEST_BYTES: 12500000,
   MAX_ATTACHMENTS: 12,
-  MAX_ATTACHMENT_BYTES: 650000,
+  MAX_ATTACHMENT_BYTES: 2500000,
   STATUS_SECONDS: 21600
 });
 
@@ -28,7 +28,8 @@ function doPost(event) {
     if (!contents || contents.length > MPI_EMAIL.MAX_REQUEST_BYTES) throw new Error("Request was empty or too large");
     var input = JSON.parse(contents);
     requestId = safeText_(input.requestId, 120);
-    if (!requestId || safeText_(input.source, 80) !== MPI_EMAIL.SOURCE) throw new Error("Request was not accepted");
+    var source = safeText_(input.source, 80);
+    if (!requestId || (source !== MPI_EMAIL.SOURCE && source !== "mpi-field-tools-form-email")) throw new Error("Request was not accepted");
 
     var existing = readStatus_(requestId);
     if (existing && (existing.status === "sent" || existing.status === "duplicate")) {
@@ -41,16 +42,17 @@ function doPost(event) {
       existing = readStatus_(requestId);
       if (existing && existing.status === "sent") return response_({ ok: true, status: "duplicate", requestId: requestId });
       enforceDailyLimit_();
-      var payload = cleanPayload_(input);
-      var attachments = attachmentBlobs_(input.labCocPhotos);
+      var genericForm = source === "mpi-field-tools-form-email";
+      var payload = genericForm ? cleanFormPayload_(input) : cleanPayload_(input);
+      var attachments = genericForm ? formAttachmentBlobs_(input.formAttachments) : attachmentBlobs_(input.labCocPhotos);
       MailApp.sendEmail({
         to: MPI_EMAIL.RECIPIENT,
         cc: MPI_EMAIL.ADMIN_COPY,
         replyTo: MPI_EMAIL.REPLY_TO,
         name: "Michigan Property Inspections",
-        subject: "Daily Inspector Closeout | " + payload.inspectorName + " | " + payload.date,
-        body: plainText_(payload, attachments.length),
-        htmlBody: renderEmail_(payload, attachments.length),
+        subject: genericForm ? payload.subject : "Daily Inspector Closeout | " + payload.inspectorName + " | " + payload.date,
+        body: genericForm ? plainFormText_(payload) : plainText_(payload, attachments.length),
+        htmlBody: genericForm ? renderFormEmail_(payload) : renderEmail_(payload, attachments.length),
         attachments: attachments
       });
       incrementDailyCount_();
@@ -117,9 +119,41 @@ function cleanTimeClock_(value) {
 function cleanDriveTime_(value) {
   if (!value || typeof value !== "object") return null;
   return {
-    total: safeText_(value.total || value.totalDriveTime, 50),
-    count: Math.max(0, Number(value.count || value.driveCount) || 0)
+    morningMinutes: Math.max(0, Number(value.morningMinutes) || 0),
+    betweenJobMinutes: Math.max(0, Number(value.betweenJobMinutes) || 0),
+    labMinutes: Math.max(0, Number(value.labMinutes) || 0),
+    finalMinutes: Math.max(0, Number(value.finalMinutes) || 0),
+    totalMinutes: Math.max(0, Number(value.totalMinutes) || 0),
+    finalPending: value.finalPending === true
   };
+}
+
+function cleanFormPayload_(input) {
+  var formType = safeText_(input.formType, 80) || "Workflow Notification";
+  var title = safeText_(input.title, 160) || formType;
+  var inspectorName = safeText_(input.inspectorName, 80) || "MPI Inspector";
+  return {
+    formType: formType,
+    title: title,
+    inspectorName: inspectorName,
+    submittedAt: friendlyDateTime_(safeText_(input.submittedAt, 80)),
+    status: safeText_(input.status, 80) || "Submitted",
+    subject: safeText_(input.subject, 220) || formType + " | " + inspectorName + " | " + title,
+    preheader: inspectorName + " submitted " + title + " through MPI Field Tools.",
+    fields: cleanObjectArray_(input.fields, 30, function (item) { return { label: safeText_(item.label, 100), value: safeText_(item.value, 1600) }; }).filter(function (item) { return item.label && item.value; })
+  };
+}
+
+function friendlyDateTime_(value) {
+  if (!value) return "Not recorded";
+  var parsed = new Date(value);
+  if (isNaN(parsed.getTime())) return safeText_(value, 80);
+  return Utilities.formatDate(parsed, "America/Detroit", "MMMM d, yyyy 'at' h:mm a");
+}
+
+function duration_(minutes) {
+  var value = Math.max(0, Math.round(Number(minutes) || 0));
+  return Math.floor(value / 60) + " hr " + (value % 60) + " min";
 }
 
 function attachmentBlobs_(items) {
@@ -138,6 +172,17 @@ function attachmentBlobs_(items) {
   return blobs;
 }
 
+function formAttachmentBlobs_(items) {
+  if (!Array.isArray(items)) return [];
+  return items.slice(0, MPI_EMAIL.MAX_ATTACHMENTS).map(function (item, index) {
+    var base64 = item && typeof item.base64 === "string" ? item.base64.replace(/\s/g, "") : "";
+    if (!base64 || base64.length > Math.ceil(MPI_EMAIL.MAX_ATTACHMENT_BYTES * 4 / 3) + 16) throw new Error("An attached MPI document was too large");
+    var bytes = Utilities.base64Decode(base64);
+    if (bytes.length > MPI_EMAIL.MAX_ATTACHMENT_BYTES) throw new Error("An attached MPI document was too large");
+    return Utilities.newBlob(bytes, safeText_(item.mimeType, 80) || "application/octet-stream", safeFilename_(item.name || "MPI-document-" + (index + 1)));
+  });
+}
+
 function renderEmail_(payload, attachmentCount) {
   var equipment = payload.equipment.length
     ? payload.equipment.map(function (item) { return '<span style="display:inline-block;margin:0 7px 8px 0;padding:9px 12px;border:1px solid #cbd9e8;border-radius:999px;background:#edf5fb;color:#11186a;font-size:13px;font-weight:700;">&#10003; ' + html_(item) + '</span>'; }).join("")
@@ -150,6 +195,14 @@ function renderEmail_(payload, attachmentCount) {
     ["Hours Worked", payload.timeClock.totalWorked],
     ["Management activity window", payload.timeClock.managementActivityWindow]
   ]) : '<p style="margin:0;color:#66708c;">Timekeeping was not available.</p>';
+
+  var driveTime = payload.driveTime ? cardRows_([
+    ["Morning drive", duration_(payload.driveTime.morningMinutes)],
+    ["Between jobs", duration_(payload.driveTime.betweenJobMinutes)],
+    ["Lab travel", duration_(payload.driveTime.labMinutes)],
+    ["Final drive", payload.driveTime.finalPending ? "Pending" : duration_(payload.driveTime.finalMinutes)],
+    ["Total drive time", duration_(payload.driveTime.totalMinutes)]
+  ]) : '<p style="margin:0;color:#66708c;">Drive time was not available.</p>';
 
   var activity = payload.activity.length
     ? payload.activity.map(function (item) {
@@ -181,6 +234,7 @@ function renderEmail_(payload, attachmentCount) {
     '<tr><td style="padding:22px;">' +
       section_("INSPECTOR", cardRows_([["Inspector Name", payload.inspectorName], ["Date", payload.date], ["Status", payload.status]])) +
       section_("HOURS & ACTIVITY WINDOW", timeClock) +
+      section_("DRIVE TIME", driveTime) +
       section_("EQUIPMENT RETURNED / CONFIRMED", equipment) +
       section_("DAILY ACTIVITY", '<table role="presentation" width="100%" cellspacing="0" cellpadding="0">' + activity + '</table>') +
       section_("COMPLETED JOBS", jobs) +
@@ -202,10 +256,29 @@ function cardRows_(rows) {
 function plainText_(payload, attachmentCount) {
   var lines = ["MICHIGAN PROPERTY INSPECTIONS", payload.closeoutLabel, "", "Inspector: " + payload.inspectorName, "Date: " + payload.date, "Status: " + payload.status, ""];
   if (payload.timeClock) lines.push("Hours Worked: " + payload.timeClock.totalWorked, "Clocked out: " + payload.timeClock.clockOffTime, "");
+  if (payload.driveTime) lines.push("Drive Time: " + duration_(payload.driveTime.totalMinutes), "");
   lines.push("Completed Jobs:");
   payload.jobs.forEach(function (job) { lines.push("- " + job.address + " — " + job.status); });
   if (attachmentCount) lines.push("", "Chain of Custody photos attached: " + attachmentCount);
   lines.push("", "Michigan Property Inspections Workflow Management System");
+  return lines.join("\n");
+}
+
+function renderFormEmail_(payload) {
+  var rows = cardRows_([["Inspector", payload.inspectorName], ["Submitted", payload.submittedAt], ["Status", payload.status]].concat(payload.fields.map(function (field) { return [field.label, field.value]; })));
+  return '<!doctype html><html><body style="margin:0;padding:0;background:#eef2f8;font-family:Arial,Helvetica,sans-serif;color:#11186a;">' +
+    '<div style="display:none;max-height:0;overflow:hidden;opacity:0;">' + html_(payload.preheader) + '</div>' +
+    '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eef2f8;"><tr><td align="center" style="padding:20px 10px;">' +
+    '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;background:#fff;border:1px solid #d8e0eb;border-radius:22px;overflow:hidden;">' +
+    '<tr><td align="center" style="padding:28px 22px;background:#11186a;"><img src="' + MPI_EMAIL.LOGO_URL + '" width="90" alt="Michigan Property Inspections" style="display:block;width:90px;height:auto;margin:0 auto 13px;"><div style="color:#d8b655;font-size:12px;letter-spacing:2px;font-weight:800;">MICHIGAN PROPERTY INSPECTIONS</div><h1 style="margin:8px 0 0;color:#fff;font-size:27px;line-height:34px;">' + html_(payload.formType.toUpperCase()) + '</h1></td></tr>' +
+    '<tr><td style="padding:22px;">' + section_("SUBMISSION", '<div style="margin-bottom:14px;color:#11186a;font-size:20px;font-weight:800;">' + html_(payload.title) + '</div>' + rows) + '</td></tr>' +
+    '<tr><td align="center" style="padding:24px;background:#f4f7fb;border-top:1px solid #d8e0eb;"><strong style="color:#11186a;">Michigan Property Inspections</strong><div style="margin-top:5px;color:#66708c;font-size:12px;line-height:18px;">Workflow Management System<br>(810) 243-4773 &middot; kev@michiganpropertyinspections.com</div><div style="margin-top:10px;color:#8b93a7;font-size:11px;">Automatically generated from MPI Field Tools.</div></td></tr>' +
+    '</table></td></tr></table></body></html>';
+}
+
+function plainFormText_(payload) {
+  var lines = ["MICHIGAN PROPERTY INSPECTIONS", payload.formType, "", payload.title, "Inspector: " + payload.inspectorName, "Submitted: " + payload.submittedAt, "Status: " + payload.status, ""];
+  payload.fields.forEach(function (field) { lines.push(field.label + ": " + field.value); });
   return lines.join("\n");
 }
 

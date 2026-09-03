@@ -40,6 +40,15 @@
   const commentUsageStatus = document.getElementById("commentUsageStatus");
   const commentUsageProgress = document.getElementById("commentUsageProgress");
   const commentUsageNote = document.getElementById("commentUsageNote");
+  const requestCount = document.getElementById("adminRequestCount");
+  const requestList = document.getElementById("adminRequestList");
+  const requestStatusFilter = document.getElementById("adminRequestStatusFilter");
+  const requestInspectorFilter = document.getElementById("adminRequestInspectorFilter");
+  const requestTypeFilter = document.getElementById("adminRequestTypeFilter");
+  const requestAssigneeFilter = document.getElementById("adminRequestAssigneeFilter");
+  const requestDateFilter = document.getElementById("adminRequestDateFilter");
+  const requestSort = document.getElementById("adminRequestSort");
+  const enableRequestNotifications = document.getElementById("adminEnableRequestNotifications");
   const tabButtons = [...document.querySelectorAll("[data-admin-view]")];
   const panels = [...document.querySelectorAll("[data-admin-panel]")];
   const stats = {
@@ -82,6 +91,8 @@
   let replyRefreshTimer = 0;
   let repliesRefreshing = false;
   let selectedFiles = [];
+  let knownRequestIds = new Set();
+  let legacyRequestChecked = false;
   const messageReceiptCache = new Map();
   const MAX_ATTACHMENT_FILES = 5;
   const MAX_ATTACHMENT_BYTES = 8 * 1024 * 1024;
@@ -259,6 +270,15 @@
     return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
   }
 
+  function lastLocationForDay(day) {
+    const event = (day?.activity || []).slice().reverse().find(item => Number.isFinite(Number(item?.data?.latitude)) && Number.isFinite(Number(item?.data?.longitude)));
+    if (event) return { latitude: Number(event.data.latitude), longitude: Number(event.data.longitude), timestamp: event.timestamp, label: event.property || actionLabels[event.action] || event.action };
+    const sessions = day?.timeClock?.sessions || [];
+    const session = sessions.slice().reverse().find(item => item?.clockOutLocation?.status === "recorded" || item?.clockInLocation?.status === "recorded");
+    const location = session?.clockOutLocation?.status === "recorded" ? session.clockOutLocation : session?.clockInLocation;
+    return location ? { latitude: Number(location.latitude), longitude: Number(location.longitude), timestamp: location.recordedAt || session.clockedOutAt || session.clockedInAt, label: "Recorded phone location" } : null;
+  }
+
   function initials(value) {
     return String(value || "MPI").trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0)).join("").toUpperCase() || "MPI";
   }
@@ -393,17 +413,32 @@
     if (!day?.timeClock) return 0;
     const correction = effectiveClockOut(person, day);
     const isToday = day.date === dateKey();
-    const calculated = (day.timeClock.sessions || []).reduce((total, session, index, sessions) => {
+    const intervals = (day.timeClock.sessions || []).map((session, index, sessions) => {
       const start = asDate(session.clockedInAt)?.getTime();
       const isLast = index === sessions.length - 1;
       const end = asDate(session.clockedOutAt || (isLast ? correction : ""))?.getTime() || (isToday && day.timeClock.active && isLast ? Date.now() : 0);
-      return total + (start && end > start ? Math.floor((end - start) / 60000) : 0);
-    }, 0);
+      return { start, end };
+    }).filter(item => item.start && item.end > item.start).sort((left, right) => left.start - right.start || left.end - right.end);
+    const merged = [];
+    intervals.forEach(interval => {
+      const previous = merged[merged.length - 1];
+      if (previous && interval.start <= previous.end) previous.end = Math.max(previous.end, interval.end);
+      else merged.push({ ...interval });
+    });
+    const calculated = merged.reduce((total, interval) => total + Math.floor((interval.end - interval.start) / 60000), 0);
     return calculated || Number(day.timeClock.workedMinutes) || 0;
   }
 
   function weeklyMinutes(person) {
     return operationDays(person).filter(day => rangeDateKeys("week").includes(day.date)).reduce((total, day) => total + workedMinutes(person, day), 0);
+  }
+
+  function weeklyDayBreakdownHtml(person, metric = "hours") {
+    const week = operationDays(person).filter(day => rangeDateKeys("week").includes(day.date)).sort((left, right) => String(left.date).localeCompare(String(right.date)));
+    return `<details class="ops-breakdown"><summary>View daily breakdown</summary><div class="fact-list">${week.length ? week.map(day => {
+      const minutes = metric === "drive" ? Number(driveTimeForDay(day)?.totalMinutes) || 0 : workedMinutes(person, day);
+      return `<div class="fact"><span>${escapeHtml(new Date(`${day.date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }))}</span><strong>${formatMinutes(minutes)}</strong></div>`;
+    }).join("") : '<div class="empty">No recorded days this week.</div>'}</div></details>`;
   }
 
   function statusClass(status, alerts = []) {
@@ -478,6 +513,102 @@
         </div>
       </article>`).join("") : '<div class="empty">No company accounts have signed in yet.</div>';
     renderOperations();
+    renderRequestTodos();
+  }
+
+  function allInspectorRequests() {
+    return people.flatMap(person => (Array.isArray(person.fieldRequests) ? person.fieldRequests : []).map(request => ({ ...request, ownerUserId: person.id, ownerName: person.name || request.inspector || person.email, ownerEmail: person.email || request.inspectorEmail || "" })));
+  }
+
+  function requestDueState(request) {
+    if (request.status === "completed") return "complete";
+    if (request.asap) return "asap";
+    if (request.neededBy && request.neededBy < dateKey()) return "overdue";
+    return "normal";
+  }
+
+  function renderRequestTodos() {
+    if (!requestList) return;
+    const all = allInspectorRequests();
+    const active = all.filter(item => item.status !== "completed");
+    requestCount.textContent = active.length ? `(${active.length})` : "";
+    const inspectors = [...new Map(all.map(item => [item.ownerUserId, item.ownerName])).entries()];
+    const selectedInspector = requestInspectorFilter.value || "all";
+    requestInspectorFilter.innerHTML = '<option value="all">All inspectors</option>' + inspectors.map(([id, name]) => `<option value="${escapeHtml(id)}">${escapeHtml(name)}</option>`).join("");
+    requestInspectorFilter.value = inspectors.some(([id]) => id === selectedInspector) ? selectedInspector : "all";
+    const types = [...new Set(all.map(item => item.type).filter(Boolean))].sort();
+    const selectedType = requestTypeFilter.value || "all";
+    requestTypeFilter.innerHTML = '<option value="all">All types</option>' + types.map(type => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join("");
+    requestTypeFilter.value = types.includes(selectedType) ? selectedType : "all";
+    const admins = people.filter(person => ["owner", "admin"].includes(person.role) && person.active !== false);
+    const selectedAssignee = requestAssigneeFilter.value || "all";
+    requestAssigneeFilter.innerHTML = '<option value="all">All admins</option><option value="unassigned">Unassigned</option>' + admins.map(admin => `<option value="${escapeHtml(admin.email)}">${escapeHtml(admin.name || admin.email)}</option>`).join("");
+    requestAssigneeFilter.value = selectedAssignee === "unassigned" || admins.some(admin => admin.email === selectedAssignee) ? selectedAssignee : "all";
+    let filtered = all.filter(item => {
+      const statusMatch = requestStatusFilter.value === "all" || (requestStatusFilter.value === "active" ? item.status !== "completed" : item.status === requestStatusFilter.value);
+      const assigneeMatch = requestAssigneeFilter.value === "all" || (requestAssigneeFilter.value === "unassigned" ? !item.assignedAdmin : item.assignedAdmin === requestAssigneeFilter.value);
+      const requestedDate = String(item.requestedAt || "").slice(0, 10);
+      return statusMatch && (requestInspectorFilter.value === "all" || item.ownerUserId === requestInspectorFilter.value) && (requestTypeFilter.value === "all" || item.type === requestTypeFilter.value) && assigneeMatch && (!requestDateFilter.value || requestedDate === requestDateFilter.value);
+    });
+    filtered.sort((left, right) => {
+      if (requestSort.value === "oldest") return String(left.requestedAt || "").localeCompare(String(right.requestedAt || ""));
+      if (requestSort.value === "newest") return String(right.requestedAt || "").localeCompare(String(left.requestedAt || ""));
+      const rank = { overdue: 0, asap: 1, normal: 2, complete: 3 };
+      return rank[requestDueState(left)] - rank[requestDueState(right)] || String(right.requestedAt || "").localeCompare(String(left.requestedAt || ""));
+    });
+    requestList.innerHTML = filtered.length ? filtered.map(item => {
+      const dueState = requestDueState(item);
+      return `<article class="request-admin-card ${item.status === "completed" ? "completed" : ""}" data-request-owner="${escapeHtml(item.ownerUserId)}" data-request-id="${escapeHtml(item.id)}"><div class="request-admin-top"><div><span class="type-badge">${escapeHtml(item.type || "Request")}</span>${dueState === "asap" ? '<span class="priority-badge">ASAP</span>' : dueState === "overdue" ? '<span class="priority-badge">OVERDUE</span>' : ""}<h3>${escapeHtml(item.item || "Inspector request")}</h3></div><span class="role-badge">${escapeHtml(String(item.status || "new").replace("-", " "))}</span></div><p><strong>${escapeHtml(item.ownerName)}</strong> · Requested ${escapeHtml(formatDateTime(item.requestedAt))}${item.neededBy ? ` · Needed ${escapeHtml(formatDate(item.neededBy))}` : ""}</p><p>${escapeHtml(item.details || "No detail supplied.")}</p>${item.suggestion ? `<p><strong>Suggested solution:</strong> ${escapeHtml(item.suggestion)}</p>` : ""}<form class="request-admin-form" data-request-admin-form><div class="field"><label>Status</label><select data-request-status><option value="new" ${item.status === "new" ? "selected" : ""}>New</option><option value="in-progress" ${item.status === "in-progress" ? "selected" : ""}>In progress</option><option value="waiting" ${item.status === "waiting" ? "selected" : ""}>Waiting</option><option value="completed" ${item.status === "completed" ? "selected" : ""}>Completed</option></select></div><div class="field"><label>Assigned admin</label><select data-request-admin><option value="">Unassigned</option>${admins.map(admin => `<option value="${escapeHtml(admin.email)}" ${item.assignedAdmin === admin.email ? "selected" : ""}>${escapeHtml(admin.name || admin.email)}</option>`).join("")}</select></div><div class="field"><label>Completed date</label><input data-request-completed type="date" value="${escapeHtml(item.completedAt ? String(item.completedAt).slice(0, 10) : "")}"></div><div class="field wide"><label>Internal management note</label><textarea data-request-note maxlength="1000" placeholder="Visible to office management only">${escapeHtml(item.managementNote || "")}</textarea></div><button class="primary" type="submit">SAVE TO-DO</button><span class="status" data-request-save-status></span></form></article>`;
+    }).join("") : '<div class="empty">No requests match these filters.</div>';
+
+    const ids = new Set(all.map(item => item.id));
+    const newItems = all.filter(item => item.status === "new" && !knownRequestIds.has(item.id));
+    if (knownRequestIds.size && newItems.length && "Notification" in window && Notification.permission === "granted") {
+      const first = newItems[0];
+      const notification = new Notification("New MPI Inspector Request", { body: `${first.ownerName}: ${first.item}`, icon: "./icon-192.png", tag: `mpi-request-${first.id}` });
+      notification.onclick = () => { window.focus(); showView("requests"); };
+    }
+    knownRequestIds = ids;
+  }
+
+  async function saveRequestTodo(formElement) {
+    const card = formElement.closest("[data-request-owner][data-request-id]");
+    const person = people.find(item => item.id === card?.dataset.requestOwner);
+    const requestId = card?.dataset.requestId;
+    const previewRequest = (Array.isArray(person?.fieldRequests) ? person.fieldRequests : []).find(item => item.id === requestId);
+    const status = formElement.querySelector("[data-request-save-status]");
+    if (!person || !previewRequest) return;
+    const nextStatus = formElement.querySelector("[data-request-status]").value;
+    const assignedAdmin = formElement.querySelector("[data-request-admin]").value;
+    const managementNote = formElement.querySelector("[data-request-note]").value.trim();
+    const completedDate = formElement.querySelector("[data-request-completed]").value;
+    status.textContent = "Saving…";
+    try {
+      const ref = shared.db.collection("users").doc(person.id);
+      await shared.db.runTransaction(async transaction => {
+        const snapshot = await transaction.get(ref);
+        const requests = Array.isArray(snapshot.data()?.fieldRequests) ? snapshot.data().fieldRequests.map(item => ({ ...item })) : [];
+        const request = requests.find(item => item.id === requestId);
+        if (!request) throw new Error("This request is no longer available.");
+        request.status = nextStatus;
+        request.assignedAdmin = assignedAdmin;
+        request.managementNote = managementNote;
+        if (nextStatus === "completed") {
+          request.completedAt = completedDate ? new Date(`${completedDate}T12:00:00`).toISOString() : request.completedAt || new Date().toISOString();
+          request.completedBy = currentProfile.name || currentUser.displayName || currentUser.email;
+        } else {
+          request.completedAt = "";
+          request.completedBy = "";
+        }
+        request.updatedAt = new Date().toISOString();
+        transaction.set(ref, { fieldRequests: requests, requestsUpdatedAt: shared.serverTimestamp() }, { merge: true });
+      });
+      status.textContent = "Saved.";
+      status.className = "status success";
+    } catch (error) {
+      status.textContent = error.message || "Could not save this to-do.";
+      status.className = "status error";
+    }
   }
 
   function overviewRow(person) {
@@ -628,6 +759,10 @@
     const correctionActions = ["Arrived", "Inspection started", "Lab visit completed", "Clocked off", "On My Way selected"];
     const jobOptions = (day?.jobs || []).map(job => `<option value="${escapeHtml(job.id)}">${escapeHtml(job.property)}</option>`).join("");
     const timeAtProperty = current?.arrivedAt && asDate(current.arrivedAt) ? formatMinutes(Math.floor((Date.now() - asDate(current.arrivedAt).getTime()) / 60000)) : "—";
+    const lastLocation = lastLocationForDay(day);
+    const locationLink = lastLocation && Number.isFinite(lastLocation.latitude) && Number.isFinite(lastLocation.longitude)
+      ? `<a href="https://maps.apple.com/?q=${encodeURIComponent(`${lastLocation.latitude},${lastLocation.longitude}`)}" target="_blank" rel="noopener">Open last recorded location ↗</a> · ${escapeHtml(formatTime(lastLocation.timestamp))}`
+      : "Not available";
     inspectorDetail.innerHTML = `
       <div class="detail-hero"><div class="detail-person">${avatarHtml(person, "large")}<div><p class="ops-eyebrow">Inspector operations</p><h2>${escapeHtml(person.name || person.email)}</h2><p>${escapeHtml(person.email || "")} · ${escapeHtml(day?.date ? formatDate(day.date) : "No activity synced for this period")} · ${escapeHtml(syncAgeLabel(person, day))}</p></div></div><div><span class="status-badge ${statusClass(day?.liveStatus, alerts)}">${escapeHtml(day?.liveStatus || "NOT STARTED")}</span><button class="detail-back" type="button" data-back-overview>← All inspectors</button></div></div>
       <div class="ops-grid">
@@ -635,15 +770,16 @@
         <article class="ops-card span-6"><p class="ops-eyebrow">Next appointment</p><strong class="ops-primary">${escapeHtml(next?.property || "No remaining appointment")}</strong><p class="ops-sub">${next ? `${formatTime(next.scheduledStart)} · ${escapeHtml(next.arrivalPerformance || "On schedule")}` : "The scheduled job list is complete."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Estimated drive</span><strong>${current?.departurePlan?.estimatedDriveMinutes ? `${current.departurePlan.estimatedDriveMinutes} min` : "—"}</strong></div><div class="fact"><span>Required departure</span><strong>${escapeHtml(formatTime(current?.departurePlan?.leaveBy))}</strong></div><div class="fact"><span>Schedule status</span><strong>${alerts.some(item => /late|affect next/i.test(item)) ? "ATTENTION REQUIRED" : "ON SCHEDULE"}</strong></div></div></article>
         <article class="ops-card"><p class="ops-eyebrow">${currentRange === "week" ? "Hours worked this week" : currentRange === "yesterday" ? "Hours worked yesterday" : "Hours worked today"}</p><strong class="ops-primary">${formatMinutes(hours)}</strong><p class="ops-sub">${currentRange === "week" ? `${days.length} recorded day${days.length === 1 ? "" : "s"} included` : `Started ${formatTime(day?.timeClock?.hoursWorkedStartedAt)} · ${clockOut ? `Frozen at ${formatTime(clockOut)}` : day?.timeClock?.active ? "Running now" : "Not started"}`}</p></article>
         <article class="ops-card"><p class="ops-eyebrow">Activity window</p><strong class="ops-primary">${formatMinutes(activityMinutes)}</strong><p class="ops-sub">Morning readiness ${formatTime(activityStart)} · End ${formatTime(clockOut)}</p></article>
-        <article class="ops-card"><p class="ops-eyebrow">Weekly hours</p><strong class="ops-primary">${formatMinutes(weekly)}</strong><p class="ops-sub">Current Monday-to-today total${weekly >= 38 * 60 ? " · Review threshold approaching" : ""}</p></article>
-        <article class="ops-card span-6"><h3>Drive Time</h3><div class="fact-list"><div class="fact"><span>Morning drive</span><strong>${formatMinutes(drive.morningMinutes)}</strong></div><div class="fact"><span>Between jobs</span><strong>${formatMinutes(drive.betweenJobMinutes)}</strong></div><div class="fact"><span>Lab travel</span><strong>${formatMinutes(drive.labMinutes)}</strong></div><div class="fact"><span>Final drive</span><strong>${driveTimeForDay(day)?.finalPending ? "Pending" : formatMinutes(drive.finalMinutes)}</strong></div><div class="fact"><span>Total drive today</span><strong>${formatMinutes(drive.totalMinutes)}</strong></div></div></article>
+        <article class="ops-card"><p class="ops-eyebrow">Weekly hours</p><strong class="ops-primary">${formatMinutes(weekly)}</strong><p class="ops-sub">Current Monday-to-today total${weekly >= 38 * 60 ? " · Review threshold approaching" : ""}</p>${weeklyDayBreakdownHtml(person, "hours")}</article>
+        <article class="ops-card span-6"><h3>${currentRange === "week" ? "Total Drive Time This Week" : "Drive Time"}</h3><div class="fact-list"><div class="fact"><span>Morning drive</span><strong>${formatMinutes(drive.morningMinutes)}</strong></div><div class="fact"><span>Between jobs</span><strong>${formatMinutes(drive.betweenJobMinutes)}</strong></div><div class="fact"><span>Lab travel</span><strong>${formatMinutes(drive.labMinutes)}</strong></div><div class="fact"><span>Final drive</span><strong>${driveTimeForDay(day)?.finalPending ? "Pending" : formatMinutes(drive.finalMinutes)}</strong></div><div class="fact"><span>Total drive ${currentRange === "week" ? "this week" : "today"}</span><strong>${formatMinutes(drive.totalMinutes)}</strong></div></div>${currentRange === "week" ? weeklyDayBreakdownHtml(person, "drive") : ""}</article>
         <article class="ops-card span-6"><h3>Day Progress</h3><strong class="ops-primary">${counts.complete} / ${counts.total} complete</strong><p class="ops-sub">Completed jobs remain visible for the full calendar day.</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Completed</span><strong>${counts.complete}</strong></div><div class="fact"><span>Remaining</span><strong>${Math.max(0, counts.total - counts.complete)}</strong></div><div class="fact"><span>Total jobs</span><strong>${counts.total}</strong></div></div></article>
         <article class="ops-card full"><h3>Today’s Jobs</h3><div class="job-list">${(day?.jobs || []).length ? day.jobs.map(jobCard).join("") : '<div class="empty">No scheduled jobs are available for this period.</div>'}</div></article>
         <article class="ops-card span-8"><h3>Activity Timeline</h3><div class="timeline">${timelineHtml(person, day)}</div></article>
         <article class="ops-card"><h3>Alerts / Exceptions</h3><div class="alert-list">${alerts.length ? alerts.map(item => `<div class="alert-item">${escapeHtml(item)}</div>`).join("") : '<div class="clear-item">✓ No meaningful workflow issues recorded.</div>'}</div></article>
+        ${(day?.commentFailures || []).length ? `<article class="ops-card full"><h3>Comment Builder Technical Log</h3><div class="timeline">${day.commentFailures.slice().reverse().map(item => `<div class="timeline-row"><time>${escapeHtml(formatTime(item.timestamp))}</time><span class="timeline-dot"></span><div><strong>${escapeHtml(item.category || "service-error")} · attempt ${escapeHtml(item.attempt || "—")}</strong><small>Request ${escapeHtml(item.requestId || "—")} · ${escapeHtml(item.connectivity || "unknown")} · ${escapeHtml(item.code || item.httpStatus || "no status")} · ${escapeHtml(item.message || "No technical message")}</small></div></div>`).join("")}</div></article>` : ""}
         <article class="ops-card"><h3>Morning Readiness</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${day?.readiness ? "Complete" : "Not recorded"}</strong></div><div class="fact"><span>Completed</span><strong>${formatTime(day?.readiness?.completedAt)}</strong></div><div class="fact"><span>Important notifications</span><strong>${escapeHtml(day?.readiness?.notificationPermission === "granted" ? "Enabled" : day?.readiness?.notificationPermission || "Unknown")}</strong></div></div></article>
         <article class="ops-card"><h3>Lab Activity</h3>${labHtml(day)}</article>
-        <article class="ops-card"><h3>End-of-Day Status</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${escapeHtml(eodStatus)}</strong></div><div class="fact"><span>Clock out</span><strong>${formatTime(clockOut)}</strong></div><div class="fact"><span>Location</span><strong>${escapeHtml(day?.timeClock?.sessions?.at(-1)?.clockOutLocation?.status || "Not recorded")}</strong></div><div class="fact"><span>Equipment check</span><strong>${day?.dayComplete?.equipment?.length ? "Complete" : "Pending"}</strong></div></div></article>
+        <article class="ops-card"><h3>End-of-Day Status</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${escapeHtml(eodStatus)}</strong></div><div class="fact"><span>Clock out</span><strong>${formatTime(clockOut)}</strong></div><div class="fact"><span>Last recorded location</span><strong>${locationLink}</strong></div><div class="fact"><span>Equipment check</span><strong>${day?.dayComplete?.equipment?.length ? "Complete" : "Pending"}</strong></div></div><p class="ops-sub">Location is event-based, not continuous. Never treat a stale location as live.</p></article>
         <article class="ops-card span-6"><h3>Message Inspector</h3><div class="quick-messages" id="adminQuickMessages">${["CALL OFFICE", "PLEASE CHECK APP", "RUNNING LATE – UPDATE OFFICE", "REMEMBER LAB DROP", "PLEASE CONFIRM STATUS", "CONTACT CLIENT"].map(value => `<button type="button" data-quick-message="${escapeHtml(value)}">${escapeHtml(value)}</button>`).join("")}</div><form class="compact-form" id="adminMessageForm" data-person-id="${escapeHtml(person.id)}"><div class="field"><label for="adminMessageText">Review or write the message</label><textarea id="adminMessageText" maxlength="1000" required placeholder="Type a clear operational message for ${escapeHtml(person.name || "the inspector")}"></textarea></div><button class="primary" type="submit">SEND TO INSPECTOR APP</button><span class="status" id="adminMessageStatus"></span></form><h3 style="margin-top:20px">Message History</h3><div class="message-history" id="adminMessageHistory">${messageHistoryHtml(person)}</div></article>
         <article class="ops-card span-6"><h3>Admin Corrections</h3><p class="ops-sub">Corrections are appended to the audit trail. Original records are never deleted or overwritten.</p><form class="compact-form" id="adminCorrectionForm" data-person-id="${escapeHtml(person.id)}"><div class="two-col"><div class="field"><label for="adminCorrectionAction">Missed / incorrect action</label><select id="adminCorrectionAction" required>${correctionActions.map(action => `<option value="${escapeHtml(action)}">${escapeHtml(action)}</option>`).join("")}</select></div><div class="field"><label for="adminCorrectionJob">Job</label><select id="adminCorrectionJob"><option value="">No specific job</option>${jobOptions}</select></div></div><div class="field"><label for="adminCorrectionValue">Correct date and time</label><input id="adminCorrectionValue" type="datetime-local" required></div><div class="field"><label for="adminCorrectionReason">Reason for correction</label><textarea id="adminCorrectionReason" maxlength="500" required placeholder="Explain why management is adding this correction."></textarea></div><button class="primary" type="submit">ADD AUDITABLE CORRECTION</button><span class="status" id="adminCorrectionStatus"></span></form><h3 style="margin-top:20px">Correction History</h3><div class="correction-history">${correctionHistoryHtml(person, day)}</div></article>
       </div>`;
@@ -693,6 +829,32 @@
     unsubscribeUpdates?.();
     unsubscribePeople = shared.db.collection("users").orderBy("name").onSnapshot(snapshot => {
       people = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (!legacyRequestChecked) {
+        legacyRequestChecked = true;
+        const kevin = people.find(person => shared.normalizeEmail(person.email) === "kev@michiganpropertyinspections.com");
+        const exists = kevin?.fieldRequests?.some(item => item.id === "legacy-safety-glasses-20260903-1152");
+        if (kevin && !exists) {
+          const request = {
+            id: "legacy-safety-glasses-20260903-1152",
+            type: "PPE or safety equipment",
+            item: "Safety Glasses",
+            inspector: kevin.name || "Kevin Cave",
+            inspectorId: kevin.inspectorId || "",
+            inspectorEmail: kevin.email,
+            requestedAt: "2026-09-03T11:52:00-04:00",
+            neededBy: "",
+            asap: true,
+            details: "Safety glasses requested by the inspector.",
+            suggestion: "",
+            status: "new",
+            assignedAdmin: "",
+            completedAt: "",
+            completedBy: "",
+            backfilled: true
+          };
+          shared.db.collection("users").doc(kevin.id).set({ fieldRequests: shared.arrayUnion(request), requestsUpdatedAt: shared.serverTimestamp() }, { merge: true }).catch(() => { legacyRequestChecked = false; });
+        }
+      }
       people.forEach(person => {
         const inspectorId = String(person.inspectorId || shared.knownInspectorNumber?.(person) || "").trim();
         if (inspectorId && inspectorId !== person.inspectorId) {
@@ -873,6 +1035,21 @@
   updatesList.addEventListener("click", event => {
     const button = event.target.closest("[data-open-admin-attachment]");
     if (button) openAdminAttachment(button);
+  });
+  [requestStatusFilter, requestInspectorFilter, requestTypeFilter, requestAssigneeFilter, requestDateFilter, requestSort].forEach(control => control?.addEventListener("change", renderRequestTodos));
+  requestList?.addEventListener("submit", event => {
+    const requestForm = event.target.closest("[data-request-admin-form]");
+    if (!requestForm) return;
+    event.preventDefault();
+    saveRequestTodo(requestForm);
+  });
+  enableRequestNotifications?.addEventListener("click", async () => {
+    if (!("Notification" in window)) {
+      enableRequestNotifications.textContent = "NOT SUPPORTED IN THIS BROWSER";
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    enableRequestNotifications.textContent = permission === "granted" ? "DESKTOP ALERTS ENABLED" : "ALLOW ALERTS IN BROWSER SETTINGS";
   });
   peopleList.addEventListener("change", updatePerson);
   inspectorSelector.addEventListener("change", () => { selectedInspectorId = inspectorSelector.value; renderOperations(); });

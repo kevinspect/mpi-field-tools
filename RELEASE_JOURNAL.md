@@ -2676,3 +2676,15 @@ Status: prepared August 26, 2026 as app Build 96.
 
 - Restore GitHub `main` to public Build 94 to remove only the 100-minute well workflow.
 - Restore GitHub `main` to `fallback/pre-six-hour-review-2026-08-26` to remove the entire improvement cycle.
+## Build 139 — September 3, 2026
+
+- Made core workflow actions offline-first and retained the original device timestamp, connectivity state, location result, and synchronization status.
+- Allowed the first ARRIVED action to start Hours Worked while offline without discarding the GPS attempt; online out-of-geofence arrivals remain blocked.
+- Corrected Hours Worked calculations by merging overlapping or duplicated clock sessions. The inspector view, admin dashboard, weekly totals, and closeout email now share this calculation.
+- Preserved the final Hours Worked Today total and completed-job list after daily clock-out.
+- Added inspector weekly-hours visibility and expandable daily hours/drive breakdowns in the office console.
+- Added a persistent inspector-request workflow with ASAP, office assignment, status, internal notes, completion history, inspector-visible status, and the September 3 Safety Glasses backfill.
+- Added an office To-Do Items dashboard with filters, priority sorting, unread count, and optional desktop alerts.
+- Added a direct Team Status shortcut on the home screen while retaining privacy-safe inspector status sharing.
+- Added Comment Builder automatic retry, stable request references, technical failure logging, and a failure screen that preserves the original field note.
+- Removed FormSubmit submission routing. Workflow forms now use the reusable branded MPI email service, and daily closeouts include drive-time categories.
