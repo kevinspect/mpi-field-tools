@@ -259,6 +259,33 @@
     return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
   }
 
+  function initials(value) {
+    return String(value || "MPI").trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0)).join("").toUpperCase() || "MPI";
+  }
+
+  function avatarHtml(person, extraClass = "") {
+    const name = person?.name || person?.email || "MPI Inspector";
+    const photo = person?.photoURL
+      ? `<img src="${escapeHtml(person.photoURL)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`
+      : "";
+    return `<span class="inspector-avatar ${escapeHtml(extraClass)}">${photo}<b>${escapeHtml(initials(name))}</b></span>`;
+  }
+
+  function latestSyncDate(person, day = latestDay(person)) {
+    return asDate(person?.operationsUpdatedAt) || asDate(day?.updatedAtClient) || asDate(person?.lastSeenAt);
+  }
+
+  function syncAgeLabel(person, day = latestDay(person)) {
+    const date = latestSyncDate(person, day);
+    if (!date) return "Waiting for first device sync";
+    const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+    if (minutes < 1) return "Updated just now";
+    if (minutes < 60) return `Updated ${minutes} min ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `Updated ${hours} hr${hours === 1 ? "" : "s"} ago`;
+    return `Updated ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+  }
+
   function driveTimeForDay(day) {
     const saved = day?.driveTime || {};
     const events = (Array.isArray(day?.activity) ? day.activity : [])
@@ -439,7 +466,7 @@
     renderInspectorSelector();
     peopleList.innerHTML = people.length ? people.map(person => `
       <article class="person-card" data-person-id="${escapeHtml(person.id)}">
-        <div class="person-main"><strong>${escapeHtml(person.name || "MPI Team Member")}</strong><small>${escapeHtml(person.email)}</small><small>${person.inspectorId ? `Inspector number: ${escapeHtml(person.inspectorId)}` : "Inspector number not assigned"}</small></div>
+        <div class="person-main inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(person.name || "MPI Team Member")}</strong><small>${escapeHtml(person.email)}</small><small>${person.inspectorId ? `Inspector number: ${escapeHtml(person.inspectorId)}` : "Inspector number not assigned"}</small></div></div>
         <div class="person-controls">
           <input data-person-inspector-id aria-label="Inspector number for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.inspectorId || "")}" maxlength="40" placeholder="Inspector number" ${person.role === "owner" ? "disabled" : ""}>
           <select data-person-role aria-label="Role for ${escapeHtml(person.name || person.email)}" ${person.role === "owner" ? "disabled" : ""}>
@@ -461,10 +488,12 @@
     const hours = selectedDays(person).reduce((total, item) => total + workedMinutes(person, item), 0);
     const drive = selectedDays(person).reduce((total, item) => total + (Number(driveTimeForDay(item)?.totalMinutes) || 0), 0);
     const status = day?.liveStatus || "NOT STARTED";
+    const latestSync = latestSyncDate(person, day);
+    const stale = !["NOT STARTED", "CLOCKED OUT"].includes(status) && latestSync && Date.now() - latestSync.getTime() > 20 * 60 * 1000;
     const punctuality = day?.currentJob?.arrivalPerformance || next?.arrivalPerformance || (alerts.some(item => /late/i.test(item)) ? "Needs review" : "On schedule");
     return `<button class="inspector-row${alerts.length ? " has-alert" : ""}" type="button" data-open-inspector="${escapeHtml(person.id)}">
-      <div><strong>${escapeHtml(person.name || person.email)}</strong><small>${escapeHtml(day?.currentJob?.property || (next ? `Next: ${next.property}` : "No current appointment"))}</small></div>
-      <div><span class="status-badge ${statusClass(status, alerts)}">${escapeHtml(status)}</span><small>${alerts[0] ? escapeHtml(alerts[0]) : escapeHtml(punctuality)}</small></div>
+      <div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(person.name || person.email)}</strong><small>${escapeHtml(day?.currentJob?.property || (next ? `Next: ${next.property}` : "No current appointment"))}</small><small class="inspector-sync${stale ? " stale" : ""}">${escapeHtml(syncAgeLabel(person, day))}${stale ? " · confirm status" : ""}</small></div></div>
+      <div><span class="status-badge ${statusClass(status, alerts)}${stale ? " stale" : ""}">${escapeHtml(status)}</span><small>${alerts[0] ? escapeHtml(alerts[0]) : escapeHtml(punctuality)}</small></div>
       <div class="row-metric"><span>Jobs</span><b>${counts.complete} / ${counts.total}</b></div>
       <div class="row-metric"><span>Hours worked</span><b>${formatMinutes(hours)}</b></div>
       <div class="row-metric"><span>Drive time</span><b>${formatMinutes(drive)}</b></div>
@@ -600,7 +629,7 @@
     const jobOptions = (day?.jobs || []).map(job => `<option value="${escapeHtml(job.id)}">${escapeHtml(job.property)}</option>`).join("");
     const timeAtProperty = current?.arrivedAt && asDate(current.arrivedAt) ? formatMinutes(Math.floor((Date.now() - asDate(current.arrivedAt).getTime()) / 60000)) : "—";
     inspectorDetail.innerHTML = `
-      <div class="detail-hero"><div><p class="ops-eyebrow">Inspector operations</p><h2>${escapeHtml(person.name || person.email)}</h2><p>${escapeHtml(person.email || "")} · ${escapeHtml(day?.date ? formatDate(day.date) : "No activity synced for this period")}</p></div><div><span class="status-badge ${statusClass(day?.liveStatus, alerts)}">${escapeHtml(day?.liveStatus || "NOT STARTED")}</span><button class="detail-back" type="button" data-back-overview>← All inspectors</button></div></div>
+      <div class="detail-hero"><div class="detail-person">${avatarHtml(person, "large")}<div><p class="ops-eyebrow">Inspector operations</p><h2>${escapeHtml(person.name || person.email)}</h2><p>${escapeHtml(person.email || "")} · ${escapeHtml(day?.date ? formatDate(day.date) : "No activity synced for this period")} · ${escapeHtml(syncAgeLabel(person, day))}</p></div></div><div><span class="status-badge ${statusClass(day?.liveStatus, alerts)}">${escapeHtml(day?.liveStatus || "NOT STARTED")}</span><button class="detail-back" type="button" data-back-overview>← All inspectors</button></div></div>
       <div class="ops-grid">
         <article class="ops-card span-6"><p class="ops-eyebrow">Current job</p><strong class="ops-primary">${escapeHtml(current?.property || "No job currently open")}</strong><p class="ops-sub">${current ? `Scheduled ${formatTime(current.scheduledStart)} · ${escapeHtml(current.arrivalPerformance || "Arrival not recorded")} · ${escapeHtml(String(current.status || "scheduled").replace(/-/g, " "))}` : "The inspector is not inside an active job workflow."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Arrived</span><strong>${escapeHtml(formatTime(current?.arrivedAt))}</strong></div><div class="fact"><span>Inspection started</span><strong>${escapeHtml(formatTime(current?.inspectionStartedAt))}</strong></div><div class="fact"><span>Time at property</span><strong>${timeAtProperty}</strong></div></div></article>
         <article class="ops-card span-6"><p class="ops-eyebrow">Next appointment</p><strong class="ops-primary">${escapeHtml(next?.property || "No remaining appointment")}</strong><p class="ops-sub">${next ? `${formatTime(next.scheduledStart)} · ${escapeHtml(next.arrivalPerformance || "On schedule")}` : "The scheduled job list is complete."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Estimated drive</span><strong>${current?.departurePlan?.estimatedDriveMinutes ? `${current.departurePlan.estimatedDriveMinutes} min` : "—"}</strong></div><div class="fact"><span>Required departure</span><strong>${escapeHtml(formatTime(current?.departurePlan?.leaveBy))}</strong></div><div class="fact"><span>Schedule status</span><strong>${alerts.some(item => /late|affect next/i.test(item)) ? "ATTENTION REQUIRED" : "ON SCHEDULE"}</strong></div></div></article>
@@ -924,7 +953,7 @@
     });
     people = [
       { id: "preview-kevin", name: "Kevin Cave", email: "kev@michiganpropertyinspections.com", role: "owner", active: true, operationsCurrent: makeDay("Kevin Cave", "KC", "INSPECTION IN PROGRESS"), operationsUpdatedAt: new Date() },
-      { id: "preview-cory", name: "Cory Inspector", email: "cory@michiganpropertyinspections.com", inspectorId: "NACHI26090138", role: "inspector", active: true, operationsCurrent: makeDay("Cory Inspector", "NACHI26090138", "DRIVING TO JOB", 6), operationsUpdatedAt: new Date() }
+      { id: "preview-cory", name: "Cory Leese", email: "cory@michiganpropertyinspections.com", inspectorId: "NACHI26090138", role: "inspector", active: true, operationsCurrent: makeDay("Cory Leese", "NACHI26090138", "DRIVING TO JOB", 6), operationsUpdatedAt: new Date() }
     ];
     currentUser = { uid: "preview", email: "kev@michiganpropertyinspections.com", displayName: "Kevin Cave" };
     currentProfile = { name: "Kevin Cave", role: "owner", active: true };
