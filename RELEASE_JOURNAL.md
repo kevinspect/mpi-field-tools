@@ -1,5 +1,14 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 138 — Live Team Status
+
+- Added a live team-status panel to the inspector workflow showing each field inspector's name, Google profile photo or initials, general workflow status, and last phone update.
+- Keeps the inspector view privacy-safe: job addresses, GPS information, hours worked, management logs, and performance details are not shared with other inspectors.
+- Enhanced the Office Operations dashboard with inspector photos or initials, live status, current-job context, last synchronization time, and a clear stale-phone warning when an active device has not updated recently.
+- Refreshes an active company phone's general status every two minutes while the app is visible and immediately after the app returns online or to the foreground.
+- Excludes office-admin accounts from the field-inspector roster while preserving their full authorized Admin Console access.
+- Updated the offline application shell and visible version to Build 138.
+
 ## Build 137 — Office File Attachments
 
 - Added a branded drag-and-drop file area to the Admin Console publishing form for PDFs and common image formats.
