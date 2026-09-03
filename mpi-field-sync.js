@@ -29,6 +29,82 @@
   let unsubscribeUpdates = null;
   let unsubscribeTeamPresence = null;
   let registeredPushToken = "";
+  const NOTIFIED_UPDATE_STORAGE_KEY = "mpiNotifiedOfficeUpdatesV2";
+
+  function notifiedUpdateIds() {
+    try {
+      const values = JSON.parse(localStorage.getItem(NOTIFIED_UPDATE_STORAGE_KEY) || "[]");
+      return new Set(Array.isArray(values) ? values.map(String) : []);
+    } catch (_) {
+      return new Set();
+    }
+  }
+
+  function saveNotifiedUpdateIds(values) {
+    try { localStorage.setItem(NOTIFIED_UPDATE_STORAGE_KEY, JSON.stringify([...values].slice(-100))); }
+    catch (_) {}
+  }
+
+  function playOfficeMessageTone() {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const context = new AudioContext();
+      const start = context.currentTime;
+      [784, 988, 1175].forEach((frequency, index) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(0.0001, start + index * 0.16);
+        gain.gain.exponentialRampToValueAtTime(0.22, start + index * 0.16 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + index * 0.16 + 0.13);
+        oscillator.connect(gain).connect(context.destination);
+        oscillator.start(start + index * 0.16);
+        oscillator.stop(start + index * 0.16 + 0.14);
+      });
+      window.setTimeout(() => context.close().catch(() => {}), 900);
+    } catch (_) {}
+  }
+
+  async function showIncomingOfficeAlert(update) {
+    const title = update.title || "New message from MPI Office";
+    const body = update.message || "Open MPI Field Tools to review the new message.";
+    try { navigator.vibrate?.([250, 100, 250, 100, 450]); } catch (_) {}
+    playOfficeMessageTone();
+    if (typeof window.showToast === "function") window.showToast(title);
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    try {
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(title, {
+          body,
+          icon: "./icon-192.png",
+          badge: "./icon-192.png",
+          tag: `mpi-office-${update.id}`,
+          renotify: true,
+          requireInteraction: true,
+          silent: false,
+          vibrate: [250, 100, 250, 100, 450],
+          data: { url: "./#team-messages" }
+        });
+      } else {
+        new Notification(title, { body, icon: "./icon-192.png", tag: `mpi-office-${update.id}` });
+      }
+    } catch (_) {}
+  }
+
+  function alertForNewUpdates(updates) {
+    const seen = notifiedUpdateIds();
+    const now = Date.now();
+    const fresh = updates.filter(update => {
+      if (!update?.id || update.receipt || seen.has(update.id)) return false;
+      const created = update.createdAt?.toMillis?.() || 0;
+      return !created || now - created < 24 * 60 * 60 * 1000;
+    });
+    updates.forEach(update => { if (update?.id) seen.add(update.id); });
+    saveNotifiedUpdateIds(seen);
+    if (fresh.length) showIncomingOfficeAlert(fresh[0]);
+  }
 
   document.querySelector("[data-team-status-shortcut]")?.addEventListener("click", () => {
     window.setTimeout(() => teamStatusCard?.scrollIntoView({ behavior: "smooth", block: "start" }), 180);
@@ -172,6 +248,7 @@
 
   function renderUpdates(updates) {
     currentUpdates = updates;
+    alertForNewUpdates(updates);
     const unread = updates.filter(item => !item.receipt).length;
     homeCard.hidden = !updates.length;
     if (updates.length) {
@@ -323,7 +400,8 @@
     button.disabled = true;
     status.textContent = "Sending…";
     try {
-      await shared.replyToUpdate(card.dataset.updateId, currentUser, currentProfile, message);
+      const update = currentUpdates.find(item => item.id === card.dataset.updateId) || null;
+      await shared.replyToUpdate(card.dataset.updateId, currentUser, currentProfile, message, update);
       status.textContent = "Reply sent to MPI management.";
     } catch (error) {
       button.disabled = false;

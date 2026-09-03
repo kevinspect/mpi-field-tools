@@ -48,7 +48,9 @@
   const requestAssigneeFilter = document.getElementById("adminRequestAssigneeFilter");
   const requestDateFilter = document.getElementById("adminRequestDateFilter");
   const requestSort = document.getElementById("adminRequestSort");
-  const enableRequestNotifications = document.getElementById("adminEnableRequestNotifications");
+  const officeAlertButtons = [...document.querySelectorAll("[data-enable-office-alerts]")];
+  const replyInbox = document.getElementById("adminReplyInbox");
+  const replyCount = document.getElementById("adminReplyCount");
   const tabButtons = [...document.querySelectorAll("[data-admin-view]")];
   const panels = [...document.querySelectorAll("[data-admin-panel]")];
   const stats = {
@@ -88,16 +90,127 @@
   let selectedInspectorId = "all";
   let unsubscribePeople = null;
   let unsubscribeUpdates = null;
+  let unsubscribeReplies = null;
   let replyRefreshTimer = 0;
   let repliesRefreshing = false;
   let selectedFiles = [];
+  let inspectorReplies = [];
+  let knownReplyKeys = new Set();
+  let replyListenerReady = false;
+  let officeMessaging = null;
+  const OFFICE_PUSH_TOKEN_KEY = "mpiOfficePushTokenV1";
   let knownRequestIds = new Set();
+  const assignedRequestMigrations = new Set();
   let legacyRequestChecked = false;
   const messageReceiptCache = new Map();
   const MAX_ATTACHMENT_FILES = 5;
   const MAX_ATTACHMENT_BYTES = 8 * 1024 * 1024;
   const MAX_ATTACHMENT_TOTAL_BYTES = 12 * 1024 * 1024;
   const ATTACHMENT_CHUNK_LENGTH = 560000;
+
+  function savedOfficePushToken() {
+    try { return String(localStorage.getItem(OFFICE_PUSH_TOKEN_KEY) || "").trim(); }
+    catch (_) { return ""; }
+  }
+
+  function setOfficeAlertButtonState(label, disabled = false) {
+    officeAlertButtons.forEach(button => {
+      const text = button.querySelector("span");
+      if (text) text.textContent = label;
+      button.disabled = disabled;
+    });
+  }
+
+  function playOfficeAlertTone() {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const context = new AudioContext();
+      const start = context.currentTime;
+      [740, 932, 1175].forEach((frequency, index) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(0.0001, start + index * 0.15);
+        gain.gain.exponentialRampToValueAtTime(0.2, start + index * 0.15 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + index * 0.15 + 0.12);
+        oscillator.connect(gain).connect(context.destination);
+        oscillator.start(start + index * 0.15);
+        oscillator.stop(start + index * 0.15 + 0.13);
+      });
+      window.setTimeout(() => context.close().catch(() => {}), 850);
+    } catch (_) {}
+  }
+
+  async function showOfficeAlert(title, body, tag = "mpi-office-alert") {
+    playOfficeAlertTone();
+    try { navigator.vibrate?.([250, 100, 250, 100, 450]); } catch (_) {}
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    try {
+      const registration = "serviceWorker" in navigator ? await navigator.serviceWorker.ready : null;
+      if (registration) {
+        await registration.showNotification(title, {
+          body,
+          icon: "./icon-192.png",
+          badge: "./icon-192.png",
+          tag,
+          renotify: true,
+          requireInteraction: true,
+          silent: false,
+          vibrate: [250, 100, 250, 100, 450],
+          data: { url: "./admin.html" }
+        });
+      } else {
+        const notification = new Notification(title, { body, icon: "./icon-192.png", tag });
+        notification.onclick = () => window.focus();
+      }
+    } catch (_) {}
+  }
+
+  async function enableOfficeAlerts(button = null, requestPermission = true) {
+    if (!currentUser || !currentProfile || !shared.isAdminRole(currentProfile)) return false;
+    if (!("Notification" in window) || !("serviceWorker" in navigator) || !window.firebase?.messaging) {
+      setOfficeAlertButtonState("ALERTS NOT SUPPORTED");
+      return false;
+    }
+    if (requestPermission) {
+      button && (button.disabled = true);
+      setOfficeAlertButtonState("ENABLING ALERTS…", true);
+    }
+    try {
+      const permission = Notification.permission === "granted" ? "granted" : requestPermission ? await Notification.requestPermission() : Notification.permission;
+      if (permission !== "granted") {
+        setOfficeAlertButtonState(permission === "denied" ? "ALLOW ALERTS IN SETTINGS" : "ENABLE OFFICE ALERTS");
+        return false;
+      }
+      const registration = await navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" });
+      await navigator.serviceWorker.ready;
+      officeMessaging ||= window.firebase.messaging();
+      if (!officeMessaging.__mpiForegroundReady) {
+        officeMessaging.onMessage(payload => {
+          const title = payload?.notification?.title || payload?.data?.title || "New MPI office notification";
+          const body = payload?.notification?.body || payload?.data?.body || "Open the Office Console to review it.";
+          showOfficeAlert(title, body, payload?.data?.tag || "mpi-office-push");
+        });
+        officeMessaging.__mpiForegroundReady = true;
+      }
+      const token = await officeMessaging.getToken({ vapidKey: shared.vapidKey, serviceWorkerRegistration: registration });
+      if (!token) throw new Error("No office notification token was returned.");
+      try { localStorage.setItem(OFFICE_PUSH_TOKEN_KEY, token); } catch (_) {}
+      await shared.db.collection("users").doc(currentUser.uid).set({
+        officeNotificationDevice: { token, enabled: true, app: "MPI Office Console", updatedAt: shared.serverTimestamp() }
+      }, { merge: true });
+      currentProfile.officeNotificationDevice = { token, enabled: true };
+      setOfficeAlertButtonState("OFFICE ALERTS ENABLED", true);
+      return true;
+    } catch (error) {
+      setOfficeAlertButtonState("TRY OFFICE ALERTS AGAIN");
+      console.warn("MPI office alert setup failed", error);
+      return false;
+    } finally {
+      if (button && !button.disabled) button.disabled = false;
+    }
+  }
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
@@ -111,6 +224,67 @@
 
   function attachmentKind(file) {
     return String(file?.type || "").includes("pdf") || /\.pdf$/i.test(file?.name || "") ? "PDF" : "IMG";
+  }
+
+  function updateForReply(reply) {
+    return updates.find(update => update.id === reply.updateId) || null;
+  }
+
+  function replyKey(reply) {
+    const timestamp = reply.repliedAt?.toMillis?.() || String(reply.repliedAt || reply.updatedAt || "");
+    return `${reply.path || `${reply.updateId}/${reply.userId}`}:${timestamp}:${reply.replyText || ""}`;
+  }
+
+  function renderReplyInbox() {
+    if (!replyInbox) return;
+    const values = inspectorReplies
+      .filter(item => item.replyText)
+      .sort((left, right) => (asDate(right.repliedAt)?.getTime() || 0) - (asDate(left.repliedAt)?.getTime() || 0))
+      .slice(0, 12);
+    if (replyCount) replyCount.textContent = values.length ? String(values.length) : "";
+    const count = replyInbox.querySelector(".office-reply-head span");
+    if (count) count.textContent = String(values.length);
+    const list = replyInbox.querySelector(".office-reply-list");
+    if (!list) return;
+    list.innerHTML = values.length ? values.map(reply => {
+      const update = updateForReply(reply);
+      return `<button class="office-reply-card" type="button" data-open-reply-inspector="${escapeHtml(reply.userId || "")}"><div><strong>${escapeHtml(reply.userName || reply.userEmail || "MPI Inspector")}</strong><small>${escapeHtml(reply.updateTitle || update?.title || "Message from MPI Office")}</small></div><div><span>${escapeHtml(reply.replyText)}</span></div><time>${escapeHtml(formatDateTime(reply.repliedAt || reply.updatedAt))}</time></button>`;
+    }).join("") : '<div class="empty">No inspector replies yet. New replies will appear here automatically.</div>';
+  }
+
+  function processReplySnapshot(snapshot) {
+    const values = snapshot.docs.map(doc => ({
+      id: doc.id,
+      path: doc.ref.path,
+      updateId: doc.ref.parent.parent?.id || doc.data().updateId || "",
+      ...doc.data()
+    }));
+    const nextKeys = new Set(values.map(replyKey));
+    if (replyListenerReady) {
+      const newReplies = values.filter(reply => !knownReplyKeys.has(replyKey(reply)));
+      if (newReplies.length) {
+        const latest = newReplies.sort((left, right) => (asDate(right.repliedAt)?.getTime() || 0) - (asDate(left.repliedAt)?.getTime() || 0))[0];
+        showOfficeAlert(`Reply from ${latest.userName || "MPI Inspector"}`, latest.replyText || "A new inspector reply is available.", `mpi-reply-${latest.updateId}-${latest.userId}`);
+      }
+    }
+    inspectorReplies = values;
+    knownReplyKeys = nextKeys;
+    replyListenerReady = true;
+    renderReplyInbox();
+    values.forEach(reply => { if (reply.updateId) messageReceiptCache.set(reply.updateId, reply); });
+    const selected = people.find(item => item.id === selectedInspectorId);
+    if (selected) hydrateMessageReceipts(selected);
+  }
+
+  function notificationTokensForUpdate(audience, targetEmail = "") {
+    return [...new Set(people.filter(person => {
+      if (person.active === false || !["owner", "inspector"].includes(String(person.role || "").toLowerCase())) return false;
+      return audience === "all" || shared.normalizeEmail(person.email) === shared.normalizeEmail(targetEmail);
+    }).map(person => person.notificationDevice?.token).filter(Boolean))];
+  }
+
+  function officeReplyToken() {
+    return String(currentProfile?.officeNotificationDevice?.token || savedOfficePushToken() || "").trim();
   }
 
   function validAttachment(file) {
@@ -527,6 +701,34 @@
     return "normal";
   }
 
+  async function progressAssignedRequests(person) {
+    const candidates = (Array.isArray(person?.fieldRequests) ? person.fieldRequests : [])
+      .filter(item => item?.id && item.assignedAdmin && item.status === "new" && !assignedRequestMigrations.has(`${person.id}/${item.id}`));
+    if (!candidates.length) return;
+    candidates.forEach(item => assignedRequestMigrations.add(`${person.id}/${item.id}`));
+    try {
+      const ref = shared.db.collection("users").doc(person.id);
+      await shared.db.runTransaction(async transaction => {
+        const snapshot = await transaction.get(ref);
+        const requests = Array.isArray(snapshot.data()?.fieldRequests) ? snapshot.data().fieldRequests.map(item => ({ ...item })) : [];
+        let changed = false;
+        requests.forEach(request => {
+          if (!request.assignedAdmin || request.status !== "new") return;
+          const assignee = people.find(item => shared.normalizeEmail(item.email) === shared.normalizeEmail(request.assignedAdmin));
+          request.status = "in-progress";
+          request.assignedAdminName = request.assignedAdminName || assignee?.name || request.assignedAdmin;
+          request.assignedAt = request.assignedAt || new Date().toISOString();
+          request.assignedBy = request.assignedBy || "MPI Office";
+          request.updatedAt = new Date().toISOString();
+          changed = true;
+        });
+        if (changed) transaction.set(ref, { fieldRequests: requests, requestsUpdatedAt: shared.serverTimestamp() }, { merge: true });
+      });
+    } catch (_) {
+      candidates.forEach(item => assignedRequestMigrations.delete(`${person.id}/${item.id}`));
+    }
+  }
+
   function renderRequestTodos() {
     if (!requestList) return;
     const all = allInspectorRequests();
@@ -558,7 +760,13 @@
     });
     requestList.innerHTML = filtered.length ? filtered.map(item => {
       const dueState = requestDueState(item);
-      return `<article class="request-admin-card ${item.status === "completed" ? "completed" : ""}" data-request-owner="${escapeHtml(item.ownerUserId)}" data-request-id="${escapeHtml(item.id)}"><div class="request-admin-top"><div><span class="type-badge">${escapeHtml(item.type || "Request")}</span>${dueState === "asap" ? '<span class="priority-badge">ASAP</span>' : dueState === "overdue" ? '<span class="priority-badge">OVERDUE</span>' : ""}<h3>${escapeHtml(item.item || "Inspector request")}</h3></div><span class="role-badge">${escapeHtml(String(item.status || "new").replace("-", " "))}</span></div><p><strong>${escapeHtml(item.ownerName)}</strong> · Requested ${escapeHtml(formatDateTime(item.requestedAt))}${item.neededBy ? ` · Needed ${escapeHtml(formatDate(item.neededBy))}` : ""}</p><p>${escapeHtml(item.details || "No detail supplied.")}</p>${item.suggestion ? `<p><strong>Suggested solution:</strong> ${escapeHtml(item.suggestion)}</p>` : ""}<form class="request-admin-form" data-request-admin-form><div class="field"><label>Status</label><select data-request-status><option value="new" ${item.status === "new" ? "selected" : ""}>New</option><option value="in-progress" ${item.status === "in-progress" ? "selected" : ""}>In progress</option><option value="waiting" ${item.status === "waiting" ? "selected" : ""}>Waiting</option><option value="completed" ${item.status === "completed" ? "selected" : ""}>Completed</option></select></div><div class="field"><label>Assigned admin</label><select data-request-admin><option value="">Unassigned</option>${admins.map(admin => `<option value="${escapeHtml(admin.email)}" ${item.assignedAdmin === admin.email ? "selected" : ""}>${escapeHtml(admin.name || admin.email)}</option>`).join("")}</select></div><div class="field"><label>Completed date</label><input data-request-completed type="date" value="${escapeHtml(item.completedAt ? String(item.completedAt).slice(0, 10) : "")}"></div><div class="field wide"><label>Internal management note</label><textarea data-request-note maxlength="1000" placeholder="Visible to office management only">${escapeHtml(item.managementNote || "")}</textarea></div><button class="primary" type="submit">SAVE TO-DO</button><span class="status" data-request-save-status></span></form></article>`;
+      const assignee = admins.find(admin => shared.normalizeEmail(admin.email) === shared.normalizeEmail(item.assignedAdmin));
+      const progress = item.status === "completed"
+        ? `Completed by ${item.completedBy || assignee?.name || "MPI Office"}`
+        : assignee
+          ? `With ${assignee.name || assignee.email} · ${String(item.status || "in-progress").replace("-", " ")}`
+          : "Unassigned · waiting for office action";
+      return `<article class="request-admin-card ${item.status === "completed" ? "completed" : ""}" data-request-owner="${escapeHtml(item.ownerUserId)}" data-request-id="${escapeHtml(item.id)}"><div class="request-admin-top"><div><span class="type-badge">${escapeHtml(item.type || "Request")}</span>${dueState === "asap" ? '<span class="priority-badge">ASAP</span>' : dueState === "overdue" ? '<span class="priority-badge">OVERDUE</span>' : ""}<h3>${escapeHtml(item.item || "Inspector request")}</h3></div><span class="role-badge">${escapeHtml(String(item.status || "new").replace("-", " "))}</span></div><p><strong>${escapeHtml(item.ownerName)}</strong> · Requested ${escapeHtml(formatDateTime(item.requestedAt))}${item.neededBy ? ` · Needed ${escapeHtml(formatDate(item.neededBy))}` : ""}</p><p><strong>Progress:</strong> ${escapeHtml(progress)}</p><p>${escapeHtml(item.details || "No detail supplied.")}</p>${item.suggestion ? `<p><strong>Suggested solution:</strong> ${escapeHtml(item.suggestion)}</p>` : ""}<form class="request-admin-form" data-request-admin-form><div class="field"><label>Status</label><select data-request-status><option value="new" ${item.status === "new" ? "selected" : ""}>New</option><option value="in-progress" ${item.status === "in-progress" ? "selected" : ""}>In progress</option><option value="waiting" ${item.status === "waiting" ? "selected" : ""}>Waiting</option><option value="completed" ${item.status === "completed" ? "selected" : ""}>Completed</option></select></div><div class="field"><label>Assigned admin</label><select data-request-admin><option value="">Unassigned</option>${admins.map(admin => `<option value="${escapeHtml(admin.email)}" ${item.assignedAdmin === admin.email ? "selected" : ""}>${escapeHtml(admin.name || admin.email)}</option>`).join("")}</select></div><div class="field"><label>Completed date</label><input data-request-completed type="date" value="${escapeHtml(item.completedAt ? String(item.completedAt).slice(0, 10) : "")}"></div><div class="field wide"><label>Internal management note</label><textarea data-request-note maxlength="1000" placeholder="Visible to office management only">${escapeHtml(item.managementNote || "")}</textarea></div><button class="primary" type="submit">SAVE PROGRESS</button><span class="status" data-request-save-status></span></form></article>`;
     }).join("") : '<div class="empty">No requests match these filters.</div>';
 
     const ids = new Set(all.map(item => item.id));
@@ -578,8 +786,10 @@
     const previewRequest = (Array.isArray(person?.fieldRequests) ? person.fieldRequests : []).find(item => item.id === requestId);
     const status = formElement.querySelector("[data-request-save-status]");
     if (!person || !previewRequest) return;
-    const nextStatus = formElement.querySelector("[data-request-status]").value;
+    let nextStatus = formElement.querySelector("[data-request-status]").value;
     const assignedAdmin = formElement.querySelector("[data-request-admin]").value;
+    const assignedAdminPerson = people.find(person => shared.normalizeEmail(person.email) === shared.normalizeEmail(assignedAdmin));
+    if (assignedAdmin && nextStatus === "new") nextStatus = "in-progress";
     const managementNote = formElement.querySelector("[data-request-note]").value.trim();
     const completedDate = formElement.querySelector("[data-request-completed]").value;
     status.textContent = "Saving…";
@@ -591,7 +801,13 @@
         const request = requests.find(item => item.id === requestId);
         if (!request) throw new Error("This request is no longer available.");
         request.status = nextStatus;
+        const assignmentChanged = request.assignedAdmin !== assignedAdmin;
         request.assignedAdmin = assignedAdmin;
+        request.assignedAdminName = assignedAdmin ? (assignedAdminPerson?.name || assignedAdmin) : "";
+        if (assignmentChanged) {
+          request.assignedAt = assignedAdmin ? new Date().toISOString() : "";
+          request.assignedBy = assignedAdmin ? (currentProfile.name || currentUser.displayName || currentUser.email) : "";
+        }
         request.managementNote = managementNote;
         if (nextStatus === "completed") {
           request.completedAt = completedDate ? new Date(`${completedDate}T12:00:00`).toISOString() : request.completedAt || new Date().toISOString();
@@ -801,12 +1017,13 @@
       if (!person) renderTeamOverview();
       else if (!preserveCorrectionDraft) renderInspectorDetail(person);
     }
+    renderReplyInbox();
   }
 
   async function receiptSummary(updateId) {
     try {
       const snapshot = await shared.db.collection("officeUpdates").doc(updateId).collection("receipts").get();
-      const values = snapshot.docs.map(doc => doc.data());
+      const values = snapshot.docs.map(doc => ({ userId: doc.id, ...doc.data() }));
       return { total: values.length, acknowledged: values.filter(item => ["acknowledged", "completed", "read", "replied"].includes(item.status)).length, completed: values.filter(item => item.status === "completed").length, replies: values.filter(item => item.replyText) };
     } catch (_) {
       return { total: 0, acknowledged: 0, completed: 0, replies: [] };
@@ -815,6 +1032,17 @@
 
   async function renderUpdates() {
     const summaries = await Promise.all(updates.map(update => receiptSummary(update.id)));
+    const summaryReplies = summaries.flatMap((summary, index) => summary.replies.map(reply => ({
+      ...reply,
+      updateId: updates[index]?.id || "",
+      updateTitle: updates[index]?.title || "Office update"
+    })));
+    if (summaryReplies.length) {
+      const merged = new Map(inspectorReplies.map(reply => [`${reply.updateId}:${reply.userId || reply.userEmail || "unknown"}`, reply]));
+      summaryReplies.forEach(reply => merged.set(`${reply.updateId}:${reply.userId || reply.userEmail || "unknown"}`, reply));
+      inspectorReplies = [...merged.values()].sort((a, b) => (asDate(b.repliedAt)?.getTime() || 0) - (asDate(a.repliedAt)?.getTime() || 0));
+      renderReplyInbox();
+    }
     updatesList.innerHTML = updates.length ? updates.map((update, index) => {
       const summary = summaries[index];
       const recipient = update.audience === "all" ? "All inspectors" : update.targetName || update.targetEmail || "One inspector";
@@ -827,8 +1055,10 @@
   function startAdminData() {
     unsubscribePeople?.();
     unsubscribeUpdates?.();
+    unsubscribeReplies?.();
     unsubscribePeople = shared.db.collection("users").orderBy("name").onSnapshot(snapshot => {
       people = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      people.forEach(person => progressAssignedRequests(person));
       if (!legacyRequestChecked) {
         legacyRequestChecked = true;
         const kevin = people.find(person => shared.normalizeEmail(person.email) === "kev@michiganpropertyinspections.com");
@@ -856,7 +1086,7 @@
         }
       }
       people.forEach(person => {
-        const inspectorId = String(person.inspectorId || shared.knownInspectorNumber?.(person) || "").trim();
+        const inspectorId = String(shared.knownInspectorNumber?.(person) || person.inspectorId || "").trim();
         if (inspectorId && inspectorId !== person.inspectorId) {
           shared.db.collection("users").doc(person.id).set({ inspectorId, updatedAt: shared.serverTimestamp(), updatedBy: currentUser?.uid || "system" }, { merge: true }).catch(() => {});
         }
@@ -867,6 +1097,11 @@
       updates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(update => !update.hidden);
       renderUpdates();
     }, error => { publishStatus.textContent = error.message; publishStatus.className = "status error"; });
+    replyListenerReady = false;
+    knownReplyKeys = new Set();
+    unsubscribeReplies = shared.db.collectionGroup("receipts").where("status", "==", "replied").onSnapshot(processReplySnapshot, () => {
+      renderReplyInbox();
+    });
     if (!replyRefreshTimer) {
       replyRefreshTimer = window.setInterval(async () => {
         if (dashboard.hidden || repliesRefreshing || !updates.length) return;
@@ -895,6 +1130,8 @@
     }
     const targetPerson = people.find(person => shared.normalizeEmail(person.email) === targetEmail);
     const filesToUpload = [...selectedFiles];
+    const notificationTitle = titleInput.value.trim();
+    const notificationBody = messageInput.value.trim();
     publishButton.disabled = true;
     publishStatus.textContent = "Publishing…";
     publishStatus.className = "status";
@@ -907,8 +1144,8 @@
         audience: audience === "all" ? "all" : "inspector",
         targetEmail,
         targetName: targetPerson?.name || "",
-        title: titleInput.value.trim(),
-        message: messageInput.value.trim(),
+        title: notificationTitle,
+        message: notificationBody,
         link: linkInput.value.trim(),
         dueDate: dueInput.value,
         requiresAcknowledgement: ackInput.checked,
@@ -916,6 +1153,7 @@
         attachmentUploadStatus: filesToUpload.length ? "uploading" : "complete",
         attachmentCount: filesToUpload.length,
         attachments: [],
+        replyNotificationToken: officeReplyToken(),
         createdAt: shared.serverTimestamp(),
         createdBy: currentUser.uid,
         createdByEmail: shared.normalizeEmail(currentUser.email),
@@ -933,6 +1171,18 @@
       targetField.hidden = true;
       publishStatus.textContent = "Published to MPI Field Tools.";
       publishStatus.className = "status success";
+      const pushRequested = await shared.sendPushNotification({
+        kind: "office-update",
+        audience: audience === "all" ? "all" : "inspector",
+        targetTokens: notificationTokensForUpdate(audience === "all" ? "all" : "inspector", targetEmail),
+        title: notificationTitle || "New message from MPI Office",
+        body: notificationBody || "Open MPI Field Tools to review the new information.",
+        link: "./#team-messages",
+        tag: `mpi-office-${updateRef.id}`
+      }).catch(() => false);
+      publishStatus.textContent = pushRequested
+        ? "Published to MPI Field Tools and push alert requested."
+        : "Published to MPI Field Tools. The recipient has not enabled push alerts on this phone yet.";
       showView("updates");
     } catch (error) {
       if (updateRef) updateRef.set({ active: false, attachmentUploadStatus: "failed", attachmentUploadError: String(error?.message || "Upload failed").slice(0, 240) }, { merge: true }).catch(() => {});
@@ -950,15 +1200,27 @@
     if (!person || !text) return;
     status.textContent = "Sending…";
     try {
-      await shared.db.collection("officeUpdates").add({
+      const messageRef = await shared.db.collection("officeUpdates").add({
         type: "message", priority: "important", audience: "inspector",
         targetEmail: shared.normalizeEmail(person.email), targetName: person.name || "",
         title: "Message from MPI Office", message: text, link: "", dueDate: "", requiresAcknowledgement: false, active: true,
+        replyNotificationToken: officeReplyToken(),
         createdAt: shared.serverTimestamp(), createdBy: currentUser.uid,
         createdByEmail: shared.normalizeEmail(currentUser.email), createdByName: currentProfile.name || currentUser.displayName || "MPI Management"
       });
+      const pushRequested = await shared.sendPushNotification({
+        kind: "office-message",
+        audience: "inspector",
+        targetTokens: notificationTokensForUpdate("inspector", person.email),
+        title: "Message from MPI Office",
+        body: text,
+        link: "./#team-messages",
+        tag: `mpi-office-${messageRef.id}`
+      }).catch(() => false);
       formElement.reset();
-      status.textContent = `Sent to ${person.name || "inspector"}.`;
+      status.textContent = pushRequested
+        ? `Sent to ${person.name || "inspector"}; push alert requested.`
+        : `Sent to ${person.name || "inspector"}. Push alerts are not enabled on that phone yet.`;
       status.className = "status success";
     } catch (error) {
       status.textContent = error.message || "The message could not be sent.";
@@ -1043,13 +1305,13 @@
     event.preventDefault();
     saveRequestTodo(requestForm);
   });
-  enableRequestNotifications?.addEventListener("click", async () => {
-    if (!("Notification" in window)) {
-      enableRequestNotifications.textContent = "NOT SUPPORTED IN THIS BROWSER";
-      return;
-    }
-    const permission = await Notification.requestPermission();
-    enableRequestNotifications.textContent = permission === "granted" ? "DESKTOP ALERTS ENABLED" : "ALLOW ALERTS IN BROWSER SETTINGS";
+  officeAlertButtons.forEach(button => button.addEventListener("click", () => enableOfficeAlerts(button, true)));
+  replyInbox?.addEventListener("click", event => {
+    const button = event.target.closest("[data-open-reply-inspector]");
+    if (!button?.dataset.openReplyInspector) return;
+    selectedInspectorId = button.dataset.openReplyInspector;
+    inspectorSelector.value = selectedInspectorId;
+    renderOperations();
   });
   peopleList.addEventListener("change", updatePerson);
   inspectorSelector.addEventListener("change", () => { selectedInspectorId = inspectorSelector.value; renderOperations(); });
@@ -1166,6 +1428,8 @@
       if (user && profile && !shared.isAdminRole(profile)) authStatus.textContent = `${user.email || "This account"} has inspector access only. Sign out and use kev@michiganpropertyinspections.com.`;
       unsubscribePeople?.();
       unsubscribeUpdates?.();
+      unsubscribeReplies?.();
+      unsubscribeReplies = null;
       if (replyRefreshTimer) {
         window.clearInterval(replyRefreshTimer);
         replyRefreshTimer = 0;
@@ -1181,5 +1445,6 @@
     accountEmail.textContent = user.email || "";
     accountInitial.textContent = (profile.name || user.displayName || "K").trim().charAt(0).toUpperCase();
     startAdminData();
+    if (window.Notification?.permission === "granted") enableOfficeAlerts(null, false);
   });
 })();

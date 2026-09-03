@@ -11,7 +11,11 @@
   };
   const MPI_OWNER_EMAILS = ["kev@michiganpropertyinspections.com"];
   const MPI_COMPANY_DOMAIN = "michiganpropertyinspections.com";
+  const MPI_PUSH_ENDPOINT = "https://script.google.com/macros/s/AKfycbzd701WKgQIzWP24pmjL3gaTFIjH2iHxjMYzirArFoYq8nup57p8h1VMmJPx9MVYOqL/exec";
+  const MPI_PUSH_SOURCE = "mpi-field-tools-push";
+  const MPI_FIREBASE_VAPID_KEY = "BFk0G1S4lILqk9x_sIDPRCUmPgzTOwyHocHWXG_SDgw6WOrlxiMB-eS4mPBEAPhI93I2mMB3zFxzoZaHKsudR6k";
   const MPI_INSPECTOR_NUMBERS = {
+    "kev@michiganpropertyinspections.com": "NACHI24060423",
     "cory@michiganpropertyinspections.com": "NACHI26090138"
   };
 
@@ -119,7 +123,7 @@
         lastSeenAt: serverTimestamp()
       });
     } else {
-      const savedInspectorNumber = String(snapshot.data().inspectorId || inspectorNumber || "").trim();
+      const savedInspectorNumber = String(inspectorNumber || snapshot.data().inspectorId || "").trim();
       await ref.set({
         name: snapshot.data().name || user.displayName || "MPI Team Member",
         email: normalizeEmail(user.email),
@@ -222,18 +226,62 @@
     }, { merge: true });
   }
 
-  function replyToUpdate(updateId, user, profile, message) {
+  async function sendPushNotification(options = {}) {
+    const user = auth.currentUser;
+    if (!user || !MPI_PUSH_ENDPOINT) return false;
+    const targetTokens = [...new Set((Array.isArray(options.targetTokens) ? options.targetTokens : [])
+      .map(value => String(value || "").trim())
+      .filter(Boolean))].slice(0, 30);
+    if (!targetTokens.length && options.audience !== "office") return false;
+    const idToken = await user.getIdToken();
+    const requestId = `push-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    await fetch(MPI_PUSH_ENDPOINT, {
+      method: "POST",
+      mode: "no-cors",
+      cache: "no-store",
+      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+      body: JSON.stringify({
+        source: MPI_PUSH_SOURCE,
+        requestId,
+        idToken,
+        kind: String(options.kind || "office-update").slice(0, 40),
+        audience: String(options.audience || "inspector").slice(0, 20),
+        targetTokens,
+        title: String(options.title || "MPI Field Tools").trim().slice(0, 90),
+        body: String(options.body || "A new MPI message is available.").trim().slice(0, 220),
+        link: String(options.link || "./#team-messages").trim().slice(0, 500),
+        tag: String(options.tag || requestId).trim().slice(0, 100)
+      })
+    });
+    return true;
+  }
+
+  function replyToUpdate(updateId, user, profile, message, update = null) {
     const replyText = String(message || "").trim().slice(0, 1000);
     if (!updateId || !user || !replyText) return Promise.reject(new Error("Write a reply first."));
-    return db.collection("officeUpdates").doc(updateId).collection("receipts").doc(user.uid).set({
+    const receiptPromise = db.collection("officeUpdates").doc(updateId).collection("receipts").doc(user.uid).set({
       userId: user.uid,
       userEmail: normalizeEmail(user.email),
       userName: profile?.name || user.displayName || "MPI Team Member",
+      updateId,
+      updateTitle: String(update?.title || "Message from MPI Office").slice(0, 100),
       status: "replied",
       replyText,
       repliedAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     }, { merge: true });
+    return receiptPromise.then(async () => {
+      await sendPushNotification({
+        kind: "inspector-reply",
+        audience: "office",
+        targetTokens: [update?.replyNotificationToken],
+        title: `Reply from ${profile?.name || user.displayName || "MPI Inspector"}`,
+        body: replyText,
+        link: "./admin.html",
+        tag: `mpi-reply-${updateId}-${user.uid}`
+      }).catch(() => false);
+      return true;
+    });
   }
 
   async function loadOfficeAttachment(updateId, attachment) {
@@ -317,6 +365,9 @@
     ownerEmail: MPI_OWNER_EMAILS[0],
     ownerEmails: [...MPI_OWNER_EMAILS],
     companyDomain: MPI_COMPANY_DOMAIN,
+    pushEndpoint: MPI_PUSH_ENDPOINT,
+    pushSource: MPI_PUSH_SOURCE,
+    vapidKey: MPI_FIREBASE_VAPID_KEY,
     normalizeEmail,
     isCompanyEmail,
     isOwnerEmail,
@@ -331,6 +382,7 @@
     setUpdateStatus,
     clearUpdate,
     replyToUpdate,
+    sendPushNotification,
     loadOfficeAttachment,
     syncOperationsSnapshot,
     watchTeamPresence

@@ -11,6 +11,14 @@ var MPI_EMAIL = Object.freeze({
   STATUS_SECONDS: 21600
 });
 
+var MPI_PUSH = Object.freeze({
+  SOURCE: "mpi-field-tools-push",
+  PROJECT_ID: "mpi-field-notifications",
+  WEB_APP_URL: "https://kevinspect.github.io/mpi-field-tools/",
+  FIREBASE_API_KEY: "AIzaSyBH37lEcQdExd0JRTRWCYlZHWNevIJrmPk",
+  MAX_TARGETS: 30
+});
+
 function doGet(event) {
   var parameters = event && event.parameter ? event.parameter : {};
   if (parameters.action === "status") {
@@ -29,6 +37,7 @@ function doPost(event) {
     var input = JSON.parse(contents);
     requestId = safeText_(input.requestId, 120);
     var source = safeText_(input.source, 80);
+    if (source === MPI_PUSH.SOURCE) return handlePushRequest_(input, requestId);
     if (!requestId || (source !== MPI_EMAIL.SOURCE && source !== "mpi-field-tools-form-email")) throw new Error("Request was not accepted");
 
     var existing = readStatus_(requestId);
@@ -66,6 +75,144 @@ function doPost(event) {
     if (requestId) writeStatus_(requestId, { ok: false, status: "failed", requestId: requestId, message: message });
     return response_({ ok: false, status: "failed", requestId: requestId, message: message });
   }
+}
+
+function handlePushRequest_(input, requestId) {
+  try {
+    if (!requestId) throw new Error("Notification request ID is missing");
+    var existing = readStatus_(requestId);
+    if (existing && (existing.status === "sent" || existing.status === "partial" || existing.status === "no-target")) {
+      return response_({ ok: true, status: "duplicate", requestId: requestId });
+    }
+    var sender = verifyFirebaseUser_(safeText_(input.idToken, 5000));
+    if (!sender || !sender.emailVerified || !isMpiCompanyEmail_(sender.email)) throw new Error("Company sign-in could not be verified");
+    var targets = cleanStringArray_(input.targetTokens, MPI_PUSH.MAX_TARGETS, 500);
+    if (!targets.length && safeText_(input.audience, 20) === "office") targets = officeNotificationTokens_();
+    targets = uniqueStrings_(targets);
+    if (!targets.length) {
+      writeStatus_(requestId, { ok: true, status: "no-target", requestId: requestId, sent: 0 });
+      return response_({ ok: true, status: "no-target", requestId: requestId, sent: 0 });
+    }
+    var title = safeText_(input.title, 90) || "MPI Field Tools";
+    var body = safeText_(input.body, 220) || "A new MPI message is available.";
+    var link = absoluteAppLink_(safeText_(input.link, 500));
+    var tag = safeText_(input.tag, 100) || requestId;
+    var sent = 0;
+    var failed = 0;
+    targets.forEach(function (token) {
+      if (sendFcmWebPush_(token, title, body, link, tag)) sent += 1;
+      else failed += 1;
+    });
+    var status = failed ? (sent ? "partial" : "failed") : "sent";
+    writeStatus_(requestId, { ok: sent > 0, status: status, requestId: requestId, sent: sent, failed: failed });
+    return response_({ ok: sent > 0, status: status, requestId: requestId, sent: sent, failed: failed });
+  } catch (error) {
+    var message = safeText_(error && error.message ? error.message : "Notification delivery failed", 180);
+    if (requestId) writeStatus_(requestId, { ok: false, status: "failed", requestId: requestId, message: message });
+    return response_({ ok: false, status: "failed", requestId: requestId, message: message });
+  }
+}
+
+function verifyFirebaseUser_(idToken) {
+  if (!idToken) return null;
+  var response = UrlFetchApp.fetch("https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" + encodeURIComponent(MPI_PUSH.FIREBASE_API_KEY), {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify({ idToken: idToken }),
+    muteHttpExceptions: true
+  });
+  if (response.getResponseCode() !== 200) return null;
+  var parsed = JSON.parse(response.getContentText() || "{}");
+  var user = parsed.users && parsed.users[0];
+  return user ? { uid: user.localId, email: String(user.email || "").toLowerCase(), emailVerified: user.emailVerified === true } : null;
+}
+
+function isMpiCompanyEmail_(email) {
+  var normalized = String(email || "").toLowerCase();
+  return normalized === "kev@michiganpropertyinspections.com" || /@michiganpropertyinspections[.]com$/.test(normalized);
+}
+
+function officeNotificationTokens_() {
+  try {
+    var response = UrlFetchApp.fetch("https://firestore.googleapis.com/v1/projects/" + MPI_PUSH.PROJECT_ID + "/databases/(default)/documents/users?pageSize=100", {
+      headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+      muteHttpExceptions: true
+    });
+    if (response.getResponseCode() !== 200) return [];
+    var parsed = JSON.parse(response.getContentText() || "{}");
+    return (parsed.documents || []).map(function (document) {
+      var fields = document.fields || {};
+      var active = fields.active && fields.active.booleanValue;
+      var role = fields.role && fields.role.stringValue;
+      var device = fields.officeNotificationDevice && fields.officeNotificationDevice.mapValue && fields.officeNotificationDevice.mapValue.fields;
+      return active !== false && (role === "owner" || role === "admin") && device && device.enabled && device.enabled.booleanValue !== false
+        ? String(device.token && device.token.stringValue || "")
+        : "";
+    }).filter(Boolean);
+  } catch (_) {
+    return [];
+  }
+}
+
+function sendFcmWebPush_(token, title, body, link, tag) {
+  var response = UrlFetchApp.fetch("https://fcm.googleapis.com/v1/projects/" + MPI_PUSH.PROJECT_ID + "/messages:send", {
+    method: "post",
+    contentType: "application/json",
+    headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+    payload: JSON.stringify({
+      message: {
+        token: token,
+        notification: { title: title, body: body },
+        webpush: {
+          headers: { Urgency: "high", TTL: "86400" },
+          notification: {
+            icon: MPI_PUSH.WEB_APP_URL + "icon-192.png",
+            badge: MPI_PUSH.WEB_APP_URL + "icon-192.png",
+            tag: tag,
+            renotify: true,
+            requireInteraction: true,
+            vibrate: [250, 100, 250, 100, 450]
+          },
+          fcm_options: { link: link }
+        },
+        data: { title: title, body: body, link: link, tag: tag }
+      }
+    }),
+    muteHttpExceptions: true
+  });
+  var code = response.getResponseCode();
+  return code >= 200 && code < 300;
+}
+
+function absoluteAppLink_(value) {
+  var link = String(value || "").trim();
+  if (/^https:\/\//i.test(link)) return link;
+  return MPI_PUSH.WEB_APP_URL + link.replace(/^\.\//, "").replace(/^\//, "");
+}
+
+function uniqueStrings_(values) {
+  var seen = {};
+  return values.filter(function (value) {
+    var key = String(value || "").trim();
+    if (!key || seen[key]) return false;
+    seen[key] = true;
+    return true;
+  });
+}
+
+function authorizePushService() {
+  var response = UrlFetchApp.fetch(
+    "https://firestore.googleapis.com/v1/projects/" + MPI_PUSH.PROJECT_ID + "/databases/(default)/documents/users?pageSize=1",
+    {
+      method: "get",
+      headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+      muteHttpExceptions: true
+    }
+  );
+  var code = response.getResponseCode();
+  console.log("MPI push service permission check: " + code);
+  if (code < 200 || code >= 300) throw new Error("Push service permission check failed: " + code);
+  return code;
 }
 
 function cleanPayload_(input) {

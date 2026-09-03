@@ -2696,3 +2696,12 @@ Status: prepared August 26, 2026 as app Build 96.
 - Simplified the office headings and navigation labels while retaining every existing workflow, role restriction, report, request, update, and inspector-management control.
 - Upgraded the file upload area into a clearer drag-and-drop surface with a dedicated upload icon and phone-friendly tap behavior.
 - Added a direct Send Update action in the desktop header while preserving owner-only Comment Builder allowance visibility.
+
+## Build 141 — September 3, 2026
+
+- Added two-way push and audible alerts for office-to-inspector messages and inspector-to-office replies.
+- Added an Inspector Replies inbox to Operations so replies no longer remain hidden inside Sent Updates.
+- Added one-tap Office Alerts setup on both the Operations and Requests screens.
+- Made assigned inspector requests automatically move to In Progress and clearly show the responsible office administrator.
+- Added Kevin Cave's inspector number, NACHI24060423, and retained Cory Leese's assigned inspector number.
+- Improved reply recovery so an existing response still appears in Operations even when the live collection listener is unavailable.

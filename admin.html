@@ -187,6 +187,18 @@
     .admin-update-replies { display:grid; gap:7px; margin-top:14px; padding:13px; color:#276853; background:#eaf6f1; border:1px solid #c9e5da; border-radius:11px; }
     .admin-update-replies > strong { font-size:10px; text-transform:uppercase; letter-spacing:.06em; }
     .admin-update-replies p { margin:0; color:#345c51; font-size:10px; line-height:1.45; }
+    .office-reply-inbox { margin-top:16px; padding:16px; background:linear-gradient(135deg,#eef7ff,#f8fbff); border:1px solid #bfd7ec; border-radius:16px; }
+    .office-reply-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+    .office-reply-head h3 { margin:0; color:var(--navy); font-size:15px; }
+    .office-reply-head span { min-width:26px; padding:5px 8px; color:#fff; background:var(--blue); border-radius:999px; text-align:center; font-size:10px; font-weight:900; }
+    .office-reply-list { display:grid; gap:8px; }
+    .office-reply-card { display:grid; grid-template-columns:minmax(120px,.75fr) minmax(0,1.5fr) auto; gap:12px; align-items:center; width:100%; padding:12px 13px; color:var(--navy); background:#fff; border:1px solid #d7e3ef; border-radius:12px; text-align:left; cursor:pointer; }
+    .office-reply-card:hover { border-color:#69a9d7; box-shadow:0 7px 18px rgba(30,117,181,.1); }
+    .office-reply-card strong,.office-reply-card span,.office-reply-card small { display:block; }
+    .office-reply-card strong { font-size:11px; }
+    .office-reply-card span { overflow:hidden; color:#33436b; font-size:11px; line-height:1.4; text-overflow:ellipsis; white-space:nowrap; }
+    .office-reply-card small { margin-top:3px; color:var(--muted); font-size:9px; }
+    .office-reply-card time { color:var(--blue); font-size:9px; font-weight:850; white-space:nowrap; }
     .compact-form { display:grid; gap:10px; }
     .compact-form textarea { min-height:92px; }
     .two-col { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -224,9 +236,11 @@
       .inspector-row > :first-child,.inspector-row > :nth-child(2),.inspector-row .row-open { grid-column:1/-1; }
       .row-open { display:none; }
       .ops-card,.ops-card.span-6,.ops-card.span-8 { grid-column:1/-1; }
+      .office-reply-card { grid-template-columns:1fr auto; }
+      .office-reply-card > div:nth-child(2) { grid-column:1/-1; grid-row:2; }
     }
 
-    /* Build 140 — app-style office console and unified icon language */
+    /* Build 141 — two-way alerts, reply inbox, and request progress */
     .icon-library { position:absolute; width:0; height:0; overflow:hidden; }
     .app-icon { width:18px; height:18px; flex:0 0 auto; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
     body { background:#eef2f8; }
@@ -381,7 +395,7 @@
 
       <nav class="panel tabbar" aria-label="Office Console sections">
         <div class="nav-heading">Workspace</div>
-        <button class="active" type="button" data-admin-view="operations"><svg class="app-icon"><use href="#icon-grid"></use></svg><span>Operations</span></button>
+        <button class="active" type="button" data-admin-view="operations"><svg class="app-icon"><use href="#icon-grid"></use></svg><span>Operations</span><span class="nav-count" id="adminReplyCount"></span></button>
         <button type="button" data-admin-view="requests"><svg class="app-icon"><use href="#icon-clipboard"></use></svg><span>Requests</span><span class="nav-count" id="adminRequestCount"></span></button>
         <button type="button" data-admin-view="publish"><svg class="app-icon"><use href="#icon-send"></use></svg><span>Send to field</span></button>
         <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Sent updates</span></button>
@@ -390,12 +404,13 @@
 
       <section class="console-view active" data-admin-panel="operations">
         <div class="panel content-panel">
-          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-activity"></use></svg></span><div><h2>Live Field Team</h2><p>Open an inspector to see their complete operational day.</p></div></div></div>
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-activity"></use></svg></span><div><h2>Live Field Team</h2><p>Open an inspector to see their complete operational day.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE OFFICE ALERTS</span></button></div>
           <div class="operations-toolbar">
             <div><p class="ops-eyebrow">Reporting period</p><div class="range-picker" id="adminRangePicker"><button class="active" type="button" data-range="today">Today</button><button type="button" data-range="yesterday">Yesterday</button><button type="button" data-range="week">This week</button></div></div>
             <div class="field"><label for="adminInspectorSelector">Inspector</label><select id="adminInspectorSelector"><option value="all">All inspectors</option></select></div>
           </div>
           <p class="sync-note" id="adminOperationsSync">Waiting for inspector devices to sync.</p>
+          <section class="office-reply-inbox" id="adminReplyInbox" aria-live="polite"><div class="office-reply-head"><h3>Inspector Replies</h3><span>0</span></div><div class="office-reply-list"><div class="empty">No inspector replies yet.</div></div></section>
           <div class="team-overview" id="adminTeamOverview"><div class="empty">No inspector activity has synced yet.</div></div>
           <div class="detail-shell" id="adminInspectorDetail" hidden></div>
         </div>
@@ -403,7 +418,7 @@
 
       <section class="console-view" data-admin-panel="requests">
         <div class="panel content-panel">
-          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-clipboard"></use></svg></span><div><h2>Inspector Requests</h2><p>PPE, tools, uniforms, supplies, training and feedback stay here until completed.</p></div></div><button class="secondary" id="adminEnableRequestNotifications" type="button"><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE ALERTS</span></button></div>
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-clipboard"></use></svg></span><div><h2>Inspector Requests</h2><p>PPE, tools, uniforms, supplies, training and feedback stay here until completed.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE OFFICE ALERTS</span></button></div>
           <div class="form-grid" id="adminRequestFilters">
             <div class="field"><label for="adminRequestStatusFilter">Status</label><select id="adminRequestStatusFilter"><option value="active">All active</option><option value="new">New</option><option value="in-progress">In progress</option><option value="waiting">Waiting</option><option value="completed">Completed</option><option value="all">All history</option></select></div>
             <div class="field"><label for="adminRequestInspectorFilter">Inspector</label><select id="adminRequestInspectorFilter"><option value="all">All inspectors</option></select></div>
@@ -451,7 +466,8 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
-  <script src="./mpi-shared.js?build=140"></script>
-  <script src="./admin.js?build=140"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
+  <script src="./mpi-shared.js?build=141"></script>
+  <script src="./admin.js?build=141"></script>
 </body>
 </html>

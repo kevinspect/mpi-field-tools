@@ -1,5 +1,5 @@
-const CACHE_NAME = "mpi-field-tools-shell-v140";
-const APP_SHELL = ["./", "./index.html", "./admin.html", "./mpi-shared.js", "./mpi-shared.js?build=140", "./mpi-field-sync.js", "./mpi-field-sync.js?build=140", "./mpi-comment-ai.js", "./mpi-comment-ai.js?build=140", "./admin.js", "./admin.js?build=140", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./mpi-logo.png", "./tool-thumbnails.png", "./mpi-email-template.html"];
+const CACHE_NAME = "mpi-field-tools-shell-v141";
+const APP_SHELL = ["./", "./index.html", "./admin.html", "./mpi-shared.js", "./mpi-shared.js?build=141", "./mpi-field-sync.js", "./mpi-field-sync.js?build=141", "./mpi-comment-ai.js", "./mpi-comment-ai.js?build=141", "./admin.js", "./admin.js?build=141", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./mpi-logo.png", "./tool-thumbnails.png", "./mpi-email-template.html"];
 
 async function fetchFresh(resource) {
   return fetch(resource, { cache: "no-store" });
@@ -76,6 +76,9 @@ self.addEventListener("push", event => {
     badge: "./icon-192.png",
     tag: data.tag || "mpi-team-message",
     renotify: true,
+    requireInteraction: true,
+    silent: false,
+    vibrate: [250, 100, 250, 100, 450],
     data: { url: targetUrl }
   }));
 });
