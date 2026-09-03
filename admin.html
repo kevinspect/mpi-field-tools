@@ -225,17 +225,133 @@
       .row-open { display:none; }
       .ops-card,.ops-card.span-6,.ops-card.span-8 { grid-column:1/-1; }
     }
+
+    /* Build 140 — app-style office console and unified icon language */
+    .icon-library { position:absolute; width:0; height:0; overflow:hidden; }
+    .app-icon { width:18px; height:18px; flex:0 0 auto; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+    body { background:#eef2f8; }
+    .topbar { min-height:68px; padding:9px clamp(14px,3vw,30px); background:linear-gradient(100deg,#0e155d,#182673 68%,#254789); border-bottom:3px solid var(--gold); box-shadow:0 8px 24px rgba(13,20,79,.2); }
+    .brand img { width:46px; height:46px; }
+    .brand strong { letter-spacing:-.01em; }
+    .brand span { color:#bdc7e8; font-size:12px; font-weight:750; letter-spacing:.05em; text-transform:uppercase; }
+    .top-actions a,.top-actions button { gap:7px; min-height:42px; padding:0 13px; border-radius:10px; font-size:13px; text-transform:none; }
+    .top-actions .new-update-action { color:#10175f; background:#fff; border-color:#fff; box-shadow:0 3px 0 var(--gold); }
+    .shell { width:min(1440px,calc(100% - 32px)); padding:26px 0 70px; }
+    .hero { align-items:center; margin-bottom:18px; color:var(--ink); }
+    .hero h1 { color:var(--navy); font-size:clamp(30px,4.2vw,44px); }
+    .hero p:last-child { max-width:none; margin-top:8px; color:var(--muted); font-size:15px; }
+    .account-pill { padding:9px 12px; border:1px solid var(--line); box-shadow:0 7px 22px rgba(17,24,106,.08); }
+    .panel { box-shadow:0 8px 24px rgba(17,24,106,.065); }
+    .primary,.secondary { display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+    .dashboard { display:grid; grid-template-columns:216px minmax(0,1fr); gap:15px 18px; align-items:start; }
+    .tabbar { position:sticky; top:88px; grid-column:1; grid-row:1 / span 20; display:flex; flex-direction:column; gap:4px; padding:12px; overflow:visible; color:#fff; background:linear-gradient(180deg,#11186a,#17256e); border-color:#263680; border-radius:17px; }
+    .tabbar .nav-heading { padding:7px 10px 9px; color:#929dd0; font-size:11px; font-weight:950; letter-spacing:.16em; text-transform:uppercase; }
+    .tabbar button { position:relative; display:flex; align-items:center; gap:10px; width:100%; min-height:48px; padding:0 11px; color:#c9d0ec; border-radius:10px; font-size:14px; text-align:left; }
+    .tabbar button .app-icon { width:19px; height:19px; color:#dabb58; }
+    .tabbar button.active { color:#fff; background:rgba(255,255,255,.12); box-shadow:inset 3px 0 var(--gold); }
+    .tabbar button.active .app-icon { color:#fff; }
+    .nav-count { display:grid; min-width:20px; height:20px; margin-left:auto; place-items:center; padding:0 5px; color:#12195e; background:#edcf74; border-radius:999px; font-size:8px; font-weight:950; }
+    .nav-count:empty { display:none; }
+    .stat-grid,.comment-usage-panel,.console-view { grid-column:2; min-width:0; }
+    .stat-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+    .stat { min-height:92px; padding:14px 15px; }
+    .stat-title { display:flex; align-items:center; gap:8px; }
+    .stat-title > span:last-child { color:var(--muted); font-size:12px; font-weight:900; letter-spacing:.05em; text-transform:uppercase; }
+    .stat-icon { display:grid; width:30px; height:30px; place-items:center; color:var(--blue); background:#edf5fb; border-radius:9px; }
+    .stat-icon .app-icon { width:16px; height:16px; }
+    .stat strong { margin-top:8px; font-size:25px; }
+    .console-view.active { display:block; }
+    .content-panel { padding:20px; }
+    .section-title { display:flex; align-items:flex-start; gap:12px; }
+    .section-icon { display:grid; width:42px; height:42px; flex:0 0 42px; place-items:center; color:var(--blue); background:#edf5fb; border:1px solid #d5e6f3; border-radius:12px; }
+    .section-icon .app-icon { width:21px; height:21px; }
+    .section-head h2 { font-size:23px; letter-spacing:-.025em; }
+    .section-head p { margin-top:4px; font-size:14px; }
+    .content-panel .field label { font-size:13px; }
+    .content-panel .field input,.content-panel .field select,.content-panel .field textarea { font-size:14px; }
+    .operations-toolbar { padding:13px; background:#f7f9fc; border:1px solid var(--line); border-radius:13px; }
+    .range-picker button { min-height:38px; font-size:13px; }
+    .team-overview { gap:9px; }
+    .inspector-row { min-height:82px; padding:13px 14px; border-radius:13px; box-shadow:none; transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease; }
+    .inspector-row:hover { transform:translateY(-1px); border-color:#bacbe1; box-shadow:0 9px 22px rgba(17,24,106,.08); }
+    .comment-usage-panel { padding:16px; }
+    .attachment-drop { grid-template-columns:auto minmax(0,1fr); gap:14px; min-height:118px; justify-items:start; padding:19px 22px; text-align:left; }
+    .upload-icon { display:grid !important; width:48px; height:48px; place-items:center; color:#fff; background:linear-gradient(145deg,#2775b9,#174c87); border-radius:14px; box-shadow:0 7px 17px rgba(39,117,185,.22); }
+    .upload-icon .app-icon { width:25px; height:25px; }
+    .attachment-drop > span:last-of-type strong { font-size:13px; }
+    .primary { min-height:46px; }
+    .primary .app-icon,.secondary .app-icon { width:17px; height:17px; }
+    .auth-card .primary { margin-inline:auto; }
+
+    @media (max-width:960px) {
+      .dashboard { grid-template-columns:188px minmax(0,1fr); }
+      .stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .inspector-row { grid-template-columns:minmax(160px,1.15fr) minmax(120px,.75fr) repeat(2,minmax(82px,.55fr)) 28px; }
+      .inspector-row > :nth-child(6) { display:none; }
+    }
+
+    @media (max-width:760px) {
+      body { background:#eef2f8; }
+      .topbar { min-height:62px; padding:8px 11px; }
+      .brand img { width:39px; height:39px; }
+      .brand strong { max-width:150px; font-size:11.5px; }
+      .top-actions { gap:6px; }
+      .top-actions .new-update-action,.top-actions button#adminSignOut { display:none; }
+      .top-actions a { min-height:40px; padding:0 9px; background:#fff; color:var(--navy); border-color:#fff; box-shadow:0 3px 0 var(--gold); }
+      .top-actions a .app-icon { width:16px; height:16px; }
+      .shell { width:min(100% - 20px,1440px); padding:18px 0 94px; }
+      .hero { grid-template-columns:1fr; gap:12px; margin-bottom:14px; }
+      .hero h1 { font-size:32px; }
+      .hero p:last-child { font-size:13px; line-height:1.45; }
+      .account-pill { max-width:none; }
+      .dashboard { display:grid; grid-template-columns:1fr; gap:12px; }
+      .stat-grid,.comment-usage-panel,.console-view { grid-column:1; }
+      .stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .stat { min-height:82px; }
+      .tabbar { position:fixed; z-index:100; inset:auto 8px max(8px,env(safe-area-inset-bottom)); grid-column:auto; grid-row:auto; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:3px; padding:6px; background:rgba(17,24,106,.97); border:1px solid rgba(255,255,255,.16); border-radius:16px; box-shadow:0 15px 36px rgba(11,18,65,.35); backdrop-filter:blur(16px); }
+      .tabbar .nav-heading { display:none; }
+      .tabbar button { display:grid; min-width:0; min-height:58px; place-items:center; align-content:center; gap:3px; padding:5px 2px; border-radius:11px; font-size:10px; text-align:center; }
+      .tabbar button .app-icon { width:19px; height:19px; }
+      .tabbar button.active { box-shadow:none; background:#fff; color:var(--navy); }
+      .tabbar button.active .app-icon { color:var(--blue); }
+      .tabbar .nav-count { position:absolute; top:3px; right:7px; min-width:16px; height:16px; font-size:7px; }
+      .content-panel { padding:15px; }
+      .section-head { display:flex; flex-direction:column; gap:10px; }
+      .section-icon { width:38px; height:38px; flex-basis:38px; }
+      .operations-toolbar { padding:11px; }
+      .attachment-drop { grid-template-columns:1fr; justify-items:center; text-align:center; }
+      .inspector-row { grid-template-columns:1fr 1fr; }
+      .comment-usage-panel { grid-template-columns:1fr 1fr; }
+    }
   </style>
 </head>
 <body>
+  <svg class="icon-library" aria-hidden="true">
+    <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+    <symbol id="icon-clipboard" viewBox="0 0 24 24"><path d="M9 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m8 13 2 2 5-5"/></symbol>
+    <symbol id="icon-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+    <symbol id="icon-inbox" viewBox="0 0 24 24"><path d="M4 4h16l2 10v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5Z"/><path d="M2 14h5l2 3h6l2-3h5"/></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="icon-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/></symbol>
+    <symbol id="icon-logout" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></symbol>
+    <symbol id="icon-activity" viewBox="0 0 24 24"><path d="M3 12h4l2-7 4 14 2-7h6"/></symbol>
+    <symbol id="icon-briefcase" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="icon-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M16 16l-4-4-4 4M12 12v9"/><path d="M20.4 17.5A5 5 0 0 0 18 8.2 7 7 0 0 0 4.3 10.7 4 4 0 0 0 5 18h2"/></symbol>
+    <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  </svg>
   <header class="topbar">
     <div class="brand"><img src="./mpi-logo.png" alt=""><div><strong>Michigan Property Inspections</strong><span>Inspector Operations</span></div></div>
-    <div class="top-actions"><a href="./?office=1#home" aria-label="Return to Inspector App">← INSPECTOR APP</a><button id="adminSignOut" type="button" hidden>Sign out</button></div>
+    <div class="top-actions"><button class="new-update-action" type="button" data-admin-view="publish"><svg class="app-icon"><use href="#icon-plus"></use></svg><span>Send update</span></button><a href="./?office=1#home" aria-label="Return to Inspector App"><svg class="app-icon"><use href="#icon-phone"></use></svg><span>Inspector app</span></a><button id="adminSignOut" type="button" hidden><svg class="app-icon"><use href="#icon-logout"></use></svg><span>Sign out</span></button></div>
   </header>
 
   <main class="shell">
     <section class="hero">
-      <div><p class="eyebrow">Owner and office administration</p><h1>Inspector Operations</h1><p>See the working day across the team, open one inspector for full detail, send messages, and manage company information from phone or desktop.</p></div>
+      <div><p class="eyebrow">Owner and office administration</p><h1>Office Console</h1><p>Live operations, requests, company updates and inspector records in one workspace.</p></div>
       <div class="account-pill" id="adminAccountPill" hidden><span class="account-avatar" id="adminInitial">K</span><div><strong id="adminAccountName">Owner</strong><small id="adminAccountEmail"></small></div></div>
     </section>
 
@@ -243,16 +359,16 @@
       <img src="./mpi-logo.png" alt="Michigan Property Inspections">
       <h2>Office access</h2>
       <p>Sign in with your approved Michigan Property Inspections Google account. Inspectors cannot open this management console.</p>
-      <button class="primary" id="adminSignIn" type="button">SIGN IN WITH MPI GOOGLE ACCOUNT</button>
+      <button class="primary" id="adminSignIn" type="button"><svg class="app-icon"><use href="#icon-shield"></use></svg><span>SIGN IN WITH MPI GOOGLE ACCOUNT</span></button>
       <p class="status" id="adminAuthStatus"></p>
     </section>
 
     <section class="dashboard" id="adminDashboard" hidden>
       <div class="stat-grid">
-        <article class="panel stat"><span>Inspectors working</span><strong id="statWorking">0</strong></article>
-        <article class="panel stat"><span>Jobs completed</span><strong id="statJobs">0</strong></article>
-        <article class="panel stat"><span id="statHoursLabel">Hours today</span><strong id="statHours">0:00</strong></article>
-        <article class="panel stat"><span>Needs attention</span><strong id="statAlerts">0</strong></article>
+        <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><span>Inspectors working</span></div><strong id="statWorking">0</strong></article>
+        <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-briefcase"></use></svg></span><span>Jobs completed</span></div><strong id="statJobs">0</strong></article>
+        <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-clock"></use></svg></span><span id="statHoursLabel">Hours today</span></div><strong id="statHours">0:00</strong></article>
+        <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-alert"></use></svg></span><span>Needs attention</span></div><strong id="statAlerts">0</strong></article>
       </div>
 
       <section class="panel comment-usage-panel" id="commentUsagePanel" aria-labelledby="commentUsageTitle" hidden>
@@ -264,16 +380,17 @@
       </section>
 
       <nav class="panel tabbar" aria-label="Office Console sections">
-        <button class="active" type="button" data-admin-view="operations">Today’s operations</button>
-        <button type="button" data-admin-view="requests">To-Do Items <span id="adminRequestCount"></span></button>
-        <button type="button" data-admin-view="publish">Publish information</button>
-        <button type="button" data-admin-view="updates">Sent updates</button>
-        <button type="button" data-admin-view="people">Inspectors</button>
+        <div class="nav-heading">Workspace</div>
+        <button class="active" type="button" data-admin-view="operations"><svg class="app-icon"><use href="#icon-grid"></use></svg><span>Operations</span></button>
+        <button type="button" data-admin-view="requests"><svg class="app-icon"><use href="#icon-clipboard"></use></svg><span>Requests</span><span class="nav-count" id="adminRequestCount"></span></button>
+        <button type="button" data-admin-view="publish"><svg class="app-icon"><use href="#icon-send"></use></svg><span>Send to field</span></button>
+        <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Sent updates</span></button>
+        <button type="button" data-admin-view="people"><svg class="app-icon"><use href="#icon-users"></use></svg><span>Team</span></button>
       </nav>
 
       <section class="console-view active" data-admin-panel="operations">
         <div class="panel content-panel">
-          <div class="section-head"><div><h2>Inspector Operations Dashboard</h2><p>See the whole team at a glance, then open one inspector for their complete operational day.</p></div></div>
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-activity"></use></svg></span><div><h2>Live Field Team</h2><p>Open an inspector to see their complete operational day.</p></div></div></div>
           <div class="operations-toolbar">
             <div><p class="ops-eyebrow">Reporting period</p><div class="range-picker" id="adminRangePicker"><button class="active" type="button" data-range="today">Today</button><button type="button" data-range="yesterday">Yesterday</button><button type="button" data-range="week">This week</button></div></div>
             <div class="field"><label for="adminInspectorSelector">Inspector</label><select id="adminInspectorSelector"><option value="all">All inspectors</option></select></div>
@@ -286,7 +403,7 @@
 
       <section class="console-view" data-admin-panel="requests">
         <div class="panel content-panel">
-          <div class="section-head"><div><h2>Inspector Requests / To-Do Items</h2><p>Every field request stays here until the office completes it. Internal notes are not shown in the inspector app.</p></div><button class="secondary" id="adminEnableRequestNotifications" type="button">ENABLE DESKTOP ALERTS</button></div>
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-clipboard"></use></svg></span><div><h2>Inspector Requests</h2><p>PPE, tools, uniforms, supplies, training and feedback stay here until completed.</p></div></div><button class="secondary" id="adminEnableRequestNotifications" type="button"><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE ALERTS</span></button></div>
           <div class="form-grid" id="adminRequestFilters">
             <div class="field"><label for="adminRequestStatusFilter">Status</label><select id="adminRequestStatusFilter"><option value="active">All active</option><option value="new">New</option><option value="in-progress">In progress</option><option value="waiting">Waiting</option><option value="completed">Completed</option><option value="all">All history</option></select></div>
             <div class="field"><label for="adminRequestInspectorFilter">Inspector</label><select id="adminRequestInspectorFilter"><option value="all">All inspectors</option></select></div>
@@ -301,7 +418,7 @@
 
       <section class="console-view" data-admin-panel="publish">
         <div class="panel content-panel">
-          <div class="section-head"><div><h2>Add information to the field app</h2><p>Send to everybody or one inspector. The information appears on their company device after sign-in and stays available offline after syncing.</p></div></div>
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-send"></use></svg></span><div><h2>Send to the Field</h2><p>Send a message, assignment, document or job note to everyone or one inspector.</p></div></div></div>
           <form id="adminUpdateForm">
             <div class="form-grid">
               <div class="field"><label for="adminUpdateType">Information type</label><select id="adminUpdateType" required><option value="announcement">Company announcement</option><option value="instruction">Inspector instruction</option><option value="training">Training assignment</option><option value="job-note">Job-specific note</option><option value="procedure">Procedure / tool guide</option><option value="equipment">Equipment notice</option></select></div>
@@ -312,21 +429,21 @@
               <div class="field wide"><label for="adminUpdateMessage">Information / instructions</label><textarea id="adminUpdateMessage" maxlength="2000" required placeholder="Write the clear instruction, announcement, job note, or training requirement."></textarea></div>
               <div class="field"><label for="adminUpdateLink">Supporting link</label><input id="adminUpdateLink" type="url" maxlength="500" placeholder="Optional course, document, or reference link"></div>
               <div class="field"><label for="adminUpdateDue">Due date</label><input id="adminUpdateDue" type="date"></div>
-              <label class="attachment-drop" id="adminAttachmentDrop" for="adminUpdateFiles" tabindex="0"><span><strong>Drop PDFs or images here</strong><span>or click to choose files · up to 5 files · 8 MB each · 12 MB total</span></span><input id="adminUpdateFiles" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple hidden></label>
+              <label class="attachment-drop" id="adminAttachmentDrop" for="adminUpdateFiles" tabindex="0"><span class="upload-icon"><svg class="app-icon"><use href="#icon-upload"></use></svg></span><span><strong>Drag and drop PDFs or images</strong><span>or tap to choose files · up to 5 files · 8 MB each</span></span><input id="adminUpdateFiles" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple hidden></label>
               <div class="attachment-list" id="adminAttachmentList" aria-live="polite"></div>
               <label class="check wide"><input id="adminUpdateAck" type="checkbox" checked><span><strong>Require confirmation</strong><br>The inspector must acknowledge or complete this item in the app.</span></label>
             </div>
-            <div class="form-actions"><button class="primary" id="adminPublishButton" type="submit">PUBLISH TO MPI FIELD TOOLS</button><span class="status" id="adminPublishStatus"></span></div>
+            <div class="form-actions"><button class="primary" id="adminPublishButton" type="submit"><svg class="app-icon"><use href="#icon-send"></use></svg><span>SEND TO MPI FIELD TOOLS</span></button><span class="status" id="adminPublishStatus"></span></div>
           </form>
         </div>
       </section>
 
       <section class="console-view" data-admin-panel="updates">
-        <div class="panel content-panel"><div class="section-head"><div><h2>Sent updates</h2><p>Review what was published and the response recorded by each inspector.</p></div></div><div class="update-list" id="adminUpdatesList"><div class="empty">No office updates have been published.</div></div></div>
+        <div class="panel content-panel"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Sent Updates</h2><p>Review delivery, acknowledgements and inspector replies.</p></div></div></div><div class="update-list" id="adminUpdatesList"><div class="empty">No office updates have been published.</div></div></div>
       </section>
 
       <section class="console-view" data-admin-panel="people">
-        <div class="panel content-panel"><div class="section-head"><div><h2>Inspector accounts</h2><p>Company accounts appear here after their first sign-in. Owner and admin roles control access to this console.</p></div></div><div class="notice">For security, every person signs in with their own Michigan Property Inspections Google account. The app stays signed in on an approved company phone until that person signs out.</div><div class="people-list" id="adminPeopleList" style="margin-top:14px"><div class="empty">No company accounts have signed in yet.</div></div></div>
+        <div class="panel content-panel"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><div><h2>Team Accounts</h2><p>Manage inspector identity, access and account status.</p></div></div></div><div class="notice">For security, every person signs in with their own Michigan Property Inspections Google account. The app stays signed in on an approved company phone until that person signs out.</div><div class="people-list" id="adminPeopleList" style="margin-top:14px"><div class="empty">No company accounts have signed in yet.</div></div></div>
       </section>
     </section>
   </main>
@@ -334,7 +451,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
-  <script src="./mpi-shared.js?build=139"></script>
-  <script src="./admin.js?build=139"></script>
+  <script src="./mpi-shared.js?build=140"></script>
+  <script src="./admin.js?build=140"></script>
 </body>
 </html>

@@ -531,7 +531,7 @@
     if (!requestList) return;
     const all = allInspectorRequests();
     const active = all.filter(item => item.status !== "completed");
-    requestCount.textContent = active.length ? `(${active.length})` : "";
+    requestCount.textContent = active.length ? String(active.length) : "";
     const inspectors = [...new Map(all.map(item => [item.ownerUserId, item.ownerName])).entries()];
     const selectedInspector = requestInspectorFilter.value || "all";
     requestInspectorFilter.innerHTML = '<option value="all">All inspectors</option>' + inspectors.map(([id, name]) => `<option value="${escapeHtml(id)}">${escapeHtml(name)}</option>`).join("");

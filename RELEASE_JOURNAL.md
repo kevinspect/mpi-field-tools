@@ -2688,3 +2688,11 @@ Status: prepared August 26, 2026 as app Build 96.
 - Added a direct Team Status shortcut on the home screen while retaining privacy-safe inspector status sharing.
 - Added Comment Builder automatic retry, stable request references, technical failure logging, and a failure screen that preserves the original field note.
 - Removed FormSubmit submission routing. Workflow forms now use the reusable branded MPI email service, and daily closeouts include drive-time categories.
+
+## Build 140 — September 3, 2026
+
+- Reworked the Office Console into an app-style workspace with a permanent desktop navigation rail and a phone-friendly bottom navigation bar.
+- Added a consistent professional line-icon system for operations, requests, messages, team accounts, statistics, alerts, sign-in, sign-out, and phone navigation.
+- Simplified the office headings and navigation labels while retaining every existing workflow, role restriction, report, request, update, and inspector-management control.
+- Upgraded the file upload area into a clearer drag-and-drop surface with a dedicated upload icon and phone-friendly tap behavior.
+- Added a direct Send Update action in the desktop header while preserving owner-only Comment Builder allowance visibility.
