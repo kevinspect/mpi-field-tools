@@ -1,5 +1,15 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 142 — Personal Profiles and Admin Permission Repair
+
+- Added a complete My Profile card in Settings for every signed-in company user.
+- Users can change their own profile photo, full name, job title, phone number, inspector number, and assigned vehicle without changing protected email or role permissions.
+- Profile photos are resized on the phone before saving to keep synchronization fast and remain within the existing no-cost company setup.
+- Updated team-status and Office Console avatars to use each person's chosen MPI profile photo.
+- Preserved user-edited inspector numbers instead of restoring an older built-in value at the next sign-in.
+- Corrected Office Admin permissions so Brooke can progress inspector requests, assign them, record notes and completion dates, while owner-only access remains protected.
+- Updated the offline application shell and visible version to Build 142.
+
 ## Build 138 — Live Team Status
 
 - Added a live team-status panel to the inspector workflow showing each field inspector's name, Google profile photo or initials, general workflow status, and last phone update.

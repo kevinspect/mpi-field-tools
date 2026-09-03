@@ -459,8 +459,9 @@
 
   function avatarHtml(person, extraClass = "") {
     const name = person?.name || person?.email || "MPI Inspector";
-    const photo = person?.photoURL
-      ? `<img src="${escapeHtml(person.photoURL)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`
+    const photoSource = person?.profilePhoto || person?.photoURL;
+    const photo = photoSource
+      ? `<img src="${escapeHtml(photoSource)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`
       : "";
     return `<span class="inspector-avatar ${escapeHtml(extraClass)}">${photo}<b>${escapeHtml(initials(name))}</b></span>`;
   }

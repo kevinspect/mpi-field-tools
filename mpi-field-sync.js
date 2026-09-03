@@ -14,6 +14,21 @@
   const accountStatus = document.getElementById("mpiAccountStatus");
   const accountName = document.getElementById("mpiAccountName");
   const accountRole = document.getElementById("mpiAccountRole");
+  const profileCard = document.getElementById("mpiProfileCard");
+  const profileForm = document.getElementById("mpiProfileForm");
+  const profileStatus = document.getElementById("mpiProfileStatus");
+  const profileAvatar = document.getElementById("mpiProfileAvatar");
+  const profileInitials = document.getElementById("mpiProfileInitials");
+  const profilePhotoInput = document.getElementById("mpiProfilePhotoInput");
+  const profilePhotoRemove = document.getElementById("mpiProfilePhotoRemove");
+  const profileName = document.getElementById("mpiProfileName");
+  const profileJobTitle = document.getElementById("mpiProfileJobTitle");
+  const profilePhone = document.getElementById("mpiProfilePhone");
+  const profileInspectorId = document.getElementById("mpiProfileInspectorId");
+  const profileVehicle = document.getElementById("mpiProfileVehicle");
+  const profileRole = document.getElementById("mpiProfileRole");
+  const profileEmail = document.getElementById("mpiProfileEmail");
+  const profileSave = document.getElementById("mpiProfileSave");
   const signInButtons = [...document.querySelectorAll("[data-mpi-sign-in]")];
   const signOutButtons = [...document.querySelectorAll("[data-mpi-sign-out]")];
   const updatesGate = document.getElementById("mpiUpdatesGate");
@@ -29,6 +44,7 @@
   let unsubscribeUpdates = null;
   let unsubscribeTeamPresence = null;
   let registeredPushToken = "";
+  let pendingProfilePhoto = null;
   const NOTIFIED_UPDATE_STORAGE_KEY = "mpiNotifiedOfficeUpdatesV2";
 
   function notifiedUpdateIds() {
@@ -189,6 +205,157 @@
     return String(name || "MPI").trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0)).join("").toUpperCase() || "MPI";
   }
 
+  function profilePhotoSource(profile = currentProfile, user = currentUser) {
+    return String(profile?.profilePhoto || profile?.photoURL || user?.photoURL || "").trim();
+  }
+
+  function showProfilePhoto(source, name) {
+    if (!profileAvatar || !profileInitials) return;
+    profileAvatar.querySelector("img")?.remove();
+    profileInitials.textContent = teamInitials(name);
+    if (!source) return;
+    const image = document.createElement("img");
+    image.alt = "";
+    image.referrerPolicy = "no-referrer";
+    image.addEventListener("error", () => image.remove(), { once: true });
+    image.src = source;
+    profileAvatar.prepend(image);
+  }
+
+  function roleLabel(profile) {
+    return ({ owner: "Owner", admin: "Office Admin", inspector: "Inspector" })[String(profile?.role || "inspector").toLowerCase()] || "Inspector";
+  }
+
+  function renderProfile(user, profile) {
+    if (!profileCard || !profileForm) return;
+    profileCard.hidden = !(user && profile);
+    if (!user || !profile) return;
+    pendingProfilePhoto = null;
+    profileName.value = profile.name || user.displayName || "";
+    profileJobTitle.value = profile.jobTitle || (profile.role === "inspector" ? "Inspector" : "");
+    profilePhone.value = profile.phone || "";
+    profileInspectorId.value = profile.inspectorId || "";
+    profileVehicle.value = profile.assignedVehicle || "";
+    profileRole.value = roleLabel(profile);
+    profileEmail.value = user.email || profile.email || "";
+    profileStatus.textContent = "Saved to your MPI account";
+    showProfilePhoto(profilePhotoSource(profile, user), profileName.value);
+  }
+
+  function loadImage(source) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("That photo could not be opened."));
+      image.src = source;
+    });
+  }
+
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("That photo could not be read."));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function compressedProfilePhoto(file) {
+    if (!file?.type?.startsWith("image/")) throw new Error("Choose an image from the phone's Photo Library.");
+    if (file.size > 12 * 1024 * 1024) throw new Error("Choose a photo smaller than 12 MB.");
+    const source = await readFileAsDataUrl(file);
+    const image = await loadImage(source);
+    let size = 360;
+    let quality = 0.82;
+    let result = "";
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const context = canvas.getContext("2d", { alpha: false });
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, size, size);
+      const crop = Math.min(image.naturalWidth || image.width, image.naturalHeight || image.height);
+      const sx = ((image.naturalWidth || image.width) - crop) / 2;
+      const sy = ((image.naturalHeight || image.height) - crop) / 2;
+      context.drawImage(image, sx, sy, crop, crop, 0, 0, size, size);
+      result = canvas.toDataURL("image/jpeg", quality);
+      if (result.length <= 180000) return result;
+      size = Math.max(220, size - 45);
+      quality = Math.max(0.62, quality - 0.07);
+    }
+    if (result.length > 220000) throw new Error("That image could not be made small enough. Try a different photo.");
+    return result;
+  }
+
+  async function chooseProfilePhoto() {
+    const file = profilePhotoInput?.files?.[0];
+    if (!file) return;
+    profileStatus.textContent = "Preparing photo…";
+    try {
+      pendingProfilePhoto = await compressedProfilePhoto(file);
+      showProfilePhoto(pendingProfilePhoto, profileName.value);
+      profileStatus.textContent = "Photo ready — tap Save My Profile";
+    } catch (error) {
+      pendingProfilePhoto = null;
+      profileStatus.textContent = error?.message || "Photo could not be prepared.";
+    } finally {
+      profilePhotoInput.value = "";
+    }
+  }
+
+  async function saveProfile(event) {
+    event.preventDefault();
+    if (!currentUser || !currentProfile) return;
+    const name = profileName.value.trim().slice(0, 80);
+    if (!name) {
+      profileStatus.textContent = "Enter your full name.";
+      profileName.focus();
+      return;
+    }
+    profileSave.disabled = true;
+    profileStatus.textContent = "Saving profile…";
+    const updates = {
+      name,
+      jobTitle: profileJobTitle.value.trim().slice(0, 80),
+      phone: profilePhone.value.trim().slice(0, 30),
+      inspectorId: profileInspectorId.value.trim().slice(0, 40),
+      assignedVehicle: profileVehicle.value.trim().slice(0, 80),
+      profileUpdatedAt: shared.serverTimestamp()
+    };
+    if (pendingProfilePhoto !== null) updates.profilePhoto = pendingProfilePhoto;
+    try {
+      await shared.db.collection("users").doc(currentUser.uid).set(updates, { merge: true });
+      currentProfile = { ...currentProfile, ...updates };
+      await shared.db.collection("teamPresence").doc(currentUser.uid).set({
+        name,
+        profilePhoto: pendingProfilePhoto !== null ? pendingProfilePhoto : String(currentProfile.profilePhoto || ""),
+        updatedAt: shared.serverTimestamp()
+      }, { merge: true }).catch(() => false);
+      pendingProfilePhoto = null;
+      accountName.textContent = name;
+      showProfilePhoto(profilePhotoSource(currentProfile, currentUser), name);
+      profileStatus.textContent = "Profile saved";
+      const sessionDetail = {
+        userId: currentUser.uid,
+        role: currentProfile.role || "inspector",
+        inspectorId: String(currentProfile.inspectorId || "").trim(),
+        inspectorName: name,
+        inspectorEmail: String(currentUser.email || currentProfile.email || "").trim(),
+        phone: String(currentProfile.phone || "").trim(),
+        assignedVehicle: String(currentProfile.assignedVehicle || "").trim()
+      };
+      window.MPI_COMPANY_SESSION = sessionDetail;
+      window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail: sessionDetail }));
+    } catch (error) {
+      profileStatus.textContent = /permission/i.test(error?.message || "")
+        ? "Profile permission needs updating. Please try again shortly."
+        : (error?.message || "Profile could not be saved. Try again.");
+    } finally {
+      profileSave.disabled = false;
+    }
+  }
+
   function renderTeamPresence(records, error = null) {
     if (!teamStatusCard || !teamStatusList) return;
     const inspectorView = currentUser && currentProfile && ["owner", "inspector"].includes(String(currentProfile.role || "").toLowerCase());
@@ -210,7 +377,8 @@
       const age = teamPresenceAge(item);
       const updated = teamPresenceDate(item);
       const stale = sameDay && rawStatus !== "CLOCKED OUT" && updated && Date.now() - updated.getTime() > 20 * 60 * 1000;
-      const photo = item.photoURL ? `<img src="${escapeHtml(item.photoURL)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : "";
+      const photoSource = item.profilePhoto || item.photoURL;
+      const photo = photoSource ? `<img src="${escapeHtml(photoSource)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : "";
       return `<article class="workflow-team-person${item.id === currentUser.uid ? " is-you" : ""}"><span class="workflow-team-avatar">${photo}<b>${escapeHtml(teamInitials(item.name))}</b></span><div class="workflow-team-copy"><strong>${escapeHtml(item.name || "MPI Inspector")}${item.id === currentUser.uid ? " <small>YOU</small>" : ""}</strong><span>${escapeHtml(stale ? `${age} · confirm status if needed` : age)}</span></div><span class="workflow-team-pill ${teamStatusTone(rawStatus)}${stale ? " stale" : ""}">${escapeHtml(sameDay ? teamStatusLabel(rawStatus) : "Not updated today")}</span></article>`;
     }).join("") : '<div class="workflow-team-empty">Team members will appear after their company phones load this update.</div>';
     teamStatusUpdated.textContent = values.length ? `${values.length} field ${values.length === 1 ? "user" : "users"}` : "Waiting for phones";
@@ -290,11 +458,13 @@
       unsubscribeTeamPresence?.();
       unsubscribeTeamPresence = null;
       if (teamStatusCard) teamStatusCard.hidden = true;
+      renderProfile(null, null);
       return;
     }
     accountName.textContent = profile.name || user.displayName || "MPI Team Member";
     accountRole.textContent = shared.isAdminRole(profile) ? "Owner / office administrator" : "Inspector";
     accountStatus.textContent = user.email || "Signed in";
+    renderProfile(user, profile);
     signInButtons.forEach(button => { button.hidden = true; });
     signOutButtons.forEach(button => { button.hidden = false; });
     officeConsoleCard.hidden = !shared.isAdminRole(profile);
@@ -417,6 +587,14 @@
 
   signInButtons.forEach(button => button.addEventListener("click", () => signIn(button)));
   signOutButtons.forEach(button => button.addEventListener("click", () => shared.signOut()));
+  profileForm?.addEventListener("submit", saveProfile);
+  profilePhotoInput?.addEventListener("change", chooseProfilePhoto);
+  profileName?.addEventListener("input", () => showProfilePhoto(pendingProfilePhoto !== null ? pendingProfilePhoto : profilePhotoSource(), profileName.value));
+  profilePhotoRemove?.addEventListener("click", () => {
+    pendingProfilePhoto = "";
+    showProfilePhoto("", profileName?.value || currentProfile?.name || "MPI");
+    profileStatus.textContent = "Photo removed — tap Save My Profile";
+  });
   updatesList.addEventListener("click", handleUpdateAction);
   updatesList.addEventListener("click", handleAttachmentOpen);
   updatesList.addEventListener("submit", handleUpdateReply);

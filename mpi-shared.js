@@ -123,7 +123,7 @@
         lastSeenAt: serverTimestamp()
       });
     } else {
-      const savedInspectorNumber = String(inspectorNumber || snapshot.data().inspectorId || "").trim();
+      const savedInspectorNumber = String(snapshot.data().inspectorId || inspectorNumber || "").trim();
       await ref.set({
         name: snapshot.data().name || user.displayName || "MPI Team Member",
         email: normalizeEmail(user.email),
@@ -335,6 +335,7 @@
       name: String(profile.name || user.displayName || "MPI Team Member").slice(0, 80),
       role,
       photoURL: String(user.photoURL || profile.photoURL || "").slice(0, 1000),
+      profilePhoto: String(profile.profilePhoto || "").slice(0, 220000),
       status,
       date: String(clean.date || ""),
       active: teamVisible,
