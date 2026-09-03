@@ -87,7 +87,8 @@ function handlePushRequest_(input, requestId) {
     var sender = verifyFirebaseUser_(safeText_(input.idToken, 5000));
     if (!sender || !sender.emailVerified || !isMpiCompanyEmail_(sender.email)) throw new Error("Company sign-in could not be verified");
     var targets = cleanStringArray_(input.targetTokens, MPI_PUSH.MAX_TARGETS, 500);
-    if (!targets.length && safeText_(input.audience, 20) === "office") targets = officeNotificationTokens_();
+    var targetEmail = safeText_(input.targetEmail, 160).toLowerCase();
+    if (!targets.length && safeText_(input.audience, 20) === "office") targets = officeNotificationTokens_(targetEmail);
     targets = uniqueStrings_(targets);
     if (!targets.length) {
       writeStatus_(requestId, { ok: true, status: "no-target", requestId: requestId, sent: 0 });
@@ -132,8 +133,9 @@ function isMpiCompanyEmail_(email) {
   return normalized === "kev@michiganpropertyinspections.com" || /@michiganpropertyinspections[.]com$/.test(normalized);
 }
 
-function officeNotificationTokens_() {
+function officeNotificationTokens_(targetEmail) {
   try {
+    var requestedEmail = String(targetEmail || "").trim().toLowerCase();
     var response = UrlFetchApp.fetch("https://firestore.googleapis.com/v1/projects/" + MPI_PUSH.PROJECT_ID + "/databases/(default)/documents/users?pageSize=100", {
       headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
       muteHttpExceptions: true
@@ -144,8 +146,9 @@ function officeNotificationTokens_() {
       var fields = document.fields || {};
       var active = fields.active && fields.active.booleanValue;
       var role = fields.role && fields.role.stringValue;
+      var email = String(fields.email && fields.email.stringValue || "").toLowerCase();
       var device = fields.officeNotificationDevice && fields.officeNotificationDevice.mapValue && fields.officeNotificationDevice.mapValue.fields;
-      return active !== false && (role === "owner" || role === "admin") && device && device.enabled && device.enabled.booleanValue !== false
+      return active !== false && (role === "owner" || role === "admin") && (!requestedEmail || email === requestedEmail) && device && device.enabled && device.enabled.booleanValue !== false
         ? String(device.token && device.token.stringValue || "")
         : "";
     }).filter(Boolean);

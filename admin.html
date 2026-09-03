@@ -92,12 +92,21 @@
     .status.success { color:var(--green); }
     .status.error { color:var(--red); }
     .update-list,.people-list { display:grid; gap:11px; }
-    .request-admin-list { display:grid; gap:12px; }
+    .request-admin-list { display:grid; gap:16px; }
+    .request-admin-group { display:grid; gap:10px; }
+    .request-admin-group-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 2px; }
+    .request-admin-group-head h3 { margin:0; color:var(--navy); font-size:14px; }
+    .request-admin-group-head span { min-width:28px; padding:5px 8px; color:var(--navy); background:#edf3fb; border-radius:999px; text-align:center; font-size:9px; font-weight:950; }
     .request-admin-card { padding:17px; background:#fff; border:1px solid var(--line); border-left:5px solid var(--gold); border-radius:14px; }
+    .request-admin-card.in-progress { border-left-color:var(--blue); }
+    .request-admin-card.waiting { border-left-color:#8c6c1c; }
     .request-admin-card.completed { opacity:.72; border-left-color:var(--green); }
     .request-admin-top { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
     .request-admin-top h3 { margin:6px 0 0; color:var(--navy); font-size:17px; }
     .request-admin-card p { color:var(--muted); font-size:10.5px; line-height:1.5; }
+    .request-progress-note { display:grid; gap:4px; margin-top:11px; padding:11px 12px; color:#273b70; background:#eef5fb; border:1px solid #cfdfed; border-radius:10px; }
+    .request-progress-note strong { color:var(--navy); font-size:9px; letter-spacing:.05em; text-transform:uppercase; }
+    .request-progress-note span { font-size:10.5px; line-height:1.45; white-space:pre-wrap; }
     .request-admin-form { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:13px; padding-top:13px; border-top:1px solid var(--line); }
     .request-admin-form .wide { grid-column:1/-1; }
     .update-card,.person-card { padding:17px; background:#fff; border:1px solid var(--line); border-radius:14px; }
@@ -193,6 +202,8 @@
     .office-reply-head span { min-width:26px; padding:5px 8px; color:#fff; background:var(--blue); border-radius:999px; text-align:center; font-size:10px; font-weight:900; }
     .office-reply-list { display:grid; gap:8px; }
     .office-reply-card { display:grid; grid-template-columns:minmax(120px,.75fr) minmax(0,1.5fr) auto; gap:12px; align-items:center; width:100%; padding:12px 13px; color:var(--navy); background:#fff; border:1px solid #d7e3ef; border-radius:12px; text-align:left; cursor:pointer; }
+    .office-reply-card.unread { border-left:5px solid var(--gold); }
+    .office-reply-new { display:inline-flex !important; width:max-content; margin-top:5px; padding:3px 6px; color:#fff !important; background:var(--blue); border-radius:999px; font-size:8px !important; font-weight:950; letter-spacing:.05em; text-transform:uppercase; }
     .office-reply-card:hover { border-color:#69a9d7; box-shadow:0 7px 18px rgba(30,117,181,.1); }
     .office-reply-card strong,.office-reply-card span,.office-reply-card small { display:block; }
     .office-reply-card strong { font-size:11px; }
@@ -240,7 +251,7 @@
       .office-reply-card > div:nth-child(2) { grid-column:1/-1; grid-row:2; }
     }
 
-    /* Build 142 — editable company profiles and profile photos */
+    /* Build 143 — request workflow and correctly routed office replies */
     .icon-library { position:absolute; width:0; height:0; overflow:hidden; }
     .app-icon { width:18px; height:18px; flex:0 0 auto; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
     body { background:#eef2f8; }
@@ -467,7 +478,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=142"></script>
-  <script src="./admin.js?build=142"></script>
+  <script src="./mpi-shared.js?build=143"></script>
+  <script src="./admin.js?build=143"></script>
 </body>
 </html>

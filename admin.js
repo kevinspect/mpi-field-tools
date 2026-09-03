@@ -96,10 +96,12 @@
   let selectedFiles = [];
   let inspectorReplies = [];
   let knownReplyKeys = new Set();
+  let readReplyKeys = new Set();
   let replyListenerReady = false;
   let officeMessaging = null;
   const OFFICE_PUSH_TOKEN_KEY = "mpiOfficePushTokenV1";
   let knownRequestIds = new Set();
+  let reviewingRequests = false;
   const assignedRequestMigrations = new Set();
   let legacyRequestChecked = false;
   const messageReceiptCache = new Map();
@@ -235,20 +237,43 @@
     return `${reply.path || `${reply.updateId}/${reply.userId}`}:${timestamp}:${reply.replyText || ""}`;
   }
 
+  function replyIsForCurrentAdmin(reply) {
+    const update = updateForReply(reply);
+    const recipientId = String(reply.replyToUserId || update?.createdBy || "");
+    const recipientEmail = shared.normalizeEmail(reply.replyToEmail || update?.createdByEmail);
+    if (recipientId) return recipientId === currentUser?.uid;
+    if (recipientEmail) return recipientEmail === shared.normalizeEmail(currentUser?.email);
+    return shared.isOwnerEmail(currentUser?.email);
+  }
+
+  function markReplyRead(key) {
+    if (!key || readReplyKeys.has(key)) return;
+    readReplyKeys.add(key);
+    const savedKeys = [...readReplyKeys].slice(-200);
+    currentProfile.officeReplyReadKeys = savedKeys;
+    renderReplyInbox();
+    shared.db.collection("users").doc(currentUser.uid).set({
+      officeReplyReadKeys: savedKeys,
+      officeRepliesReadAt: shared.serverTimestamp()
+    }, { merge: true }).catch(() => {});
+  }
+
   function renderReplyInbox() {
     if (!replyInbox) return;
     const values = inspectorReplies
       .filter(item => item.replyText)
       .sort((left, right) => (asDate(right.repliedAt)?.getTime() || 0) - (asDate(left.repliedAt)?.getTime() || 0))
       .slice(0, 12);
-    if (replyCount) replyCount.textContent = values.length ? String(values.length) : "";
+    const unread = values.filter(item => replyIsForCurrentAdmin(item) && !readReplyKeys.has(replyKey(item)));
+    if (replyCount) replyCount.textContent = unread.length ? String(unread.length) : "";
     const count = replyInbox.querySelector(".office-reply-head span");
-    if (count) count.textContent = String(values.length);
+    if (count) count.textContent = unread.length ? `${unread.length} new` : "0 new";
     const list = replyInbox.querySelector(".office-reply-list");
     if (!list) return;
     list.innerHTML = values.length ? values.map(reply => {
       const update = updateForReply(reply);
-      return `<button class="office-reply-card" type="button" data-open-reply-inspector="${escapeHtml(reply.userId || "")}"><div><strong>${escapeHtml(reply.userName || reply.userEmail || "MPI Inspector")}</strong><small>${escapeHtml(reply.updateTitle || update?.title || "Message from MPI Office")}</small></div><div><span>${escapeHtml(reply.replyText)}</span></div><time>${escapeHtml(formatDateTime(reply.repliedAt || reply.updatedAt))}</time></button>`;
+      const isUnread = replyIsForCurrentAdmin(reply) && !readReplyKeys.has(replyKey(reply));
+      return `<button class="office-reply-card${isUnread ? " unread" : ""}" type="button" data-open-reply-inspector="${escapeHtml(reply.userId || "")}" data-reply-key="${escapeHtml(replyKey(reply))}"><div><strong>${escapeHtml(reply.userName || reply.userEmail || "MPI Inspector")}</strong><small>${escapeHtml(reply.updateTitle || update?.title || "Message from MPI Office")}</small>${isUnread ? '<span class="office-reply-new">New reply</span>' : ""}</div><div><span>${escapeHtml(reply.replyText)}</span></div><time>${escapeHtml(formatDateTime(reply.repliedAt || reply.updatedAt))}</time></button>`;
     }).join("") : '<div class="empty">No inspector replies yet. New replies will appear here automatically.</div>';
   }
 
@@ -261,7 +286,7 @@
     }));
     const nextKeys = new Set(values.map(replyKey));
     if (replyListenerReady) {
-      const newReplies = values.filter(reply => !knownReplyKeys.has(replyKey(reply)));
+      const newReplies = values.filter(reply => !knownReplyKeys.has(replyKey(reply)) && replyIsForCurrentAdmin(reply));
       if (newReplies.length) {
         const latest = newReplies.sort((left, right) => (asDate(right.repliedAt)?.getTime() || 0) - (asDate(left.repliedAt)?.getTime() || 0))[0];
         showOfficeAlert(`Reply from ${latest.userName || "MPI Inspector"}`, latest.replyText || "A new inspector reply is available.", `mpi-reply-${latest.updateId}-${latest.userId}`);
@@ -643,6 +668,7 @@
   function showView(name) {
     tabButtons.forEach(button => button.classList.toggle("active", button.dataset.adminView === name));
     panels.forEach(panel => panel.classList.toggle("active", panel.dataset.adminPanel === name));
+    if (name === "requests") markNewRequestsReviewed();
   }
 
   function correctionDraftIsActive() {
@@ -702,6 +728,47 @@
     return "normal";
   }
 
+  function requestNeedsAttention(request) {
+    return String(request?.status || "new") === "new" && !request?.reviewedAt;
+  }
+
+  async function markNewRequestsReviewed() {
+    if (reviewingRequests || !currentUser || !shared.isAdminRole(currentProfile)) return;
+    const groups = people.map(person => ({
+      person,
+      ids: (Array.isArray(person.fieldRequests) ? person.fieldRequests : []).filter(requestNeedsAttention).map(item => item.id)
+    })).filter(group => group.ids.length);
+    if (!groups.length) return;
+    reviewingRequests = true;
+    const reviewedAt = new Date().toISOString();
+    groups.forEach(({ person, ids }) => {
+      person.fieldRequests.forEach(item => {
+        if (!ids.includes(item.id)) return;
+        item.reviewedAt = reviewedAt;
+        item.reviewedBy = currentProfile.name || currentUser.displayName || currentUser.email;
+      });
+    });
+    renderRequestTodos();
+    try {
+      await Promise.all(groups.map(({ person, ids }) => {
+        const ref = shared.db.collection("users").doc(person.id);
+        return shared.db.runTransaction(async transaction => {
+          const snapshot = await transaction.get(ref);
+          const requests = Array.isArray(snapshot.data()?.fieldRequests) ? snapshot.data().fieldRequests.map(item => ({ ...item })) : [];
+          requests.forEach(request => {
+            if (!ids.includes(request.id) || !requestNeedsAttention(request)) return;
+            request.reviewedAt = reviewedAt;
+            request.reviewedBy = currentProfile.name || currentUser.displayName || currentUser.email;
+            request.updatedAt = reviewedAt;
+          });
+          transaction.set(ref, { fieldRequests: requests, requestsUpdatedAt: shared.serverTimestamp() }, { merge: true });
+        });
+      }));
+    } finally {
+      reviewingRequests = false;
+    }
+  }
+
   async function progressAssignedRequests(person) {
     const candidates = (Array.isArray(person?.fieldRequests) ? person.fieldRequests : [])
       .filter(item => item?.id && item.assignedAdmin && item.status === "new" && !assignedRequestMigrations.has(`${person.id}/${item.id}`));
@@ -733,8 +800,8 @@
   function renderRequestTodos() {
     if (!requestList) return;
     const all = allInspectorRequests();
-    const active = all.filter(item => item.status !== "completed");
-    requestCount.textContent = active.length ? String(active.length) : "";
+    const attention = all.filter(requestNeedsAttention);
+    requestCount.textContent = attention.length ? String(attention.length) : "";
     const inspectors = [...new Map(all.map(item => [item.ownerUserId, item.ownerName])).entries()];
     const selectedInspector = requestInspectorFilter.value || "all";
     requestInspectorFilter.innerHTML = '<option value="all">All inspectors</option>' + inspectors.map(([id, name]) => `<option value="${escapeHtml(id)}">${escapeHtml(name)}</option>`).join("");
@@ -759,7 +826,7 @@
       const rank = { overdue: 0, asap: 1, normal: 2, complete: 3 };
       return rank[requestDueState(left)] - rank[requestDueState(right)] || String(right.requestedAt || "").localeCompare(String(left.requestedAt || ""));
     });
-    requestList.innerHTML = filtered.length ? filtered.map(item => {
+    const requestCard = item => {
       const dueState = requestDueState(item);
       const assignee = admins.find(admin => shared.normalizeEmail(admin.email) === shared.normalizeEmail(item.assignedAdmin));
       const progress = item.status === "completed"
@@ -767,17 +834,26 @@
         : assignee
           ? `With ${assignee.name || assignee.email} · ${String(item.status || "in-progress").replace("-", " ")}`
           : "Unassigned · waiting for office action";
-      return `<article class="request-admin-card ${item.status === "completed" ? "completed" : ""}" data-request-owner="${escapeHtml(item.ownerUserId)}" data-request-id="${escapeHtml(item.id)}"><div class="request-admin-top"><div><span class="type-badge">${escapeHtml(item.type || "Request")}</span>${dueState === "asap" ? '<span class="priority-badge">ASAP</span>' : dueState === "overdue" ? '<span class="priority-badge">OVERDUE</span>' : ""}<h3>${escapeHtml(item.item || "Inspector request")}</h3></div><span class="role-badge">${escapeHtml(String(item.status || "new").replace("-", " "))}</span></div><p><strong>${escapeHtml(item.ownerName)}</strong> · Requested ${escapeHtml(formatDateTime(item.requestedAt))}${item.neededBy ? ` · Needed ${escapeHtml(formatDate(item.neededBy))}` : ""}</p><p><strong>Progress:</strong> ${escapeHtml(progress)}</p><p>${escapeHtml(item.details || "No detail supplied.")}</p>${item.suggestion ? `<p><strong>Suggested solution:</strong> ${escapeHtml(item.suggestion)}</p>` : ""}<form class="request-admin-form" data-request-admin-form><div class="field"><label>Status</label><select data-request-status><option value="new" ${item.status === "new" ? "selected" : ""}>New</option><option value="in-progress" ${item.status === "in-progress" ? "selected" : ""}>In progress</option><option value="waiting" ${item.status === "waiting" ? "selected" : ""}>Waiting</option><option value="completed" ${item.status === "completed" ? "selected" : ""}>Completed</option></select></div><div class="field"><label>Assigned admin</label><select data-request-admin><option value="">Unassigned</option>${admins.map(admin => `<option value="${escapeHtml(admin.email)}" ${item.assignedAdmin === admin.email ? "selected" : ""}>${escapeHtml(admin.name || admin.email)}</option>`).join("")}</select></div><div class="field"><label>Completed date</label><input data-request-completed type="date" value="${escapeHtml(item.completedAt ? String(item.completedAt).slice(0, 10) : "")}"></div><div class="field wide"><label>Internal management note</label><textarea data-request-note maxlength="1000" placeholder="Visible to office management only">${escapeHtml(item.managementNote || "")}</textarea></div><button class="primary" type="submit">SAVE PROGRESS</button><span class="status" data-request-save-status></span></form></article>`;
+      return `<article class="request-admin-card ${escapeHtml(item.status || "new")}" data-request-owner="${escapeHtml(item.ownerUserId)}" data-request-id="${escapeHtml(item.id)}"><div class="request-admin-top"><div><span class="type-badge">${escapeHtml(item.type || "Request")}</span>${dueState === "asap" ? '<span class="priority-badge">ASAP</span>' : dueState === "overdue" ? '<span class="priority-badge">OVERDUE</span>' : ""}<h3>${escapeHtml(item.item || "Inspector request")}</h3></div><span class="role-badge">${escapeHtml(String(item.status || "new").replace("-", " "))}</span></div><p><strong>${escapeHtml(item.ownerName)}</strong> · Requested ${escapeHtml(formatDateTime(item.requestedAt))}${item.neededBy ? ` · Needed ${escapeHtml(formatDate(item.neededBy))}` : ""}</p><p><strong>Progress:</strong> ${escapeHtml(progress)}</p><p>${escapeHtml(item.details || "No detail supplied.")}</p>${item.suggestion ? `<p><strong>Suggested solution:</strong> ${escapeHtml(item.suggestion)}</p>` : ""}${item.managementNote ? `<div class="request-progress-note"><strong>Latest office progress</strong><span>${escapeHtml(item.managementNote)}</span></div>` : ""}<form class="request-admin-form" data-request-admin-form><div class="field"><label>Status</label><select data-request-status><option value="new" ${item.status === "new" ? "selected" : ""}>New</option><option value="in-progress" ${item.status === "in-progress" ? "selected" : ""}>In progress</option><option value="waiting" ${item.status === "waiting" ? "selected" : ""}>Waiting</option><option value="completed" ${item.status === "completed" ? "selected" : ""}>Completed</option></select></div><div class="field"><label>Assigned admin</label><select data-request-admin><option value="">Unassigned</option>${admins.map(admin => `<option value="${escapeHtml(admin.email)}" ${item.assignedAdmin === admin.email ? "selected" : ""}>${escapeHtml(admin.name || admin.email)}</option>`).join("")}</select></div><div class="field" data-request-completed-field ${item.status === "completed" ? "" : "hidden"}><label>Completed date</label><input data-request-completed type="date" value="${escapeHtml(item.completedAt ? String(item.completedAt).slice(0, 10) : "")}"></div><div class="field wide"><label>Internal management note</label><textarea data-request-note maxlength="1000" placeholder="Example: Order placed; awaiting delivery">${escapeHtml(item.managementNote || "")}</textarea></div><button class="primary" type="submit">SAVE PROGRESS</button><span class="status" data-request-save-status></span></form></article>`;
+    };
+    const groupDefinitions = [
+      { status: "new", label: "New requests" },
+      { status: "in-progress", label: "In progress" },
+      { status: "waiting", label: "Waiting" },
+      { status: "completed", label: "Completed" }
+    ];
+    requestList.innerHTML = filtered.length ? groupDefinitions.map(group => {
+      const items = filtered.filter(item => String(item.status || "new") === group.status);
+      return items.length ? `<section class="request-admin-group" data-request-group="${group.status}"><div class="request-admin-group-head"><h3>${group.label}</h3><span>${items.length}</span></div>${items.map(requestCard).join("")}</section>` : "";
     }).join("") : '<div class="empty">No requests match these filters.</div>';
 
-    const ids = new Set(all.map(item => item.id));
-    const newItems = all.filter(item => item.status === "new" && !knownRequestIds.has(item.id));
+    const newItems = all.filter(item => requestNeedsAttention(item) && !knownRequestIds.has(`${item.ownerUserId}/${item.id}`));
     if (knownRequestIds.size && newItems.length && "Notification" in window && Notification.permission === "granted") {
       const first = newItems[0];
       const notification = new Notification("New MPI Inspector Request", { body: `${first.ownerName}: ${first.item}`, icon: "./icon-192.png", tag: `mpi-request-${first.id}` });
       notification.onclick = () => { window.focus(); showView("requests"); };
     }
-    knownRequestIds = ids;
+    knownRequestIds = new Set(all.map(item => `${item.ownerUserId}/${item.id}`));
   }
 
   async function saveRequestTodo(formElement) {
@@ -793,6 +869,11 @@
     if (assignedAdmin && nextStatus === "new") nextStatus = "in-progress";
     const managementNote = formElement.querySelector("[data-request-note]").value.trim();
     const completedDate = formElement.querySelector("[data-request-completed]").value;
+    const changedAt = new Date().toISOString();
+    const completedAt = nextStatus === "completed"
+      ? (completedDate ? new Date(`${completedDate}T12:00:00`).toISOString() : previewRequest.completedAt || changedAt)
+      : "";
+    const completedBy = nextStatus === "completed" ? (currentProfile.name || currentUser.displayName || currentUser.email) : "";
     status.textContent = "Saving…";
     try {
       const ref = shared.db.collection("users").doc(person.id);
@@ -810,18 +891,31 @@
           request.assignedBy = assignedAdmin ? (currentProfile.name || currentUser.displayName || currentUser.email) : "";
         }
         request.managementNote = managementNote;
-        if (nextStatus === "completed") {
-          request.completedAt = completedDate ? new Date(`${completedDate}T12:00:00`).toISOString() : request.completedAt || new Date().toISOString();
-          request.completedBy = currentProfile.name || currentUser.displayName || currentUser.email;
-        } else {
-          request.completedAt = "";
-          request.completedBy = "";
-        }
-        request.updatedAt = new Date().toISOString();
+        request.completedAt = completedAt;
+        request.completedBy = completedBy;
+        request.reviewedAt = request.reviewedAt || changedAt;
+        request.reviewedBy = request.reviewedBy || currentProfile.name || currentUser.displayName || currentUser.email;
+        request.updatedAt = changedAt;
         transaction.set(ref, { fieldRequests: requests, requestsUpdatedAt: shared.serverTimestamp() }, { merge: true });
       });
-      status.textContent = "Saved.";
-      status.className = "status success";
+      Object.assign(previewRequest, {
+        status: nextStatus,
+        assignedAdmin,
+        assignedAdminName: assignedAdmin ? (assignedAdminPerson?.name || assignedAdmin) : "",
+        managementNote,
+        completedAt,
+        completedBy,
+        reviewedAt: previewRequest.reviewedAt || changedAt,
+        reviewedBy: previewRequest.reviewedBy || currentProfile.name || currentUser.displayName || currentUser.email,
+        updatedAt: changedAt
+      });
+      renderRequestTodos();
+      const savedCard = [...requestList.querySelectorAll("[data-request-owner][data-request-id]")].find(item => item.dataset.requestOwner === person.id && item.dataset.requestId === requestId);
+      const savedStatus = savedCard?.querySelector("[data-request-save-status]");
+      if (savedStatus) {
+        savedStatus.textContent = "Progress saved.";
+        savedStatus.className = "status success";
+      }
     } catch (error) {
       status.textContent = error.message || "Could not save this to-do.";
       status.className = "status error";
@@ -1306,10 +1400,19 @@
     event.preventDefault();
     saveRequestTodo(requestForm);
   });
+  requestList?.addEventListener("change", event => {
+    const formElement = event.target.closest("[data-request-admin-form]");
+    if (!formElement) return;
+    const statusControl = formElement.querySelector("[data-request-status]");
+    if (event.target.matches("[data-request-admin]") && event.target.value && statusControl.value === "new") statusControl.value = "in-progress";
+    const completedField = formElement.querySelector("[data-request-completed-field]");
+    if (completedField) completedField.hidden = statusControl.value !== "completed";
+  });
   officeAlertButtons.forEach(button => button.addEventListener("click", () => enableOfficeAlerts(button, true)));
   replyInbox?.addEventListener("click", event => {
     const button = event.target.closest("[data-open-reply-inspector]");
     if (!button?.dataset.openReplyInspector) return;
+    markReplyRead(button.dataset.replyKey || "");
     selectedInspectorId = button.dataset.openReplyInspector;
     inspectorSelector.value = selectedInspectorId;
     renderOperations();
@@ -1420,6 +1523,7 @@
   shared.watchSession(({ user, profile, error }) => {
     currentUser = user;
     currentProfile = profile;
+    readReplyKeys = new Set(Array.isArray(profile?.officeReplyReadKeys) ? profile.officeReplyReadKeys : []);
     authStatus.textContent = error?.message || "";
     if (!user || !profile || !shared.isAdminRole(profile)) {
       dashboard.hidden = true;

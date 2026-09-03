@@ -1,5 +1,16 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 143 — Request Progress, Reply Routing, and Phone Setup Cleanup
+
+- Changed the Requests badge to count only genuinely new, unread inspector requests; opening Requests clears the new-item indicator without removing the request.
+- Organized inspector requests into New, In Progress, Waiting, and Completed sections.
+- Assigned requests move into In Progress automatically, and saved office progress notes now remain visible on the request card.
+- Added an immediate “Progress saved” confirmation and only shows the completion date when a request is actually marked Completed.
+- Changed inspector replies so the notification is addressed to the office user who sent the original message instead of being broadcast to another administrator.
+- Changed the Operations notification badge to count only unread replies addressed to the signed-in office user and clear after the reply is opened.
+- Removed Today’s Jobs Verified and Training Profile Verified from Company Phone Setup, leaving only the four true one-time phone setup checks.
+- Updated the offline application shell and visible version to Build 143.
+
 ## Build 142 — Personal Profiles and Admin Permission Repair
 
 - Added a complete My Profile card in Settings for every signed-in company user.

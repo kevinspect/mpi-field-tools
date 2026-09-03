@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="142">
+  <meta name="app-build" content="143">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5060,7 +5060,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">142</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">143</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -7507,12 +7507,12 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 142</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 143</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
           <summary>
-            <span><strong>Company phone setup</strong><small>One-time readiness check for the app, offline access, notifications, schedule, and training account.</small></span>
+            <span><strong>Company phone setup</strong><small>One-time readiness check for the app, offline access, notifications, and inspector identity.</small></span>
             <span class="daily-readiness-status" id="phoneSetupStatus">Checking…</span>
           </summary>
           <div class="phone-setup-body">
@@ -7521,8 +7521,6 @@
               <div class="phone-setup-item"><div><strong>Offline access saved</strong><small>Reconnect once and open the app so the current build can be stored on this phone.</small></div><span class="phone-setup-detected" id="phoneSetupOffline">Check needed</span></div>
               <div class="phone-setup-item"><div><strong>MPI notifications enabled</strong><small>Company push messages can arrive when the app is closed.</small></div><span class="phone-setup-detected" id="phoneSetupNotifications">Check needed</span></div>
               <div class="phone-setup-item"><div><strong>Inspector name remembered</strong><small>Open My Day once so MPI forms can use the correct inspector name.</small></div><span class="phone-setup-detected" id="phoneSetupInspector">Check needed</span></div>
-              <label class="phone-setup-item phone-setup-manual"><input id="phoneSetupCalendar" type="checkbox"><span><strong>Today’s jobs verified</strong><small>I opened the schedule with my assigned MPI company account and saw the correct jobs.</small></span></label>
-              <label class="phone-setup-item phone-setup-manual"><input id="phoneSetupTraining" type="checkbox"><span><strong>Training profile verified</strong><small>I opened my MPI training profile and InterNACHI account under my own credentials.</small></span></label>
             </div>
             <div class="phone-setup-actions">
               <a href="#job-companion">Open My Day</a>
@@ -7637,9 +7635,9 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=142"></script>
-  <script src="./mpi-field-sync.js?build=142"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=142"></script>
+  <script src="./mpi-shared.js?build=143"></script>
+  <script src="./mpi-field-sync.js?build=143"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=143"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -8596,8 +8594,6 @@
       const phoneSetupOffline = document.getElementById("phoneSetupOffline");
       const phoneSetupNotifications = document.getElementById("phoneSetupNotifications");
       const phoneSetupInspector = document.getElementById("phoneSetupInspector");
-      const phoneSetupCalendar = document.getElementById("phoneSetupCalendar");
-      const phoneSetupTraining = document.getElementById("phoneSetupTraining");
       const refreshPhoneSetupBtn = document.getElementById("refreshPhoneSetupBtn");
       const phonePracticeStatus = document.getElementById("phonePracticeStatus");
       const phonePracticeHelp = document.getElementById("phonePracticeHelp");
@@ -13767,24 +13763,12 @@
         }
       }
 
-      function loadPhoneSetupConfirmations() {
-        try {
-          const saved = JSON.parse(localStorage.getItem(PHONE_SETUP_STORAGE_KEY) || "{}");
-          return { calendar: Boolean(saved?.calendar), training: Boolean(saved?.training) };
-        } catch (_) {
-          return { calendar: false, training: false };
-        }
-      }
-
       function setPhoneSetupIndicator(element, ready, readyText) {
         element.textContent = ready ? readyText : "Set up needed";
         element.classList.toggle("ready", ready);
       }
 
       function renderPhoneSetup() {
-        const confirmations = loadPhoneSetupConfirmations();
-        phoneSetupCalendar.checked = confirmations.calendar;
-        phoneSetupTraining.checked = confirmations.training;
         let pushToken = "";
         try { pushToken = localStorage.getItem("mpiPushTokenV1") || ""; } catch (_) {}
         const installed = isStandaloneApp();
@@ -13795,21 +13779,10 @@
         setPhoneSetupIndicator(phoneSetupOffline, offline, "Saved offline");
         setPhoneSetupIndicator(phoneSetupNotifications, notifications, "Enabled");
         setPhoneSetupIndicator(phoneSetupInspector, inspector, "Name saved");
-        const completed = [installed, offline, notifications, inspector, confirmations.calendar, confirmations.training].filter(Boolean).length;
-        phoneSetupStatus.textContent = completed === 6 ? "Phone ready" : `${completed} of 6`;
-        phoneSetupStatus.classList.toggle("is-ready", completed === 6);
-        phoneSetupPanel.classList.toggle("is-complete", completed === 6);
-      }
-
-      function savePhoneSetupConfirmations() {
-        try {
-          localStorage.setItem(PHONE_SETUP_STORAGE_KEY, JSON.stringify({
-            calendar: phoneSetupCalendar.checked,
-            training: phoneSetupTraining.checked,
-            updatedAt: new Date().toISOString()
-          }));
-        } catch (_) {}
-        renderPhoneSetup();
+        const completed = [installed, offline, notifications, inspector].filter(Boolean).length;
+        phoneSetupStatus.textContent = completed === 4 ? "Phone ready" : `${completed} of 4`;
+        phoneSetupStatus.classList.toggle("is-ready", completed === 4);
+        phoneSetupPanel.classList.toggle("is-complete", completed === 4);
       }
 
       function loadPhonePracticeRecord() {
@@ -13932,7 +13905,6 @@
       const LAST_CLEARED_JOB_STORAGE_KEY = "mpiLastClearedJobV1";
       const DAILY_READINESS_STORAGE_KEY = "mpiDailyReadinessV1";
       const SHIFT_RESET_STORAGE_KEY = "mpiShiftResetV1";
-      const PHONE_SETUP_STORAGE_KEY = "mpiPhoneSetupV1";
       const PHONE_PRACTICE_STORAGE_KEY = "mpiPhonePracticeV1";
       const WORKFLOW_PROFILE_STORAGE_KEY = "mpiWorkflowProfileV1";
       const WORKFLOW_ACTIVITY_STORAGE_KEY = "mpiWorkflowActivityV1";
@@ -21204,8 +21176,6 @@
       });
       trainingNextActionBtn.addEventListener("click", openNextTrainingModule);
       trainingProgressShareForm.addEventListener("submit", validateTrainingProgressSubmission);
-      phoneSetupCalendar.addEventListener("change", savePhoneSetupConfirmations);
-      phoneSetupTraining.addEventListener("change", savePhoneSetupConfirmations);
       refreshPhoneSetupBtn.addEventListener("click", () => {
         renderPhoneSetup();
         showToast("Company phone setup refreshed");
