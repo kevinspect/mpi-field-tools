@@ -27,6 +27,23 @@
   const db = app.firestore();
   const serverTimestamp = window.firebase.firestore.FieldValue.serverTimestamp;
   const arrayUnion = window.firebase.firestore.FieldValue.arrayUnion;
+  const TEAM_STATUS_VALUES = new Set([
+    "NOT STARTED",
+    "READY / WAITING TO DEPART",
+    "DRIVING TO JOB",
+    "ARRIVED AT JOB",
+    "INSPECTION IN PROGRESS",
+    "FINAL JOB COMPLETE",
+    "LAB STOP",
+    "DRIVING TO LAB",
+    "AT LAB",
+    "DRIVING TO NEXT JOB",
+    "READY TO DRIVE HOME",
+    "DRIVING HOME",
+    "DRIVING HOME / FINAL DESTINATION",
+    "END-OF-DAY CHECKS",
+    "CLOCKED OUT"
+  ]);
 
   const authPersistenceReady = auth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL).catch(() => false);
   db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
@@ -94,6 +111,7 @@
       await ref.set({
         name: user.displayName || normalizeEmail(user.email).split("@")[0],
         email: normalizeEmail(user.email),
+        photoURL: String(user.photoURL || "").slice(0, 1000),
         ...(inspectorNumber ? { inspectorId: inspectorNumber } : {}),
         role: owner ? "owner" : "inspector",
         active: true,
@@ -105,6 +123,7 @@
       await ref.set({
         name: snapshot.data().name || user.displayName || "MPI Team Member",
         email: normalizeEmail(user.email),
+        photoURL: String(user.photoURL || snapshot.data().photoURL || "").slice(0, 1000),
         ...(savedInspectorNumber ? { inspectorId: savedInspectorNumber } : {}),
         lastSeenAt: serverTimestamp()
       }, { merge: true });
@@ -256,7 +275,33 @@
       operationsDays: days,
       operationsUpdatedAt: serverTimestamp()
     }, { merge: true });
+    const profile = current.data() || {};
+    const role = String(profile.role || "inspector").toLowerCase();
+    const status = TEAM_STATUS_VALUES.has(String(clean.liveStatus || "")) ? String(clean.liveStatus) : "NOT STARTED";
+    const teamVisible = profile.active !== false && ["owner", "inspector"].includes(role);
+    await db.collection("teamPresence").doc(user.uid).set({
+      userId: user.uid,
+      name: String(profile.name || user.displayName || "MPI Team Member").slice(0, 80),
+      role,
+      photoURL: String(user.photoURL || profile.photoURL || "").slice(0, 1000),
+      status,
+      date: String(clean.date || ""),
+      active: teamVisible,
+      updatedAtClient: new Date().toISOString(),
+      updatedAt: serverTimestamp()
+    }, { merge: true }).catch(() => false);
     return true;
+  }
+
+  function watchTeamPresence(callback) {
+    if (typeof callback !== "function") return () => {};
+    return db.collection("teamPresence").where("active", "==", true).onSnapshot(snapshot => {
+      const records = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(item => ["owner", "inspector"].includes(String(item.role || "").toLowerCase()))
+        .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")));
+      callback(records, null);
+    }, error => callback([], error));
   }
 
   window.MPI_SHARED = {
@@ -284,6 +329,7 @@
     clearUpdate,
     replyToUpdate,
     loadOfficeAttachment,
-    syncOperationsSnapshot
+    syncOperationsSnapshot,
+    watchTeamPresence
   };
 })();
