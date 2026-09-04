@@ -107,6 +107,27 @@
     .request-progress-note { display:grid; gap:4px; margin-top:11px; padding:11px 12px; color:#273b70; background:#eef5fb; border:1px solid #cfdfed; border-radius:10px; }
     .request-progress-note strong { color:var(--navy); font-size:9px; letter-spacing:.05em; text-transform:uppercase; }
     .request-progress-note span { font-size:10.5px; line-height:1.45; white-space:pre-wrap; }
+    .admin-onboarding[hidden] { display:none; }
+    .admin-onboarding { position:fixed; z-index:500; inset:0; display:grid; place-items:center; padding:18px; background:rgba(8,13,66,.78); backdrop-filter:blur(10px); }
+    .admin-onboarding-card { width:min(620px,100%); max-height:calc(100vh - 36px); overflow:auto; background:#fff; border:1px solid rgba(255,255,255,.45); border-radius:22px; box-shadow:0 28px 80px rgba(3,8,52,.4); }
+    .admin-onboarding-head { display:flex; align-items:center; gap:14px; padding:22px 24px; color:#fff; background:linear-gradient(135deg,var(--navy),#273a98); border-radius:21px 21px 0 0; }
+    .admin-onboarding-head img { width:54px; height:54px; object-fit:contain; }
+    .admin-onboarding-head strong,.admin-onboarding-head span { display:block; }
+    .admin-onboarding-head strong { font-size:18px; }
+    .admin-onboarding-head span { margin-top:4px; color:#dce3ff; font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .admin-onboarding-body { padding:26px 24px 18px; }
+    .admin-onboarding-body h2 { margin:0; color:var(--navy); font-size:27px; }
+    .admin-onboarding-body p { margin:11px 0 0; color:var(--muted); line-height:1.55; }
+    .admin-onboarding-list { display:grid; gap:9px; margin:18px 0 0; padding:0; list-style:none; }
+    .admin-onboarding-list li { display:flex; gap:10px; align-items:flex-start; padding:12px 13px; color:#27305f; background:#f4f7fb; border:1px solid var(--line); border-radius:11px; line-height:1.42; }
+    .admin-onboarding-list li::before { content:'\2713'; display:grid; flex:0 0 23px; height:23px; place-items:center; color:#fff; background:var(--green); border-radius:50%; font-size:11px; font-weight:950; }
+    .admin-onboarding-alert { width:100%; margin-top:18px; }
+    .admin-onboarding-status { min-height:18px; margin-top:9px!important; color:var(--blue)!important; font-size:11px; font-weight:850; }
+    .admin-onboarding-progress { display:flex; justify-content:center; gap:7px; padding:0 24px 18px; }
+    .admin-onboarding-progress span { width:9px; height:9px; background:#d9deea; border-radius:50%; }
+    .admin-onboarding-progress span.active { width:25px; background:var(--gold); border-radius:999px; }
+    .admin-onboarding-actions { display:grid; grid-template-columns:auto minmax(180px,1fr); gap:10px; padding:18px 24px 24px; border-top:1px solid var(--line); }
+    .admin-onboarding-actions button[hidden] { visibility:hidden; }
     .subcontractor-admin-list { display:grid; gap:13px; }
     .subcontractor-admin-card { padding:18px; background:#fff; border:1px solid var(--line); border-left:5px solid var(--blue); border-radius:15px; }
     .subcontractor-admin-card.test { border-left-color:var(--gold); background:linear-gradient(135deg,#fffdf5,#fff); }
@@ -145,6 +166,9 @@
     .person-main strong,.person-main small { display:block; overflow-wrap:anywhere; }
     .person-main strong { color:var(--navy); }
     .person-main small { margin-top:4px; color:var(--muted); font-size:10px; }
+    .person-role-badge { display:inline-flex; min-height:21px; align-items:center; margin-bottom:6px; padding:3px 7px; color:#46506f; background:#edf1f7; border-radius:999px; font-size:8px; font-weight:950; letter-spacing:.06em; text-transform:uppercase; }
+    .person-role-badge.subcontractor { color:#fff; background:var(--blue); }
+    .person-role-badge.owner,.person-role-badge.admin { color:#6d4c00; background:#fff1c5; }
     .person-controls { display:flex; gap:8px; align-items:center; }
     .person-controls input,.person-controls select { min-height:40px; padding:0 9px; border:1px solid var(--line); border-radius:9px; }
     .person-controls input { width:180px; }
@@ -394,6 +418,12 @@
       .attachment-drop { grid-template-columns:1fr; justify-items:center; text-align:center; }
       .inspector-row { grid-template-columns:1fr 1fr; }
       .comment-usage-panel { grid-template-columns:1fr 1fr; }
+      .admin-onboarding { padding:10px; }
+      .admin-onboarding-card { max-height:calc(100vh - 20px); border-radius:17px; }
+      .admin-onboarding-head { padding:18px; border-radius:16px 16px 0 0; }
+      .admin-onboarding-body { padding:22px 18px 15px; }
+      .admin-onboarding-body h2 { font-size:23px; }
+      .admin-onboarding-actions { grid-template-columns:1fr 1.5fr; padding:15px 18px 20px; }
     }
   </style>
 </head>
@@ -525,11 +555,20 @@
     </section>
   </main>
 
+  <section class="admin-onboarding" id="adminOnboarding" role="dialog" aria-modal="true" aria-labelledby="adminOnboardingTitle" hidden>
+    <div class="admin-onboarding-card">
+      <header class="admin-onboarding-head"><img src="./mpi-logo.png" alt=""><div><strong>MPI Office Console Setup</strong><span id="adminOnboardingStepLabel">Step 1 of 5</span></div></header>
+      <div class="admin-onboarding-body" id="adminOnboardingBody"></div>
+      <div class="admin-onboarding-progress" id="adminOnboardingProgress" aria-hidden="true"></div>
+      <footer class="admin-onboarding-actions"><button class="secondary" id="adminOnboardingBack" type="button">BACK</button><button class="primary" id="adminOnboardingNext" type="button">CONTINUE</button></footer>
+    </div>
+  </section>
+
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=148"></script>
-  <script src="./admin.js?build=148"></script>
+  <script src="./mpi-shared.js?build=149"></script>
+  <script src="./admin.js?build=149"></script>
 </body>
 </html>

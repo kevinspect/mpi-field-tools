@@ -1,5 +1,17 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 149 — Adrienne Office Setup
+
+- Added a guided setup path for `adrienne@michiganpropertyinspections.com`; Kevin can assign her Owner access from Team Accounts after her first secure company sign-in.
+- Added a one-time, five-step Office Console setup guide for Adrienne covering installation, notifications, navigation and daily office use.
+- Kept every subcontractor in Team Accounts and added a prominent Subcontractor badge so office staff can distinguish external field partners at a glance.
+- Preserved Kevin-only visibility for the private MPI Comment Builder allowance.
+- Updated the field app, Office Console, script references, and offline cache to Build 149.
+
+### Validation record
+
+- Confirmed JavaScript syntax, inline script parsing, clean patch formatting, Build 149 cache references and the existing secure role-assignment path.
+
 ## Build 148 — Safety Reply and Per-Admin Receipt
 
 - Reset the inspector safety-notice form only after both the urgent dashboard alert and branded email succeed, while retaining the inspector identity and refreshing the event time for the next notice.

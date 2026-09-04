@@ -64,6 +64,12 @@
     alerts: document.getElementById("statAlerts")
   };
   const statHoursLabel = document.getElementById("statHoursLabel");
+  const adminOnboarding = document.getElementById("adminOnboarding");
+  const adminOnboardingBody = document.getElementById("adminOnboardingBody");
+  const adminOnboardingStepLabel = document.getElementById("adminOnboardingStepLabel");
+  const adminOnboardingProgress = document.getElementById("adminOnboardingProgress");
+  const adminOnboardingBack = document.getElementById("adminOnboardingBack");
+  const adminOnboardingNext = document.getElementById("adminOnboardingNext");
   const actionLabels = {
     "Morning readiness completed": "Morning Readiness Complete",
     "Inspector activity started": "Activity tracking started",
@@ -119,6 +125,79 @@
   const MAX_ATTACHMENT_BYTES = 8 * 1024 * 1024;
   const MAX_ATTACHMENT_TOTAL_BYTES = 12 * 1024 * 1024;
   const ATTACHMENT_CHUNK_LENGTH = 560000;
+  const ADMIN_ONBOARDING_VERSION = 1;
+  const ADMIN_ONBOARDING_EMAILS = new Set(["adrienne@michiganpropertyinspections.com"]);
+  let adminOnboardingStep = 0;
+
+  const adminOnboardingSteps = [
+    () => ({
+      title: `Welcome, ${escapeHtml(currentProfile?.name || "Adrienne")}`,
+      copy: "Your secure MPI owner account is ready. This short setup will prepare the Office Console on this device and show you where the important daily controls are.",
+      items: ["Use your own MPI Google account every time.", "Your access includes live operations, messages, requests, reports and team management.", "Your sign-in stays on this approved device until you sign out or clear its browser data."]
+    }),
+    () => ({
+      title: "Keep the Office Console handy",
+      copy: "Save the console like an app so you can open it directly without finding the link again.",
+      items: ["iPhone or iPad: open this page in Safari, tap Share, then Add to Home Screen and Add.", "Computer: bookmark this page in the browser toolbar.", "Always open the MPI Office icon or the saved Office Console bookmark."]
+    }),
+    () => ({
+      title: "Turn on office alerts",
+      copy: "Alerts are important for inspector replies, urgent safety notices and new requests. Approve the notification prompt on every office device you use.",
+      items: ["Tap Enable Office Alerts below.", "Choose Allow when the device asks for notification permission.", "Repeat this one time on each additional phone or computer."],
+      alertButton: true
+    }),
+    () => ({
+      title: "Know the five office sections",
+      copy: "The main navigation keeps the office work in one place.",
+      items: ["Operations: live inspector status, job progress, hours, drive time and safety alerts.", "Requests: assign, update and complete employee requests.", "Send to Field: send messages, instructions, PDFs and images.", "Sent Updates: review delivery, confirmations and replies.", "Team: manage accounts, roles, phone numbers and inspector details."]
+    }),
+    () => ({
+      title: "Setup complete",
+      copy: "Adrienne now has owner-level Office Console access. Press Finish Setup to save this setup and open the live Operations screen.",
+      items: ["Use Enable Office Alerts on any new device.", "Safety alerts require each administrator to acknowledge them separately.", "The private MPI Comment Builder allowance remains visible only to Kevin, as previously requested."]
+    })
+  ];
+
+  function renderAdminOnboarding() {
+    if (!adminOnboarding || !adminOnboardingBody) return;
+    const step = adminOnboardingSteps[adminOnboardingStep]();
+    adminOnboardingStepLabel.textContent = `Step ${adminOnboardingStep + 1} of ${adminOnboardingSteps.length}`;
+    adminOnboardingBody.innerHTML = `<h2 id="adminOnboardingTitle">${step.title}</h2><p>${step.copy}</p><ul class="admin-onboarding-list">${step.items.map(item => `<li>${item}</li>`).join("")}</ul>${step.alertButton ? '<button class="primary admin-onboarding-alert" type="button" data-onboarding-enable-alerts>ENABLE OFFICE ALERTS</button><p class="admin-onboarding-status" data-onboarding-alert-status></p>' : ""}<p class="admin-onboarding-status" data-onboarding-save-status></p>`;
+    adminOnboardingProgress.innerHTML = adminOnboardingSteps.map((_, index) => `<span class="${index === adminOnboardingStep ? "active" : ""}"></span>`).join("");
+    adminOnboardingBack.hidden = adminOnboardingStep === 0;
+    adminOnboardingNext.textContent = adminOnboardingStep === adminOnboardingSteps.length - 1 ? "FINISH SETUP" : "CONTINUE";
+  }
+
+  function maybeStartAdminOnboarding() {
+    if (!currentUser || !currentProfile || !adminOnboarding) return;
+    const email = shared.normalizeEmail(currentUser.email);
+    const completed = Number(currentProfile.adminOnboardingVersion || 0) >= ADMIN_ONBOARDING_VERSION;
+    if (!ADMIN_ONBOARDING_EMAILS.has(email) || completed) return;
+    adminOnboardingStep = 0;
+    renderAdminOnboarding();
+    adminOnboarding.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  async function completeAdminOnboarding() {
+    const status = adminOnboardingBody?.querySelector("[data-onboarding-save-status]");
+    adminOnboardingNext.disabled = true;
+    if (status) status.textContent = "Saving your setup…";
+    try {
+      await shared.db.collection("users").doc(currentUser.uid).set({
+        adminOnboardingVersion: ADMIN_ONBOARDING_VERSION,
+        adminOnboardingCompletedAt: shared.serverTimestamp()
+      }, { merge: true });
+      currentProfile.adminOnboardingVersion = ADMIN_ONBOARDING_VERSION;
+      adminOnboarding.hidden = true;
+      document.body.style.overflow = "";
+      showView("operations");
+    } catch (error) {
+      if (status) status.textContent = error.message || "Setup could not be saved. Please try again.";
+    } finally {
+      adminOnboardingNext.disabled = false;
+    }
+  }
 
   function savedOfficePushToken() {
     try { return String(localStorage.getItem(OFFICE_PUSH_TOKEN_KEY) || "").trim(); }
@@ -256,6 +335,10 @@
     if (recipientId) return recipientId === currentUser?.uid;
     if (recipientEmail) return recipientEmail === shared.normalizeEmail(currentUser?.email);
     return shared.isOwnerEmail(currentUser?.email);
+  }
+
+  function isPrimaryOwner() {
+    return shared.normalizeEmail(currentUser?.email) === shared.ownerEmail;
   }
 
   function markReplyRead(key) {
@@ -883,12 +966,16 @@
     inspectorSelector.value = selectedInspectorId;
   }
 
+  function teamRoleLabel(roleValue) {
+    return ({ owner: "Owner", admin: "Office admin", inspector: "Inspector", subcontractor: "Subcontractor" })[String(roleValue || "inspector").toLowerCase()] || "Team member";
+  }
+
   function renderPeople() {
     renderTargetOptions();
     renderInspectorSelector();
     peopleList.innerHTML = people.length ? people.map(person => `
       <article class="person-card" data-person-id="${escapeHtml(person.id)}">
-        <div class="person-main inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(person.name || "MPI Team Member")}</strong><small>${escapeHtml(person.email)}</small><small>${person.inspectorId ? `Inspector number: ${escapeHtml(person.inspectorId)}` : "Inspector number not assigned"}</small></div></div>
+        <div class="person-main inspector-identity">${avatarHtml(person)}<div><span class="person-role-badge ${escapeHtml(String(person.role || "inspector").toLowerCase())}">${escapeHtml(teamRoleLabel(person.role))}</span><strong>${escapeHtml(person.name || "MPI Team Member")}</strong><small>${escapeHtml(person.email)}</small><small>${person.role === "subcontractor" ? "External field partner" : person.inspectorId ? `Inspector number: ${escapeHtml(person.inspectorId)}` : "Inspector number not assigned"}</small></div></div>
         <div class="person-controls">
           <input data-person-inspector-id aria-label="Inspector number for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.inspectorId || "")}" maxlength="40" placeholder="Inspector number" ${person.role === "owner" ? "disabled" : ""}>
           <input data-person-phone aria-label="Phone number for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.phone || "")}" maxlength="30" placeholder="Phone number" ${person.role === "owner" ? "disabled" : ""}>
@@ -1200,7 +1287,7 @@
   }
 
   function renderCommentUsageAllowance() {
-    if (!commentUsageUsed || !shared.isOwnerEmail(currentUser?.email)) {
+    if (!commentUsageUsed || !isPrimaryOwner()) {
       if (commentUsagePanel) commentUsagePanel.hidden = true;
       return;
     }
@@ -1671,6 +1758,31 @@
     }
   }
 
+  adminOnboardingBack?.addEventListener("click", () => {
+    if (adminOnboardingStep <= 0) return;
+    adminOnboardingStep -= 1;
+    renderAdminOnboarding();
+  });
+  adminOnboardingNext?.addEventListener("click", () => {
+    if (adminOnboardingStep < adminOnboardingSteps.length - 1) {
+      adminOnboardingStep += 1;
+      renderAdminOnboarding();
+      return;
+    }
+    completeAdminOnboarding();
+  });
+  adminOnboardingBody?.addEventListener("click", async event => {
+    const button = event.target.closest("[data-onboarding-enable-alerts]");
+    if (!button) return;
+    const status = adminOnboardingBody.querySelector("[data-onboarding-alert-status]");
+    button.disabled = true;
+    if (status) status.textContent = "Opening notification permission…";
+    const enabled = await enableOfficeAlerts(button, true);
+    button.disabled = enabled;
+    button.textContent = enabled ? "OFFICE ALERTS ENABLED" : "TRY OFFICE ALERTS AGAIN";
+    if (status) status.textContent = enabled ? "Alerts are enabled on this device." : "Alerts were not enabled. Check the device notification settings, then try again.";
+  });
+
   tabButtons.forEach(button => button.addEventListener("click", () => showView(button.dataset.adminView)));
   dashboard.addEventListener("change", event => {
     const input = event.target.closest("[data-chat-files]");
@@ -1913,7 +2025,7 @@
       accountPill.hidden = true;
       signOutButton.hidden = !user;
       authCard.hidden = false;
-      if (user && profile && !shared.isAdminRole(profile)) authStatus.textContent = `${user.email || "This account"} has inspector access only. Sign out and use kev@michiganpropertyinspections.com.`;
+      if (user && profile && !shared.isAdminRole(profile)) authStatus.textContent = `${user.email || "This account"} has inspector access only. An owner can change the account role from Team Accounts.`;
       unsubscribePeople?.();
       unsubscribeUpdates?.();
       unsubscribeReplies?.();
@@ -1926,7 +2038,7 @@
       }
       return;
     }
-    commentUsagePanel.hidden = !shared.isOwnerEmail(user.email);
+    commentUsagePanel.hidden = !isPrimaryOwner();
     authCard.hidden = true;
     dashboard.hidden = false;
     accountPill.hidden = false;
@@ -1935,6 +2047,7 @@
     accountEmail.textContent = user.email || "";
     accountInitial.textContent = (profile.name || user.displayName || "K").trim().charAt(0).toUpperCase();
     startAdminData();
+    maybeStartAdminOnboarding();
     if (window.Notification?.permission === "granted") enableOfficeAlerts(null, false);
   });
 })();
