@@ -257,9 +257,9 @@
     return true;
   }
 
-  function replyToUpdate(updateId, user, profile, message, update = null) {
+  function replyToUpdate(updateId, user, profile, message, update = null, files = []) {
     const replyText = String(message || "").trim().slice(0, 1000);
-    if (!updateId || !user || !replyText) return Promise.reject(new Error("Write a reply first."));
+    if (!updateId || !user || (!replyText && !files.length)) return Promise.reject(new Error("Write a reply or attach a photo first."));
     const receiptPromise = db.collection("officeUpdates").doc(updateId).collection("receipts").doc(user.uid).set({
       userId: user.uid,
       userEmail: normalizeEmail(user.email),
@@ -275,17 +275,114 @@
       updatedAt: serverTimestamp()
     }, { merge: true });
     return receiptPromise.then(async () => {
-      await sendPushNotification({
-        kind: "inspector-reply",
-        audience: "office",
-        targetEmail: normalizeEmail(update?.createdByEmail),
-        title: `Reply from ${profile?.name || user.displayName || "MPI Inspector"}`,
-        body: replyText,
-        link: "./admin.html",
-        tag: `mpi-reply-${updateId}-${user.uid}`
-      }).catch(() => false);
-      return true;
+      return sendFieldMessage(user, profile, replyText, files, { replyToUpdateId: updateId });
     });
+  }
+
+  function fileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || "").split(",").pop() || "");
+      reader.onerror = () => reject(new Error(`${file.name || "Photo"} could not be read.`));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function prepareFieldImage(file) {
+    if (!file || !/^image\/(jpeg|png|webp)$/i.test(file.type || "") || file.size < 900000) return file;
+    const source = URL.createObjectURL(file);
+    try {
+      const image = await new Promise((resolve, reject) => {
+        const element = new Image();
+        element.onload = () => resolve(element);
+        element.onerror = () => reject(new Error(`${file.name || "Photo"} could not be prepared.`));
+        element.src = source;
+      });
+      const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.78));
+      return blob ? new File([blob], String(file.name || "field-photo").replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" }) : file;
+    } finally {
+      URL.revokeObjectURL(source);
+    }
+  }
+
+  async function sendFieldMessage(user, profile, message, files = [], options = {}) {
+    const text = String(message || "").trim().slice(0, 1200);
+    const selected = [...files].filter(file => /^image\//i.test(file?.type || "") || /\.(jpe?g|png|webp|heic|heif)$/i.test(file?.name || "")).slice(0, 3);
+    if (!user || (!text && !selected.length)) throw new Error("Write a message or attach a photo first.");
+    if (selected.some(file => Number(file.size) > 6 * 1024 * 1024)) throw new Error("Each photo must be smaller than 6 MB.");
+    const messageRef = db.collection("fieldMessages").doc();
+    const senderName = String(options.senderName || profile?.name || user.displayName || "MPI Field User").trim().slice(0, 100);
+    const base = {
+      senderUid: user.uid,
+      senderEmail: normalizeEmail(user.email),
+      senderName,
+      senderRole: String(options.senderRole || profile?.role || "inspector").toLowerCase().slice(0, 30),
+      message: text,
+      replyToUpdateId: String(options.replyToUpdateId || "").slice(0, 160),
+      test: Boolean(options.test),
+      targetRole: "office",
+      attachments: [],
+      active: selected.length === 0,
+      createdAt: serverTimestamp(),
+      createdAtClient: new Date().toISOString()
+    };
+    await messageRef.set(base);
+    const attachments = [];
+    try {
+      for (const original of selected) {
+        const file = await prepareFieldImage(original);
+        const encoded = await fileAsBase64(file);
+        const pieces = [];
+        for (let offset = 0; offset < encoded.length; offset += 600000) pieces.push(encoded.slice(offset, offset + 600000));
+        const attachmentRef = messageRef.collection("attachments").doc();
+        const metadata = {
+          id: attachmentRef.id,
+          name: String(file.name || "field-photo.jpg").slice(0, 160),
+          type: file.type || "image/jpeg",
+          size: Number(file.size) || 0,
+          chunkCount: pieces.length
+        };
+        await attachmentRef.set({ ...metadata, senderUid: user.uid, active: true, createdAt: serverTimestamp() });
+        for (let start = 0; start < pieces.length; start += 6) {
+          await Promise.all(pieces.slice(start, start + 6).map((data, part) => attachmentRef.collection("chunks").doc(String(start + part).padStart(4, "0")).set({ index: start + part, data, senderUid: user.uid, active: true })));
+        }
+        attachments.push(metadata);
+      }
+      await messageRef.update({ attachments, active: true, uploadedAt: serverTimestamp() });
+    } catch (error) {
+      await messageRef.set({ active: false, uploadError: String(error?.message || "Photo upload failed").slice(0, 200) }, { merge: true }).catch(() => {});
+      throw error;
+    }
+    await sendPushNotification({
+      kind: "field-message",
+      audience: "office",
+      title: `Message from ${senderName}`,
+      body: text || `${attachments.length} field photo${attachments.length === 1 ? "" : "s"} attached.`,
+      link: "./admin.html",
+      tag: `mpi-field-message-${messageRef.id}`
+    }).catch(() => false);
+    return { id: messageRef.id, ...base, attachments, active: true };
+  }
+
+  async function loadFieldAttachment(messageId, attachment) {
+    const messageKey = String(messageId || "").trim();
+    const attachmentKey = String(attachment?.id || "").trim();
+    if (!messageKey || !attachmentKey) throw new Error("This photo is missing its secure file reference.");
+    const snapshot = await db.collection("fieldMessages").doc(messageKey)
+      .collection("attachments").doc(attachmentKey).collection("chunks")
+      .orderBy("index", "asc").get();
+    const chunks = snapshot.docs.map(doc => doc.data()).sort((left, right) => Number(left.index) - Number(right.index));
+    if (!chunks.length || (attachment.chunkCount && chunks.length !== Number(attachment.chunkCount))) throw new Error("The complete photo has not synchronized yet.");
+    const encoded = chunks.map(chunk => String(chunk.data || "")).join("");
+    const binary = window.atob(encoded);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+    return new Blob([bytes], { type: attachment.type || "image/jpeg" });
   }
 
   async function loadOfficeAttachment(updateId, attachment) {
@@ -333,7 +430,7 @@
     });
     const role = String(profile.role || "inspector").toLowerCase();
     const status = TEAM_STATUS_VALUES.has(String(clean.liveStatus || "")) ? String(clean.liveStatus) : "NOT STARTED";
-    const teamVisible = profile.active !== false && ["owner", "inspector"].includes(role);
+    const teamVisible = profile.active !== false && ["owner", "inspector", "subcontractor"].includes(role);
     await db.collection("teamPresence").doc(user.uid).set({
       userId: user.uid,
       name: String(profile.name || user.displayName || "MPI Team Member").slice(0, 80),
@@ -354,7 +451,7 @@
     return db.collection("teamPresence").where("active", "==", true).onSnapshot(snapshot => {
       const records = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(item => ["owner", "inspector"].includes(String(item.role || "").toLowerCase()))
+        .filter(item => ["owner", "inspector", "subcontractor"].includes(String(item.role || "").toLowerCase()))
         .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")));
       callback(records, null);
     }, error => callback([], error));
@@ -387,8 +484,10 @@
     setUpdateStatus,
     clearUpdate,
     replyToUpdate,
+    sendFieldMessage,
     sendPushNotification,
     loadOfficeAttachment,
+    loadFieldAttachment,
     syncOperationsSnapshot,
     watchTeamPresence
   };

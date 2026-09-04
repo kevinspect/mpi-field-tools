@@ -433,7 +433,7 @@
       const link = update.link ? `<a class="mpi-update-link" href="${escapeHtml(update.link)}" target="_blank" rel="noopener noreferrer">Open supporting information ↗</a>` : "";
       const reply = update.receipt?.replyText
         ? `<div class="mpi-update-reply-sent"><strong>Your reply was sent to the office</strong><span>${escapeHtml(update.receipt.replyText)}</span></div>`
-        : `<details class="mpi-update-reply"><summary>Reply to office</summary><form data-update-reply-form><label>Message for management<textarea maxlength="1000" required placeholder="Type your reply here"></textarea></label><button type="submit">SEND REPLY</button><span role="status"></span></form></details>`;
+        : `<details class="mpi-update-reply"><summary>Reply to office</summary><form data-update-reply-form><label>Message for management<textarea maxlength="1000" placeholder="Type your reply here"></textarea></label><label class="mpi-reply-photo">ATTACH PHOTOS<input type="file" data-update-reply-files accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple><small>Up to 3 photos. Large phone photos are reduced before sending.</small></label><button type="submit">SEND REPLY</button><span role="status"></span></form></details>`;
       return `<article class="mpi-update-card ${escapeHtml(update.priority || "normal")}" data-update-id="${escapeHtml(update.id)}"><div class="mpi-update-top"><span>${escapeHtml(typeLabel(update.type))}</span>${update.priority && update.priority !== "normal" ? `<strong>${escapeHtml(update.priority)}</strong>` : ""}</div><h3>${escapeHtml(update.title)}</h3><p>${escapeHtml(update.message)}</p><div class="mpi-update-meta">${due}<span>From ${escapeHtml(update.createdByName || "MPI Management")}</span></div>${link}${updateAttachmentsHtml(update)}${reply}<button class="mpi-update-action${action.clear ? " clear" : ""}" type="button" data-update-status="${action.status}" ${action.disabled ? "disabled" : ""}>${escapeHtml(action.label)}</button></article>`;
     }).join("") : '<div class="mpi-updates-empty"><strong>You are up to date.</strong><span>No current office messages, instructions, or training assignments are waiting.</span></div>';
   }
@@ -568,13 +568,18 @@
     const button = form.querySelector("button");
     const status = form.querySelector("[role=status]");
     const message = textarea.value.trim();
-    if (!message) return;
+    const filesInput = form.querySelector("[data-update-reply-files]");
+    const files = [...(filesInput?.files || [])].slice(0, 3);
+    if (!message && !files.length) {
+      status.textContent = "Write a reply or attach a photo first.";
+      return;
+    }
     button.disabled = true;
     status.textContent = "Sending…";
     try {
       const update = currentUpdates.find(item => item.id === card.dataset.updateId) || null;
-      await shared.replyToUpdate(card.dataset.updateId, currentUser, currentProfile, message, update);
-      status.textContent = "Reply sent to MPI management.";
+      await shared.replyToUpdate(card.dataset.updateId, currentUser, currentProfile, message, update, files);
+      status.textContent = files.length ? `Reply and ${files.length} photo${files.length === 1 ? "" : "s"} sent to MPI management.` : "Reply sent to MPI management.";
     } catch (error) {
       button.disabled = false;
       status.textContent = error?.message || "Reply could not be sent. Try again.";

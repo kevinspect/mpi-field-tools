@@ -125,6 +125,7 @@
     .subcontractor-admin-events strong { color:var(--navy); }
     .subcontractor-admin-message { display:grid; gap:8px; margin-top:14px; padding-top:13px; border-top:1px solid var(--line); }
     .subcontractor-admin-message textarea { width:100%; min-height:78px; padding:10px; border:1px solid #cbd3e1; border-radius:10px; font:inherit; font-size:11px; }
+    .chat-attachment-drop { grid-column:1/-1; min-height:78px; margin-top:2px; }
     .subcontractor-office-messages { display:grid; gap:7px; margin-top:12px; }
     .subcontractor-office-messages article { padding:10px 11px; background:#edf5fb; border:1px solid #d0e0ee; border-radius:10px; }
     .subcontractor-office-messages strong,.subcontractor-office-messages span { display:block; }
@@ -163,6 +164,8 @@
     .team-overview { display:grid; gap:11px; margin-top:16px; }
     .inspector-row { display:grid; grid-template-columns:minmax(170px,1.25fr) minmax(135px,.8fr) repeat(4,minmax(105px,.62fr)) 34px; align-items:center; gap:12px; width:100%; padding:16px; color:var(--ink); background:#fff; border:1px solid var(--line); border-left:5px solid var(--blue); border-radius:15px; text-align:left; box-shadow:0 7px 20px rgba(17,24,106,.05); }
     .inspector-row.has-alert { border-left-color:#b94b42; }
+    .inspector-row.subcontractor-row { border-left-color:var(--gold); }
+    .inspector-row.subcontractor-row.test { background:#fffdf5; }
     .inspector-row strong,.inspector-row span,.inspector-row small { display:block; }
     .inspector-row strong { color:var(--navy); font-size:15px; }
     .inspector-row small { margin-top:4px; color:var(--muted); font-size:9.5px; line-height:1.4; }
@@ -275,7 +278,7 @@
       .subcontractor-admin-facts { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
 
-    /* Build 144 — low-usage subcontractor field tool */
+    /* Build 145 — unified field team and two-way attachments */
     .icon-library { position:absolute; width:0; height:0; overflow:hidden; }
     .app-icon { width:18px; height:18px; flex:0 0 auto; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
     body { background:#eef2f8; }
@@ -431,7 +434,6 @@
       <nav class="panel tabbar" aria-label="Office Console sections">
         <div class="nav-heading">Workspace</div>
         <button class="active" type="button" data-admin-view="operations"><svg class="app-icon"><use href="#icon-grid"></use></svg><span>Operations</span><span class="nav-count" id="adminReplyCount"></span></button>
-        <button type="button" data-admin-view="subcontractors"><svg class="app-icon"><use href="#icon-users"></use></svg><span>Subcontractors</span></button>
         <button type="button" data-admin-view="requests"><svg class="app-icon"><use href="#icon-clipboard"></use></svg><span>Requests</span><span class="nav-count" id="adminRequestCount"></span></button>
         <button type="button" data-admin-view="publish"><svg class="app-icon"><use href="#icon-send"></use></svg><span>Send to field</span></button>
         <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Sent updates</span></button>
@@ -440,22 +442,15 @@
 
       <section class="console-view active" data-admin-panel="operations">
         <div class="panel content-panel">
-          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-activity"></use></svg></span><div><h2>Live Field Team</h2><p>Open an inspector to see their complete operational day.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE OFFICE ALERTS</span></button></div>
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-activity"></use></svg></span><div><h2>Live Field Team</h2><p>Inspectors and subcontractors together, with each person’s current status at a glance.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE OFFICE ALERTS</span></button></div>
           <div class="operations-toolbar">
             <div><p class="ops-eyebrow">Reporting period</p><div class="range-picker" id="adminRangePicker"><button class="active" type="button" data-range="today">Today</button><button type="button" data-range="yesterday">Yesterday</button><button type="button" data-range="week">This week</button></div></div>
-            <div class="field"><label for="adminInspectorSelector">Inspector</label><select id="adminInspectorSelector"><option value="all">All inspectors</option></select></div>
+            <div class="field"><label for="adminInspectorSelector">Field user</label><select id="adminInspectorSelector"><option value="all">All field users</option></select></div>
           </div>
           <p class="sync-note" id="adminOperationsSync">Waiting for inspector devices to sync.</p>
           <section class="office-reply-inbox" id="adminReplyInbox" aria-live="polite"><div class="office-reply-head"><h3>Inspector Replies</h3><span>0</span></div><div class="office-reply-list"><div class="empty">No inspector replies yet.</div></div></section>
           <div class="team-overview" id="adminTeamOverview"><div class="empty">No inspector activity has synced yet.</div></div>
           <div class="detail-shell" id="adminInspectorDetail" hidden></div>
-        </div>
-      </section>
-
-      <section class="console-view" data-admin-panel="subcontractors">
-        <div class="panel content-panel">
-          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><div><h2>Subcontractor Operations</h2><p>Live job and lab status only. This view does not calculate payroll, hours, or employee production.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE OFFICE ALERTS</span></button></div>
-          <div class="subcontractor-admin-list" id="adminSubcontractorList"><div class="empty">No subcontractor activity has synchronized yet.</div></div>
         </div>
       </section>
 
@@ -510,7 +505,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=144"></script>
-  <script src="./admin.js?build=144"></script>
+  <script src="./mpi-shared.js?build=145"></script>
+  <script src="./admin.js?build=145"></script>
 </body>
 </html>

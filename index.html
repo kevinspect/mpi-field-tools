@@ -4877,6 +4877,9 @@
     .mpi-update-attachments { display:grid; gap:8px; margin-top:13px; padding:12px; background:#f4f8fc; border:1px solid #d7e3ef; border-radius:12px; }
     .mpi-update-attachments > strong { color:var(--forest); font-size:10px; }
     .mpi-update-attachments > small { color:#6b7188; font-size:9px; line-height:1.4; }
+    .mpi-reply-photo { display:grid; gap:6px; padding:11px; color:var(--navy); background:#f4f8fc; border:1px dashed #86acd0; border-radius:11px; font-size:10px; font-weight:900; }
+    .mpi-reply-photo input { width:100%; min-height:42px; padding:7px; color:#26345f; background:#fff; border:1px solid #cad7e6; border-radius:9px; font:inherit; }
+    .mpi-reply-photo small { color:#6b7188; font-size:9px; font-weight:650; line-height:1.4; }
     .mpi-update-attachment { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:9px; align-items:center; width:100%; min-height:48px; padding:8px 10px; color:var(--forest); background:#fff; border:1px solid #cbd9e8; border-radius:10px; text-align:left; }
     .mpi-update-attachment-kind { display:grid; width:34px; height:34px; place-items:center; color:#fff; background:var(--bright-blue); border-radius:8px; font-size:8px; font-weight:950; }
     .mpi-update-attachment-copy { min-width:0; }
@@ -4907,7 +4910,7 @@
     .mpi-updates-gate h3 { margin:0; color:var(--forest); font-size:22px; }
     .mpi-updates-gate p { margin:9px auto 17px; color:var(--ink-2); font-size:11px; line-height:1.55; }
 
-    /* Build 144 — low-usage subcontractor field tool */
+    /* Build 145 — unified field team and two-way attachments */
     .subcontractor-screen { width:min(760px,calc(100% - 24px)); margin:0 auto; padding:22px 0 96px; }
     .subcontractor-hero { padding:22px; color:#fff; background:linear-gradient(145deg,#10165f,#213a8f); border:1px solid rgba(255,255,255,.16); border-radius:20px; box-shadow:0 18px 38px rgba(17,24,106,.2); }
     .subcontractor-hero-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
@@ -5164,7 +5167,8 @@
       <h2 id="subcontractor-message-title">Message office</h2>
       <p>Send a short operational message directly to MPI management.</p>
       <form class="subcontractor-message-form" id="subcontractorMessageForm">
-        <textarea id="subcontractorMessageText" maxlength="1000" required placeholder="Write your message to MPI Office"></textarea>
+        <textarea id="subcontractorMessageText" maxlength="1000" placeholder="Write your message to MPI Office"></textarea>
+        <label class="mpi-reply-photo">ATTACH PHOTOS<input id="subcontractorMessagePhotos" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple><small>Up to 3 photos. Large phone photos are reduced before sending.</small></label>
         <button class="subcontractor-action" type="submit">SEND TO OFFICE</button>
         <span id="subcontractorMessageStatus" role="status"></span>
       </form>
@@ -7366,6 +7370,7 @@
             </div>
           </div>
           <div class="field"><label for="teamQuestionText">Question or support needed *</label><textarea id="teamQuestionText" name="Question or support needed" maxlength="1200" placeholder="Include the system, visible condition, what you have already checked, and the decision you need help with." required></textarea></div>
+          <label class="mpi-reply-photo" for="teamQuestionPhotos">ATTACH PHOTOS<input id="teamQuestionPhotos" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple><small>Optional · up to 3 photos from the property or equipment.</small></label>
           <button class="decode-btn" id="teamQuestionSubmitBtn" type="submit">Submit field question</button>
           <p class="damage-submit-status" id="teamQuestionStatus" role="status" aria-live="polite"></p>
           <p class="privacy-note">An unsent text draft stays only on this company phone and clears after successful submission.</p>
@@ -7628,7 +7633,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 144</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 145</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7756,10 +7761,10 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=144"></script>
-  <script src="./mpi-field-sync.js?build=144"></script>
-  <script src="./mpi-subcontractor.js?build=144"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=144"></script>
+  <script src="./mpi-shared.js?build=145"></script>
+  <script src="./mpi-field-sync.js?build=145"></script>
+  <script src="./mpi-subcontractor.js?build=145"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=145"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -8763,6 +8768,7 @@
       const teamQuestionProperty = document.getElementById("teamQuestionProperty");
       const teamQuestionTiming = document.getElementById("teamQuestionTiming");
       const teamQuestionText = document.getElementById("teamQuestionText");
+      const teamQuestionPhotos = document.getElementById("teamQuestionPhotos");
       const teamQuestionSubject = document.getElementById("teamQuestionSubject");
       const teamQuestionSubmittedAt = document.getElementById("teamQuestionSubmittedAt");
       const teamQuestionSubmitBtn = document.getElementById("teamQuestionSubmitBtn");
@@ -18939,7 +18945,7 @@
             formType: String(config.subject.value || "MPI Workflow Submission").split("—")[0].trim(),
             title: config.subject.value,
             inspector: config.inspector.value.trim()
-          });
+          }, config.attachments ? [...config.attachments()].slice(0, 3) : []);
           config.status.className = "damage-submit-status success";
           config.status.textContent = "Sent to MPI management in the branded email format.";
           if (config.form === messageAckForm) {
@@ -18965,6 +18971,7 @@
           inspector: teamQuestionInspector,
           submitButton: teamQuestionSubmitBtn,
           pendingText: "Sending field question…",
+          attachments: () => teamQuestionPhotos?.files || [],
           subjectText: () => `MPI Field Question — ${teamQuestionTiming.value} — ${teamQuestionInspector.value.trim()}`.slice(0, 180)
         });
       }

@@ -92,10 +92,14 @@
   let unsubscribePeople = null;
   let unsubscribeUpdates = null;
   let unsubscribeReplies = null;
+  let unsubscribeFieldMessages = null;
   let replyRefreshTimer = 0;
   let repliesRefreshing = false;
   let selectedFiles = [];
   let inspectorReplies = [];
+  let fieldMessages = [];
+  let fieldMessageListenerReady = false;
+  let knownFieldMessageIds = new Set();
   let knownReplyKeys = new Set();
   let readReplyKeys = new Set();
   let replyListenerReady = false;
@@ -234,11 +238,13 @@
   }
 
   function replyKey(reply) {
+    if (reply.fieldMessageId) return `field:${reply.fieldMessageId}`;
     const timestamp = reply.repliedAt?.toMillis?.() || String(reply.repliedAt || reply.updatedAt || "");
     return `${reply.path || `${reply.updateId}/${reply.userId}`}:${timestamp}:${reply.replyText || ""}`;
   }
 
   function replyIsForCurrentAdmin(reply) {
+    if (reply.fieldMessageId) return shared.isAdminRole(currentProfile);
     const update = updateForReply(reply);
     const recipientId = String(reply.replyToUserId || update?.createdBy || "");
     const recipientEmail = shared.normalizeEmail(reply.replyToEmail || update?.createdByEmail);
@@ -261,7 +267,19 @@
 
   function renderReplyInbox() {
     if (!replyInbox) return;
-    const values = inspectorReplies
+    const fieldReplies = fieldMessages.map(item => ({
+      fieldMessageId: item.id,
+      userId: item.senderUid,
+      userEmail: item.senderEmail,
+      userName: item.senderName,
+      updateId: item.replyToUpdateId || "",
+      updateTitle: item.replyToUpdateId ? "Reply to office message" : "Message to MPI Office",
+      replyText: item.message || (item.attachments?.length ? `${item.attachments.length} photo${item.attachments.length === 1 ? "" : "s"} attached` : "Field message"),
+      repliedAt: item.createdAt || item.createdAtClient,
+      attachments: item.attachments || []
+    }));
+    const mirrored = new Set(fieldReplies.filter(item => item.updateId).map(item => `${item.updateId}:${item.userId}`));
+    const values = [...fieldReplies, ...inspectorReplies.filter(item => !mirrored.has(`${item.updateId}:${item.userId}`))]
       .filter(item => item.replyText)
       .sort((left, right) => (asDate(right.repliedAt)?.getTime() || 0) - (asDate(left.repliedAt)?.getTime() || 0))
       .slice(0, 12);
@@ -274,8 +292,28 @@
     list.innerHTML = values.length ? values.map(reply => {
       const update = updateForReply(reply);
       const isUnread = replyIsForCurrentAdmin(reply) && !readReplyKeys.has(replyKey(reply));
-      return `<button class="office-reply-card${isUnread ? " unread" : ""}" type="button" data-open-reply-inspector="${escapeHtml(reply.userId || "")}" data-reply-key="${escapeHtml(replyKey(reply))}"><div><strong>${escapeHtml(reply.userName || reply.userEmail || "MPI Inspector")}</strong><small>${escapeHtml(reply.updateTitle || update?.title || "Message from MPI Office")}</small>${isUnread ? '<span class="office-reply-new">New reply</span>' : ""}</div><div><span>${escapeHtml(reply.replyText)}</span></div><time>${escapeHtml(formatDateTime(reply.repliedAt || reply.updatedAt))}</time></button>`;
+      const photos = reply.attachments?.length ? `<span class="office-reply-files">${reply.attachments.length} photo${reply.attachments.length === 1 ? "" : "s"}</span>` : "";
+      return `<button class="office-reply-card${isUnread ? " unread" : ""}" type="button" data-open-reply-inspector="${escapeHtml(reply.userId || "")}" data-reply-key="${escapeHtml(replyKey(reply))}"><div><strong>${escapeHtml(reply.userName || reply.userEmail || "MPI Field User")}</strong><small>${escapeHtml(reply.updateTitle || update?.title || "Message to MPI Office")}</small>${isUnread ? '<span class="office-reply-new">New message</span>' : ""}</div><div><span>${escapeHtml(reply.replyText)}</span>${photos}</div><time>${escapeHtml(formatDateTime(reply.repliedAt || reply.updatedAt))}</time></button>`;
     }).join("") : '<div class="empty">No inspector replies yet. New replies will appear here automatically.</div>';
+  }
+
+  function processFieldMessages(snapshot) {
+    const values = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(item => item.active !== false);
+    const ids = new Set(values.map(item => item.id));
+    if (fieldMessageListenerReady) {
+      const fresh = values.filter(item => !knownFieldMessageIds.has(item.id));
+      if (fresh.length) {
+        const latest = fresh.sort((left, right) => (asDate(right.createdAt)?.getTime() || 0) - (asDate(left.createdAt)?.getTime() || 0))[0];
+        showOfficeAlert(`Message from ${latest.senderName || "MPI Field User"}`, latest.message || `${latest.attachments?.length || 1} field photo attached.`, `mpi-field-${latest.id}`);
+      }
+    }
+    fieldMessages = values;
+    knownFieldMessageIds = ids;
+    fieldMessageListenerReady = true;
+    renderReplyInbox();
+    const selected = overviewEntry(selectedInspectorId);
+    const history = document.getElementById("adminMessageHistory");
+    if (selected?.person && history) history.innerHTML = messageHistoryHtml(selected.person);
   }
 
   function processReplySnapshot(snapshot) {
@@ -361,11 +399,11 @@
     });
   }
 
-  async function uploadAttachments(updateRef, files, audience, targetEmail) {
+  async function uploadAttachments(updateRef, files, audience, targetEmail, statusElement = publishStatus) {
     const attachments = [];
     for (let fileIndex = 0; fileIndex < files.length; fileIndex += 1) {
       const file = files[fileIndex];
-      publishStatus.textContent = `Uploading ${fileIndex + 1} of ${files.length}: ${file.name}`;
+      if (statusElement) statusElement.textContent = `Uploading ${fileIndex + 1} of ${files.length}: ${file.name}`;
       const encoded = await fileAsBase64(file);
       const pieces = [];
       for (let offset = 0; offset < encoded.length; offset += ATTACHMENT_CHUNK_LENGTH) pieces.push(encoded.slice(offset, offset + ATTACHMENT_CHUNK_LENGTH));
@@ -386,10 +424,71 @@
     return attachments;
   }
 
+  function chatAttachmentHtml() {
+    return `<label class="attachment-drop chat-attachment-drop" data-chat-drop tabindex="0"><span class="upload-icon"><svg class="app-icon"><use href="#icon-upload"></use></svg></span><span><strong>Drop a PDF or images here</strong><span>or click to choose · up to 5 files</span></span><input type="file" data-chat-files accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple hidden></label><div class="attachment-list" data-chat-file-list></div>`;
+  }
+
+  function addChatFiles(formElement, files) {
+    const status = formElement.querySelector("[data-message-status], #adminMessageStatus");
+    const current = Array.isArray(formElement._mpiFiles) ? formElement._mpiFiles : [];
+    for (const file of [...files]) {
+      if (!validAttachment(file)) {
+        if (status) status.textContent = `${file.name} is not a supported PDF or image.`;
+        continue;
+      }
+      if (file.size > MAX_ATTACHMENT_BYTES) {
+        if (status) status.textContent = `${file.name} is larger than 8 MB.`;
+        continue;
+      }
+      if (!current.some(item => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified)) current.push(file);
+    }
+    formElement._mpiFiles = current.slice(0, MAX_ATTACHMENT_FILES);
+    while (formElement._mpiFiles.reduce((total, file) => total + file.size, 0) > MAX_ATTACHMENT_TOTAL_BYTES) formElement._mpiFiles.pop();
+    renderChatFiles(formElement);
+  }
+
+  function renderChatFiles(formElement) {
+    const list = formElement.querySelector("[data-chat-file-list]");
+    if (!list) return;
+    list.innerHTML = (formElement._mpiFiles || []).map((file, index) => `<div class="attachment-item"><span class="attachment-kind">${attachmentKind(file)}</span><span><strong>${escapeHtml(file.name)}</strong><small>${escapeHtml(formatFileSize(file.size))}</small></span><button class="attachment-remove" type="button" data-remove-chat-file="${index}">REMOVE</button></div>`).join("");
+  }
+
   function adminAttachmentsHtml(update) {
     const attachments = Array.isArray(update?.attachments) ? update.attachments : [];
     if (!attachments.length) return "";
     return `<div class="admin-attachments"><strong>${attachments.length} attached file${attachments.length === 1 ? "" : "s"}</strong>${attachments.map(file => `<button class="admin-attachment-open" type="button" data-open-admin-attachment="${escapeHtml(file.id)}" data-update-id="${escapeHtml(update.id)}"><span>${escapeHtml(attachmentKind(file))} · ${escapeHtml(file.name)} · ${escapeHtml(formatFileSize(file.size))}</span><span>OPEN ↗</span></button>`).join("")}</div>`;
+  }
+
+  function fieldAttachmentsHtml(message) {
+    const attachments = Array.isArray(message?.attachments) ? message.attachments : [];
+    if (!attachments.length) return "";
+    return `<div class="admin-attachments"><strong>${attachments.length} field photo${attachments.length === 1 ? "" : "s"}</strong>${attachments.map(file => `<button class="admin-attachment-open" type="button" data-open-field-attachment="${escapeHtml(file.id)}" data-field-message-id="${escapeHtml(message.id)}"><span>IMG · ${escapeHtml(file.name)} · ${escapeHtml(formatFileSize(file.size))}</span><span>OPEN ↗</span></button>`).join("")}</div>`;
+  }
+
+  async function openFieldAttachment(button) {
+    const message = fieldMessages.find(item => item.id === button.dataset.fieldMessageId);
+    const attachment = message?.attachments?.find(item => item.id === button.dataset.openFieldAttachment);
+    if (!message || !attachment) return;
+    const viewer = window.open("about:blank", "_blank");
+    button.disabled = true;
+    try {
+      const blob = await shared.loadFieldAttachment(message.id, attachment);
+      const url = URL.createObjectURL(blob);
+      if (viewer) viewer.location.replace(url);
+      else {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = attachment.name || "field-photo.jpg";
+        link.click();
+      }
+      window.setTimeout(() => URL.revokeObjectURL(url), 5 * 60 * 1000);
+    } catch (error) {
+      viewer?.close();
+      publishStatus.textContent = error?.message || "The field photo could not be opened.";
+      publishStatus.className = "status error";
+    } finally {
+      button.disabled = false;
+    }
   }
 
   async function openAdminAttachment(button) {
@@ -573,7 +672,24 @@
   }
 
   function operativePeople() {
-    return people.filter(person => person.active !== false && (person.role === "inspector" || person.operationsCurrent || person.operationsDays?.length));
+    return people.filter(person => person.active !== false && person.role !== "subcontractor" && (person.role === "inspector" || person.operationsCurrent || person.operationsDays?.length));
+  }
+
+  function subcontractorEntries() {
+    const entries = people.filter(person => person.active !== false && person.role === "subcontractor").map(person => ({ id: `sub:${person.id}`, person, state: person.subcontractorCurrent, test: false }));
+    people.filter(person => person.active !== false && person.subcontractorTestCurrent?.test === true).forEach(person => entries.push({ id: `subtest:${person.id}`, person, state: person.subcontractorTestCurrent, test: true }));
+    return entries;
+  }
+
+  function teamOverviewEntries() {
+    return [
+      ...operativePeople().map(person => ({ id: person.id, person, kind: "inspector" })),
+      ...subcontractorEntries().map(entry => ({ ...entry, kind: "subcontractor" }))
+    ];
+  }
+
+  function overviewEntry(id) {
+    return teamOverviewEntries().find(entry => entry.id === id) || null;
   }
 
   function operationDays(person) {
@@ -693,8 +809,9 @@
 
   function renderInspectorSelector() {
     const selected = selectedInspectorId;
-    inspectorSelector.innerHTML = '<option value="all">All inspectors</option>' + operativePeople().map(person => `<option value="${escapeHtml(person.id)}">${escapeHtml(person.name || person.email)}</option>`).join("");
-    selectedInspectorId = operativePeople().some(person => person.id === selected) ? selected : "all";
+    const entries = teamOverviewEntries();
+    inspectorSelector.innerHTML = '<option value="all">All field users</option>' + entries.map(entry => `<option value="${escapeHtml(entry.id)}">${escapeHtml(entry.kind === "subcontractor" ? `${entry.test ? "TEST · " : ""}${entry.state?.subcontractorName || entry.person.name || entry.person.email} — Subcontractor` : entry.person.name || entry.person.email)}</option>`).join("");
+    selectedInspectorId = entries.some(entry => entry.id === selected) ? selected : "all";
     inspectorSelector.value = selectedInspectorId;
   }
 
@@ -739,8 +856,8 @@
         <div class="subcontractor-admin-fact"><span>Completed</span><strong>${escapeHtml(formatTime(completedAt))}</strong></div>
       </div>
       <div class="subcontractor-admin-events">${events.length ? events.map(item => `<div><strong>${escapeHtml(item.type || "Status updated")}</strong><span>${escapeHtml(formatTime(item.timestamp))}${item.lab ? ` · ${escapeHtml(item.lab)}` : ""}</span></div>`).join("") : '<div><strong>No actions yet</strong><span>Waiting for phone</span></div>'}</div>
-      <div class="subcontractor-office-messages">${messages.length ? messages.map(item => `<article><strong>${escapeHtml(formatDateTime(item.createdAt))} · ${escapeHtml(item.senderName || title)}</strong><span>${escapeHtml(item.message || "")}</span></article>`).join("") : ""}</div>
-      <form class="subcontractor-admin-message" data-subcontractor-message-form data-person-id="${escapeHtml(person.id)}"><label class="field">Message subcontractor<textarea data-message-text maxlength="1000" required placeholder="Write a message for ${escapeHtml(title)}"></textarea></label><button class="primary" type="submit">MESSAGE SUBCONTRACTOR</button><span class="status" data-message-status></span></form>
+      <h3 style="margin-top:16px">Conversation</h3><div class="message-history" id="adminMessageHistory">${messageHistoryHtml(person)}${messages.length ? messages.map(item => `<article><strong>${escapeHtml(formatDateTime(item.createdAt))} · ${escapeHtml(item.senderName || title)} → Office</strong><p>${escapeHtml(item.message || "")}</p></article>`).join("") : ""}</div>
+      <form class="subcontractor-admin-message" data-subcontractor-message-form data-person-id="${escapeHtml(person.id)}"><label class="field">Message subcontractor<textarea data-message-text maxlength="1000" required placeholder="Write a message for ${escapeHtml(title)}"></textarea></label>${chatAttachmentHtml()}<button class="primary" type="submit">MESSAGE SUBCONTRACTOR</button><span class="status" data-message-status></span></form>
       ${isTest ? '<button class="danger" type="button" data-reset-admin-test-subcontractor>RESET TEST DAY</button>' : ""}
     </article>`;
   }
@@ -984,6 +1101,24 @@
     </button>`;
   }
 
+  function subcontractorOverviewRow(entry) {
+    const { person, state, test } = entry;
+    const job = state?.currentJob || { number: state?.currentJobNumber || 1, status: "ready" };
+    const title = test ? (state?.subcontractorName || "Test Subcontractor") : (person.name || person.email || "MPI Subcontractor");
+    const status = state?.status || `READY FOR JOB ${job.number || 1}`;
+    const completed = Array.isArray(state?.completedJobs) ? state.completedJobs.length : 0;
+    const lastEvent = Array.isArray(state?.events) ? state.events.at(-1) : null;
+    return `<button class="inspector-row subcontractor-row${test ? " test" : ""}" type="button" data-open-subcontractor="${escapeHtml(entry.id)}">
+      <div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(title)}</strong><small>${escapeHtml(test ? "Test subcontractor · excluded from payroll" : "Subcontractor")}</small><small class="inspector-sync">${escapeHtml(state?.updatedAtClient ? `Updated ${formatDateTime(state.updatedAtClient)}` : "Waiting for phone sync")}</small></div></div>
+      <div><span class="status-badge">${escapeHtml(status)}</span><small>${escapeHtml(lastEvent?.type || "No action recorded yet")}</small></div>
+      <div class="row-metric"><span>Current job</span><b>${escapeHtml(`Job ${job.number || 1}`)}</b></div>
+      <div class="row-metric"><span>Completed</span><b>${completed}</b></div>
+      <div class="row-metric"><span>Arrived</span><b>${escapeHtml(formatTime(job.arrivedAt))}</b></div>
+      <div class="row-metric"><span>Last action</span><b>${escapeHtml(formatTime(lastEvent?.timestamp))}</b></div>
+      <span class="row-open">›</span>
+    </button>`;
+  }
+
   function renderOperationsStats() {
     const inspectors = operativePeople();
     const days = inspectors.map(person => ({ person, day: latestDay(person) })).filter(item => item.day);
@@ -1021,10 +1156,16 @@
   }
 
   function renderTeamOverview() {
-    const inspectors = operativePeople();
+    const entries = teamOverviewEntries();
     teamOverview.hidden = false;
     inspectorDetail.hidden = true;
-    teamOverview.innerHTML = inspectors.length ? inspectors.map(overviewRow).join("") : '<div class="empty">No inspector devices have synced operational data yet. Ask each inspector to open MPI Field Tools while signed in.</div>';
+    teamOverview.innerHTML = entries.length ? entries.map(entry => entry.kind === "subcontractor" ? subcontractorOverviewRow(entry) : overviewRow(entry.person)).join("") : '<div class="empty">No field devices have synced yet. Ask each user to open MPI Field Tools while signed in.</div>';
+  }
+
+  function renderSubcontractorDetail(entry) {
+    inspectorDetail.innerHTML = `<div class="detail-hero"><div class="detail-person">${avatarHtml(entry.person, "large")}<div><p class="ops-eyebrow">Subcontractor operations</p><h2>${escapeHtml(entry.test ? (entry.state?.subcontractorName || "Test Subcontractor") : (entry.person.name || entry.person.email || "MPI Subcontractor"))}</h2><p>Job and lab status · excluded from employee payroll and hours</p></div></div><button class="detail-back" type="button" data-back-overview>← All field users</button></div>${subcontractorStateCard(entry.person, entry.state, entry.test)}`;
+    teamOverview.hidden = true;
+    inspectorDetail.hidden = false;
   }
 
   function jobCard(job) {
@@ -1061,13 +1202,16 @@
   }
 
   function messageHistoryHtml(person) {
-    const messages = messagesFor(person);
-    return messages.length ? messages.slice(0, 20).map(message => {
+    const officeMessages = messagesFor(person).map(message => ({ direction: "office", timestamp: message.createdAt, message }));
+    const fromField = fieldMessages.filter(message => message.senderUid === person.id || shared.normalizeEmail(message.senderEmail) === shared.normalizeEmail(person.email)).map(message => ({ direction: "field", timestamp: message.createdAt || message.createdAtClient, message }));
+    const messages = [...officeMessages, ...fromField].sort((left, right) => (asDate(right.timestamp)?.getTime() || 0) - (asDate(left.timestamp)?.getTime() || 0));
+    return messages.length ? messages.slice(0, 30).map(item => {
+      const message = item.message;
+      if (item.direction === "field") return `<article><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || person.name || "MPI Field User")} → Office</strong><p>${escapeHtml(message.message || "Photos sent to MPI Office")}</p>${fieldAttachmentsHtml(message)}</article>`;
       const receipt = messageReceiptCache.get(message.id);
       const state = receipt?.status ? receipt.status.replace(/-/g, " ") : "Sent to app";
-      const reply = receipt?.replyText ? `<p><b>Reply from ${escapeHtml(receipt.userName || person.name || "inspector")}:</b> ${escapeHtml(receipt.replyText)}</p>` : "";
-      return `<article><strong>${escapeHtml(formatDateTime(message.createdAt))} · ${escapeHtml(message.createdByName || "MPI Office")}</strong><p>${escapeHtml(message.message)}</p><p><b>Status:</b> ${escapeHtml(state)}</p>${reply}</article>`;
-    }).join("") : '<div class="empty">No direct messages sent to this inspector.</div>';
+      return `<article><strong>${escapeHtml(formatDateTime(message.createdAt))} · MPI Office → ${escapeHtml(person.name || "field user")}</strong><p>${escapeHtml(message.message)}</p><p><b>Status:</b> ${escapeHtml(state)}</p>${adminAttachmentsHtml(message)}</article>`;
+    }).join("") : '<div class="empty">No messages in this conversation yet.</div>';
   }
 
   async function hydrateMessageReceipts(person) {
@@ -1131,7 +1275,7 @@
         <article class="ops-card"><h3>Morning Readiness</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${day?.readiness ? "Complete" : "Not recorded"}</strong></div><div class="fact"><span>Completed</span><strong>${formatTime(day?.readiness?.completedAt)}</strong></div><div class="fact"><span>Important notifications</span><strong>${escapeHtml(day?.readiness?.notificationPermission === "granted" ? "Enabled" : day?.readiness?.notificationPermission || "Unknown")}</strong></div></div></article>
         <article class="ops-card"><h3>Lab Activity</h3>${labHtml(day)}</article>
         <article class="ops-card"><h3>End-of-Day Status</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${escapeHtml(eodStatus)}</strong></div><div class="fact"><span>Clock out</span><strong>${formatTime(clockOut)}</strong></div><div class="fact"><span>Last recorded location</span><strong>${locationLink}</strong></div><div class="fact"><span>Equipment check</span><strong>${day?.dayComplete?.equipment?.length ? "Complete" : "Pending"}</strong></div></div><p class="ops-sub">Location is event-based, not continuous. Never treat a stale location as live.</p></article>
-        <article class="ops-card span-6"><h3>Message Inspector</h3><div class="quick-messages" id="adminQuickMessages">${["CALL OFFICE", "PLEASE CHECK APP", "RUNNING LATE – UPDATE OFFICE", "REMEMBER LAB DROP", "PLEASE CONFIRM STATUS", "CONTACT CLIENT"].map(value => `<button type="button" data-quick-message="${escapeHtml(value)}">${escapeHtml(value)}</button>`).join("")}</div><form class="compact-form" id="adminMessageForm" data-person-id="${escapeHtml(person.id)}"><div class="field"><label for="adminMessageText">Review or write the message</label><textarea id="adminMessageText" maxlength="1000" required placeholder="Type a clear operational message for ${escapeHtml(person.name || "the inspector")}"></textarea></div><button class="primary" type="submit">SEND TO INSPECTOR APP</button><span class="status" id="adminMessageStatus"></span></form><h3 style="margin-top:20px">Message History</h3><div class="message-history" id="adminMessageHistory">${messageHistoryHtml(person)}</div></article>
+        <article class="ops-card span-6"><h3>Message Inspector</h3><div class="quick-messages" id="adminQuickMessages">${["CALL OFFICE", "PLEASE CHECK APP", "RUNNING LATE – UPDATE OFFICE", "REMEMBER LAB DROP", "PLEASE CONFIRM STATUS", "CONTACT CLIENT"].map(value => `<button type="button" data-quick-message="${escapeHtml(value)}">${escapeHtml(value)}</button>`).join("")}</div><form class="compact-form" id="adminMessageForm" data-person-id="${escapeHtml(person.id)}"><div class="field"><label for="adminMessageText">Review or write the message</label><textarea id="adminMessageText" maxlength="1000" required placeholder="Type a clear operational message for ${escapeHtml(person.name || "the inspector")}"></textarea></div>${chatAttachmentHtml()}<button class="primary" type="submit">SEND TO INSPECTOR APP</button><span class="status" id="adminMessageStatus"></span></form><h3 style="margin-top:20px">Conversation</h3><div class="message-history" id="adminMessageHistory">${messageHistoryHtml(person)}</div></article>
         <article class="ops-card span-6"><h3>Admin Corrections</h3><p class="ops-sub">Corrections are appended to the audit trail. Original records are never deleted or overwritten.</p><form class="compact-form" id="adminCorrectionForm" data-person-id="${escapeHtml(person.id)}"><div class="two-col"><div class="field"><label for="adminCorrectionAction">Missed / incorrect action</label><select id="adminCorrectionAction" required>${correctionActions.map(action => `<option value="${escapeHtml(action)}">${escapeHtml(action)}</option>`).join("")}</select></div><div class="field"><label for="adminCorrectionJob">Job</label><select id="adminCorrectionJob"><option value="">No specific job</option>${jobOptions}</select></div></div><div class="field"><label for="adminCorrectionValue">Correct date and time</label><input id="adminCorrectionValue" type="datetime-local" required></div><div class="field"><label for="adminCorrectionReason">Reason for correction</label><textarea id="adminCorrectionReason" maxlength="500" required placeholder="Explain why management is adding this correction."></textarea></div><button class="primary" type="submit">ADD AUDITABLE CORRECTION</button><span class="status" id="adminCorrectionStatus"></span></form><h3 style="margin-top:20px">Correction History</h3><div class="correction-history">${correctionHistoryHtml(person, day)}</div></article>
       </div>`;
     teamOverview.hidden = true;
@@ -1148,9 +1292,10 @@
     operationsSync.textContent = latest ? `Latest device sync ${formatDateTime(latest)}` : "Waiting for inspector devices to sync.";
     if (selectedInspectorId === "all") renderTeamOverview();
     else {
-      const person = people.find(item => item.id === selectedInspectorId);
-      if (!person) renderTeamOverview();
-      else if (!preserveCorrectionDraft) renderInspectorDetail(person);
+      const entry = overviewEntry(selectedInspectorId);
+      if (!entry) renderTeamOverview();
+      else if (entry.kind === "subcontractor") renderSubcontractorDetail(entry);
+      else if (!preserveCorrectionDraft) renderInspectorDetail(entry.person);
     }
     renderReplyInbox();
   }
@@ -1191,6 +1336,7 @@
     unsubscribePeople?.();
     unsubscribeUpdates?.();
     unsubscribeReplies?.();
+    unsubscribeFieldMessages?.();
     unsubscribePeople = shared.db.collection("users").orderBy("name").onSnapshot(snapshot => {
       people = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       people.forEach(person => progressAssignedRequests(person));
@@ -1235,6 +1381,12 @@
     replyListenerReady = false;
     knownReplyKeys = new Set();
     unsubscribeReplies = shared.db.collectionGroup("receipts").where("status", "==", "replied").onSnapshot(processReplySnapshot, () => {
+      renderReplyInbox();
+    });
+    fieldMessageListenerReady = false;
+    knownFieldMessageIds = new Set();
+    unsubscribeFieldMessages = shared.db.collection("fieldMessages").orderBy("createdAt", "desc").limit(200).onSnapshot(processFieldMessages, () => {
+      fieldMessages = [];
       renderReplyInbox();
     });
     if (!replyRefreshTimer) {
@@ -1333,16 +1485,23 @@
     const text = formElement.querySelector("[data-message-text], #adminMessageText")?.value.trim();
     const status = formElement.querySelector("[data-message-status], #adminMessageStatus");
     if (!person || !text) return;
+    const files = [...(formElement._mpiFiles || [])];
     status.textContent = "Sending…";
+    let messageRef = null;
     try {
-      const messageRef = await shared.db.collection("officeUpdates").add({
+      messageRef = shared.db.collection("officeUpdates").doc();
+      await messageRef.set({
         type: "message", priority: "important", audience: "inspector",
         targetEmail: shared.normalizeEmail(person.email), targetName: person.name || "",
-        title: "Message from MPI Office", message: text, link: "", dueDate: "", requiresAcknowledgement: false, active: true,
+        title: "Message from MPI Office", message: text, link: "", dueDate: "", requiresAcknowledgement: false, active: files.length === 0, attachments: [],
         replyNotificationToken: officeReplyToken(),
         createdAt: shared.serverTimestamp(), createdBy: currentUser.uid,
         createdByEmail: shared.normalizeEmail(currentUser.email), createdByName: currentProfile.name || currentUser.displayName || "MPI Management"
       });
+      if (files.length) {
+        const attachments = await uploadAttachments(messageRef, files, "inspector", shared.normalizeEmail(person.email), status);
+        await messageRef.update({ attachments, active: true, attachmentUploadStatus: "complete", publishedAt: shared.serverTimestamp() });
+      }
       const pushRequested = await shared.sendPushNotification({
         kind: "office-message",
         audience: "inspector",
@@ -1353,11 +1512,14 @@
         tag: `mpi-office-${messageRef.id}`
       }).catch(() => false);
       formElement.reset();
+      formElement._mpiFiles = [];
+      renderChatFiles(formElement);
       status.textContent = pushRequested
         ? `Sent to ${person.name || "field user"}; push alert requested.`
         : `Sent to ${person.name || "field user"}. Push alerts are not enabled on that phone yet.`;
       status.className = "status success";
     } catch (error) {
+      if (messageRef) messageRef.set({ active: false, attachmentUploadStatus: "failed" }, { merge: true }).catch(() => {});
       status.textContent = error.message || "The message could not be sent.";
       status.className = "status error";
     }
@@ -1433,6 +1595,39 @@
   }
 
   tabButtons.forEach(button => button.addEventListener("click", () => showView(button.dataset.adminView)));
+  dashboard.addEventListener("change", event => {
+    const input = event.target.closest("[data-chat-files]");
+    if (!input) return;
+    addChatFiles(input.closest("form"), input.files || []);
+    input.value = "";
+  });
+  dashboard.addEventListener("dragover", event => {
+    const drop = event.target.closest("[data-chat-drop]");
+    if (!drop) return;
+    event.preventDefault();
+    drop.classList.add("dragging");
+  });
+  dashboard.addEventListener("dragleave", event => event.target.closest("[data-chat-drop]")?.classList.remove("dragging"));
+  dashboard.addEventListener("drop", event => {
+    const drop = event.target.closest("[data-chat-drop]");
+    if (!drop) return;
+    event.preventDefault();
+    drop.classList.remove("dragging");
+    addChatFiles(drop.closest("form"), event.dataTransfer?.files || []);
+  });
+  dashboard.addEventListener("keydown", event => {
+    const drop = event.target.closest("[data-chat-drop]");
+    if (!drop || !["Enter", " "].includes(event.key)) return;
+    event.preventDefault();
+    drop.querySelector("[data-chat-files]")?.click();
+  });
+  dashboard.addEventListener("click", event => {
+    const remove = event.target.closest("[data-remove-chat-file]");
+    if (!remove) return;
+    const formElement = remove.closest("form");
+    formElement._mpiFiles?.splice(Number(remove.dataset.removeChatFile), 1);
+    renderChatFiles(formElement);
+  });
   subcontractorList?.addEventListener("submit", event => {
     const formElement = event.target.closest("[data-subcontractor-message-form]");
     if (!formElement) return;
@@ -1482,6 +1677,13 @@
   });
   officeAlertButtons.forEach(button => button.addEventListener("click", () => enableOfficeAlerts(button, true)));
   replyInbox?.addEventListener("click", event => {
+    const attachment = event.target.closest("[data-open-field-attachment]");
+    if (attachment) {
+      event.preventDefault();
+      event.stopPropagation();
+      openFieldAttachment(attachment);
+      return;
+    }
     const button = event.target.closest("[data-open-reply-inspector]");
     if (!button?.dataset.openReplyInspector) return;
     markReplyRead(button.dataset.replyKey || "");
@@ -1498,6 +1700,13 @@
     renderOperations();
   });
   teamOverview.addEventListener("click", event => {
+    const subcontractor = event.target.closest("[data-open-subcontractor]");
+    if (subcontractor) {
+      selectedInspectorId = subcontractor.dataset.openSubcontractor;
+      inspectorSelector.value = selectedInspectorId;
+      renderOperations();
+      return;
+    }
     const row = event.target.closest("[data-open-inspector]");
     if (!row) return;
     selectedInspectorId = row.dataset.openInspector;
@@ -1505,6 +1714,16 @@
     renderOperations();
   });
   inspectorDetail.addEventListener("click", event => {
+    const fieldAttachment = event.target.closest("[data-open-field-attachment]");
+    if (fieldAttachment) {
+      openFieldAttachment(fieldAttachment);
+      return;
+    }
+    const officeAttachment = event.target.closest("[data-open-admin-attachment]");
+    if (officeAttachment) {
+      openAdminAttachment(officeAttachment);
+      return;
+    }
     if (event.target.closest("[data-back-overview]")) {
       selectedInspectorId = "all";
       inspectorSelector.value = "all";
@@ -1520,6 +1739,7 @@
   inspectorDetail.addEventListener("submit", event => {
     event.preventDefault();
     if (event.target.id === "adminMessageForm") sendInspectorMessage(event.target);
+    if (event.target.matches("[data-subcontractor-message-form]")) sendInspectorMessage(event.target);
     if (event.target.id === "adminCorrectionForm") addAdminCorrection(event.target);
   });
   signInButton.addEventListener("click", async () => {
@@ -1608,6 +1828,8 @@
       unsubscribeUpdates?.();
       unsubscribeReplies?.();
       unsubscribeReplies = null;
+      unsubscribeFieldMessages?.();
+      unsubscribeFieldMessages = null;
       if (replyRefreshTimer) {
         window.clearInterval(replyRefreshTimer);
         replyRefreshTimer = 0;

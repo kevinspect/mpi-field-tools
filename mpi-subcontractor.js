@@ -24,6 +24,7 @@
   const labCompleteButton = document.getElementById("subcontractorLabCompleteBtn");
   const messageForm = document.getElementById("subcontractorMessageForm");
   const messageInput = document.getElementById("subcontractorMessageText");
+  const messagePhotos = document.getElementById("subcontractorMessagePhotos");
   const messageStatus = document.getElementById("subcontractorMessageStatus");
   const officeUpdateCount = document.getElementById("subcontractorOfficeUpdateCount");
   const actionStatus = document.getElementById("subcontractorActionStatus");
@@ -115,6 +116,27 @@
     }, { merge: true }).catch(() => {
       actionStatus.textContent = "Saved on this phone. It will sync when the connection returns.";
     });
+    if (!testMode) {
+      const role = "subcontractor";
+      const status = state.lab?.status === "on-way" ? "DRIVING TO LAB"
+        : state.lab?.status === "arrived" ? "AT LAB"
+          : state.currentJob?.status === "on-way" ? "DRIVING TO JOB"
+            : state.currentJob?.status === "arrived" ? "ARRIVED AT JOB"
+              : state.currentJob?.status === "completed" ? "FINAL JOB COMPLETE"
+                : "READY / WAITING TO DEPART";
+      shared.db.collection("teamPresence").doc(session.userId).set({
+        userId: session.userId,
+        name: String(session.inspectorName || "MPI Subcontractor").slice(0, 80),
+        role,
+        photoURL: "",
+        profilePhoto: "",
+        status,
+        date: localDateKey(),
+        active: true,
+        updatedAtClient: nowIso(),
+        updatedAt: shared.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+    }
   }
 
   function persist() {
@@ -274,7 +296,8 @@
   async function sendOfficeMessage(event) {
     event.preventDefault();
     const message = String(messageInput.value || "").trim().slice(0, 1000);
-    if (!message || !session?.userId || !shared?.db) return;
+    const photos = [...(messagePhotos?.files || [])].slice(0, 3);
+    if ((!message && !photos.length) || !session?.userId || !shared?.db) return;
     const record = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       message,
@@ -287,20 +310,10 @@
     messageForm.querySelector("button").disabled = true;
     messageStatus.textContent = "Sending…";
     try {
-      await shared.db.collection("users").doc(session.userId).set({
-        subcontractorMessages: shared.arrayUnion(record),
-        subcontractorUpdatedAt: shared.serverTimestamp()
-      }, { merge: true });
-      await shared.sendPushNotification({
-        kind: "subcontractor-message",
-        audience: "office",
-        title: `${testMode ? "TEST · " : ""}Message from ${record.senderName}`,
-        body: message,
-        link: "./admin.html",
-        tag: `mpi-subcontractor-${record.id}`
-      }).catch(() => false);
+      await shared.sendFieldMessage(shared.auth.currentUser, { name: record.senderName, role: "subcontractor" }, message, photos, { senderName: record.senderName, senderRole: "subcontractor", test: testMode });
       messageInput.value = "";
-      messageStatus.textContent = "Message sent to MPI Office.";
+      if (messagePhotos) messagePhotos.value = "";
+      messageStatus.textContent = photos.length ? `Message and ${photos.length} photo${photos.length === 1 ? "" : "s"} sent to MPI Office.` : "Message sent to MPI Office.";
     } catch (error) {
       messageStatus.textContent = navigator.onLine ? "Message could not be sent. Try again." : "Reconnect before sending this message.";
     } finally {

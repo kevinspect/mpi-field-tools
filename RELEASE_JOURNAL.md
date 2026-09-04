@@ -2745,3 +2745,19 @@ Status: prepared August 26, 2026 as app Build 96.
 - Confirmed the active state survives a reload and unavailable actions remain disabled.
 - Confirmed the dedicated admin Subcontractors view displays the test profile and activity.
 - Confirmed JavaScript syntax, inline script parsing, unique markup IDs, and clean patch formatting.
+
+## Build 145 — September 3, 2026
+
+- Merged inspectors and subcontractors into one Live Field Team view in the Office Console; subcontractors remain excluded from employee hours and payroll totals.
+- Added a role-marked subcontractor summary row with current status, job number, completed-job count, arrival time, and latest action.
+- Removed the separate Subcontractors navigation page and moved the full subcontractor detail and conversation into the shared team view.
+- Added drag-and-drop PDF and image attachments to direct office messages for inspectors and subcontractors.
+- Added photo attachments to replies from every signed-in field user and to the inspector Ask Management form.
+- Added up to three compressed field photos per message, secure attachment viewing in the office conversation, and new-message alerts for office staff.
+- Added subcontractor presence updates so the field team can see the subcontractor's current working status alongside other users.
+
+### Validation record
+
+- Confirmed external and inline JavaScript syntax, unique markup IDs, build-cache references, and clean patch formatting.
+- Confirmed message attachments remain hidden until all chunks finish uploading and failed uploads cannot appear as completed messages.
+- Confirmed subcontractor records appear in Live Field Team without contributing to employee hours, drive-time, or job totals.
