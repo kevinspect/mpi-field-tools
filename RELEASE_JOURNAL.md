@@ -2761,3 +2761,14 @@ Status: prepared August 26, 2026 as app Build 96.
 - Confirmed external and inline JavaScript syntax, unique markup IDs, build-cache references, and clean patch formatting.
 - Confirmed message attachments remain hidden until all chunks finish uploading and failed uploads cannot appear as completed messages.
 - Confirmed subcontractor records appear in Live Field Team without contributing to employee hours, drive-time, or job totals.
+
+## Build 146 — September 4, 2026
+
+- Corrected the installed-build marker that was still reporting Build 144 after Build 145 had loaded.
+- Synchronized the page, version file, script references, and offline cache to Build 146 so the update prompt clears after installation.
+- Forced a fresh offline application shell, preventing the Load Update button from reopening the same outdated cached page.
+
+### Validation record
+
+- Confirmed every runtime build marker and cache reference reports Build 146.
+- Confirmed the update comparison no longer treats the installed page as older than the published version.
