@@ -236,6 +236,19 @@
     .office-reply-card span { overflow:hidden; color:#33436b; font-size:11px; line-height:1.4; text-overflow:ellipsis; white-space:nowrap; }
     .office-reply-card small { margin-top:3px; color:var(--muted); font-size:9px; }
     .office-reply-card time { color:var(--blue); font-size:9px; font-weight:850; white-space:nowrap; }
+    .safety-alert-center { display:grid; gap:11px; margin-top:16px; padding:16px; background:linear-gradient(145deg,#fff2f0,#fff); border:2px solid #b43b35; border-radius:15px; box-shadow:0 10px 25px rgba(155,56,56,.14); }
+    .safety-alert-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .safety-alert-head h3 { display:flex; align-items:center; gap:9px; margin:0; color:#8e2d2a; font-size:18px; }
+    .safety-alert-head span { display:grid; min-width:28px; height:28px; place-items:center; padding:0 8px; color:#fff; background:#a7352d; border-radius:999px; font-size:10px; font-weight:950; }
+    .safety-alert-card { padding:15px; background:#fff; border:1px solid #e6b8b4; border-left:6px solid #a7352d; border-radius:12px; }
+    .safety-alert-card header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .safety-alert-card h4 { margin:6px 0 0; color:#7d2825; font-size:17px; }
+    .safety-alert-card time { color:#8e2d2a; font-size:10px; font-weight:900; white-space:nowrap; }
+    .safety-critical-badge { display:inline-flex; min-height:24px; align-items:center; padding:3px 8px; color:#fff; background:#a7352d; border-radius:999px; font-size:8px; font-weight:950; letter-spacing:.08em; text-transform:uppercase; }
+    .safety-alert-meta { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:9px; color:#59617d; font-size:10px; font-weight:750; }
+    .safety-alert-facts { margin:12px 0 0; padding:11px 12px; color:#262b49; background:#fff7f6; border:1px solid #efd3d0; border-radius:9px; font-size:11px; line-height:1.5; white-space:pre-wrap; }
+    .safety-alert-detail { margin:9px 0 0; color:#4f5878; font-size:10px; line-height:1.5; }
+    .safety-alert-card .primary { margin-top:12px; background:#8e2d2a; box-shadow:0 4px 0 #65201e; }
     .compact-form { display:grid; gap:10px; }
     .compact-form textarea { min-height:92px; }
     .two-col { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -448,6 +461,10 @@
             <div class="field"><label for="adminInspectorSelector">Field user</label><select id="adminInspectorSelector"><option value="all">All field users</option></select></div>
           </div>
           <p class="sync-note" id="adminOperationsSync">Waiting for inspector devices to sync.</p>
+          <section class="safety-alert-center" id="adminSafetyAlerts" aria-live="assertive" aria-labelledby="adminSafetyAlertsTitle" hidden>
+            <div class="safety-alert-head"><h3 id="adminSafetyAlertsTitle"><svg class="app-icon"><use href="#icon-alert"></use></svg> Safety Alerts</h3><span id="adminSafetyAlertCount">0</span></div>
+            <div id="adminSafetyAlertList"></div>
+          </section>
           <section class="office-reply-inbox" id="adminReplyInbox" aria-live="polite"><div class="office-reply-head"><h3>Inspector Replies</h3><span>0</span></div><div class="office-reply-list"><div class="empty">No inspector replies yet.</div></div></section>
           <div class="team-overview" id="adminTeamOverview"><div class="empty">No inspector activity has synced yet.</div></div>
           <div class="detail-shell" id="adminInspectorDetail" hidden></div>
@@ -505,7 +522,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=146"></script>
-  <script src="./admin.js?build=146"></script>
+  <script src="./mpi-shared.js?build=147"></script>
+  <script src="./admin.js?build=147"></script>
 </body>
 </html>

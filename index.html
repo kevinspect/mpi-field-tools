@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="146">
+  <meta name="app-build" content="147">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5111,7 +5111,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">144</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">147</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -7633,7 +7633,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 146</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 147</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7761,10 +7761,10 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=146"></script>
-  <script src="./mpi-field-sync.js?build=146"></script>
-  <script src="./mpi-subcontractor.js?build=146"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=146"></script>
+  <script src="./mpi-shared.js?build=147"></script>
+  <script src="./mpi-field-sync.js?build=147"></script>
+  <script src="./mpi-subcontractor.js?build=147"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=147"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -18941,18 +18941,28 @@
         config.submitButton.textContent = config.pendingText;
         config.status.textContent = "Sending the branded MPI report. Keep this page open.";
         try {
+          let managementAlertError = null;
+          if (config.beforeEmail) {
+            try {
+              await config.beforeEmail();
+            } catch (error) {
+              managementAlertError = error;
+            }
+          }
           await submitBrandedWorkflowForm(config.form, {
             formType: String(config.subject.value || "MPI Workflow Submission").split("—")[0].trim(),
             title: config.subject.value,
             inspector: config.inspector.value.trim()
           }, config.attachments ? [...config.attachments()].slice(0, 3) : []);
-          config.status.className = "damage-submit-status success";
-          config.status.textContent = "Sent to MPI management in the branded email format.";
+          config.status.className = managementAlertError ? "damage-submit-status error" : "damage-submit-status success";
+          config.status.textContent = managementAlertError
+            ? "The email was sent, but the urgent dashboard alert did not synchronize. Call MPI management now and retry when connected."
+            : "Sent to MPI management in the branded email format.";
           if (config.form === messageAckForm) {
             saveMessageAcknowledgement(REQUIRED_PHOTO_MESSAGE_ID);
             renderMessageAcknowledgement();
           }
-          showToast("MPI report sent");
+          if (!managementAlertError) showToast("MPI report sent");
         } catch (error) {
           config.status.className = "damage-submit-status error";
           config.status.textContent = error?.message || "The branded MPI report could not be sent. Your draft remains on this phone.";
@@ -18993,6 +19003,37 @@
           inspector: safetyNoticeInspector,
           submitButton: safetyNoticeSubmitBtn,
           pendingText: "Sending safety notice…",
+          beforeEmail: async () => {
+            const shared = window.MPI_SHARED;
+            const user = shared?.auth?.currentUser;
+            const session = window.MPI_COMPANY_SESSION;
+            if (!shared?.sendSafetyAlert || !user || !session?.userId) throw new Error("The secure office alert connection is not ready.");
+            const reportSeed = `${safetyNoticeOccurredAt.value}|${safetyNoticeInspector.value}|${safetyNoticeProperty.value}|${safetyNoticeType.value}`;
+            let reportHash = 2166136261;
+            for (let index = 0; index < reportSeed.length; index += 1) {
+              reportHash ^= reportSeed.charCodeAt(index);
+              reportHash = Math.imul(reportHash, 16777619);
+            }
+            const formData = new FormData(safetyNoticeForm);
+            const peopleInformed = formData.getAll("People informed").map(value => String(value));
+            const otherPerson = String(formData.get("Other person informed") || "").trim();
+            if (otherPerson) peopleInformed.push(`Other: ${otherPerson}`);
+            await shared.sendSafetyAlert(user, {
+              name: session.inspectorName || safetyNoticeInspector.value.trim(),
+              role: session.role || "inspector"
+            }, {
+              reportId: `${safetyNoticeOccurredAt.value.replace(/[^0-9]/g, "")}-${(reportHash >>> 0).toString(36)}`,
+              inspector: safetyNoticeInspector.value.trim(),
+              noticeType: safetyNoticeType.value,
+              property: safetyNoticeProperty.value.trim(),
+              occurredAt: safetyNoticeOccurredAt.value,
+              facts: String(formData.get("What happened") || "").trim(),
+              decision: String(formData.get("Inspection decision") || "").trim(),
+              immediateAction: String(formData.get("Immediate action taken") || "").trim(),
+              followUp: String(formData.get("Follow-up needed") || "").trim(),
+              peopleInformed
+            });
+          },
           subjectText: () => `MPI Safety Notice — ${safetyNoticeType.value} — ${safetyNoticeInspector.value.trim()}`.slice(0, 180)
         });
       }

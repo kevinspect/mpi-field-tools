@@ -369,6 +369,54 @@
     return { id: messageRef.id, ...base, attachments, active: true };
   }
 
+  async function sendSafetyAlert(user, profile, report = {}) {
+    if (!user) throw new Error("Sign in with the inspector’s MPI company account before submitting a safety notice.");
+    const senderName = String(report.inspector || profile?.name || user.displayName || "MPI Inspector").trim().slice(0, 100);
+    const senderEmail = normalizeEmail(user.email);
+    const reportId = String(report.reportId || `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`)
+      .replace(/[^a-z0-9_-]+/gi, "-")
+      .slice(0, 120);
+    const noticeType = String(report.noticeType || "Safety event").trim().slice(0, 100);
+    const property = String(report.property || "Location not supplied").trim().slice(0, 220);
+    const facts = String(report.facts || "Safety notice submitted.").trim().slice(0, 1400);
+    const immediateAction = String(report.immediateAction || "").trim().slice(0, 900);
+    const decision = String(report.decision || "").trim().slice(0, 180);
+    const followUp = String(report.followUp || "").trim().slice(0, 700);
+    const occurredAt = String(report.occurredAt || new Date().toISOString()).trim().slice(0, 60);
+    const peopleInformed = [...new Set((Array.isArray(report.peopleInformed) ? report.peopleInformed : [])
+      .map(value => String(value || "").trim().slice(0, 120))
+      .filter(Boolean))].slice(0, 12);
+    const alertRef = db.collection("fieldMessages").doc(`safety-${reportId}`);
+    const title = `URGENT SAFETY · ${noticeType}`.slice(0, 100);
+    const body = `${senderName} · ${property}${facts ? ` · ${facts}` : ""}`.slice(0, 220);
+    const record = {
+      senderUid: user.uid,
+      senderEmail,
+      senderName,
+      senderRole: String(profile?.role || "inspector").toLowerCase().slice(0, 30),
+      kind: "safety-alert",
+      priority: "critical",
+      title,
+      message: facts,
+      safety: { noticeType, property, occurredAt, facts, immediateAction, decision, followUp, peopleInformed },
+      targetRole: "office",
+      attachments: [],
+      active: true,
+      createdAt: serverTimestamp(),
+      createdAtClient: new Date().toISOString()
+    };
+    await alertRef.set(record, { merge: true });
+    await sendPushNotification({
+      kind: "safety-alert",
+      audience: "office",
+      title,
+      body,
+      link: "./admin.html#safety-alerts",
+      tag: `mpi-safety-${reportId}`
+    });
+    return { id: alertRef.id, ...record };
+  }
+
   async function loadFieldAttachment(messageId, attachment) {
     const messageKey = String(messageId || "").trim();
     const attachmentKey = String(attachment?.id || "").trim();
@@ -485,6 +533,7 @@
     clearUpdate,
     replyToUpdate,
     sendFieldMessage,
+    sendSafetyAlert,
     sendPushNotification,
     loadOfficeAttachment,
     loadFieldAttachment,

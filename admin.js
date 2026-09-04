@@ -35,6 +35,9 @@
   const inspectorDetail = document.getElementById("adminInspectorDetail");
   const subcontractorList = document.getElementById("adminSubcontractorList");
   const operationsSync = document.getElementById("adminOperationsSync");
+  const safetyAlertCenter = document.getElementById("adminSafetyAlerts");
+  const safetyAlertCount = document.getElementById("adminSafetyAlertCount");
+  const safetyAlertList = document.getElementById("adminSafetyAlertList");
   const commentUsageUsed = document.getElementById("commentUsageUsed");
   const commentUsagePanel = document.getElementById("commentUsagePanel");
   const commentUsageRemaining = document.getElementById("commentUsageRemaining");
@@ -102,6 +105,8 @@
   let knownFieldMessageIds = new Set();
   let knownReplyKeys = new Set();
   let readReplyKeys = new Set();
+  let unreadReplyCount = 0;
+  let unreadSafetyCount = 0;
   let replyListenerReady = false;
   let officeMessaging = null;
   const OFFICE_PUSH_TOKEN_KEY = "mpiOfficePushTokenV1";
@@ -259,15 +264,48 @@
     const savedKeys = [...readReplyKeys].slice(-200);
     currentProfile.officeReplyReadKeys = savedKeys;
     renderReplyInbox();
+    renderSafetyAlerts();
+    renderOperationsStats();
     shared.db.collection("users").doc(currentUser.uid).set({
       officeReplyReadKeys: savedKeys,
       officeRepliesReadAt: shared.serverTimestamp()
     }, { merge: true }).catch(() => {});
   }
 
+  function safetyMessages() {
+    return fieldMessages
+      .filter(item => item.kind === "safety-alert" && item.active !== false)
+      .sort((left, right) => (asDate(right.createdAt || right.createdAtClient)?.getTime() || 0) - (asDate(left.createdAt || left.createdAtClient)?.getTime() || 0));
+  }
+
+  function unreadSafetyAlerts() {
+    return safetyMessages().filter(item => !readReplyKeys.has(`field:${item.id}`));
+  }
+
+  function updateOperationsNotificationBadge() {
+    const total = unreadReplyCount + unreadSafetyCount;
+    if (replyCount) replyCount.textContent = total ? String(total) : "";
+  }
+
+  function renderSafetyAlerts() {
+    if (!safetyAlertCenter || !safetyAlertList) return;
+    const alerts = unreadSafetyAlerts();
+    unreadSafetyCount = alerts.length;
+    safetyAlertCenter.hidden = !alerts.length;
+    if (safetyAlertCount) safetyAlertCount.textContent = String(alerts.length);
+    safetyAlertList.innerHTML = alerts.map(alert => {
+      const details = alert.safety || {};
+      const informed = Array.isArray(details.peopleInformed) && details.peopleInformed.length
+        ? details.peopleInformed.join(", ")
+        : "Not recorded";
+      return `<article class="safety-alert-card" data-safety-alert-id="${escapeHtml(alert.id)}"><header><div><span class="safety-critical-badge">Immediate review required</span><h4>${escapeHtml(details.noticeType || alert.title || "Safety event")}</h4></div><time>${escapeHtml(formatDateTime(alert.createdAt || alert.createdAtClient))}</time></header><div class="safety-alert-meta"><span><strong>Inspector:</strong> ${escapeHtml(alert.senderName || alert.senderEmail || "MPI Inspector")}</span><span><strong>Location:</strong> ${escapeHtml(details.property || "Not supplied")}</span><span><strong>Occurred:</strong> ${escapeHtml(formatDateTime(details.occurredAt))}</span></div><div class="safety-alert-facts">${escapeHtml(details.facts || alert.message || "Safety notice submitted.")}</div>${details.immediateAction ? `<p class="safety-alert-detail"><strong>Immediate action:</strong> ${escapeHtml(details.immediateAction)}</p>` : ""}${details.decision ? `<p class="safety-alert-detail"><strong>Inspection decision:</strong> ${escapeHtml(details.decision)}</p>` : ""}<p class="safety-alert-detail"><strong>People informed:</strong> ${escapeHtml(informed)}</p>${details.followUp ? `<p class="safety-alert-detail"><strong>Follow-up requested:</strong> ${escapeHtml(details.followUp)}</p>` : ""}<button class="primary" type="button" data-acknowledge-safety="${escapeHtml(alert.id)}">ACKNOWLEDGE SAFETY ALERT</button></article>`;
+    }).join("");
+    updateOperationsNotificationBadge();
+  }
+
   function renderReplyInbox() {
     if (!replyInbox) return;
-    const fieldReplies = fieldMessages.map(item => ({
+    const fieldReplies = fieldMessages.filter(item => item.kind !== "safety-alert").map(item => ({
       fieldMessageId: item.id,
       userId: item.senderUid,
       userEmail: item.senderEmail,
@@ -284,7 +322,8 @@
       .sort((left, right) => (asDate(right.repliedAt)?.getTime() || 0) - (asDate(left.repliedAt)?.getTime() || 0))
       .slice(0, 12);
     const unread = values.filter(item => replyIsForCurrentAdmin(item) && !readReplyKeys.has(replyKey(item)));
-    if (replyCount) replyCount.textContent = unread.length ? String(unread.length) : "";
+    unreadReplyCount = unread.length;
+    updateOperationsNotificationBadge();
     const count = replyInbox.querySelector(".office-reply-head span");
     if (count) count.textContent = unread.length ? `${unread.length} new` : "0 new";
     const list = replyInbox.querySelector(".office-reply-list");
@@ -303,14 +342,22 @@
     if (fieldMessageListenerReady) {
       const fresh = values.filter(item => !knownFieldMessageIds.has(item.id));
       if (fresh.length) {
-        const latest = fresh.sort((left, right) => (asDate(right.createdAt)?.getTime() || 0) - (asDate(left.createdAt)?.getTime() || 0))[0];
-        showOfficeAlert(`Message from ${latest.senderName || "MPI Field User"}`, latest.message || `${latest.attachments?.length || 1} field photo attached.`, `mpi-field-${latest.id}`);
+        const ordered = fresh.sort((left, right) => (asDate(right.createdAt)?.getTime() || 0) - (asDate(left.createdAt)?.getTime() || 0));
+        const latest = ordered.find(item => item.kind === "safety-alert") || ordered[0];
+        const safety = latest.kind === "safety-alert";
+        showOfficeAlert(
+          safety ? latest.title || "URGENT MPI SAFETY ALERT" : `Message from ${latest.senderName || "MPI Field User"}`,
+          safety ? `${latest.senderName || "MPI Inspector"} · ${latest.safety?.property || "Location not supplied"} · ${latest.message || "Safety notice submitted."}` : latest.message || `${latest.attachments?.length || 1} field photo attached.`,
+          safety ? `mpi-safety-${latest.id}` : `mpi-field-${latest.id}`
+        );
       }
     }
     fieldMessages = values;
     knownFieldMessageIds = ids;
     fieldMessageListenerReady = true;
+    renderSafetyAlerts();
     renderReplyInbox();
+    renderOperationsStats();
     const selected = overviewEntry(selectedInspectorId);
     const history = document.getElementById("adminMessageHistory");
     if (selected?.person && history) history.innerHTML = messageHistoryHtml(selected.person);
@@ -1127,7 +1174,7 @@
     const totalMinutes = days.reduce((total, item) => total + selectedDays(item.person).reduce((sum, day) => sum + workedMinutes(item.person, day), 0), 0);
     statHoursLabel.textContent = currentRange === "week" ? "Hours this week" : currentRange === "yesterday" ? "Hours yesterday" : "Hours today";
     stats.hours.textContent = `${Math.floor(totalMinutes / 60)}:${String(totalMinutes % 60).padStart(2, "0")}`;
-    stats.alerts.textContent = String(days.reduce((total, item) => total + meaningfulAlerts(item.person, item.day).length, 0));
+    stats.alerts.textContent = String(days.reduce((total, item) => total + meaningfulAlerts(item.person, item.day).length, 0) + unreadSafetyAlerts().length);
     renderCommentUsageAllowance();
   }
 
@@ -1298,6 +1345,7 @@
       else if (!preserveCorrectionDraft) renderInspectorDetail(entry.person);
     }
     renderReplyInbox();
+    renderSafetyAlerts();
   }
 
   async function receiptSummary(updateId) {
@@ -1690,6 +1738,13 @@
     selectedInspectorId = button.dataset.openReplyInspector;
     inspectorSelector.value = selectedInspectorId;
     renderOperations();
+  });
+  safetyAlertCenter?.addEventListener("click", event => {
+    const button = event.target.closest("[data-acknowledge-safety]");
+    if (!button) return;
+    button.disabled = true;
+    button.textContent = "ACKNOWLEDGED";
+    markReplyRead(`field:${button.dataset.acknowledgeSafety}`);
   });
   peopleList.addEventListener("change", updatePerson);
   inspectorSelector.addEventListener("change", () => { selectedInspectorId = inspectorSelector.value; renderOperations(); });

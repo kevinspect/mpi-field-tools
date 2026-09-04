@@ -1,5 +1,15 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 147 — Critical Safety Alert Delivery
+
+- Changed Safety & Near-Miss submissions from email-only delivery to a dual-channel safety workflow.
+- Every new safety notice now creates a permanent, structured alert in the Office Console and requests a high-priority push notification for every enabled owner/admin device.
+- Added a red Safety Alerts panel to the Operations dashboard with the inspector, location, event type, facts, immediate action, inspection decision, people informed, and requested follow-up.
+- Keeps each safety alert visible and counted in Needs Attention until an administrator explicitly acknowledges it.
+- Prevents near-miss reports from being mixed into the normal inspector reply inbox.
+- Preserves the branded email as a second safety-notification channel and warns the inspector to call management if the dashboard channel cannot synchronize.
+- Updated the field app, Office Console, script references, and offline cache to Build 147.
+
 ## Build 143 — Request Progress, Reply Routing, and Phone Setup Cleanup
 
 - Changed the Requests badge to count only genuinely new, unread inspector requests; opening Requests clears the new-item indicator without removing the request.
