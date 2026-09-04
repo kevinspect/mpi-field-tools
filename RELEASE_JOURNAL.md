@@ -1,5 +1,12 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 148 — Safety Reply and Per-Admin Receipt
+
+- Reset the inspector safety-notice form only after both the urgent dashboard alert and branded email succeed, while retaining the inspector identity and refreshing the event time for the next notice.
+- Kept safety-alert acknowledgement private to each admin account, recorded who acknowledged it and when, and clarified that opening or replying does not acknowledge the alert.
+- Added a reply box directly to every urgent safety alert. Safety replies return to the reporting inspector as a critical, acknowledgement-required app message with a push alert.
+- Updated the field app, Office Console, script references, and offline cache to Build 148.
+
 ## Build 147 — Critical Safety Alert Delivery
 
 - Changed Safety & Near-Miss submissions from email-only delivery to a dual-channel safety workflow.

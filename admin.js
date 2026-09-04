@@ -282,6 +282,27 @@
     return safetyMessages().filter(item => !readReplyKeys.has(`field:${item.id}`));
   }
 
+  function acknowledgeSafetyAlert(alertId) {
+    const id = String(alertId || "").trim();
+    if (!id || !currentUser || !currentProfile) return;
+    const alert = fieldMessages.find(item => item.id === id);
+    const existing = Array.isArray(currentProfile.safetyAlertAcknowledgements)
+      ? currentProfile.safetyAlertAcknowledgements.filter(item => item?.alertId !== id)
+      : [];
+    const acknowledgement = {
+      alertId: id,
+      alertTitle: String(alert?.title || alert?.safety?.noticeType || "Safety alert").slice(0, 120),
+      acknowledgedAtClient: new Date().toISOString(),
+      acknowledgedBy: currentProfile.name || currentUser.displayName || currentUser.email || "MPI Admin"
+    };
+    currentProfile.safetyAlertAcknowledgements = [...existing, acknowledgement].slice(-200);
+    markReplyRead(`field:${id}`);
+    shared.db.collection("users").doc(currentUser.uid).set({
+      safetyAlertAcknowledgements: currentProfile.safetyAlertAcknowledgements,
+      safetyAlertsAcknowledgedAt: shared.serverTimestamp()
+    }, { merge: true }).catch(() => {});
+  }
+
   function updateOperationsNotificationBadge() {
     const total = unreadReplyCount + unreadSafetyCount;
     if (replyCount) replyCount.textContent = total ? String(total) : "";
@@ -298,7 +319,7 @@
       const informed = Array.isArray(details.peopleInformed) && details.peopleInformed.length
         ? details.peopleInformed.join(", ")
         : "Not recorded";
-      return `<article class="safety-alert-card" data-safety-alert-id="${escapeHtml(alert.id)}"><header><div><span class="safety-critical-badge">Immediate review required</span><h4>${escapeHtml(details.noticeType || alert.title || "Safety event")}</h4></div><time>${escapeHtml(formatDateTime(alert.createdAt || alert.createdAtClient))}</time></header><div class="safety-alert-meta"><span><strong>Inspector:</strong> ${escapeHtml(alert.senderName || alert.senderEmail || "MPI Inspector")}</span><span><strong>Location:</strong> ${escapeHtml(details.property || "Not supplied")}</span><span><strong>Occurred:</strong> ${escapeHtml(formatDateTime(details.occurredAt))}</span></div><div class="safety-alert-facts">${escapeHtml(details.facts || alert.message || "Safety notice submitted.")}</div>${details.immediateAction ? `<p class="safety-alert-detail"><strong>Immediate action:</strong> ${escapeHtml(details.immediateAction)}</p>` : ""}${details.decision ? `<p class="safety-alert-detail"><strong>Inspection decision:</strong> ${escapeHtml(details.decision)}</p>` : ""}<p class="safety-alert-detail"><strong>People informed:</strong> ${escapeHtml(informed)}</p>${details.followUp ? `<p class="safety-alert-detail"><strong>Follow-up requested:</strong> ${escapeHtml(details.followUp)}</p>` : ""}<button class="primary" type="button" data-acknowledge-safety="${escapeHtml(alert.id)}">ACKNOWLEDGE SAFETY ALERT</button></article>`;
+      return `<article class="safety-alert-card" data-safety-alert-id="${escapeHtml(alert.id)}"><header><div><span class="safety-critical-badge">Immediate review required</span><h4>${escapeHtml(details.noticeType || alert.title || "Safety event")}</h4></div><time>${escapeHtml(formatDateTime(alert.createdAt || alert.createdAtClient))}</time></header><div class="safety-alert-meta"><span><strong>Inspector:</strong> ${escapeHtml(alert.senderName || alert.senderEmail || "MPI Inspector")}</span><span><strong>Location:</strong> ${escapeHtml(details.property || "Not supplied")}</span><span><strong>Occurred:</strong> ${escapeHtml(formatDateTime(details.occurredAt))}</span></div><div class="safety-alert-facts">${escapeHtml(details.facts || alert.message || "Safety notice submitted.")}</div>${details.immediateAction ? `<p class="safety-alert-detail"><strong>Immediate action:</strong> ${escapeHtml(details.immediateAction)}</p>` : ""}${details.decision ? `<p class="safety-alert-detail"><strong>Inspection decision:</strong> ${escapeHtml(details.decision)}</p>` : ""}<p class="safety-alert-detail"><strong>People informed:</strong> ${escapeHtml(informed)}</p>${details.followUp ? `<p class="safety-alert-detail"><strong>Follow-up requested:</strong> ${escapeHtml(details.followUp)}</p>` : ""}<form class="safety-alert-reply" data-safety-reply-form data-safety-alert-id="${escapeHtml(alert.id)}" data-person-id="${escapeHtml(alert.senderUid || "")}" data-target-email="${escapeHtml(alert.senderEmail || "")}" data-target-name="${escapeHtml(alert.senderName || "MPI Inspector")}"><label>Reply to ${escapeHtml(alert.senderName || "the inspector")}</label><textarea data-message-text maxlength="1000" required placeholder="Type the office safety follow-up or instructions"></textarea><button type="submit">SEND SAFETY REPLY</button><span class="status" data-message-status aria-live="polite"></span></form><p class="safety-alert-receipt-note">Replying does not acknowledge this alert. Your acknowledgement applies only to your admin account; every other admin must confirm receipt separately.</p><button class="primary" type="button" data-acknowledge-safety="${escapeHtml(alert.id)}">ACKNOWLEDGE SAFETY ALERT</button></article>`;
     }).join("");
     updateOperationsNotificationBadge();
   }
@@ -1529,19 +1550,27 @@
   }
 
   async function sendInspectorMessage(formElement) {
-    const person = people.find(item => item.id === formElement.dataset.personId);
+    const person = people.find(item => item.id === formElement.dataset.personId) || (formElement.dataset.targetEmail ? {
+      id: formElement.dataset.personId || "",
+      email: formElement.dataset.targetEmail,
+      name: formElement.dataset.targetName || "MPI Inspector",
+      role: "inspector"
+    } : null);
     const text = formElement.querySelector("[data-message-text], #adminMessageText")?.value.trim();
     const status = formElement.querySelector("[data-message-status], #adminMessageStatus");
     if (!person || !text) return;
+    const safetyAlertId = String(formElement.dataset.safetyAlertId || "").trim();
+    const isSafetyReply = Boolean(safetyAlertId);
     const files = [...(formElement._mpiFiles || [])];
     status.textContent = "Sending…";
     let messageRef = null;
     try {
       messageRef = shared.db.collection("officeUpdates").doc();
       await messageRef.set({
-        type: "message", priority: "important", audience: "inspector",
+        type: "message", priority: isSafetyReply ? "critical" : "important", audience: "inspector",
         targetEmail: shared.normalizeEmail(person.email), targetName: person.name || "",
-        title: "Message from MPI Office", message: text, link: "", dueDate: "", requiresAcknowledgement: false, active: files.length === 0, attachments: [],
+        title: isSafetyReply ? "Safety follow-up from MPI Office" : "Message from MPI Office", message: text, link: "", dueDate: "", requiresAcknowledgement: isSafetyReply, active: files.length === 0, attachments: [],
+        replyToSafetyAlertId: safetyAlertId,
         replyNotificationToken: officeReplyToken(),
         createdAt: shared.serverTimestamp(), createdBy: currentUser.uid,
         createdByEmail: shared.normalizeEmail(currentUser.email), createdByName: currentProfile.name || currentUser.displayName || "MPI Management"
@@ -1554,7 +1583,7 @@
         kind: "office-message",
         audience: "inspector",
         targetTokens: notificationTokensForUpdate("inspector", person.email),
-        title: "Message from MPI Office",
+        title: isSafetyReply ? "SAFETY FOLLOW-UP FROM MPI OFFICE" : "Message from MPI Office",
         body: text,
         link: person.role === "subcontractor" ? "./#office-updates" : "./#team-messages",
         tag: `mpi-office-${messageRef.id}`
@@ -1563,8 +1592,8 @@
       formElement._mpiFiles = [];
       renderChatFiles(formElement);
       status.textContent = pushRequested
-        ? `Sent to ${person.name || "field user"}; push alert requested.`
-        : `Sent to ${person.name || "field user"}. Push alerts are not enabled on that phone yet.`;
+        ? `${isSafetyReply ? "Safety reply" : "Message"} sent to ${person.name || "field user"}; push alert requested.`
+        : `${isSafetyReply ? "Safety reply" : "Message"} sent to ${person.name || "field user"}. Push alerts are not enabled on that phone yet.`;
       status.className = "status success";
     } catch (error) {
       if (messageRef) messageRef.set({ active: false, attachmentUploadStatus: "failed" }, { merge: true }).catch(() => {});
@@ -1744,7 +1773,13 @@
     if (!button) return;
     button.disabled = true;
     button.textContent = "ACKNOWLEDGED";
-    markReplyRead(`field:${button.dataset.acknowledgeSafety}`);
+    acknowledgeSafetyAlert(button.dataset.acknowledgeSafety);
+  });
+  safetyAlertCenter?.addEventListener("submit", event => {
+    const formElement = event.target.closest("[data-safety-reply-form]");
+    if (!formElement) return;
+    event.preventDefault();
+    sendInspectorMessage(formElement);
   });
   peopleList.addEventListener("change", updatePerson);
   inspectorSelector.addEventListener("change", () => { selectedInspectorId = inspectorSelector.value; renderOperations(); });
