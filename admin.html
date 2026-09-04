@@ -107,6 +107,29 @@
     .request-progress-note { display:grid; gap:4px; margin-top:11px; padding:11px 12px; color:#273b70; background:#eef5fb; border:1px solid #cfdfed; border-radius:10px; }
     .request-progress-note strong { color:var(--navy); font-size:9px; letter-spacing:.05em; text-transform:uppercase; }
     .request-progress-note span { font-size:10.5px; line-height:1.45; white-space:pre-wrap; }
+    .subcontractor-admin-list { display:grid; gap:13px; }
+    .subcontractor-admin-card { padding:18px; background:#fff; border:1px solid var(--line); border-left:5px solid var(--blue); border-radius:15px; }
+    .subcontractor-admin-card.test { border-left-color:var(--gold); background:linear-gradient(135deg,#fffdf5,#fff); }
+    .subcontractor-admin-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+    .subcontractor-admin-head h3 { margin:4px 0 0; color:var(--navy); font-size:19px; }
+    .subcontractor-admin-head p { margin:5px 0 0; color:var(--muted); font-size:10px; }
+    .subcontractor-admin-badge { display:inline-flex; min-height:28px; align-items:center; padding:0 9px; color:#fff; background:var(--blue); border-radius:999px; font-size:8.5px; font-weight:950; letter-spacing:.06em; text-transform:uppercase; }
+    .subcontractor-admin-card.test .subcontractor-admin-badge { color:#684c00; background:#f4d36d; }
+    .subcontractor-admin-facts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; margin-top:14px; }
+    .subcontractor-admin-fact { padding:11px; background:#f5f7fb; border:1px solid #e1e6ef; border-radius:10px; }
+    .subcontractor-admin-fact span,.subcontractor-admin-fact strong { display:block; }
+    .subcontractor-admin-fact span { color:var(--muted); font-size:8px; font-weight:900; letter-spacing:.07em; text-transform:uppercase; }
+    .subcontractor-admin-fact strong { margin-top:5px; color:var(--navy); font-size:12px; }
+    .subcontractor-admin-events { display:grid; gap:6px; margin-top:13px; }
+    .subcontractor-admin-events div { display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid #e7ebf2; color:var(--muted); font-size:9.5px; }
+    .subcontractor-admin-events strong { color:var(--navy); }
+    .subcontractor-admin-message { display:grid; gap:8px; margin-top:14px; padding-top:13px; border-top:1px solid var(--line); }
+    .subcontractor-admin-message textarea { width:100%; min-height:78px; padding:10px; border:1px solid #cbd3e1; border-radius:10px; font:inherit; font-size:11px; }
+    .subcontractor-office-messages { display:grid; gap:7px; margin-top:12px; }
+    .subcontractor-office-messages article { padding:10px 11px; background:#edf5fb; border:1px solid #d0e0ee; border-radius:10px; }
+    .subcontractor-office-messages strong,.subcontractor-office-messages span { display:block; }
+    .subcontractor-office-messages strong { color:var(--navy); font-size:9.5px; }
+    .subcontractor-office-messages span { margin-top:4px; color:#4f5878; font-size:10px; line-height:1.4; }
     .request-admin-form { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:13px; padding-top:13px; border-top:1px solid var(--line); }
     .request-admin-form .wide { grid-column:1/-1; }
     .update-card,.person-card { padding:17px; background:#fff; border:1px solid var(--line); border-radius:14px; }
@@ -249,9 +272,10 @@
       .ops-card,.ops-card.span-6,.ops-card.span-8 { grid-column:1/-1; }
       .office-reply-card { grid-template-columns:1fr auto; }
       .office-reply-card > div:nth-child(2) { grid-column:1/-1; grid-row:2; }
+      .subcontractor-admin-facts { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
 
-    /* Build 143 — request workflow and correctly routed office replies */
+    /* Build 144 — low-usage subcontractor field tool */
     .icon-library { position:absolute; width:0; height:0; overflow:hidden; }
     .app-icon { width:18px; height:18px; flex:0 0 auto; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
     body { background:#eef2f8; }
@@ -407,6 +431,7 @@
       <nav class="panel tabbar" aria-label="Office Console sections">
         <div class="nav-heading">Workspace</div>
         <button class="active" type="button" data-admin-view="operations"><svg class="app-icon"><use href="#icon-grid"></use></svg><span>Operations</span><span class="nav-count" id="adminReplyCount"></span></button>
+        <button type="button" data-admin-view="subcontractors"><svg class="app-icon"><use href="#icon-users"></use></svg><span>Subcontractors</span></button>
         <button type="button" data-admin-view="requests"><svg class="app-icon"><use href="#icon-clipboard"></use></svg><span>Requests</span><span class="nav-count" id="adminRequestCount"></span></button>
         <button type="button" data-admin-view="publish"><svg class="app-icon"><use href="#icon-send"></use></svg><span>Send to field</span></button>
         <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Sent updates</span></button>
@@ -427,6 +452,13 @@
         </div>
       </section>
 
+      <section class="console-view" data-admin-panel="subcontractors">
+        <div class="panel content-panel">
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><div><h2>Subcontractor Operations</h2><p>Live job and lab status only. This view does not calculate payroll, hours, or employee production.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE OFFICE ALERTS</span></button></div>
+          <div class="subcontractor-admin-list" id="adminSubcontractorList"><div class="empty">No subcontractor activity has synchronized yet.</div></div>
+        </div>
+      </section>
+
       <section class="console-view" data-admin-panel="requests">
         <div class="panel content-panel">
           <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-clipboard"></use></svg></span><div><h2>Inspector Requests</h2><p>PPE, tools, uniforms, supplies, training and feedback stay here until completed.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE OFFICE ALERTS</span></button></div>
@@ -444,13 +476,13 @@
 
       <section class="console-view" data-admin-panel="publish">
         <div class="panel content-panel">
-          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-send"></use></svg></span><div><h2>Send to the Field</h2><p>Send a message, assignment, document or job note to everyone or one inspector.</p></div></div></div>
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-send"></use></svg></span><div><h2>Send to the Field</h2><p>Send a message, assignment, document or job note to everyone or one field user.</p></div></div></div>
           <form id="adminUpdateForm">
             <div class="form-grid">
               <div class="field"><label for="adminUpdateType">Information type</label><select id="adminUpdateType" required><option value="announcement">Company announcement</option><option value="instruction">Inspector instruction</option><option value="training">Training assignment</option><option value="job-note">Job-specific note</option><option value="procedure">Procedure / tool guide</option><option value="equipment">Equipment notice</option></select></div>
               <div class="field"><label for="adminUpdatePriority">Priority</label><select id="adminUpdatePriority" required><option value="normal">Normal</option><option value="important">Important</option><option value="urgent">Urgent</option></select></div>
-              <div class="field"><label for="adminUpdateAudience">Who should receive it?</label><select id="adminUpdateAudience" required><option value="all">All inspectors</option><option value="inspector">One inspector</option></select></div>
-              <div class="field" id="adminTargetField" hidden><label for="adminUpdateTarget">Inspector</label><select id="adminUpdateTarget"><option value="">Choose inspector</option></select></div>
+              <div class="field"><label for="adminUpdateAudience">Who should receive it?</label><select id="adminUpdateAudience" required><option value="all">All field users</option><option value="inspector">One field user</option></select></div>
+              <div class="field" id="adminTargetField" hidden><label for="adminUpdateTarget">Field user</label><select id="adminUpdateTarget"><option value="">Choose field user</option></select></div>
               <div class="field wide"><label for="adminUpdateTitle">Title</label><input id="adminUpdateTitle" maxlength="100" required placeholder="Example: Complete roof inspection refresher"></div>
               <div class="field wide"><label for="adminUpdateMessage">Information / instructions</label><textarea id="adminUpdateMessage" maxlength="2000" required placeholder="Write the clear instruction, announcement, job note, or training requirement."></textarea></div>
               <div class="field"><label for="adminUpdateLink">Supporting link</label><input id="adminUpdateLink" type="url" maxlength="500" placeholder="Optional course, document, or reference link"></div>
@@ -478,7 +510,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=143"></script>
-  <script src="./admin.js?build=143"></script>
+  <script src="./mpi-shared.js?build=144"></script>
+  <script src="./admin.js?build=144"></script>
 </body>
 </html>

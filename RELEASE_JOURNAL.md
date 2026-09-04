@@ -2726,3 +2726,22 @@ Status: prepared August 26, 2026 as app Build 96.
 - Made assigned inspector requests automatically move to In Progress and clearly show the responsible office administrator.
 - Added Kevin Cave's inspector number, NACHI24060423, and retained Cory Leese's assigned inspector number.
 - Improved reply recovery so an existing response still appears in Operations even when the live collection listener is unavailable.
+
+## Build 144 — September 3, 2026
+
+- Added a dedicated Subcontractor role that opens a minimal field tool instead of the employee workflow.
+- Added sequential, offline-first Job 1 / Job 2 / Job 3 tracking with guarded On Way, Arrived, and Complete actions and exact timestamps.
+- Added separate Water Tech and IMS lab-trip flows that preserve the current job number.
+- Reused MPI Comment Builder, Equipment Age Finder, Damaged Item Notice, office messaging, and push-notification infrastructure.
+- Added a separate Office Console Subcontractors view with live status, current job number, action times, recent activity, messages, and no payroll calculations.
+- Added owner/admin Test Subcontractor mode, visibly marked test records, and Reset Test Day controls.
+- Added Subcontractor role and phone management to Team Accounts.
+- Prepared the test profile for Jason Chamarro; his cell number is stored in the secured account profile rather than public website code.
+
+### Validation record
+
+- Passed the full Job 1 sequence and confirmed Job 2 starts only after the next On Way action.
+- Passed Water Tech and IMS lab-state checks without changing the job number.
+- Confirmed the active state survives a reload and unavailable actions remain disabled.
+- Confirmed the dedicated admin Subcontractors view displays the test profile and activity.
+- Confirmed JavaScript syntax, inline script parsing, unique markup IDs, and clean patch formatting.

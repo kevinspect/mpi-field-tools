@@ -223,7 +223,7 @@
   }
 
   function roleLabel(profile) {
-    return ({ owner: "Owner", admin: "Office Admin", inspector: "Inspector" })[String(profile?.role || "inspector").toLowerCase()] || "Inspector";
+    return ({ owner: "Owner", admin: "Office Admin", inspector: "Inspector", subcontractor: "Subcontractor" })[String(profile?.role || "inspector").toLowerCase()] || "Inspector";
   }
 
   function renderProfile(user, profile) {
@@ -232,7 +232,7 @@
     if (!user || !profile) return;
     pendingProfilePhoto = null;
     profileName.value = profile.name || user.displayName || "";
-    profileJobTitle.value = profile.jobTitle || (profile.role === "inspector" ? "Inspector" : "");
+    profileJobTitle.value = profile.jobTitle || (profile.role === "inspector" ? "Inspector" : profile.role === "subcontractor" ? "Subcontractor" : "");
     profilePhone.value = profile.phone || "";
     profileInspectorId.value = profile.inspectorId || "";
     profileVehicle.value = profile.assignedVehicle || "";
@@ -462,7 +462,7 @@
       return;
     }
     accountName.textContent = profile.name || user.displayName || "MPI Team Member";
-    accountRole.textContent = shared.isAdminRole(profile) ? "Owner / office administrator" : "Inspector";
+    accountRole.textContent = shared.isAdminRole(profile) ? "Owner / office administrator" : roleLabel(profile);
     accountStatus.textContent = user.email || "Signed in";
     renderProfile(user, profile);
     signInButtons.forEach(button => { button.hidden = true; });
@@ -478,7 +478,9 @@
       role: profile.role || "inspector",
       inspectorId: String(profile.inspectorId || "").trim(),
       inspectorName: String(profile.name || user.displayName || "").trim(),
-      inspectorEmail: String(user.email || profile.email || "").trim()
+      inspectorEmail: String(user.email || profile.email || "").trim(),
+      phone: String(profile.phone || "").trim(),
+      assignedVehicle: String(profile.assignedVehicle || "").trim()
     };
     window.MPI_COMPANY_SESSION = sessionDetail;
     window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail: sessionDetail }));

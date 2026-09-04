@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="143">
+  <meta name="app-build" content="144">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4907,6 +4907,50 @@
     .mpi-updates-gate h3 { margin:0; color:var(--forest); font-size:22px; }
     .mpi-updates-gate p { margin:9px auto 17px; color:var(--ink-2); font-size:11px; line-height:1.55; }
 
+    /* Build 144 — low-usage subcontractor field tool */
+    .subcontractor-screen { width:min(760px,calc(100% - 24px)); margin:0 auto; padding:22px 0 96px; }
+    .subcontractor-hero { padding:22px; color:#fff; background:linear-gradient(145deg,#10165f,#213a8f); border:1px solid rgba(255,255,255,.16); border-radius:20px; box-shadow:0 18px 38px rgba(17,24,106,.2); }
+    .subcontractor-hero-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .subcontractor-hero .eyebrow { color:#f0cc67; }
+    .subcontractor-hero h1 { margin:5px 0 0; font-size:clamp(28px,7vw,42px); line-height:1; letter-spacing:-.035em; }
+    .subcontractor-test-badge { display:inline-flex; min-height:32px; align-items:center; padding:0 11px; color:#171b52; background:#f4cf66; border-radius:999px; font-size:11px; font-weight:950; letter-spacing:.08em; }
+    .subcontractor-current { display:grid; grid-template-columns:auto minmax(0,1fr); gap:16px; align-items:center; margin-top:20px; padding:17px; color:var(--ink); background:#fff; border-radius:16px; }
+    .subcontractor-job-number { display:grid; min-width:98px; min-height:80px; place-items:center; color:#fff; background:var(--bright-blue); border-radius:13px; font-size:21px; font-weight:950; }
+    .subcontractor-current span,.subcontractor-current strong,.subcontractor-current small { display:block; }
+    .subcontractor-current span { color:#6a718b; font-size:9px; font-weight:950; letter-spacing:.12em; text-transform:uppercase; }
+    .subcontractor-current strong { margin-top:5px; color:var(--ink); font-size:20px; }
+    .subcontractor-current small { margin-top:5px; color:#5a6281; font-size:11px; line-height:1.4; }
+    .subcontractor-panel { margin-top:14px; padding:17px; background:#fff; border:1px solid #d9e1ed; border-radius:17px; box-shadow:0 10px 25px rgba(17,24,106,.07); }
+    .subcontractor-panel h2 { margin:0; color:var(--ink); font-size:18px; }
+    .subcontractor-panel > p { margin:7px 0 0; color:#5e6685; font-size:11px; line-height:1.5; }
+    .subcontractor-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:15px; }
+    .subcontractor-action { min-height:58px; padding:10px 13px; color:#fff; background:var(--ink); border:0; border-radius:12px; box-shadow:0 4px 0 #aa8425; font-size:11px; font-weight:950; }
+    .subcontractor-action.secondary { color:var(--bright-blue); background:#edf5fb; border:1px solid #c7dced; box-shadow:none; }
+    .subcontractor-action:disabled { color:#8d93a8; background:#e8ebf1; border:1px solid #d9dee7; box-shadow:none; cursor:not-allowed; }
+    .subcontractor-lab-card { margin-top:14px; padding:17px; color:#fff; background:#1f6d5a; border-radius:17px; }
+    .subcontractor-lab-card h2 { margin:4px 0; color:#fff; font-size:22px; }
+    .subcontractor-lab-card p { margin:0; color:#dff4ee; font-size:11px; font-weight:850; }
+    .subcontractor-lab-card .subcontractor-actions a { display:grid; min-height:58px; place-items:center; color:#164f42; background:#fff; border-radius:12px; font-size:11px; font-weight:950; text-decoration:none; }
+    .subcontractor-tool-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:14px; }
+    .subcontractor-tool { display:grid; min-height:76px; align-content:center; gap:4px; padding:14px; color:var(--ink); background:#fff; border:1px solid #d9e1ed; border-radius:14px; text-decoration:none; box-shadow:0 8px 20px rgba(17,24,106,.06); }
+    .subcontractor-tool strong { font-size:12px; }
+    .subcontractor-tool small { color:#626a87; font-size:9.5px; line-height:1.35; }
+    .subcontractor-tool-count { display:inline-flex; width:max-content; min-height:24px; align-items:center; margin-top:5px; padding:0 8px; color:#fff; background:var(--bright-blue); border-radius:999px; font-size:8px; font-weight:950; }
+    .subcontractor-message-form { display:grid; gap:10px; margin-top:14px; }
+    .subcontractor-message-form textarea { width:100%; min-height:92px; padding:12px; color:var(--ink); background:#fff; border:1px solid #cbd4e2; border-radius:11px; font:inherit; font-size:16px; resize:vertical; }
+    .subcontractor-message-form span { min-height:18px; color:#276a55; font-size:10px; font-weight:850; }
+    .subcontractor-test-controls { display:flex; flex-wrap:wrap; gap:9px; margin-top:14px; }
+    .subcontractor-test-controls button { min-height:44px; padding:0 14px; border-radius:10px; font-size:10px; font-weight:950; }
+    .subcontractor-test-controls .exit { color:#fff; background:#9b3838; border:0; }
+    .subcontractor-action-status { min-height:18px; margin:12px 2px 0; color:#4f5879; font-size:10px; font-weight:800; text-align:center; }
+    body.mpi-subcontractor-mode .topbar-actions,
+    body.mpi-subcontractor-mode #appBottomNav,
+    body.mpi-subcontractor-mode #activeJobContext { display:none !important; }
+    body.mpi-subcontractor-mode .topbar { position:static; }
+
+    .subcontractor-test-settings { border:2px solid #d8b24e; }
+    .subcontractor-test-settings .phone-setup-actions { margin-top:14px; }
+
     .app-bottom-nav {
       position: fixed;
       z-index: 30;
@@ -4964,6 +5008,10 @@
       .mpi-profile-field.full,
       .mpi-profile-save,
       .mpi-profile-note { grid-column: auto; }
+      .subcontractor-screen { width:min(100% - 20px,760px); padding-top:12px; }
+      .subcontractor-current { grid-template-columns:1fr; }
+      .subcontractor-job-number { min-height:64px; }
+      .subcontractor-actions,.subcontractor-tool-grid { grid-template-columns:1fr; }
     }
 
     :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
@@ -5060,7 +5108,73 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">143</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">144</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+  </section>
+
+  <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
+    <header class="subcontractor-hero">
+      <div class="subcontractor-hero-top">
+        <div><p class="eyebrow">Michigan Property Inspections</p><h1 id="subcontractor-title">Subcontractor Field Tool</h1></div>
+        <span class="subcontractor-test-badge" id="subcontractorTestBadge" hidden>TEST MODE</span>
+      </div>
+      <div class="subcontractor-current" aria-live="polite">
+        <strong class="subcontractor-job-number" id="subcontractorJobNumber">JOB 1</strong>
+        <div><span>Current status</span><strong id="subcontractorStatus">READY TO START</strong><small id="subcontractorStatusDetail">Tap On Way when you leave for the next job.</small></div>
+      </div>
+    </header>
+
+    <section class="subcontractor-panel" aria-labelledby="subcontractor-job-actions-title">
+      <h2 id="subcontractor-job-actions-title">Job tracker</h2>
+      <p>Use the next available action. Job numbers advance automatically after completion.</p>
+      <div class="subcontractor-actions">
+        <button class="subcontractor-action" id="subcontractorOnWayBtn" type="button">ON WAY TO JOB</button>
+        <button class="subcontractor-action" id="subcontractorArrivedBtn" type="button" disabled>ARRIVED AT JOB</button>
+        <button class="subcontractor-action" id="subcontractorCompleteBtn" type="button" disabled>COMPLETE JOB</button>
+      </div>
+    </section>
+
+    <section class="subcontractor-panel" aria-labelledby="subcontractor-lab-actions-title">
+      <h2 id="subcontractor-lab-actions-title">Lab stop</h2>
+      <p>A lab visit is tracked separately and never changes the current job number.</p>
+      <div class="subcontractor-actions">
+        <button class="subcontractor-action secondary" id="subcontractorWaterTechBtn" type="button">ON WAY TO WATER TECH</button>
+        <button class="subcontractor-action secondary" id="subcontractorImsBtn" type="button">ON WAY TO IMS</button>
+      </div>
+    </section>
+
+    <section class="subcontractor-lab-card" id="subcontractorLabCard" aria-live="polite" hidden>
+      <p>ACTIVE LAB VISIT</p>
+      <h2 id="subcontractorLabTitle">Water Tech</h2>
+      <p id="subcontractorLabDetail">ON WAY TO LAB</p>
+      <div class="subcontractor-actions">
+        <a id="subcontractorLabDirections" href="https://maps.apple.com/" target="_blank" rel="noopener">OPEN DIRECTIONS</a>
+        <button class="subcontractor-action" id="subcontractorLabArrivedBtn" type="button">ARRIVED AT LAB</button>
+        <button class="subcontractor-action" id="subcontractorLabCompleteBtn" type="button" hidden>LAB COMPLETE</button>
+      </div>
+    </section>
+
+    <nav class="subcontractor-tool-grid" aria-label="Subcontractor tools">
+      <a class="subcontractor-tool" href="#comment-builder"><strong>MPI COMMENT BUILDER</strong><small>Open the existing MPI comment tool.</small></a>
+      <a class="subcontractor-tool" href="#age-finder"><strong>EQUIPMENT AGE FINDER</strong><small>Decode supported equipment serial numbers.</small></a>
+      <a class="subcontractor-tool" href="#damage-report"><strong>DAMAGE ITEM NOTICE</strong><small>Record inspection-related damage.</small></a>
+      <a class="subcontractor-tool" href="#office-updates"><strong>OFFICE REPLIES</strong><small>Read messages sent from MPI Office.</small><span class="subcontractor-tool-count" id="subcontractorOfficeUpdateCount">OPEN</span></a>
+    </nav>
+
+    <section class="subcontractor-panel" aria-labelledby="subcontractor-message-title">
+      <h2 id="subcontractor-message-title">Message office</h2>
+      <p>Send a short operational message directly to MPI management.</p>
+      <form class="subcontractor-message-form" id="subcontractorMessageForm">
+        <textarea id="subcontractorMessageText" maxlength="1000" required placeholder="Write your message to MPI Office"></textarea>
+        <button class="subcontractor-action" type="submit">SEND TO OFFICE</button>
+        <span id="subcontractorMessageStatus" role="status"></span>
+      </form>
+    </section>
+
+    <p class="subcontractor-action-status" id="subcontractorActionStatus" role="status"></p>
+    <div class="subcontractor-test-controls">
+      <button class="secondary" type="button" data-reset-subcontractor-test hidden>RESET TEST DAY</button>
+      <button class="exit" id="subcontractorExitTestBtn" type="button" hidden>EXIT TEST MODE</button>
+    </div>
   </section>
 
   <section class="hub-screen app-screen-view" id="field-tools" data-app-screen="field-tools" aria-labelledby="field-tools-title">
@@ -7503,11 +7617,18 @@
             </form>
           </div>
         </section>
+        <section class="panel settings-card subcontractor-test-settings" id="subcontractorTestCard" hidden>
+          <h2>Test Subcontractor — Jason Chamarro</h2>
+          <p>Temporarily use this phone exactly like Jason while the Office Console stays open on another device. Every test record is marked TEST and remains separate from employee records.</p>
+          <div class="phone-setup-actions">
+            <button id="startSubcontractorTestBtn" type="button">OPEN TEST SUBCONTRACTOR MODE</button>
+          </div>
+        </section>
         <section class="panel settings-card">
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 143</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 144</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7635,9 +7756,10 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=143"></script>
-  <script src="./mpi-field-sync.js?build=143"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=143"></script>
+  <script src="./mpi-shared.js?build=144"></script>
+  <script src="./mpi-field-sync.js?build=144"></script>
+  <script src="./mpi-subcontractor.js?build=144"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=144"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -7649,6 +7771,7 @@
 
       const APP_SCREEN_TITLES = {
         "home": "MPI Field Tools",
+        "subcontractor-home": "MPI Subcontractor Field Tool",
         "job-companion": "My Day",
         "field-tools": "Field Tools",
         "contact-mpi": "Contact MPI",
@@ -7675,6 +7798,7 @@
       const bottomNavLinks = [...document.querySelectorAll("[data-bottom-screen]")];
       const toolScreens = new Set(["field-tools", "age-finder", "comment-builder", "damage-report", "equipment-record", "tool-guides", "sop-guide"]);
       const contactScreens = new Set(["contact-mpi", "office-updates", "team-messages", "safety-notice", "requests-feedback"]);
+      const subcontractorScreens = new Set(["subcontractor-home", "comment-builder", "age-finder", "damage-report", "office-updates"]);
 
       function updateJobContextBanner(activeScreen, job) {
         if (job === undefined) {
@@ -7693,21 +7817,27 @@
 
       function renderAppScreen() {
         const rawRequestedScreen = window.location.hash.slice(1);
-        const requestedScreen = rawRequestedScreen === "today-jobs" ? "job-companion" : rawRequestedScreen;
+        const subcontractorMode = document.body.classList.contains("mpi-subcontractor-mode");
+        const normalizedScreen = rawRequestedScreen === "today-jobs" ? "job-companion" : rawRequestedScreen;
+        const requestedScreen = subcontractorMode && !subcontractorScreens.has(normalizedScreen) ? "subcontractor-home" : normalizedScreen;
         const activeScreen = Object.hasOwn(APP_SCREEN_TITLES, requestedScreen)
           ? requestedScreen
-          : (rawRequestedScreen ? "home" : "job-companion");
+          : (subcontractorMode ? "subcontractor-home" : (rawRequestedScreen ? "home" : "job-companion"));
         if (rawRequestedScreen === "today-jobs") history.replaceState(null, "", `${location.pathname}${location.search}#job-companion`);
         for (const view of screenViews) view.hidden = view.dataset.appScreen !== activeScreen;
-        screenNav.hidden = activeScreen === "home";
+        screenNav.hidden = activeScreen === "home" || activeScreen === "subcontractor-home";
         screenTitle.textContent = APP_SCREEN_TITLES[activeScreen];
-        screenBack.href = toolScreens.has(activeScreen) && activeScreen !== "field-tools"
+        screenBack.href = subcontractorMode
+          ? "#subcontractor-home"
+          : toolScreens.has(activeScreen) && activeScreen !== "field-tools"
           ? "#field-tools"
           : contactScreens.has(activeScreen) && activeScreen !== "contact-mpi"
             ? "#contact-mpi"
             : "#home";
         screenBack.setAttribute("aria-label",
-          toolScreens.has(activeScreen) && activeScreen !== "field-tools"
+          subcontractorMode
+            ? "Back to Subcontractor Field Tool"
+            : toolScreens.has(activeScreen) && activeScreen !== "field-tools"
             ? "Back to Field Tools"
             : contactScreens.has(activeScreen) && activeScreen !== "contact-mpi"
               ? "Back to Contact MPI"
@@ -7733,6 +7863,7 @@
       }
 
       window.addEventListener("hashchange", renderAppScreen);
+      window.addEventListener("mpi-company-session-ready", renderAppScreen);
       renderAppScreen();
 
       function settleInitialAppPosition() {
@@ -14063,6 +14194,7 @@
       }
 
       function syncWorkflowCompanyProfile(event) {
+        if (String(event?.detail?.role || "").toLowerCase() === "subcontractor") return;
         const inspectorId = String(event?.detail?.inspectorId || "").trim().slice(0, 40);
         const inspectorName = String(event?.detail?.inspectorName || "").trim().slice(0, 80);
         if (!inspectorId || !inspectorName) return;
@@ -14349,6 +14481,7 @@
       }
 
       function queueWorkflowOperationsSync() {
+        if (String(window.MPI_COMPANY_SESSION?.role || "").toLowerCase() === "subcontractor") return;
         window.clearTimeout(workflowOperationsSyncTimer);
         workflowOperationsSyncTimer = window.setTimeout(() => syncWorkflowOperationsNow(), 900);
       }
@@ -15981,6 +16114,7 @@
       }
 
       function showTimedAlert(alert) {
+        if (document.body.classList.contains("mpi-subcontractor-mode") || String(window.MPI_COMPANY_SESSION?.role || "").toLowerCase() === "subcontractor") return;
         if (timedAlertRepeatInterval) window.clearInterval(timedAlertRepeatInterval);
         activeTimedAlert = alert;
         timedAlertTitle.textContent = alert.title;
@@ -17383,14 +17517,20 @@
           renderWorkflowDayComplete();
         });
         window.addEventListener("mpi-company-session-ready", event => {
+          if (String(event.detail?.role || "").toLowerCase() === "subcontractor") {
+            acknowledgeTimedAlert();
+            return;
+          }
           syncWorkflowCompanyProfile(event);
           watchInspectorRequests(event.detail);
           recoverWorkflowTimeClockFromCompanyAccount(event).finally(queueWorkflowOperationsSync);
         });
         if (window.MPI_COMPANY_SESSION) {
-          syncWorkflowCompanyProfile({ detail: window.MPI_COMPANY_SESSION });
-          watchInspectorRequests(window.MPI_COMPANY_SESSION);
-          queueWorkflowOperationsSync();
+          if (String(window.MPI_COMPANY_SESSION.role || "").toLowerCase() !== "subcontractor") {
+            syncWorkflowCompanyProfile({ detail: window.MPI_COMPANY_SESSION });
+            watchInspectorRequests(window.MPI_COMPANY_SESSION);
+            queueWorkflowOperationsSync();
+          }
         }
         workflowMessageTemplates.addEventListener("click", selectWorkflowMessageTemplate);
         requestAsap?.addEventListener("change", () => {

@@ -33,6 +33,7 @@
   const rangePicker = document.getElementById("adminRangePicker");
   const teamOverview = document.getElementById("adminTeamOverview");
   const inspectorDetail = document.getElementById("adminInspectorDetail");
+  const subcontractorList = document.getElementById("adminSubcontractorList");
   const operationsSync = document.getElementById("adminOperationsSync");
   const commentUsageUsed = document.getElementById("commentUsageUsed");
   const commentUsagePanel = document.getElementById("commentUsagePanel");
@@ -303,7 +304,7 @@
 
   function notificationTokensForUpdate(audience, targetEmail = "") {
     return [...new Set(people.filter(person => {
-      if (person.active === false || !["owner", "inspector"].includes(String(person.role || "").toLowerCase())) return false;
+      if (person.active === false || !["owner", "inspector", "subcontractor"].includes(String(person.role || "").toLowerCase())) return false;
       return audience === "all" || shared.normalizeEmail(person.email) === shared.normalizeEmail(targetEmail);
     }).map(person => person.notificationDevice?.token).filter(Boolean))];
   }
@@ -685,9 +686,9 @@
 
   function renderTargetOptions() {
     const selected = targetInput.value;
-    const inspectors = operativePeople();
-    targetInput.innerHTML = '<option value="">Choose inspector</option>' + inspectors.map(person => `<option value="${escapeHtml(person.email)}">${escapeHtml(person.name || person.email)} — ${escapeHtml(person.email)}</option>`).join("");
-    if (inspectors.some(person => person.email === selected)) targetInput.value = selected;
+    const fieldPeople = people.filter(person => person.active !== false && ["inspector", "subcontractor"].includes(String(person.role || "").toLowerCase()));
+    targetInput.innerHTML = '<option value="">Choose field user</option>' + fieldPeople.map(person => `<option value="${escapeHtml(person.email)}">${escapeHtml(person.name || person.email)} — ${escapeHtml(person.role === "subcontractor" ? "Subcontractor" : "Inspector")}</option>`).join("");
+    if (fieldPeople.some(person => person.email === selected)) targetInput.value = selected;
   }
 
   function renderInspectorSelector() {
@@ -705,8 +706,10 @@
         <div class="person-main inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(person.name || "MPI Team Member")}</strong><small>${escapeHtml(person.email)}</small><small>${person.inspectorId ? `Inspector number: ${escapeHtml(person.inspectorId)}` : "Inspector number not assigned"}</small></div></div>
         <div class="person-controls">
           <input data-person-inspector-id aria-label="Inspector number for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.inspectorId || "")}" maxlength="40" placeholder="Inspector number" ${person.role === "owner" ? "disabled" : ""}>
+          <input data-person-phone aria-label="Phone number for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.phone || "")}" maxlength="30" placeholder="Phone number" ${person.role === "owner" ? "disabled" : ""}>
           <select data-person-role aria-label="Role for ${escapeHtml(person.name || person.email)}" ${person.role === "owner" ? "disabled" : ""}>
             <option value="inspector" ${person.role === "inspector" ? "selected" : ""}>Inspector</option>
+            <option value="subcontractor" ${person.role === "subcontractor" ? "selected" : ""}>Subcontractor</option>
             <option value="admin" ${person.role === "admin" ? "selected" : ""}>Office admin</option>
             ${shared.isOwnerEmail(currentUser?.email) ? `<option value="owner" ${person.role === "owner" ? "selected" : ""}>Owner</option>` : ""}
           </select>
@@ -714,7 +717,44 @@
         </div>
       </article>`).join("") : '<div class="empty">No company accounts have signed in yet.</div>';
     renderOperations();
+    renderSubcontractors();
     renderRequestTodos();
+  }
+
+  function subcontractorStateCard(person, state, isTest = false) {
+    const job = state?.currentJob || { number: 1, status: "ready" };
+    const events = Array.isArray(state?.events) ? state.events.slice(-8).reverse() : [];
+    const messages = (Array.isArray(person.subcontractorMessages) ? person.subcontractorMessages : [])
+      .filter(item => Boolean(item.test) === Boolean(isTest)).slice(-5).reverse();
+    const status = state?.status || `READY FOR JOB ${job.number || 1}`;
+    const completedAt = job.completedAt || state?.completedJobs?.at?.(-1)?.completedAt || "";
+    const title = isTest ? (state?.subcontractorName || "TEST SUBCONTRACTOR") : (person.name || person.email || "MPI Subcontractor");
+    const phone = state?.subcontractorPhone || person.phone || "";
+    return `<article class="subcontractor-admin-card${isTest ? " test" : ""}" data-subcontractor-person="${escapeHtml(person.id)}" data-subcontractor-test="${isTest ? "1" : "0"}">
+      <div class="subcontractor-admin-head"><div><span class="ops-eyebrow">${isTest ? "Safe test record" : "Subcontractor"}</span><h3>${escapeHtml(title)}</h3><p>${escapeHtml(isTest ? `${phone || "No phone recorded"} · test data excluded from employee records` : [person.email, phone].filter(Boolean).join(" · "))}</p></div><span class="subcontractor-admin-badge">${escapeHtml(status)}</span></div>
+      <div class="subcontractor-admin-facts">
+        <div class="subcontractor-admin-fact"><span>Current job</span><strong>Job ${escapeHtml(job.number || state?.currentJobNumber || 1)}</strong></div>
+        <div class="subcontractor-admin-fact"><span>On Way</span><strong>${escapeHtml(formatTime(job.onWayAt))}</strong></div>
+        <div class="subcontractor-admin-fact"><span>Arrived</span><strong>${escapeHtml(formatTime(job.arrivedAt))}</strong></div>
+        <div class="subcontractor-admin-fact"><span>Completed</span><strong>${escapeHtml(formatTime(completedAt))}</strong></div>
+      </div>
+      <div class="subcontractor-admin-events">${events.length ? events.map(item => `<div><strong>${escapeHtml(item.type || "Status updated")}</strong><span>${escapeHtml(formatTime(item.timestamp))}${item.lab ? ` · ${escapeHtml(item.lab)}` : ""}</span></div>`).join("") : '<div><strong>No actions yet</strong><span>Waiting for phone</span></div>'}</div>
+      <div class="subcontractor-office-messages">${messages.length ? messages.map(item => `<article><strong>${escapeHtml(formatDateTime(item.createdAt))} · ${escapeHtml(item.senderName || title)}</strong><span>${escapeHtml(item.message || "")}</span></article>`).join("") : ""}</div>
+      <form class="subcontractor-admin-message" data-subcontractor-message-form data-person-id="${escapeHtml(person.id)}"><label class="field">Message subcontractor<textarea data-message-text maxlength="1000" required placeholder="Write a message for ${escapeHtml(title)}"></textarea></label><button class="primary" type="submit">MESSAGE SUBCONTRACTOR</button><span class="status" data-message-status></span></form>
+      ${isTest ? '<button class="danger" type="button" data-reset-admin-test-subcontractor>RESET TEST DAY</button>' : ""}
+    </article>`;
+  }
+
+  function renderSubcontractors() {
+    if (!subcontractorList) return;
+    const cards = [];
+    people.filter(person => person.active !== false && person.role === "subcontractor").forEach(person => {
+      cards.push(subcontractorStateCard(person, person.subcontractorCurrent, false));
+    });
+    people.filter(person => person.active !== false && person.subcontractorTestCurrent?.test === true).forEach(person => {
+      cards.push(subcontractorStateCard(person, person.subcontractorTestCurrent, true));
+    });
+    subcontractorList.innerHTML = cards.length ? cards.join("") : '<div class="empty">No subcontractor activity has synchronized yet. Assign the Subcontractor role in Team, or open Test Subcontractor from the phone Settings screen.</div>';
   }
 
   function allInspectorRequests() {
@@ -1290,8 +1330,8 @@
 
   async function sendInspectorMessage(formElement) {
     const person = people.find(item => item.id === formElement.dataset.personId);
-    const text = formElement.querySelector("#adminMessageText").value.trim();
-    const status = formElement.querySelector("#adminMessageStatus");
+    const text = formElement.querySelector("[data-message-text], #adminMessageText")?.value.trim();
+    const status = formElement.querySelector("[data-message-status], #adminMessageStatus");
     if (!person || !text) return;
     status.textContent = "Sending…";
     try {
@@ -1309,17 +1349,38 @@
         targetTokens: notificationTokensForUpdate("inspector", person.email),
         title: "Message from MPI Office",
         body: text,
-        link: "./#team-messages",
+        link: person.role === "subcontractor" ? "./#office-updates" : "./#team-messages",
         tag: `mpi-office-${messageRef.id}`
       }).catch(() => false);
       formElement.reset();
       status.textContent = pushRequested
-        ? `Sent to ${person.name || "inspector"}; push alert requested.`
-        : `Sent to ${person.name || "inspector"}. Push alerts are not enabled on that phone yet.`;
+        ? `Sent to ${person.name || "field user"}; push alert requested.`
+        : `Sent to ${person.name || "field user"}. Push alerts are not enabled on that phone yet.`;
       status.className = "status success";
     } catch (error) {
       status.textContent = error.message || "The message could not be sent.";
       status.className = "status error";
+    }
+  }
+
+  async function resetAdminTestSubcontractor(button) {
+    const card = button.closest("[data-subcontractor-person]");
+    const person = people.find(item => item.id === card?.dataset.subcontractorPerson);
+    if (!person || !shared.isAdminRole(currentProfile)) return;
+    button.disabled = true;
+    const timestamp = new Date().toISOString();
+    const reset = {
+      date: dateKey(), test: true, currentJobNumber: 1,
+      subcontractorName: "Jason Chamarro", subcontractorPhone: "",
+      currentJob: { number: 1, status: "ready", onWayAt: "", arrivedAt: "", completedAt: "" },
+      completedJobs: [], lab: null, resumeAfterLab: null,
+      status: "READY FOR JOB 1", events: [], updatedAtClient: timestamp
+    };
+    try {
+      await shared.db.collection("users").doc(person.id).set({ subcontractorTestCurrent: reset, subcontractorUpdatedAt: shared.serverTimestamp() }, { merge: true });
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = error.message || "RESET FAILED — TRY AGAIN";
     }
   }
 
@@ -1363,14 +1424,25 @@
     if (role === "owner" && !shared.isOwnerEmail(currentUser?.email)) return;
     const active = card.querySelector("[data-person-active]").checked;
     const inspectorId = card.querySelector("[data-person-inspector-id]").value.trim().slice(0, 40);
+    const phone = card.querySelector("[data-person-phone]").value.trim().slice(0, 30);
     try {
-      await shared.db.collection("users").doc(person.id).set({ role, active, inspectorId, updatedAt: shared.serverTimestamp(), updatedBy: currentUser.uid }, { merge: true });
+      await shared.db.collection("users").doc(person.id).set({ role, active, inspectorId, phone, updatedAt: shared.serverTimestamp(), updatedBy: currentUser.uid }, { merge: true });
     } catch (error) {
       authStatus.textContent = error.message || "The account change could not be saved.";
     }
   }
 
   tabButtons.forEach(button => button.addEventListener("click", () => showView(button.dataset.adminView)));
+  subcontractorList?.addEventListener("submit", event => {
+    const formElement = event.target.closest("[data-subcontractor-message-form]");
+    if (!formElement) return;
+    event.preventDefault();
+    sendInspectorMessage(formElement);
+  });
+  subcontractorList?.addEventListener("click", event => {
+    const button = event.target.closest("[data-reset-admin-test-subcontractor]");
+    if (button) resetAdminTestSubcontractor(button);
+  });
   audienceInput.addEventListener("change", () => { targetField.hidden = audienceInput.value !== "inspector"; });
   attachmentInput.addEventListener("change", () => addSelectedFiles(attachmentInput.files || []));
   attachmentDrop.addEventListener("keydown", event => {
@@ -1496,7 +1568,8 @@
     });
     people = [
       { id: "preview-kevin", name: "Kevin Cave", email: "kev@michiganpropertyinspections.com", role: "owner", active: true, operationsCurrent: makeDay("Kevin Cave", "KC", "INSPECTION IN PROGRESS"), operationsUpdatedAt: new Date() },
-      { id: "preview-cory", name: "Cory Leese", email: "cory@michiganpropertyinspections.com", inspectorId: "NACHI26090138", role: "inspector", active: true, operationsCurrent: makeDay("Cory Leese", "NACHI26090138", "DRIVING TO JOB", 6), operationsUpdatedAt: new Date() }
+      { id: "preview-cory", name: "Cory Leese", email: "cory@michiganpropertyinspections.com", inspectorId: "NACHI26090138", role: "inspector", active: true, operationsCurrent: makeDay("Cory Leese", "NACHI26090138", "DRIVING TO JOB", 6), operationsUpdatedAt: new Date() },
+      { id: "preview-sub", name: "Jason Chamarro", email: "test-subcontractor@mpi.local", phone: "", role: "subcontractor", active: true, notificationDevice: { token: "preview" }, subcontractorCurrent: { date: dateKey(), test: false, subcontractorName: "Jason Chamarro", subcontractorPhone: "", currentJobNumber: 2, currentJob: { number: 2, status: "arrived", onWayAt: at(12, 48), arrivedAt: at(13, 14), completedAt: "" }, completedJobs: [{ number: 1, status: "completed", completedAt: at(11, 32) }], status: "AT JOB – JOB 2", events: [{ id: "sub-a", type: "ON WAY", timestamp: at(12, 48), jobNumber: 2 }, { id: "sub-b", type: "ARRIVED", timestamp: at(13, 14), jobNumber: 2 }], updatedAtClient: new Date().toISOString() } }
     ];
     currentUser = { uid: "preview", email: "kev@michiganpropertyinspections.com", displayName: "Kevin Cave" };
     currentProfile = { name: "Kevin Cave", role: "owner", active: true };
