@@ -93,8 +93,16 @@
     };
   }
 
-  function localDateKeyForTimestamp(value) {
+  function timestampMilliseconds(value) {
+    const converted = value?.toDate?.();
+    if (converted instanceof Date && Number.isFinite(converted.getTime())) return converted.getTime();
+    if (Number.isFinite(Number(value?.seconds))) return Number(value.seconds) * 1000 + Math.floor(Number(value.nanoseconds || 0) / 1000000);
     const parsed = new Date(value);
+    return Number.isFinite(parsed.getTime()) ? parsed.getTime() : NaN;
+  }
+
+  function localDateKeyForTimestamp(value) {
+    const parsed = new Date(timestampMilliseconds(value));
     if (!Number.isFinite(parsed.getTime())) return "";
     return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`;
   }
@@ -105,7 +113,7 @@
     const now = Number(endTime);
     const currentDate = localDateKeyForTimestamp(now);
     const allowOpen = options.allowOpen !== undefined ? Boolean(options.allowOpen) : String(date || "") === currentDate;
-    const fallbackEnd = new Date(options.fallbackEnd || "").getTime();
+    const fallbackEnd = timestampMilliseconds(options.fallbackEnd || "");
     const issues = [];
     const paidSessionIndexes = effective.sessions.map((session, index) => {
       const source = String(session?.startSource || "legacy-manual-clock");
@@ -115,7 +123,7 @@
     const intervals = effective.sessions.map((session, index) => {
       const source = String(session?.startSource || "legacy-manual-clock");
       if (!session?.clockedInAt || ["morning-readiness", "activity-only"].includes(source)) return null;
-      const start = new Date(session.clockedInAt).getTime();
+      const start = timestampMilliseconds(session.clockedInAt);
       if (!Number.isFinite(start)) {
         issues.push({ code: "invalid-start", sessionIndex: index, message: "A paid-hours session has an invalid start time." });
         return null;
@@ -131,7 +139,7 @@
         issues.push({ code: "historical-open-session", sessionIndex: index, message: "An older paid-hours session was never clocked out and has been excluded from totals." });
         return null;
       }
-      const end = session.clockedOutAt ? new Date(session.clockedOutAt).getTime() : recoveredEnd || now;
+      const end = session.clockedOutAt ? timestampMilliseconds(session.clockedOutAt) : recoveredEnd || now;
       if (!Number.isFinite(end) || end <= start) {
         issues.push({ code: "invalid-end", sessionIndex: index, message: "A paid-hours session ends before it starts and has been excluded from totals." });
         return null;

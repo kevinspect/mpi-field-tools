@@ -2827,7 +2827,7 @@ Status: prepared August 26, 2026 as app Build 96.
 - Added an approved home/end-of-day address to company profiles. Cory Leese is set to `38948 Koppernick Road, Westland, MI 48185` and that address is used for his final-arrival location record.
 - Updated the app, Office Console, version manifest, and offline cache to Build 150.
 
-## Build 153 — Audited Hours and Arrival Drive Stop
+## Build 154 — Audited Hours and Arrival Drive Stop
 
 - Replaced unbounded weekly time accumulation with a single validated paid-session calculation shared by the inspector app, Office Console, and weekly email payload.
 - Historical sessions without a Clock Out no longer run forward to the present; invalid, wrong-day, backward, or over-18-hour sessions are excluded and flagged for management review.
@@ -2840,4 +2840,4 @@ Status: prepared August 26, 2026 as app Build 96.
 
 - Confirmed open current-day sessions continue to count while valid, while open historical sessions return zero with a review issue.
 - Confirmed closed sessions, overlapping sessions, management corrections, and per-day weekly aggregation use the same calculation path.
-- Confirmed all Build 153 page, script, version, and offline-cache markers match.
+- Confirmed all Build 154 page, script, version, and offline-cache markers match.
