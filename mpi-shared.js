@@ -105,7 +105,13 @@
     const now = Number(endTime);
     const currentDate = localDateKeyForTimestamp(now);
     const allowOpen = options.allowOpen !== undefined ? Boolean(options.allowOpen) : String(date || "") === currentDate;
+    const fallbackEnd = new Date(options.fallbackEnd || "").getTime();
     const issues = [];
+    const paidSessionIndexes = effective.sessions.map((session, index) => {
+      const source = String(session?.startSource || "legacy-manual-clock");
+      return session?.clockedInAt && !["morning-readiness", "activity-only"].includes(source) ? index : -1;
+    }).filter(index => index >= 0);
+    const finalPaidSessionIndex = paidSessionIndexes.at(-1);
     const intervals = effective.sessions.map((session, index) => {
       const source = String(session?.startSource || "legacy-manual-clock");
       if (!session?.clockedInAt || ["morning-readiness", "activity-only"].includes(source)) return null;
@@ -118,11 +124,14 @@
         issues.push({ code: "wrong-day", sessionIndex: index, message: "A paid-hours session starts outside its recorded calendar day." });
         return null;
       }
-      if (!session.clockedOutAt && !allowOpen) {
+      const recoveredEnd = !session.clockedOutAt && index === finalPaidSessionIndex && Number.isFinite(fallbackEnd) && fallbackEnd > start
+        ? fallbackEnd
+        : 0;
+      if (!session.clockedOutAt && !recoveredEnd && !allowOpen) {
         issues.push({ code: "historical-open-session", sessionIndex: index, message: "An older paid-hours session was never clocked out and has been excluded from totals." });
         return null;
       }
-      const end = session.clockedOutAt ? new Date(session.clockedOutAt).getTime() : now;
+      const end = session.clockedOutAt ? new Date(session.clockedOutAt).getTime() : recoveredEnd || now;
       if (!Number.isFinite(end) || end <= start) {
         issues.push({ code: "invalid-end", sessionIndex: index, message: "A paid-hours session ends before it starts and has been excluded from totals." });
         return null;
@@ -131,7 +140,7 @@
         issues.push({ code: "overlong-session", sessionIndex: index, message: "A paid-hours session exceeds 18 hours and has been excluded pending management correction." });
         return null;
       }
-      return { start, end, sessionIndex: index };
+      return { start, end, sessionIndex: index, recoveredEnd: Boolean(recoveredEnd) };
     }).filter(Boolean).sort((left, right) => left.start - right.start || left.end - right.end);
     const merged = [];
     intervals.forEach(interval => {

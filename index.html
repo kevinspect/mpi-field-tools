@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="152">
+  <meta name="app-build" content="153">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5111,7 +5111,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">152</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">153</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -7633,7 +7633,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 152</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 153</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7761,10 +7761,10 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=152"></script>
-  <script src="./mpi-field-sync.js?build=152"></script>
-  <script src="./mpi-subcontractor.js?build=152"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=152"></script>
+  <script src="./mpi-shared.js?build=153"></script>
+  <script src="./mpi-field-sync.js?build=153"></script>
+  <script src="./mpi-subcontractor.js?build=153"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=153"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -14794,13 +14794,20 @@
         const keys = new Set(workflowWeekDateKeys());
         const byDate = new Map();
         loadWorkflowCloseoutHistory().forEach(record => {
-          if (keys.has(record.date) && record.timeClockBackup) byDate.set(record.date, record.timeClockBackup);
+          if (keys.has(record.date) && record.timeClockBackup) byDate.set(record.date, { timeClock: record.timeClockBackup, completedAt: record.completedAt || "" });
         });
         const completedToday = workflowDayCompleteRecord();
-        if (completedToday?.timeClockBackup) byDate.set(completedToday.date, completedToday.timeClockBackup);
+        if (completedToday?.timeClockBackup) byDate.set(completedToday.date, { timeClock: completedToday.timeClockBackup, completedAt: completedToday.completedAt || "" });
         const current = loadWorkflowTimeClock();
-        if (current?.date && keys.has(current.date)) byDate.set(current.date, current);
-        return [...byDate.values()].reduce((total, record) => total + Math.floor(workflowWorkedMilliseconds(record) / 60000), 0);
+        if (current?.date && keys.has(current.date)) byDate.set(current.date, { timeClock: current, completedAt: completedToday?.completedAt || "" });
+        return [...byDate.values()].reduce((total, entry) => {
+          const record = entry.timeClock;
+          const allowOpen = record.date === localDateKey() && !entry.completedAt;
+          const milliseconds = window.MPI_SHARED?.workedMilliseconds
+            ? window.MPI_SHARED.workedMilliseconds(record, record.date, workflowAdminCorrections(), Date.now(), { allowOpen, fallbackEnd: entry.completedAt })
+            : workflowWorkedMilliseconds(record);
+          return total + Math.floor(milliseconds / 60000);
+        }, 0);
       }
 
       function workflowClockLocationDetail(location) {
@@ -17289,8 +17296,17 @@
           const allowOpen = day.date === localDateKey()
             && day.liveStatus !== "CLOCKED OUT"
             && !day.dayComplete?.completedAt;
+          const effective = window.MPI_SHARED?.effectiveTimeClock?.(day.timeClock, day.date, corrections);
+          const activityClockOut = (Array.isArray(day.activity) ? day.activity : [])
+            .filter(item => item?.action === "Clocked off")
+            .at(-1);
+          const fallbackEnd = effective?.effectiveClockedOutAt
+            || activityClockOut?.data?.clockedOutAt
+            || activityClockOut?.timestamp
+            || day.dayComplete?.completedAt
+            || "";
           const timeAudit = window.MPI_SHARED?.workedTimeAudit
-            ? window.MPI_SHARED.workedTimeAudit(day.timeClock, day.date, corrections, Date.now(), { allowOpen })
+            ? window.MPI_SHARED.workedTimeAudit(day.timeClock, day.date, corrections, Date.now(), { allowOpen, fallbackEnd })
             : null;
           const fallbackMinutes = Math.max(0, Number(day.timeClock?.workedMinutes) || 0);
           const hoursMinutes = timeAudit
@@ -17298,7 +17314,6 @@
             : fallbackMinutes <= 18 * 60 ? fallbackMinutes : 0;
           const driveMinutes = Math.max(0, Number(day.driveTime?.totalMinutes) || 0);
           const jobsCompleted = (Array.isArray(day.jobs) ? day.jobs : []).filter(job => job.status === "completed").length;
-          const effective = window.MPI_SHARED?.effectiveTimeClock?.(day.timeClock, day.date, corrections);
           return {
             date: day.date,
             dateLabel: workflowEmailDisplayDate(day.date),

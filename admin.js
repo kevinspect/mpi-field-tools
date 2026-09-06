@@ -972,7 +972,10 @@
     const allowOpen = day.date === dateKey()
       && day.liveStatus !== "CLOCKED OUT"
       && !day.dayComplete?.completedAt;
-    return shared.workedTimeAudit(day.timeClock, day.date, person?.adminCorrections || [], Date.now(), { allowOpen });
+    return shared.workedTimeAudit(day.timeClock, day.date, person?.adminCorrections || [], Date.now(), {
+      allowOpen,
+      fallbackEnd: effectiveClockOut(person, day)
+    });
   }
 
   function workedMinutes(person, day) {
