@@ -172,12 +172,18 @@
     .person-controls { display:flex; gap:8px; align-items:center; }
     .person-controls input,.person-controls select { min-height:40px; padding:0 9px; border:1px solid var(--line); border-radius:9px; }
     .person-controls input { width:180px; }
+    .person-controls [data-person-end-address] { width:300px; }
     .inspector-identity { display:grid; grid-template-columns:48px minmax(0,1fr); align-items:center; gap:11px; min-width:0; }
     .inspector-avatar { position:relative; display:grid; width:48px; height:48px; place-items:center; overflow:hidden; color:#fff; background:linear-gradient(145deg,#11186a,#2f75b5); border:2px solid #d5af4c; border-radius:50%; flex:0 0 auto; font-size:12px; font-weight:950; }
     .inspector-avatar img { position:absolute; z-index:1; inset:0; width:100%; height:100%; object-fit:cover; }
     .inspector-avatar b { position:relative; z-index:0; }
     .inspector-avatar.large { width:62px; height:62px; font-size:15px; }
     .inspector-sync { color:#2873b6 !important; font-weight:850; }
+    .arrival-review { display:grid; gap:12px; margin-top:12px; padding:16px; border:1px solid var(--line); border-left:5px solid var(--gold); border-radius:14px; background:#fff; }
+    .arrival-review > div:first-child { display:grid; gap:5px; }
+    .arrival-review > div:first-child strong { color:var(--navy); font-size:16px; }
+    .arrival-review > div:first-child small { color:var(--muted); line-height:1.45; }
+    .arrival-review > a { color:var(--blue); font-weight:900; }
     .inspector-sync.stale { color:#9a332d !important; }
     .empty { padding:34px 20px; color:var(--muted); background:#f8fafc; border:1px dashed #cad3e2; border-radius:14px; text-align:center; }
     .notice { padding:14px 16px; color:#634d0f; background:#fff8df; border:1px solid #edd891; border-radius:12px; font-size:11px; line-height:1.5; }
@@ -311,6 +317,7 @@
       .person-main .inspector-avatar { width:44px; height:44px; }
       .person-controls { justify-content:space-between; flex-wrap:wrap; }
       .person-controls input { width:100%; }
+      .person-controls [data-person-end-address] { width:100%; }
       .tabbar { position:sticky; z-index:10; top:65px; }
       .operations-toolbar,.detail-hero,.two-col { grid-template-columns:1fr; }
       .inspector-row { grid-template-columns:1fr 1fr; }
@@ -568,7 +575,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=149"></script>
-  <script src="./admin.js?build=149"></script>
+  <script src="./mpi-shared.js?build=150"></script>
+  <script src="./admin.js?build=150"></script>
 </body>
 </html>

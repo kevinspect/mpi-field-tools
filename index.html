@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="149">
+  <meta name="app-build" content="150">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5111,7 +5111,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">149</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">150</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -5270,12 +5270,12 @@
           <div class="workflow-card-header">
             <span class="workflow-status-pill" id="workflowTimeClockBadge">Not started</span>
             <h3 id="workflow-time-clock-title">Hours worked today</h3>
-            <p>Your hours begin automatically when ARRIVED is location-verified at the first inspection.</p>
+            <p>Your hours begin automatically when you tap ARRIVED at the first inspection. Location is recorded quietly for management review.</p>
           </div>
           <div class="workflow-time-clock-status">
             <span id="workflowTimeClockLabel">HOURS WORKED TODAY</span>
             <strong id="workflowTimeClockValue">0:00</strong>
-            <small id="workflowTimeClockDetail">Waiting for your first verified arrival.</small>
+            <small id="workflowTimeClockDetail">Waiting for your first arrival.</small>
             <small id="workflowWeeklyHoursDetail">HOURS WORKED THIS WEEK · 0:00</small>
           </div>
           <div class="workflow-hours-pending" id="workflowHoursPending" hidden>
@@ -5288,8 +5288,8 @@
             <span>Keep the clock running during the final journey. When you arrive home, return here and tap CLOCK OFF.</span>
           </div>
           <div class="workflow-arrival-error" id="workflowArrivalError" role="alert" hidden>
-            <strong>ARRIVAL NOT VERIFIED</strong>
-            <span id="workflowArrivalErrorBody">You must be at the scheduled inspection property before starting your Hours Worked clock.</span>
+            <strong>PRACTICE LOCATION NOT VERIFIED</strong>
+            <span id="workflowArrivalErrorBody">The practice location check could not be completed.</span>
           </div>
           <div class="workflow-time-clock-actions">
             <button class="workflow-button" id="workflowClockOnBtn" type="button" hidden>CLOCK ON</button>
@@ -7633,7 +7633,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 149</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 150</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7761,10 +7761,10 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=149"></script>
-  <script src="./mpi-field-sync.js?build=149"></script>
-  <script src="./mpi-subcontractor.js?build=149"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=149"></script>
+  <script src="./mpi-shared.js?build=150"></script>
+  <script src="./mpi-field-sync.js?build=150"></script>
+  <script src="./mpi-subcontractor.js?build=150"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=150"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -14055,11 +14055,13 @@
       const WORKFLOW_COC_MAX_PER_LAB = 8;
       const WORKFLOW_COC_MAX_PER_DAY = 12;
       const WORKFLOW_COC_MAX_BYTES = 600000;
-      const WORKFLOW_CLOCK_MODEL = "verified-first-arrival-v2";
+      const WORKFLOW_CLOCK_MODEL = "record-first-arrival-review-v3";
       const WORKFLOW_ARRIVAL_GEOFENCE_FEET = 600;
       const WORKFLOW_ARRIVAL_ACCURACY_ALLOWANCE_FEET = 200;
       const WORKFLOW_EMAIL_ENDPOINT = "https://script.google.com/macros/s/AKfycbzd701WKgQIzWP24pmjL3gaTFIjH2iHxjMYzirArFoYq8nup57p8h1VMmJPx9MVYOqL/exec";
       const WORKFLOW_EMAIL_SOURCE = "mpi-field-tools-daily-closeout";
+      const WORKFLOW_WEEKLY_EMAIL_SOURCE = "mpi-field-tools-weekly-summary";
+      const WORKFLOW_WEEKLY_EMAIL_RECEIPTS_KEY = "mpiWorkflowWeeklyEmailReceiptsV1";
       const WORKFLOW_STAGES = ["scheduled", "on-my-way", "arrived", "in-progress", "equipment", "completed"];
       const WORKFLOW_STAGE_LABELS = {
         scheduled: "Scheduled",
@@ -14175,6 +14177,7 @@
             id: String(profile.id).trim().slice(0, 40),
             phone: String(profile.phone || "").trim().slice(0, 30),
             vehicle: String(profile.vehicle || "").trim().slice(0, 80),
+            approvedEndAddress: String(profile.approvedEndAddress || "").trim().slice(0, 180),
             savedAt: String(profile.savedAt || "")
           };
         } catch (_) {
@@ -14190,6 +14193,7 @@
           id: workflowInspectorId.value.trim(),
           phone: workflowInspectorPhone.value.trim(),
           vehicle: workflowInspectorVehicle.value.trim(),
+          approvedEndAddress: "",
           savedAt: new Date().toISOString()
         };
         try { localStorage.setItem(WORKFLOW_PROFILE_STORAGE_KEY, JSON.stringify(profile)); } catch (_) {}
@@ -14201,12 +14205,16 @@
 
       function syncWorkflowCompanyProfile(event) {
         if (String(event?.detail?.role || "").toLowerCase() === "subcontractor") return;
+        window.setTimeout(() => {
+          renderWorkflowTimeClock();
+          queueWorkflowOperationsSync();
+        }, 0);
         const inspectorId = String(event?.detail?.inspectorId || "").trim().slice(0, 40);
         const inspectorName = String(event?.detail?.inspectorName || "").trim().slice(0, 80);
         if (!inspectorId || !inspectorName) return;
         const profile = loadWorkflowProfile();
         if (!profile) {
-          const created = { name: inspectorName, id: inspectorId, phone: "", vehicle: "", savedAt: new Date().toISOString() };
+          const created = { name: inspectorName, id: inspectorId, phone: String(event?.detail?.phone || "").trim().slice(0, 30), vehicle: String(event?.detail?.assignedVehicle || "").trim().slice(0, 80), approvedEndAddress: String(event?.detail?.approvedEndAddress || "").trim().slice(0, 180), savedAt: new Date().toISOString() };
           try { localStorage.setItem(WORKFLOW_PROFILE_STORAGE_KEY, JSON.stringify(created)); } catch (_) {}
           saveInspectorName(inspectorName);
           appendWorkflowEvent("Company-phone profile synchronized", { inspectorId });
@@ -14214,8 +14222,11 @@
           showToast(`${inspectorName} is ready on this company phone`);
           return;
         }
-        if (profile.id === inspectorId && profile.name === inspectorName) return;
-        const updated = { ...profile, name: inspectorName, id: inspectorId, savedAt: new Date().toISOString() };
+        const approvedEndAddress = String(event?.detail?.approvedEndAddress || profile.approvedEndAddress || "").trim().slice(0, 180);
+        const phone = String(event?.detail?.phone || profile.phone || "").trim().slice(0, 30);
+        const vehicle = String(event?.detail?.assignedVehicle || profile.vehicle || "").trim().slice(0, 80);
+        if (profile.id === inspectorId && profile.name === inspectorName && profile.approvedEndAddress === approvedEndAddress && profile.phone === phone && profile.vehicle === vehicle) return;
+        const updated = { ...profile, name: inspectorName, id: inspectorId, phone, vehicle, approvedEndAddress, savedAt: new Date().toISOString() };
         try { localStorage.setItem(WORKFLOW_PROFILE_STORAGE_KEY, JSON.stringify(updated)); } catch (_) {}
         saveInspectorName(inspectorName);
         appendWorkflowEvent("Company-phone profile synchronized", { inspectorId });
@@ -14262,6 +14273,17 @@
         try { localStorage.setItem(WORKFLOW_ACTIVITY_STORAGE_KEY, JSON.stringify(activity.slice(-5000))); } catch (_) {}
         renderWorkflowAdmin();
         if (!practice) queueWorkflowOperationsSync();
+        return event;
+      }
+
+      function updateWorkflowEventData(eventId, values) {
+        if (!eventId) return null;
+        const activity = loadWorkflowActivity();
+        const event = activity.find(item => item.id === eventId);
+        if (!event) return null;
+        event.data = { ...(event.data || {}), ...(values || {}), syncStatus: "queued" };
+        try { localStorage.setItem(WORKFLOW_ACTIVITY_STORAGE_KEY, JSON.stringify(activity.slice(-5000))); } catch (_) {}
+        queueWorkflowOperationsSync();
         return event;
       }
 
@@ -14411,11 +14433,14 @@
         const active = activeJob?.isPractice ? null : activeJob;
         const readiness = workflowReadinessRecord();
         const clock = loadWorkflowTimeClock();
+        const effectiveClock = effectiveWorkflowTimeClock(clock);
         const labStop = loadWorkflowLabStop();
         const dayComplete = workflowDayCompleteRecord();
         const compactJobs = jobs.map(job => {
           const jobEvents = activity.filter(item => String(item.calendarEventId || item.jobId || "") === String(job.id || ""));
           const eventAt = action => jobEvents.find(item => item.action === action)?.timestamp || "";
+          const arrivalLocationEvent = jobEvents.filter(item => ["Arrival location verified", "Arrival location review required"].includes(item.action)).at(-1);
+          const arrivalEvent = jobEvents.find(item => item.action === "Arrived");
           const isActive = String(active?.calendarEventId || "") === String(job.id || "");
           const arrivedAt = eventAt("Arrived");
           const performance = arrivedAt ? workflowArrivalPerformance(arrivedAt, job.start?.dateTime || job.start?.date || job.scheduledStart) : null;
@@ -14431,6 +14456,7 @@
             inspectionStartedAt: eventAt("Inspection started"),
             completedAt: eventAt("Final job completion"),
             arrivalPerformance: performance?.label || "Not recorded",
+            arrivalLocation: arrivalLocationEvent?.data || arrivalEvent?.data || null,
             departurePlan: isActive && active?.departurePlan ? { ...active.departurePlan } : null
           };
         });
@@ -14448,10 +14474,14 @@
           readiness: readiness ? { completedAt: readiness.completedAt || "", items: readiness.items || [], notificationPermission: "Notification" in window ? Notification.permission : "unsupported" } : null,
           timeClock: clock ? {
             activityStartedAt: clock.activityStartedAt || readiness?.completedAt || "",
-            hoursWorkedStartedAt: clock.hoursWorkedStartedAt || "",
+            hoursWorkedStartedAt: effectiveClock?.effectiveHoursWorkedStartedAt || clock.hoursWorkedStartedAt || "",
+            effectiveClockedOutAt: effectiveClock?.effectiveClockedOutAt || "",
             workedMinutes: Math.floor(workflowWorkedMilliseconds(clock) / 60000),
             active: Boolean(workflowActiveClockSession(clock)),
-            sessions: workflowPaySessions(clock).map(session => ({ ...session }))
+            sessions: workflowPaySessions(clock).map(session => ({ ...session })),
+            effectiveSessions: workflowPaySessions(effectiveClock).map(session => ({ ...session })),
+            managementAdjusted: Boolean(effectiveClock?.startAdjustment || effectiveClock?.endAdjustment),
+            appliedAdjustments: [effectiveClock?.startAdjustment, effectiveClock?.endAdjustment].filter(Boolean).map(item => ({ ...item }))
           } : null,
           driveTime: dayComplete?.driveTimeBackup || workflowDriveTimeWithArchives(activity),
           commentUsage: workflowCommentUsageSnapshot(),
@@ -14639,6 +14669,19 @@
         return (record?.sessions || []).filter(isWorkflowPaidSession);
       }
 
+      function workflowAdminCorrections() {
+        return Array.isArray(window.MPI_COMPANY_SESSION?.adminCorrections)
+          ? window.MPI_COMPANY_SESSION.adminCorrections
+          : [];
+      }
+
+      function effectiveWorkflowTimeClock(record = loadWorkflowTimeClock()) {
+        if (!record) return null;
+        return window.MPI_SHARED?.effectiveTimeClock
+          ? window.MPI_SHARED.effectiveTimeClock(record, record.date || localDateKey(), workflowAdminCorrections())
+          : record;
+      }
+
       async function recoverWorkflowTimeClockFromCompanyAccount(event) {
         const userId = String(event?.detail?.userId || "");
         if (!userId || !window.MPI_SHARED?.db || !loadWorkflowProfile()) return false;
@@ -14680,6 +14723,9 @@
       }
 
       function workflowWorkedMilliseconds(record = loadWorkflowTimeClock(), endTime = Date.now()) {
+        if (record && window.MPI_SHARED?.workedMilliseconds) {
+          return window.MPI_SHARED.workedMilliseconds(record, record.date || localDateKey(), workflowAdminCorrections(), endTime);
+        }
         const intervals = workflowPaySessions(record).map(session => {
           const start = new Date(session.clockedInAt).getTime();
           const end = session.clockedOutAt ? new Date(session.clockedOutAt).getTime() : endTime;
@@ -14768,7 +14814,7 @@
 
       function clearWorkflowArrivalError() {
         workflowArrivalError.hidden = true;
-        workflowArrivalErrorBody.textContent = "You must be at the scheduled inspection property before starting your Hours Worked clock.";
+        workflowArrivalErrorBody.textContent = "The practice location check could not be completed.";
       }
 
       function getWorkflowClockPosition(options) {
@@ -14879,7 +14925,7 @@
         });
       }
 
-      async function workflowPropertyCoordinates(job) {
+      async function workflowPropertyCoordinates(job, options = {}) {
         const directLatitude = Number(job?.propertyCoordinates?.latitude ?? job?.latitude);
         const directLongitude = Number(job?.propertyCoordinates?.longitude ?? job?.longitude);
         if (Number.isFinite(directLatitude) && Number.isFinite(directLongitude)) {
@@ -14890,8 +14936,10 @@
         if (Number.isFinite(Number(cached?.latitude)) && Number.isFinite(Number(cached?.longitude))) return cached;
         const resolved = await censusGeocodeWorkflowAddress(job?.property);
         saveWorkflowGeocode(job?.property, resolved);
-        job.propertyCoordinates = resolved;
-        storeActiveJob(job);
+        if (options.persist !== false) {
+          job.propertyCoordinates = resolved;
+          storeActiveJob(job);
+        }
         return resolved;
       }
 
@@ -14912,7 +14960,7 @@
           return { verified: false, location, reason: location.status === "denied" ? "Location permission was not allowed." : "This phone could not obtain a reliable location." };
         }
         try {
-          const propertyCoordinates = await workflowPropertyCoordinates(job);
+          const propertyCoordinates = await workflowPropertyCoordinates(job, { persist: false });
           const distanceFeet = Math.round(workflowDistanceFeet(location, propertyCoordinates));
           const accuracyAllowanceFeet = Math.min(WORKFLOW_ARRIVAL_ACCURACY_ALLOWANCE_FEET, Math.max(0, Number(location.accuracyFeet) || 0));
           const acceptedDistanceFeet = WORKFLOW_ARRIVAL_GEOFENCE_FEET + accuracyAllowanceFeet;
@@ -14935,6 +14983,58 @@
         } catch (error) {
           return { verified: false, location, reason: error?.message || "The scheduled property address could not be verified." };
         }
+      }
+
+      async function completeWorkflowArrivalLocationReview(job, arrivalEventId, arrivalAt, hoursSessionStarted) {
+        let result;
+        try {
+          result = await verifyWorkflowFirstArrival({ ...job });
+        } catch (error) {
+          result = { verified: false, location: { status: "unavailable" }, reason: error?.message || "Location review could not be completed." };
+        }
+        const location = result.location || { status: "unavailable" };
+        const verification = result.verification || {};
+        const verified = result.verified === true;
+        const evidence = {
+          arrivalEventId,
+          recordedArrivalAt: arrivalAt,
+          verificationStatus: verified ? "location-verified" : "arrival-location-review-required",
+          originalLocationStatus: verified ? "LOCATION VERIFIED" : "ARRIVAL LOCATION REVIEW REQUIRED",
+          reviewState: verified ? "not-required" : "pending",
+          reviewReason: verified ? "" : String(result.reason || "Location could not be verified."),
+          actualLatitude: location.status === "recorded" ? location.latitude : "",
+          actualLongitude: location.status === "recorded" ? location.longitude : "",
+          gpsAccuracyFeet: location.accuracyFeet || "",
+          gpsStatus: location.status || "unavailable",
+          scheduledAddress: String(job?.property || ""),
+          scheduledLatitude: verification.propertyLatitude ?? "",
+          scheduledLongitude: verification.propertyLongitude ?? "",
+          scheduledAddressMatch: verification.propertyMatch || "",
+          distanceFeet: verification.distanceFeet ?? "",
+          approvedGeofenceFeet: verification.approvedGeofenceFeet || WORKFLOW_ARRIVAL_GEOFENCE_FEET,
+          acceptedDistanceFeet: verification.acceptedDistanceFeet || "",
+          verifiedAt: verification.verifiedAt || new Date().toISOString(),
+          recordedOffline: !navigator.onLine
+        };
+        updateWorkflowEventData(arrivalEventId, evidence);
+        const clock = loadWorkflowTimeClock();
+        if (hoursSessionStarted && clock) {
+          const session = workflowPaySessions(clock).find(item => item.clockedInAt === arrivalAt)
+            || workflowPaySessions(clock).find(item => String(item.jobId || "") === String(job?.calendarEventId || job?.spectoraJobId || ""));
+          if (session) {
+            session.clockInLocation = location;
+            session.arrivalVerification = evidence;
+            saveWorkflowTimeClock(clock);
+          }
+        }
+        const active = loadActiveJob();
+        if (String(active?.calendarEventId || active?.spectoraJobId || "") === String(job?.calendarEventId || job?.spectoraJobId || "")) {
+          active.arrivalLocation = evidence;
+          storeActiveJob(active);
+        }
+        appendWorkflowEvent(verified ? "Arrival location verified" : "Arrival location review required", evidence, job);
+        renderWorkflowTimeClock();
+        queueWorkflowOperationsSync();
       }
 
       function workflowFinalTravelNeedsClockOff() {
@@ -14974,7 +15074,7 @@
             : hoursStarted
               ? `Clocked off at ${workflowClock(lastSession?.clockedOutAt)} · ${workflowClockLocationDetail(lastLocation)}`
               : readiness
-                ? "Activity tracking is active for management. Paid hours begin at the first verified arrival."
+                ? "Activity tracking is active for management. Paid hours begin when ARRIVED is tapped at the first inspection."
                 : "Complete Morning Readiness to begin the working-day activity record.";
         workflowHoursPending.hidden = !readiness || hoursStarted;
         const jobs = workflowScheduleJobs();
@@ -15162,7 +15262,7 @@
 
       function reopenWorkflowDayForAddedJobs(jobs) {
         const record = workflowDayCompleteRecord();
-        if (!record || record.emailStatus !== "sent" || record.date !== localDateKey()) return false;
+        if (!record || !["sent", "console-synced"].includes(record.emailStatus) || record.date !== localDateKey()) return false;
         const previouslyCompleted = new Set(Array.isArray(record.completedJobIds) ? record.completedJobIds : []);
         const addedJobs = (Array.isArray(jobs) ? jobs : []).filter(job => job?.id && !previouslyCompleted.has(job.id));
         if (!addedJobs.length) return false;
@@ -15782,9 +15882,35 @@
         record.stage = "home-arrived";
         record.homeArrivedAt = arrivedAt;
         saveWorkflowLabStop(record);
-        appendWorkflowEvent("Arrived home / end location", { arrivedAt }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
+        const approvedEndAddress = loadWorkflowProfile()?.approvedEndAddress || "";
+        const arrivalEvent = appendWorkflowEvent("Arrived home / end location", { arrivedAt, approvedEndAddress, locationStatus: "pending" }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
         renderWorkflowApp();
         showToast("Arrival recorded — complete the equipment check, then Clock Out");
+        (async () => {
+          const location = await requestWorkflowClockLocation();
+          let approvedCoordinates = null;
+          let distanceFeet = "";
+          if (approvedEndAddress && location.status === "recorded") {
+            try {
+              const cached = loadWorkflowGeocodeCache()[workflowAddressCacheKey(approvedEndAddress)];
+              approvedCoordinates = Number.isFinite(Number(cached?.latitude)) && Number.isFinite(Number(cached?.longitude))
+                ? cached
+                : await censusGeocodeWorkflowAddress(approvedEndAddress);
+              saveWorkflowGeocode(approvedEndAddress, approvedCoordinates);
+              distanceFeet = Math.round(workflowDistanceFeet(location, approvedCoordinates));
+            } catch (_) {}
+          }
+          updateWorkflowEventData(arrivalEvent?.id, {
+            locationStatus: location.status || "unavailable",
+            latitude: location.latitude || "",
+            longitude: location.longitude || "",
+            accuracyFeet: location.accuracyFeet || "",
+            approvedEndAddress,
+            approvedLatitude: approvedCoordinates?.latitude ?? "",
+            approvedLongitude: approvedCoordinates?.longitude ?? "",
+            distanceFeet
+          });
+        })().catch(() => {});
       }
 
       function updateWorkflowReadinessButton() {
@@ -16379,82 +16505,27 @@
         const timeClock = ensureWorkflowTimeClockRecord();
         const firstHoursStart = !workflowHoursHaveStarted(timeClock);
         const reopenedHoursStart = !firstHoursStart && !workflowActiveClockSession(timeClock) && !workflowDayCompleteRecord() && todayArchivedCloseouts().length > 0;
-        const mustVerifyHoursStart = firstHoursStart || reopenedHoursStart;
-        let arrivalVerification = null;
-        let location = null;
-        let offlineArrival = false;
-        if (mustVerifyHoursStart) {
-          clearWorkflowArrivalError();
-          workflowTimeClockInFlight = true;
-          workflowArrivedBtn.disabled = true;
-          workflowArrivedBtn.textContent = "VERIFYING ARRIVAL…";
-          renderWorkflowTimeClock();
-          let result;
-          try {
-            if (!navigator.onLine) {
-              const offlineLocation = await requestWorkflowClockLocation();
-              result = {
-                verified: true,
-                offlineAccepted: true,
-                location: offlineLocation,
-                reason: offlineLocation.status === "recorded" ? "GPS recorded while offline; property geofence will be reviewed after sync." : "LOCATION NOT AVAILABLE – OFFLINE ARRIVAL",
-                verification: {
-                  verifiedAt: arrivalTappedAt,
-                  verificationStatus: offlineLocation.status === "recorded" ? "recorded-offline" : "location-not-available-offline",
-                  approvedGeofenceFeet: WORKFLOW_ARRIVAL_GEOFENCE_FEET
-                }
-              };
-            } else {
-              result = await verifyWorkflowFirstArrival(job);
-            }
-          } catch (_) {
-            result = {
-              verified: false,
-              location: { status: "unavailable" },
-              reason: "Arrival verification could not be completed. Please try again."
-            };
-          } finally {
-            workflowTimeClockInFlight = false;
-            workflowArrivedBtn.disabled = false;
-            workflowArrivedBtn.textContent = "ARRIVED";
-            renderWorkflowTimeClock();
-          }
-          offlineArrival = Boolean(result.offlineAccepted);
-          if (!result.verified) {
-            appendWorkflowEvent("Arrival verification failed", {
-              attemptedAt: new Date().toISOString(),
-              reason: result.reason,
-              locationStatus: result.location?.status || "unavailable",
-              accuracyFeet: result.location?.accuracyFeet || "",
-              distanceFeet: result.verification?.distanceFeet || "",
-              approvedGeofenceFeet: WORKFLOW_ARRIVAL_GEOFENCE_FEET
-            }, job);
-            showWorkflowArrivalError(`You must be at the scheduled inspection property before starting your Hours Worked clock.${result.reason ? `\n\n${result.reason}` : ""}`);
-            showToast("Arrival not verified — check the message above ARRIVED");
-            return;
-          }
-          location = result.location;
-          arrivalVerification = result.verification;
-        }
+        const startsHours = firstHoursStart || reopenedHoursStart;
+        clearWorkflowArrivalError();
         const onMyWayEvent = loadWorkflowActivity().filter(item => item.date === localDateKey()
           && item.action === "On My Way selected"
           && String(item.calendarEventId || item.jobId || "") === String(job.calendarEventId || job.spectoraJobId || "")).at(-1);
         const arrivedAtNow = arrivalTappedAt;
         const arrivedJob = updateWorkflowStage(job, "arrived", "Arrived", {
           originalTimestamp: arrivalTappedAt,
-          recordedOffline: offlineArrival,
+          recordedOffline: !navigator.onLine,
           scheduledStart: job.scheduledStart || "",
-          gpsVerified: mustVerifyHoursStart ? !offlineArrival || location?.status === "recorded" : "First-job verification already completed",
-          locationStatus: location?.status || (offlineArrival ? "unavailable" : "not-required"),
-          verificationStatus: arrivalVerification?.verificationStatus || (mustVerifyHoursStart ? "geofence-verified" : "already-completed"),
-          latitude: location?.latitude || "",
-          longitude: location?.longitude || "",
-          accuracyFeet: location?.accuracyFeet || "",
-          distanceFeet: arrivalVerification?.distanceFeet || "",
-          approvedGeofenceFeet: arrivalVerification?.approvedGeofenceFeet || "",
+          verificationStatus: "location-review-pending",
+          originalLocationStatus: "LOCATION REVIEW PENDING",
+          reviewState: "pending",
+          approvedGeofenceFeet: WORKFLOW_ARRIVAL_GEOFENCE_FEET,
           driveMinutes: workflowMinutesBetween(onMyWayEvent?.timestamp, arrivedAtNow)
         });
-        const arrivalAt = arrivedJob?.workflowTimestamps?.arrived || new Date().toISOString();
+        const arrivalAt = arrivedJob?.workflowTimestamps?.arrived || arrivalTappedAt;
+        const arrivalEvent = loadWorkflowActivity().filter(item => item.date === localDateKey()
+          && item.action === "Arrived"
+          && item.timestamp === arrivalAt
+          && String(item.calendarEventId || item.jobId || "") === String(job.calendarEventId || job.spectoraJobId || "")).at(-1);
         const performance = workflowArrivalPerformance(arrivalAt, job.scheduledStart);
         appendWorkflowEvent("Arrival performance calculated", {
           arrivedAt: arrivalAt,
@@ -16462,7 +16533,15 @@
           varianceMinutes: performance.varianceMinutes,
           performance: performance.label
         }, arrivedJob || job);
-        if (mustVerifyHoursStart) startWorkflowHoursAtVerifiedArrival(arrivedJob || job, arrivalAt, location || { status: "unavailable" }, arrivalVerification || {}, offlineArrival ? "offline-first-arrival" : reopenedHoursStart ? "reopened-workday-arrival" : "verified-first-arrival");
+        if (startsHours) {
+          startWorkflowHoursAtVerifiedArrival(
+            arrivedJob || job,
+            arrivalAt,
+            { status: "pending", attemptedAt: arrivalAt },
+            { verificationStatus: "location-review-pending", approvedGeofenceFeet: WORKFLOW_ARRIVAL_GEOFENCE_FEET },
+            !navigator.onLine ? "offline-first-arrival" : reopenedHoursStart ? "reopened-workday-arrival" : "first-arrival"
+          );
+        }
         const departurePlan = refreshWorkflowDeparturePlan(arrivedJob || job);
         if (departurePlan) {
           appendWorkflowEvent("Departure time calculated", departurePlan, arrivedJob || job);
@@ -16470,7 +16549,8 @@
         }
         clearWorkflowArrivalError();
         renderWorkflowTimeClock();
-        showToast(mustVerifyHoursStart ? `${offlineArrival ? "Arrival saved offline" : "Arrival verified"} · Hours Worked ${reopenedHoursStart ? "resumed" : "started"} at ${workflowClock(arrivalAt)}` : "Arrival time recorded");
+        showToast(startsHours ? `Arrival recorded · Hours Worked ${reopenedHoursStart ? "resumed" : "started"} at ${workflowClock(arrivalAt)}` : "Arrival time recorded");
+        completeWorkflowArrivalLocationReview(arrivedJob || job, arrivalEvent?.id || "", arrivalAt, startsHours).catch(() => {});
       }
 
       function startWorkflowInspection() {
@@ -16580,17 +16660,10 @@
         const allConfirmed = workflowEndOfDayChecks.length > 0 && checked === workflowEndOfDayChecks.length;
         workflowEndOfDayChecks.forEach(check => { check.disabled = Boolean(record); });
         if (record) {
-          const delivered = record.emailStatus === "sent";
-          const waitingForInternet = !navigator.onLine;
-          workflowDayCompleteBtn.hidden = delivered;
-          workflowDayCompleteBtn.disabled = delivered || waitingForInternet || workflowDailySummaryInFlight;
-          workflowDayCompleteBtn.textContent = delivered
-            ? "SIGNED OFF & LOG SENT"
-            : workflowDailySummaryInFlight
-              ? "SENDING DAILY SUMMARY…"
-              : waitingForInternet
-                ? "SUMMARY WAITING FOR INTERNET"
-                : "SEND DAILY SUMMARY";
+          const saved = ["console-synced", "sent"].includes(record.emailStatus);
+          workflowDayCompleteBtn.hidden = saved;
+          workflowDayCompleteBtn.disabled = saved || workflowDailySummaryInFlight;
+          workflowDayCompleteBtn.textContent = saved ? "SIGNED OFF" : "SAVE TO OFFICE CONSOLE";
           return;
         }
         workflowDayCompleteBtn.hidden = false;
@@ -16642,14 +16715,14 @@
             : "Confirm every listed item to sign off.";
         } else {
           const signedOff = new Date(record.completedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-          if (record.emailStatus === "sent") {
-            workflowDayCompleteStatus.textContent = `Signed off at ${signedOff}. Daily summary sent to MPI management.`;
+          if (["console-synced", "sent"].includes(record.emailStatus)) {
+            workflowDayCompleteStatus.textContent = `Signed off at ${signedOff}. Today’s record is available in the Office Console.`;
           } else if (workflowDailySummaryInFlight) {
-            workflowDayCompleteStatus.textContent = `Signed off at ${signedOff}. Sending the daily summary to MPI management…`;
+            workflowDayCompleteStatus.textContent = `Signed off at ${signedOff}. Saving today’s record to the Office Console…`;
           } else if (!navigator.onLine) {
-            workflowDayCompleteStatus.textContent = `Signed off at ${signedOff}. The summary is saved on this phone and will be ready to send after reconnecting.`;
+            workflowDayCompleteStatus.textContent = `Signed off at ${signedOff}. The record will synchronize to the Office Console after reconnecting.`;
           } else {
-            workflowDayCompleteStatus.textContent = `Signed off at ${signedOff}. Tap Send Daily Summary to retry delivery.`;
+            workflowDayCompleteStatus.textContent = `Signed off at ${signedOff}. Tap Save to Office Console to retry synchronization.`;
           }
         }
       }
@@ -16665,8 +16738,8 @@
         const receipt = {
           date: record.date,
           completedAt: record.completedAt,
-          emailStatus: "sent",
-          emailedAt: record.emailedAt,
+          emailStatus: "console-synced",
+          consoleSyncedAt: record.consoleSyncedAt || new Date().toISOString(),
           equipmentConfirmed: true,
           completedJobIds,
           timeClockBackup: timeClockBackup ? { ...timeClockBackup, sessions: workflowPaySessions(timeClockBackup).map(session => ({ ...session })) } : null,
@@ -16939,7 +17012,8 @@
       function workflowEmailTimeClock() {
         const record = loadWorkflowTimeClock();
         const readiness = workflowReadinessRecord();
-        const sessions = workflowPaySessions(record);
+        const effectiveRecord = effectiveWorkflowTimeClock(record);
+        const sessions = workflowPaySessions(effectiveRecord);
         const first = sessions[0];
         const last = sessions[sessions.length - 1];
         const activityStartedAt = record?.activityStartedAt || readiness?.completedAt || "";
@@ -16959,7 +17033,8 @@
           shiftCount: sessions.length,
           clockOnLocation: workflowEmailLocation(first?.clockInLocation),
           clockOffLocation: workflowEmailLocation(last?.clockOutLocation),
-          hoursWorkedProperty: record?.hoursWorkedProperty || ""
+          hoursWorkedProperty: record?.hoursWorkedProperty || "",
+          managementAdjusted: Boolean(effectiveRecord?.startAdjustment || effectiveRecord?.endAdjustment)
         };
       }
 
@@ -17080,6 +17155,121 @@
         throw new Error("Email delivery was not confirmed");
       }
 
+      function workflowWeeklyEmailReceipts() {
+        try {
+          const value = JSON.parse(localStorage.getItem(WORKFLOW_WEEKLY_EMAIL_RECEIPTS_KEY) || "{}");
+          return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+        } catch (_) {
+          return {};
+        }
+      }
+
+      function saveWorkflowWeeklyEmailReceipt(weekStart, value) {
+        const receipts = workflowWeeklyEmailReceipts();
+        receipts[weekStart] = value;
+        try { localStorage.setItem(WORKFLOW_WEEKLY_EMAIL_RECEIPTS_KEY, JSON.stringify(receipts)); } catch (_) {}
+      }
+
+      function workflowWeeklySummaryPeriod() {
+        const keys = workflowWeekDateKeys();
+        return { keys, start: keys[0] || localDateKey(), end: keys[keys.length - 1] || localDateKey() };
+      }
+
+      function workflowWeeklyMinutesLabel(value) {
+        const minutes = Math.max(0, Math.round(Number(value) || 0));
+        return `${Math.floor(minutes / 60)} hr ${minutes % 60} min`;
+      }
+
+      async function buildWorkflowWeeklySummaryPayload() {
+        const session = window.MPI_COMPANY_SESSION;
+        if (!session?.userId || !window.MPI_SHARED?.db) throw new Error("Company account is not connected");
+        const snapshot = await window.MPI_SHARED.db.collection("users").doc(session.userId).get();
+        const profile = snapshot.data() || {};
+        const period = workflowWeeklySummaryPeriod();
+        const allowed = new Set(period.keys);
+        const byDate = new Map();
+        [...(Array.isArray(profile.operationsDays) ? profile.operationsDays : []), profile.operationsCurrent]
+          .filter(day => day?.date && allowed.has(day.date))
+          .forEach(day => byDate.set(day.date, day));
+        const corrections = Array.isArray(profile.adminCorrections) ? profile.adminCorrections : workflowAdminCorrections();
+        const days = [...byDate.values()].sort((left, right) => String(left.date).localeCompare(String(right.date))).map(day => {
+          const hoursMinutes = window.MPI_SHARED?.workedMilliseconds
+            ? Math.floor(window.MPI_SHARED.workedMilliseconds(day.timeClock, day.date, corrections, Date.now()) / 60000)
+            : Math.max(0, Number(day.timeClock?.workedMinutes) || 0);
+          const driveMinutes = Math.max(0, Number(day.driveTime?.totalMinutes) || 0);
+          const jobsCompleted = (Array.isArray(day.jobs) ? day.jobs : []).filter(job => job.status === "completed").length;
+          const effective = window.MPI_SHARED?.effectiveTimeClock?.(day.timeClock, day.date, corrections);
+          return {
+            date: day.date,
+            dateLabel: workflowEmailDisplayDate(day.date),
+            hoursMinutes,
+            driveMinutes,
+            jobsCompleted,
+            hoursStart: effective?.effectiveHoursWorkedStartedAt ? workflowClock(effective.effectiveHoursWorkedStartedAt) : "Not started",
+            clockOut: effective?.effectiveClockedOutAt ? workflowClock(effective.effectiveClockedOutAt) : "Not recorded",
+            adjusted: Boolean(effective?.startAdjustment || effective?.endAdjustment)
+          };
+        });
+        const inspectorName = String(profile.name || session.inspectorName || "MPI Inspector").trim().slice(0, 80);
+        const startLabel = workflowEmailDisplayDate(period.start);
+        const endLabel = workflowEmailDisplayDate(period.end);
+        return {
+          source: WORKFLOW_WEEKLY_EMAIL_SOURCE,
+          version: 1,
+          requestId: `weekly-${String(session.inspectorId || session.userId).replace(/[^a-z0-9-]+/gi, "-")}-${period.start}`.slice(0, 120),
+          inspectorName,
+          inspectorId: String(session.inspectorId || ""),
+          weekStart: period.start,
+          weekEnd: period.end,
+          weekLabel: `${startLabel} – ${endLabel}`,
+          preheader: `${inspectorName}'s weekly MPI workflow summary: ${days.reduce((sum, day) => sum + day.jobsCompleted, 0)} jobs completed.`,
+          totalHoursMinutes: days.reduce((sum, day) => sum + day.hoursMinutes, 0),
+          totalDriveMinutes: days.reduce((sum, day) => sum + day.driveMinutes, 0),
+          jobsCompleted: days.reduce((sum, day) => sum + day.jobsCompleted, 0),
+          days
+        };
+      }
+
+      async function sendWorkflowWeeklySummaryIfDue() {
+        const today = new Date().getDay();
+        if (![5, 6, 0].includes(today)) return false;
+        const closeout = workflowDayCompleteRecord();
+        if (!closeout?.completedAt || closeout.date !== localDateKey()) return false;
+        const period = workflowWeeklySummaryPeriod();
+        if (workflowWeeklyEmailReceipts()[period.start]?.status === "sent") return true;
+        if (!navigator.onLine) return false;
+        const payload = await buildWorkflowWeeklySummaryPayload();
+        try {
+          await sendWorkflowCloseoutEmail(payload);
+        } catch (_) {
+          const dailyLines = payload.days.length
+            ? payload.days.map(day => `${day.dateLabel}: ${workflowWeeklyMinutesLabel(day.hoursMinutes)} worked · ${workflowWeeklyMinutesLabel(day.driveMinutes)} driving · ${day.jobsCompleted} job${day.jobsCompleted === 1 ? "" : "s"}${day.adjusted ? " · management adjusted" : ""}`).join("\n")
+            : "No completed inspector days were recorded for this week.";
+          await sendWorkflowCloseoutEmail({
+            source: "mpi-field-tools-form-email",
+            requestId: `${payload.requestId}-compatible`.slice(0, 120),
+            formType: "Weekly Inspector Summary",
+            subject: `Weekly Inspector Summary | ${payload.inspectorName} | ${payload.weekLabel}`,
+            preheader: payload.preheader,
+            submittedAt: new Date().toISOString(),
+            propertyAddress: "MPI weekly operations",
+            inspectorName: payload.inspectorName,
+            status: "Week Complete",
+            fields: [
+              { label: "Reporting period", value: payload.weekLabel },
+              { label: "Hours Worked", value: workflowWeeklyMinutesLabel(payload.totalHoursMinutes) },
+              { label: "Drive Time", value: workflowWeeklyMinutesLabel(payload.totalDriveMinutes) },
+              { label: "Jobs Completed", value: String(payload.jobsCompleted) },
+              { label: "Daily Breakdown", value: dailyLines }
+            ],
+            formAttachments: []
+          });
+        }
+        saveWorkflowWeeklyEmailReceipt(period.start, { status: "sent", sentAt: new Date().toISOString(), requestId: payload.requestId });
+        appendWorkflowEvent("Weekly summary submitted to management", { weekStart: period.start, weekEnd: period.end, submittedAt: new Date().toISOString() }, null);
+        return true;
+      }
+
       async function submitWorkflowDailySummary(record = workflowDayCompleteRecord()) {
         if (!record || workflowDailySummaryInFlight || record.emailStatus === "sent") return;
         if (!navigator.onLine) {
@@ -17131,10 +17321,21 @@
         }
       }
 
-      function completeWorkflowDay() {
+      async function completeWorkflowDay() {
         const existing = workflowDayCompleteRecord();
         if (existing) {
-          submitWorkflowDailySummary(existing);
+          workflowDailySummaryInFlight = true;
+          renderWorkflowDayComplete();
+          const synced = await syncWorkflowOperationsNow(workflowOperationsSnapshot());
+          workflowDailySummaryInFlight = false;
+          if (synced) {
+            existing.emailStatus = "console-synced";
+            existing.consoleSyncedAt = new Date().toISOString();
+            saveWorkflowDayCompleteRecord(existing);
+            await sendWorkflowWeeklySummaryIfDue().catch(() => false);
+            clearDeliveredWorkflowLogs(existing);
+          }
+          renderWorkflowDayComplete();
           return;
         }
         if (workflowActiveClockSession()) {
@@ -17153,7 +17354,7 @@
           inspectorId: profile?.id || "",
           completedAt,
           equipment,
-          emailStatus: "pending",
+          emailStatus: "console-pending",
           closeoutNumber: earlierCloseouts.length + 1,
           reopenedAfterCloseout: Boolean(previous),
           previousCompletedAt: previous?.completedAt || "",
@@ -17164,7 +17365,21 @@
         appendWorkflowEvent("Signed off for day", { completedAt });
         saveWorkflowLabStop(null);
         renderWorkflowDayComplete();
-        submitWorkflowDailySummary(record);
+        workflowDailySummaryInFlight = true;
+        renderWorkflowDayComplete();
+        const synced = await syncWorkflowOperationsNow(workflowOperationsSnapshot());
+        workflowDailySummaryInFlight = false;
+        if (synced) {
+          record.emailStatus = "console-synced";
+          record.consoleSyncedAt = new Date().toISOString();
+          saveWorkflowDayCompleteRecord(record);
+          await sendWorkflowWeeklySummaryIfDue().catch(() => false);
+          clearDeliveredWorkflowLogs(record);
+          showToast("Day signed off — record saved to Office Console");
+        } else {
+          showToast("Day signed off — reconnect to save to Office Console");
+        }
+        renderWorkflowDayComplete();
       }
 
       function openWorkflowMessageDialog(template = "") {
@@ -17517,6 +17732,7 @@
           updateWorkflowDayCompleteButton();
           renderWorkflowDayComplete();
           queueWorkflowOperationsSync();
+          sendWorkflowWeeklySummaryIfDue().catch(() => false);
         });
         window.addEventListener("offline", () => {
           updateWorkflowDayCompleteButton();
@@ -17530,6 +17746,7 @@
           syncWorkflowCompanyProfile(event);
           watchInspectorRequests(event.detail);
           recoverWorkflowTimeClockFromCompanyAccount(event).finally(queueWorkflowOperationsSync);
+          sendWorkflowWeeklySummaryIfDue().catch(() => false);
         });
         if (window.MPI_COMPANY_SESSION) {
           if (String(window.MPI_COMPANY_SESSION.role || "").toLowerCase() !== "subcontractor") {
@@ -17572,6 +17789,7 @@
         window.addEventListener("pageshow", () => {
           monitorWorkflowDeparture();
           if (window.MPI_COMPANY_SESSION) queueWorkflowOperationsSync();
+          sendWorkflowWeeklySummaryIfDue().catch(() => false);
         });
         window.addEventListener("focus", monitorWorkflowDeparture);
         renderWorkflowApp();

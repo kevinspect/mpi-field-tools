@@ -3,6 +3,7 @@ var MPI_EMAIL = Object.freeze({
   ADMIN_COPY: "admin@michiganpropertyinspections.com",
   REPLY_TO: "kev@michiganpropertyinspections.com",
   SOURCE: "mpi-field-tools-daily-closeout",
+  WEEKLY_SOURCE: "mpi-field-tools-weekly-summary",
   LOGO_URL: "https://kevinspect.github.io/mpi-field-tools/mpi-logo.png",
   MAX_DAILY_SENDS: 50,
   MAX_REQUEST_BYTES: 12500000,
@@ -38,7 +39,12 @@ function doPost(event) {
     requestId = safeText_(input.requestId, 120);
     var source = safeText_(input.source, 80);
     if (source === MPI_PUSH.SOURCE) return handlePushRequest_(input, requestId);
-    if (!requestId || (source !== MPI_EMAIL.SOURCE && source !== "mpi-field-tools-form-email")) throw new Error("Request was not accepted");
+    if (!requestId || (source !== MPI_EMAIL.SOURCE && source !== MPI_EMAIL.WEEKLY_SOURCE && source !== "mpi-field-tools-form-email")) throw new Error("Request was not accepted");
+
+    if (source === MPI_EMAIL.SOURCE) {
+      writeStatus_(requestId, { ok: true, status: "sent", requestId: requestId, suppressed: true, message: "Daily closeout retained in Office Console" });
+      return response_({ ok: true, status: "sent", requestId: requestId, suppressed: true });
+    }
 
     var existing = readStatus_(requestId);
     if (existing && (existing.status === "sent" || existing.status === "duplicate")) {
@@ -52,16 +58,17 @@ function doPost(event) {
       if (existing && existing.status === "sent") return response_({ ok: true, status: "duplicate", requestId: requestId });
       enforceDailyLimit_();
       var genericForm = source === "mpi-field-tools-form-email";
-      var payload = genericForm ? cleanFormPayload_(input) : cleanPayload_(input);
-      var attachments = genericForm ? formAttachmentBlobs_(input.formAttachments) : attachmentBlobs_(input.labCocPhotos);
+      var weeklySummary = source === MPI_EMAIL.WEEKLY_SOURCE;
+      var payload = genericForm ? cleanFormPayload_(input) : weeklySummary ? cleanWeeklyPayload_(input) : cleanPayload_(input);
+      var attachments = genericForm ? formAttachmentBlobs_(input.formAttachments) : weeklySummary ? [] : attachmentBlobs_(input.labCocPhotos);
       MailApp.sendEmail({
         to: MPI_EMAIL.RECIPIENT,
         cc: MPI_EMAIL.ADMIN_COPY,
         replyTo: MPI_EMAIL.REPLY_TO,
         name: "Michigan Property Inspections",
-        subject: genericForm ? payload.subject : "Daily Inspector Closeout | " + payload.inspectorName + " | " + payload.date,
-        body: genericForm ? plainFormText_(payload) : plainText_(payload, attachments.length),
-        htmlBody: genericForm ? renderFormEmail_(payload) : renderEmail_(payload, attachments.length),
+        subject: genericForm ? payload.subject : weeklySummary ? "Weekly Inspector Summary | " + payload.inspectorName + " | " + payload.weekLabel : "Daily Inspector Closeout | " + payload.inspectorName + " | " + payload.date,
+        body: genericForm ? plainFormText_(payload) : weeklySummary ? plainWeeklyText_(payload) : plainText_(payload, attachments.length),
+        htmlBody: genericForm ? renderFormEmail_(payload) : weeklySummary ? renderWeeklyEmail_(payload) : renderEmail_(payload, attachments.length),
         attachments: attachments
       });
       incrementDailyCount_();
@@ -216,6 +223,67 @@ function authorizePushService() {
   console.log("MPI push service permission check: " + code);
   if (code < 200 || code >= 300) throw new Error("Push service permission check failed: " + code);
   return code;
+}
+
+function cleanWeeklyPayload_(input) {
+  var days = cleanObjectArray_(input.days, 7, function (item) {
+    return {
+      dateLabel: safeText_(item.dateLabel, 80),
+      hoursMinutes: Math.max(0, Number(item.hoursMinutes) || 0),
+      driveMinutes: Math.max(0, Number(item.driveMinutes) || 0),
+      jobsCompleted: Math.max(0, Math.round(Number(item.jobsCompleted) || 0)),
+      hoursStart: safeText_(item.hoursStart, 40),
+      clockOut: safeText_(item.clockOut, 40),
+      adjusted: item.adjusted === true
+    };
+  });
+  return {
+    inspectorName: safeText_(input.inspectorName, 80) || "MPI Inspector",
+    weekLabel: safeText_(input.weekLabel, 180) || "Current week",
+    preheader: safeText_(input.preheader, 200),
+    totalHoursMinutes: Math.max(0, Number(input.totalHoursMinutes) || 0),
+    totalDriveMinutes: Math.max(0, Number(input.totalDriveMinutes) || 0),
+    jobsCompleted: Math.max(0, Math.round(Number(input.jobsCompleted) || 0)),
+    days: days
+  };
+}
+
+function renderWeeklyEmail_(payload) {
+  var metrics = '<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>' +
+    weeklyMetric_("HOURS WORKED", duration_(payload.totalHoursMinutes)) +
+    weeklyMetric_("DRIVE TIME", duration_(payload.totalDriveMinutes)) +
+    weeklyMetric_("JOBS COMPLETE", String(payload.jobsCompleted)) +
+    '</tr></table>';
+  var rows = payload.days.length ? payload.days.map(function (day) {
+    return '<tr><td style="padding:13px 8px;border-bottom:1px solid #e4e9f0;color:#11186a;font-weight:800;">' + html_(day.dateLabel) + (day.adjusted ? '<div style="margin-top:4px;color:#b48720;font-size:11px;">Management adjusted</div>' : '') + '</td>' +
+      '<td style="padding:13px 8px;border-bottom:1px solid #e4e9f0;color:#293767;text-align:center;">' + html_(duration_(day.hoursMinutes)) + '</td>' +
+      '<td style="padding:13px 8px;border-bottom:1px solid #e4e9f0;color:#293767;text-align:center;">' + html_(duration_(day.driveMinutes)) + '</td>' +
+      '<td style="padding:13px 8px;border-bottom:1px solid #e4e9f0;color:#293767;text-align:center;font-weight:800;">' + day.jobsCompleted + '</td></tr>';
+  }).join("") : '<tr><td colspan="4" style="padding:16px;color:#66708c;">No recorded workdays were available.</td></tr>';
+  var breakdown = '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size:13px;"><tr><th align="left" style="padding:8px;color:#66708c;">DAY</th><th style="padding:8px;color:#66708c;">HOURS</th><th style="padding:8px;color:#66708c;">DRIVE</th><th style="padding:8px;color:#66708c;">JOBS</th></tr>' + rows + '</table>';
+  return '<!doctype html><html><body style="margin:0;padding:0;background:#eef2f8;font-family:Arial,Helvetica,sans-serif;color:#11186a;">' +
+    '<div style="display:none;max-height:0;overflow:hidden;opacity:0;">' + html_(payload.preheader) + '</div>' +
+    '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eef2f8;"><tr><td align="center" style="padding:20px 10px;">' +
+    '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;background:#ffffff;border:1px solid #d8e0eb;border-radius:22px;overflow:hidden;">' +
+    '<tr><td align="center" style="padding:28px 22px;background:#11186a;"><img src="' + MPI_EMAIL.LOGO_URL + '" width="90" alt="Michigan Property Inspections" style="display:block;width:90px;height:auto;margin:0 auto 13px;"><div style="color:#d8b655;font-size:12px;line-height:18px;letter-spacing:2px;font-weight:800;">MICHIGAN PROPERTY INSPECTIONS</div><h1 style="margin:8px 0 0;color:#ffffff;font-size:27px;line-height:34px;">WEEKLY INSPECTOR SUMMARY</h1></td></tr>' +
+    '<tr><td style="padding:22px;">' +
+      section_("INSPECTOR", cardRows_([["Inspector Name", payload.inspectorName], ["Reporting Week", payload.weekLabel], ["Status", "Weekly summary complete"]])) +
+      section_("WEEKLY TOTALS", metrics) +
+      section_("DAILY BREAKDOWN", breakdown) +
+    '</td></tr>' +
+    '<tr><td align="center" style="padding:24px;background:#f4f7fb;border-top:1px solid #d8e0eb;"><div style="width:48px;height:3px;background:#b48720;margin:0 auto 13px;"></div><strong style="color:#11186a;">Michigan Property Inspections</strong><div style="margin-top:5px;color:#66708c;font-size:12px;line-height:18px;">Workflow Management System<br>(810) 243-4773 &middot; kev@michiganpropertyinspections.com</div><div style="margin-top:10px;color:#8b93a7;font-size:11px;">Automatically generated from the inspector workflow app.</div></td></tr>' +
+    '</table></td></tr></table></body></html>';
+}
+
+function weeklyMetric_(label, value) {
+  return '<td width="33.33%" align="center" style="padding:16px 6px;border:1px solid #d8e0eb;background:#f4f7fb;"><div style="color:#66708c;font-size:10px;letter-spacing:1px;font-weight:800;">' + html_(label) + '</div><div style="margin-top:7px;color:#11186a;font-size:20px;font-weight:900;">' + html_(value) + '</div></td>';
+}
+
+function plainWeeklyText_(payload) {
+  var lines = ["MICHIGAN PROPERTY INSPECTIONS", "WEEKLY INSPECTOR SUMMARY", "", "Inspector: " + payload.inspectorName, "Week: " + payload.weekLabel, "Hours Worked: " + duration_(payload.totalHoursMinutes), "Drive Time: " + duration_(payload.totalDriveMinutes), "Jobs Completed: " + payload.jobsCompleted, "", "Daily Breakdown:"];
+  payload.days.forEach(function (day) { lines.push("- " + day.dateLabel + ": " + duration_(day.hoursMinutes) + " worked, " + duration_(day.driveMinutes) + " drive, " + day.jobsCompleted + " jobs"); });
+  lines.push("", "Michigan Property Inspections Workflow Management System");
+  return lines.join("\n");
 }
 
 function cleanPayload_(input) {

@@ -2801,3 +2801,13 @@ Status: prepared August 26, 2026 as app Build 96.
 
 - Confirmed every runtime build marker and cache reference reports Build 146.
 - Confirmed the update comparison no longer treats the installed page as older than the published version.
+# Build 150 — Arrival Review, Effective Hours, Weekly Summary
+
+- ARRIVED now records immediately, starts Hours Worked at the first arrival, and never blocks an inspector because GPS is unavailable, inaccurate, offline, or outside the expected area.
+- Added background arrival evidence with the original device timestamp, actual GPS/accuracy, scheduled property point, distance, and a management-only `LOCATION VERIFIED` or `ARRIVAL LOCATION REVIEW REQUIRED` result.
+- Added an Office Console arrival-review panel with map comparison, approval, flag/deny, and a shortcut to an auditable Hours Worked start adjustment. Original records are preserved.
+- Added effective Hours Worked start/end corrections. Today, weekly totals, the inspector total, Office Console totals, and weekly email totals now use the latest auditable management adjustment.
+- Stopped routine daily closeout emails. Daily records synchronize to the Office Console and are removed from the phone after successful synchronization.
+- Added a branded Michigan Property Inspections weekly email with total Hours Worked, total drive time, completed jobs, and a daily breakdown.
+- Added an approved home/end-of-day address to company profiles. Cory Leese is set to `38948 Koppernick Road, Westland, MI 48185` and that address is used for his final-arrival location record.
+- Updated the app, Office Console, version manifest, and offline cache to Build 150.

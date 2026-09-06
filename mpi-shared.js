@@ -10,6 +10,9 @@
     appId: "1:574980684703:web:b0d2e4491fd09b78729baa"
   };
   const MPI_OWNER_EMAILS = ["kev@michiganpropertyinspections.com"];
+  const MPI_APPROVED_END_LOCATIONS = Object.freeze({
+    "cory@michiganpropertyinspections.com": "38948 Koppernick Road, Westland, MI 48185"
+  });
   const MPI_COMPANY_DOMAIN = "michiganpropertyinspections.com";
   const MPI_PUSH_ENDPOINT = "https://script.google.com/macros/s/AKfycbzd701WKgQIzWP24pmjL3gaTFIjH2iHxjMYzirArFoYq8nup57p8h1VMmJPx9MVYOqL/exec";
   const MPI_PUSH_SOURCE = "mpi-field-tools-push";
@@ -56,6 +59,58 @@
     return String(value || "").trim().toLowerCase();
   }
 
+  function timeAdjustmentsForDate(adjustments, date) {
+    return (Array.isArray(adjustments) ? adjustments : [])
+      .filter(item => item?.date === date && item?.correctedValue)
+      .sort((left, right) => String(left.correctedAt || "").localeCompare(String(right.correctedAt || "")));
+  }
+
+  function latestTimeAdjustment(adjustments, date, actions) {
+    const accepted = new Set(Array.isArray(actions) ? actions : [actions]);
+    return timeAdjustmentsForDate(adjustments, date).filter(item => accepted.has(item.targetAction)).at(-1) || null;
+  }
+
+  function effectiveTimeClock(timeClock, date, adjustments = []) {
+    if (!timeClock || !Array.isArray(timeClock.sessions)) return null;
+    const sessions = timeClock.sessions.map(session => ({ ...session }));
+    const paidIndexes = sessions.map((session, index) => {
+      const source = String(session?.startSource || "legacy-manual-clock");
+      return session?.clockedInAt && !["morning-readiness", "activity-only"].includes(source) ? index : -1;
+    }).filter(index => index >= 0);
+    const startAdjustment = latestTimeAdjustment(adjustments, date, "Hours Worked start");
+    const endAdjustment = latestTimeAdjustment(adjustments, date, ["Hours Worked end", "Clocked off"]);
+    if (paidIndexes.length && startAdjustment?.correctedValue) sessions[paidIndexes[0]].clockedInAt = startAdjustment.correctedValue;
+    if (paidIndexes.length && endAdjustment?.correctedValue) sessions[paidIndexes.at(-1)].clockedOutAt = endAdjustment.correctedValue;
+    return {
+      ...timeClock,
+      sessions,
+      hoursWorkedStartedAt: sessions[paidIndexes[0]]?.clockedInAt || timeClock.hoursWorkedStartedAt || "",
+      effectiveHoursWorkedStartedAt: sessions[paidIndexes[0]]?.clockedInAt || "",
+      effectiveClockedOutAt: sessions[paidIndexes.at(-1)]?.clockedOutAt || "",
+      startAdjustment,
+      endAdjustment
+    };
+  }
+
+  function workedMilliseconds(timeClock, date, adjustments = [], endTime = Date.now()) {
+    const effective = effectiveTimeClock(timeClock, date, adjustments);
+    if (!effective) return 0;
+    const intervals = effective.sessions.map(session => {
+      const source = String(session?.startSource || "legacy-manual-clock");
+      if (!session?.clockedInAt || ["morning-readiness", "activity-only"].includes(source)) return null;
+      const start = new Date(session.clockedInAt).getTime();
+      const end = session.clockedOutAt ? new Date(session.clockedOutAt).getTime() : Number(endTime);
+      return Number.isFinite(start) && Number.isFinite(end) && end > start ? { start, end } : null;
+    }).filter(Boolean).sort((left, right) => left.start - right.start || left.end - right.end);
+    const merged = [];
+    intervals.forEach(interval => {
+      const previous = merged[merged.length - 1];
+      if (previous && interval.start <= previous.end) previous.end = Math.max(previous.end, interval.end);
+      else merged.push({ ...interval });
+    });
+    return merged.reduce((total, interval) => total + interval.end - interval.start, 0);
+  }
+
   function isCompanyEmail(value) {
     const email = normalizeEmail(value);
     return MPI_OWNER_EMAILS.includes(email) || email.endsWith(`@${MPI_COMPANY_DOMAIN}`);
@@ -74,6 +129,13 @@
     if (MPI_INSPECTOR_NUMBERS[email]) return MPI_INSPECTOR_NUMBERS[email];
     const name = String(profile?.name || "").trim().toLowerCase();
     return /\bcory\b/.test(name) ? "NACHI26090138" : "";
+  }
+
+  function knownApprovedEndAddress(profile) {
+    const email = normalizeEmail(profile?.email);
+    if (MPI_APPROVED_END_LOCATIONS[email]) return MPI_APPROVED_END_LOCATIONS[email];
+    const name = String(profile?.name || "").trim().toLowerCase();
+    return /\bcory\b/.test(name) ? "38948 Koppernick Road, Westland, MI 48185" : "";
   }
 
   async function signIn() {
@@ -110,6 +172,7 @@
     const ref = db.collection("users").doc(user.uid);
     const snapshot = await ref.get();
     const inspectorNumber = knownInspectorNumber({ email: user.email, name: user.displayName });
+    const approvedEndAddress = knownApprovedEndAddress({ email: user.email, name: snapshot.exists ? snapshot.data()?.name : user.displayName });
     if (!snapshot.exists) {
       const owner = isOwnerEmail(user.email);
       await ref.set({
@@ -117,6 +180,7 @@
         email: normalizeEmail(user.email),
         photoURL: String(user.photoURL || "").slice(0, 1000),
         ...(inspectorNumber ? { inspectorId: inspectorNumber } : {}),
+        ...(approvedEndAddress ? { approvedEndAddress: approvedEndAddress } : {}),
         role: owner ? "owner" : "inspector",
         active: true,
         createdAt: serverTimestamp(),
@@ -124,11 +188,13 @@
       });
     } else {
       const savedInspectorNumber = String(snapshot.data().inspectorId || inspectorNumber || "").trim();
+      const savedApprovedEndAddress = String(snapshot.data().approvedEndAddress || approvedEndAddress || "").trim();
       await ref.set({
         name: snapshot.data().name || user.displayName || "MPI Team Member",
         email: normalizeEmail(user.email),
         photoURL: String(user.photoURL || snapshot.data().photoURL || "").slice(0, 1000),
         ...(savedInspectorNumber ? { inspectorId: savedInspectorNumber } : {}),
+        ...(savedApprovedEndAddress ? { approvedEndAddress: savedApprovedEndAddress } : {}),
         lastSeenAt: serverTimestamp()
       }, { merge: true });
     }
@@ -519,10 +585,15 @@
     pushSource: MPI_PUSH_SOURCE,
     vapidKey: MPI_FIREBASE_VAPID_KEY,
     normalizeEmail,
+    timeAdjustmentsForDate,
+    latestTimeAdjustment,
+    effectiveTimeClock,
+    workedMilliseconds,
     isCompanyEmail,
     isOwnerEmail,
     isAdminRole,
     knownInspectorNumber,
+    knownApprovedEndAddress,
     signIn,
     completeRedirectSignIn,
     signOut,

@@ -43,6 +43,8 @@
   let currentUpdates = [];
   let unsubscribeUpdates = null;
   let unsubscribeTeamPresence = null;
+  let unsubscribeProfile = null;
+  let profileWatchUserId = "";
   let registeredPushToken = "";
   let pendingProfilePhoto = null;
   const NOTIFIED_UPDATE_STORAGE_KEY = "mpiNotifiedOfficeUpdatesV2";
@@ -226,6 +228,28 @@
     return ({ owner: "Owner", admin: "Office Admin", inspector: "Inspector", subcontractor: "Subcontractor" })[String(profile?.role || "inspector").toLowerCase()] || "Inspector";
   }
 
+  function companySessionDetail(user = currentUser, profile = currentProfile) {
+    if (!user || !profile) return null;
+    return {
+      userId: user.uid,
+      role: profile.role || "inspector",
+      inspectorId: String(profile.inspectorId || "").trim(),
+      inspectorName: String(profile.name || user.displayName || "").trim(),
+      inspectorEmail: String(user.email || profile.email || "").trim(),
+      phone: String(profile.phone || "").trim(),
+      assignedVehicle: String(profile.assignedVehicle || "").trim(),
+      approvedEndAddress: String(profile.approvedEndAddress || "").trim(),
+      adminCorrections: Array.isArray(profile.adminCorrections) ? profile.adminCorrections.map(item => ({ ...item })) : []
+    };
+  }
+
+  function publishCompanySession(user = currentUser, profile = currentProfile) {
+    const detail = companySessionDetail(user, profile);
+    if (!detail) return;
+    window.MPI_COMPANY_SESSION = detail;
+    window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail }));
+  }
+
   function renderProfile(user, profile) {
     if (!profileCard || !profileForm) return;
     profileCard.hidden = !(user && profile);
@@ -336,17 +360,7 @@
       accountName.textContent = name;
       showProfilePhoto(profilePhotoSource(currentProfile, currentUser), name);
       profileStatus.textContent = "Profile saved";
-      const sessionDetail = {
-        userId: currentUser.uid,
-        role: currentProfile.role || "inspector",
-        inspectorId: String(currentProfile.inspectorId || "").trim(),
-        inspectorName: name,
-        inspectorEmail: String(currentUser.email || currentProfile.email || "").trim(),
-        phone: String(currentProfile.phone || "").trim(),
-        assignedVehicle: String(currentProfile.assignedVehicle || "").trim()
-      };
-      window.MPI_COMPANY_SESSION = sessionDetail;
-      window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail: sessionDetail }));
+      publishCompanySession();
     } catch (error) {
       profileStatus.textContent = /permission/i.test(error?.message || "")
         ? "Profile permission needs updating. Please try again shortly."
@@ -456,6 +470,9 @@
       homeCard.hidden = true;
       unsubscribeUpdates?.();
       unsubscribeTeamPresence?.();
+      unsubscribeProfile?.();
+      unsubscribeProfile = null;
+      profileWatchUserId = "";
       unsubscribeTeamPresence = null;
       if (teamStatusCard) teamStatusCard.hidden = true;
       renderProfile(null, null);
@@ -473,17 +490,16 @@
     updatesGate.hidden = true;
     updatesContent.hidden = false;
     registerPushDevice(user, profile).catch(() => {});
-    const sessionDetail = {
-      userId: user.uid,
-      role: profile.role || "inspector",
-      inspectorId: String(profile.inspectorId || "").trim(),
-      inspectorName: String(profile.name || user.displayName || "").trim(),
-      inspectorEmail: String(user.email || profile.email || "").trim(),
-      phone: String(profile.phone || "").trim(),
-      assignedVehicle: String(profile.assignedVehicle || "").trim()
-    };
-    window.MPI_COMPANY_SESSION = sessionDetail;
-    window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail: sessionDetail }));
+    publishCompanySession(user, profile);
+    if (profileWatchUserId !== user.uid) {
+      unsubscribeProfile?.();
+      profileWatchUserId = user.uid;
+      unsubscribeProfile = shared.db.collection("users").doc(user.uid).onSnapshot(snapshot => {
+        if (!snapshot.exists || currentUser?.uid !== user.uid) return;
+        currentProfile = { id: snapshot.id, ...snapshot.data() };
+        publishCompanySession(currentUser, currentProfile);
+      }, () => {});
+    }
     unsubscribeUpdates?.();
     unsubscribeUpdates = shared.watchUpdates(user, profile, renderUpdates);
     unsubscribeTeamPresence?.();

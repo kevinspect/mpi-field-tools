@@ -89,6 +89,9 @@
     "End-of-day equipment check completed": "End-of-day equipment check complete",
     "Signed off for day": "Signed off for day",
     "Arrival verification failed": "GPS arrival verification failed",
+    "Arrival location verified": "Arrival location verified",
+    "Arrival location review required": "Arrival location review required",
+    "Weekly summary submitted to management": "Weekly summary emailed",
     "Running Behind selected": "Running Behind message prepared"
   };
   let currentUser = null;
@@ -867,9 +870,16 @@
       .sort((left, right) => String(left.correctedAt || "").localeCompare(String(right.correctedAt || "")));
   }
 
+  function effectiveTimeClockFor(person, day) {
+    if (!day?.timeClock) return null;
+    return shared.effectiveTimeClock
+      ? shared.effectiveTimeClock(day.timeClock, day.date, person?.adminCorrections || [])
+      : day.timeClock;
+  }
+
   function effectiveClockOut(person, day) {
-    const corrected = correctionsFor(person, day).filter(item => item.targetAction === "Clocked off").at(-1);
-    if (corrected?.correctedValue) return corrected.correctedValue;
+    const effective = effectiveTimeClockFor(person, day);
+    if (effective?.effectiveClockedOutAt) return effective.effectiveClockedOutAt;
     const sessions = day?.timeClock?.sessions || [];
     const savedClockOut = sessions.at(-1)?.clockedOutAt;
     if (savedClockOut) return savedClockOut;
@@ -879,22 +889,10 @@
 
   function workedMinutes(person, day) {
     if (!day?.timeClock) return 0;
-    const correction = effectiveClockOut(person, day);
-    const isToday = day.date === dateKey();
-    const intervals = (day.timeClock.sessions || []).map((session, index, sessions) => {
-      const start = asDate(session.clockedInAt)?.getTime();
-      const isLast = index === sessions.length - 1;
-      const end = asDate(session.clockedOutAt || (isLast ? correction : ""))?.getTime() || (isToday && day.timeClock.active && isLast ? Date.now() : 0);
-      return { start, end };
-    }).filter(item => item.start && item.end > item.start).sort((left, right) => left.start - right.start || left.end - right.end);
-    const merged = [];
-    intervals.forEach(interval => {
-      const previous = merged[merged.length - 1];
-      if (previous && interval.start <= previous.end) previous.end = Math.max(previous.end, interval.end);
-      else merged.push({ ...interval });
-    });
-    const calculated = merged.reduce((total, interval) => total + Math.floor((interval.end - interval.start) / 60000), 0);
-    return calculated || Number(day.timeClock.workedMinutes) || 0;
+    if (shared.workedMilliseconds) {
+      return Math.floor(shared.workedMilliseconds(day.timeClock, day.date, person?.adminCorrections || [], Date.now()) / 60000);
+    }
+    return Number(day.timeClock.workedMinutes) || 0;
   }
 
   function weeklyMinutes(person) {
@@ -928,6 +926,12 @@
 
   function meaningfulAlerts(person, day) {
     const alerts = Array.isArray(day?.alerts) ? day.alerts.slice() : [];
+    (day?.jobs || []).forEach(job => {
+      const evidence = job.arrivalLocation;
+      if (evidence?.verificationStatus !== "arrival-location-review-required") return;
+      const reviewed = arrivalReviewHistory(person, String(evidence.arrivalEventId || `${job.id}|${job.arrivedAt || ""}`)).at(-1);
+      if (!reviewed) alerts.push(`${job.property || "Inspection appointment"}: arrival location requires management review.`);
+    });
     if (day?.readiness && ["denied", "default"].includes(day.readiness.notificationPermission)) alerts.push("Important notification permissions are not fully enabled.");
     if (weeklyMinutes(person) >= 38 * 60) alerts.push("Weekly hours are approaching the configured 40-hour review point.");
     return [...new Set(alerts)].slice(0, 10);
@@ -979,6 +983,7 @@
         <div class="person-controls">
           <input data-person-inspector-id aria-label="Inspector number for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.inspectorId || "")}" maxlength="40" placeholder="Inspector number" ${person.role === "owner" ? "disabled" : ""}>
           <input data-person-phone aria-label="Phone number for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.phone || "")}" maxlength="30" placeholder="Phone number" ${person.role === "owner" ? "disabled" : ""}>
+          <input data-person-end-address aria-label="Approved home or end location for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.approvedEndAddress || "")}" maxlength="180" placeholder="Approved home / end location" ${person.role === "owner" ? "disabled" : ""}>
           <select data-person-role aria-label="Role for ${escapeHtml(person.name || person.email)}" ${person.role === "owner" ? "disabled" : ""}>
             <option value="inspector" ${person.role === "inspector" ? "selected" : ""}>Inspector</option>
             <option value="subcontractor" ${person.role === "subcontractor" ? "selected" : ""}>Subcontractor</option>
@@ -1330,6 +1335,8 @@
 
   function activityDetail(item) {
     if (item.action === "Arrival performance calculated") return item.data?.performance || "Compared with scheduled time";
+    if (item.action === "Arrival location verified") return item.data?.distanceFeet !== "" ? `${item.data.distanceFeet} ft from scheduled property` : "Location verified";
+    if (item.action === "Arrival location review required") return item.data?.reviewReason || "Management review required";
     if (item.action === "Lab selected") return (item.data?.labs || []).join(" + ");
     if (item.action === "Arrived at lab" || item.action === "Lab visit completed") return item.data?.lab || item.property || "Laboratory";
     if (item.action === "Clocked off") return item.data?.worked || "Hours frozen for the day";
@@ -1384,7 +1391,117 @@
 
   function correctionHistoryHtml(person, day) {
     const corrections = correctionsFor(person, day).slice().reverse();
-    return corrections.length ? corrections.map(item => `<article><strong>${escapeHtml(item.targetAction)} · ${escapeHtml(formatTime(item.correctedValue))}</strong><p>Original: ${escapeHtml(item.originalValue ? formatTime(item.originalValue) : "Not recorded")} · Corrected by ${escapeHtml(item.correctedByName || "MPI Admin")} on ${escapeHtml(formatDateTime(item.correctedAt))}</p><p>Reason: ${escapeHtml(item.reason)}</p></article>`).join("") : '<div class="empty">No admin corrections for this day.</div>';
+    const reversedIds = new Set(corrections.map(item => item.reversesCorrectionId).filter(Boolean));
+    return corrections.length ? corrections.map(item => `<article><strong>${escapeHtml(item.targetAction)} · ${escapeHtml(formatTime(item.correctedValue))}${item.reversesCorrectionId ? " · Reversal" : ""}</strong><p>Original: ${escapeHtml(item.originalValue ? formatTime(item.originalValue) : "Not recorded")} · Corrected by ${escapeHtml(item.correctedByName || "MPI Admin")} on ${escapeHtml(formatDateTime(item.correctedAt))}</p><p>Reason: ${escapeHtml(item.reason)}</p>${item.originalValue && !item.reversesCorrectionId && !reversedIds.has(item.id) ? `<button type="button" class="secondary" data-reverse-correction="${escapeHtml(item.id)}">REVERSE THIS CORRECTION</button>` : ""}</article>`).join("") : '<div class="empty">No admin corrections for this day.</div>';
+  }
+
+  async function reverseAdminCorrection(correctionId) {
+    const person = people.find(item => item.id === selectedInspectorId);
+    const day = latestDay(person);
+    const original = correctionsFor(person, day).find(item => item.id === correctionId);
+    if (!person || !day || !original?.originalValue) return;
+    const reversal = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      date: day.date,
+      targetAction: original.targetAction,
+      targetEventId: original.targetEventId || "",
+      jobId: original.jobId || "",
+      property: original.property || "",
+      originalValue: original.correctedValue,
+      correctedValue: original.originalValue,
+      reason: `Reversal of correction: ${original.reason}`.slice(0, 500),
+      reversesCorrectionId: original.id,
+      correctedAt: new Date().toISOString(),
+      correctedById: currentUser.uid,
+      correctedByEmail: shared.normalizeEmail(currentUser.email),
+      correctedByName: currentProfile.name || currentUser.displayName || "MPI Admin"
+    };
+    await shared.db.collection("users").doc(person.id).update({ adminCorrections: shared.arrayUnion(reversal), operationsUpdatedAt: shared.serverTimestamp() });
+  }
+
+  function arrivalReviewHistory(person, arrivalEventId) {
+    return (Array.isArray(person?.arrivalLocationReviews) ? person.arrivalLocationReviews : [])
+      .filter(item => item?.arrivalEventId === arrivalEventId)
+      .sort((left, right) => String(left.reviewedAt || "").localeCompare(String(right.reviewedAt || "")));
+  }
+
+  function arrivalReviewHtml(person, day) {
+    const arrivals = (day?.jobs || []).map(job => ({ job, evidence: job.arrivalLocation }))
+      .filter(item => item.evidence?.recordedArrivalAt || item.job?.arrivedAt);
+    if (!arrivals.length) return '<div class="empty">No arrival location evidence is recorded for this period.</div>';
+    return arrivals.map(({ job, evidence }) => {
+      const eventId = String(evidence.arrivalEventId || `${job.id}|${job.arrivedAt || ""}`);
+      const history = arrivalReviewHistory(person, eventId);
+      const latest = history.at(-1);
+      const needsReview = evidence.verificationStatus === "arrival-location-review-required";
+      const reviewLabel = latest?.decision === "approved" ? "APPROVED BY MANAGEMENT" : latest?.decision === "flagged" ? "FLAGGED / DENIED" : needsReview ? "REVIEW REQUIRED" : "LOCATION VERIFIED";
+      const actualLat = Number(evidence.actualLatitude);
+      const actualLng = Number(evidence.actualLongitude);
+      const scheduledLat = Number(evidence.scheduledLatitude);
+      const scheduledLng = Number(evidence.scheduledLongitude);
+      const hasActual = evidence.actualLatitude !== "" && evidence.actualLongitude !== "" && Number.isFinite(actualLat) && Number.isFinite(actualLng);
+      const hasScheduled = evidence.scheduledLatitude !== "" && evidence.scheduledLongitude !== "" && Number.isFinite(scheduledLat) && Number.isFinite(scheduledLng);
+      const mapUrl = hasActual && hasScheduled
+        ? `https://www.google.com/maps/dir/?api=1&origin=${scheduledLat},${scheduledLng}&destination=${actualLat},${actualLng}`
+        : hasActual
+          ? `https://maps.apple.com/?q=${actualLat},${actualLng}`
+          : "";
+      return `<article class="arrival-review" data-arrival-event-id="${escapeHtml(eventId)}" data-arrival-job-id="${escapeHtml(job.id || "")}" data-arrival-time="${escapeHtml(evidence.recordedArrivalAt || job.arrivedAt || "")}">
+        <div><span class="status-badge ${needsReview && !latest ? "alert" : latest?.decision === "flagged" ? "alert" : ""}">${escapeHtml(reviewLabel)}</span><strong>${escapeHtml(job.property || evidence.scheduledAddress || "Inspection appointment")}</strong><small>Arrival ${escapeHtml(formatTime(evidence.recordedArrivalAt || job.arrivedAt))} · ${evidence.distanceFeet !== "" ? `${escapeHtml(evidence.distanceFeet)} ft from scheduled point` : "Distance unavailable"}${evidence.gpsAccuracyFeet ? ` · GPS accuracy about ${escapeHtml(evidence.gpsAccuracyFeet)} ft` : ""}</small></div>
+        ${mapUrl ? `<a href="${escapeHtml(mapUrl)}" target="_blank" rel="noopener">VIEW MAP ↗</a>` : '<span class="ops-sub">Map unavailable</span>'}
+        ${needsReview ? `<label class="field">Management review note<textarea data-arrival-review-note maxlength="500" placeholder="Add context for this review"></textarea></label><div class="quick-messages"><button type="button" data-arrival-review="approved">APPROVE LOCATION</button><button type="button" data-arrival-adjust>ADJUST HOURS START</button><button type="button" data-arrival-review="flagged">FLAG / DENY</button></div><span class="status" data-arrival-review-status>${latest ? `${escapeHtml(reviewLabel)} · ${escapeHtml(latest.reviewedByName || "MPI Admin")} · ${escapeHtml(formatDateTime(latest.reviewedAt))}` : "Original arrival record is preserved."}</span>` : `<span class="status success">Automatically verified. Original evidence is preserved.</span>`}
+      </article>`;
+    }).join("");
+  }
+
+  async function saveArrivalLocationReview(button) {
+    const person = people.find(item => item.id === selectedInspectorId);
+    const card = button.closest("[data-arrival-event-id]");
+    const status = card?.querySelector("[data-arrival-review-status]");
+    const note = card?.querySelector("[data-arrival-review-note]")?.value.trim().slice(0, 500) || "";
+    const decision = button.dataset.arrivalReview;
+    if (!person || !card || !["approved", "flagged"].includes(decision)) return;
+    if (decision === "flagged" && !note) {
+      status.textContent = "Add a reason before flagging this arrival.";
+      status.className = "status error";
+      return;
+    }
+    button.disabled = true;
+    const review = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      date: latestDay(person)?.date || dateKey(),
+      arrivalEventId: card.dataset.arrivalEventId,
+      jobId: card.dataset.arrivalJobId || "",
+      originalArrivalAt: card.dataset.arrivalTime || "",
+      decision,
+      note,
+      reviewedAt: new Date().toISOString(),
+      reviewedById: currentUser.uid,
+      reviewedByEmail: shared.normalizeEmail(currentUser.email),
+      reviewedByName: currentProfile.name || currentUser.displayName || "MPI Admin"
+    };
+    try {
+      await shared.db.collection("users").doc(person.id).update({ arrivalLocationReviews: shared.arrayUnion(review), operationsUpdatedAt: shared.serverTimestamp() });
+      status.textContent = decision === "approved" ? "Location approved. The original evidence remains in the audit history." : "Arrival flagged for management follow-up.";
+      status.className = decision === "approved" ? "status success" : "status error";
+    } catch (error) {
+      button.disabled = false;
+      status.textContent = error.message || "The review could not be saved.";
+      status.className = "status error";
+    }
+  }
+
+  function prefillArrivalTimeAdjustment(button) {
+    const card = button.closest("[data-arrival-event-id]");
+    const form = document.getElementById("adminCorrectionForm");
+    const date = asDate(card?.dataset.arrivalTime);
+    if (!card || !form || !date) return;
+    form.querySelector("#adminCorrectionAction").value = "Hours Worked start";
+    form.querySelector("#adminCorrectionJob").value = card.dataset.arrivalJobId || "";
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    form.querySelector("#adminCorrectionValue").value = local;
+    form.querySelector("#adminCorrectionReason").focus();
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   function renderInspectorDetail(person) {
@@ -1402,11 +1519,14 @@
     const next = nextAppointment(day);
     const alerts = meaningfulAlerts(person, day);
     const clockOut = effectiveClockOut(person, day);
+    const effectiveClock = effectiveTimeClockFor(person, day);
+    const effectiveHoursStart = effectiveClock?.effectiveHoursWorkedStartedAt || day?.timeClock?.hoursWorkedStartedAt || "";
+    const timeAdjusted = Boolean(effectiveClock?.startAdjustment || effectiveClock?.endAdjustment);
     const activityStart = day?.timeClock?.activityStartedAt || day?.readiness?.completedAt;
     const activityStartMs = asDate(activityStart)?.getTime() || 0;
     const activityMinutes = activityStartMs ? Math.max(0, Math.floor(((asDate(clockOut)?.getTime() || Date.now()) - activityStartMs) / 60000)) : 0;
     const eodStatus = day?.dayComplete?.completedAt ? "CLOCKED OUT" : counts.total && counts.complete === counts.total ? "END-OF-DAY CHECKS" : "DAY IN PROGRESS";
-    const correctionActions = ["Arrived", "Inspection started", "Lab visit completed", "Clocked off", "On My Way selected"];
+    const correctionActions = ["Hours Worked start", "Hours Worked end", "Arrived", "Inspection started", "Lab visit completed", "Clocked off", "On My Way selected"];
     const jobOptions = (day?.jobs || []).map(job => `<option value="${escapeHtml(job.id)}">${escapeHtml(job.property)}</option>`).join("");
     const timeAtProperty = current?.arrivedAt && asDate(current.arrivedAt) ? formatMinutes(Math.floor((Date.now() - asDate(current.arrivedAt).getTime()) / 60000)) : "—";
     const lastLocation = lastLocationForDay(day);
@@ -1418,7 +1538,7 @@
       <div class="ops-grid">
         <article class="ops-card span-6"><p class="ops-eyebrow">Current job</p><strong class="ops-primary">${escapeHtml(current?.property || "No job currently open")}</strong><p class="ops-sub">${current ? `Scheduled ${formatTime(current.scheduledStart)} · ${escapeHtml(current.arrivalPerformance || "Arrival not recorded")} · ${escapeHtml(String(current.status || "scheduled").replace(/-/g, " "))}` : "The inspector is not inside an active job workflow."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Arrived</span><strong>${escapeHtml(formatTime(current?.arrivedAt))}</strong></div><div class="fact"><span>Inspection started</span><strong>${escapeHtml(formatTime(current?.inspectionStartedAt))}</strong></div><div class="fact"><span>Time at property</span><strong>${timeAtProperty}</strong></div></div></article>
         <article class="ops-card span-6"><p class="ops-eyebrow">Next appointment</p><strong class="ops-primary">${escapeHtml(next?.property || "No remaining appointment")}</strong><p class="ops-sub">${next ? `${formatTime(next.scheduledStart)} · ${escapeHtml(next.arrivalPerformance || "On schedule")}` : "The scheduled job list is complete."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Estimated drive</span><strong>${current?.departurePlan?.estimatedDriveMinutes ? `${current.departurePlan.estimatedDriveMinutes} min` : "—"}</strong></div><div class="fact"><span>Required departure</span><strong>${escapeHtml(formatTime(current?.departurePlan?.leaveBy))}</strong></div><div class="fact"><span>Schedule status</span><strong>${alerts.some(item => /late|affect next/i.test(item)) ? "ATTENTION REQUIRED" : "ON SCHEDULE"}</strong></div></div></article>
-        <article class="ops-card"><p class="ops-eyebrow">${currentRange === "week" ? "Hours worked this week" : currentRange === "yesterday" ? "Hours worked yesterday" : "Hours worked today"}</p><strong class="ops-primary">${formatMinutes(hours)}</strong><p class="ops-sub">${currentRange === "week" ? `${days.length} recorded day${days.length === 1 ? "" : "s"} included` : `Started ${formatTime(day?.timeClock?.hoursWorkedStartedAt)} · ${clockOut ? `Frozen at ${formatTime(clockOut)}` : day?.timeClock?.active ? "Running now" : "Not started"}`}</p></article>
+        <article class="ops-card"><p class="ops-eyebrow">${currentRange === "week" ? "Hours worked this week" : currentRange === "yesterday" ? "Hours worked yesterday" : "Hours worked today"}</p><strong class="ops-primary">${formatMinutes(hours)}</strong><p class="ops-sub">${currentRange === "week" ? `${days.length} recorded day${days.length === 1 ? "" : "s"} included` : `Started ${formatTime(effectiveHoursStart)} · ${clockOut ? `Frozen at ${formatTime(clockOut)}` : day?.timeClock?.active ? "Running now" : "Not started"}${timeAdjusted ? " · Management adjusted" : ""}`}</p></article>
         <article class="ops-card"><p class="ops-eyebrow">Activity window</p><strong class="ops-primary">${formatMinutes(activityMinutes)}</strong><p class="ops-sub">Morning readiness ${formatTime(activityStart)} · End ${formatTime(clockOut)}</p></article>
         <article class="ops-card"><p class="ops-eyebrow">Weekly hours</p><strong class="ops-primary">${formatMinutes(weekly)}</strong><p class="ops-sub">Current Monday-to-today total${weekly >= 38 * 60 ? " · Review threshold approaching" : ""}</p>${weeklyDayBreakdownHtml(person, "hours")}</article>
         <article class="ops-card span-6"><h3>${currentRange === "week" ? "Total Drive Time This Week" : "Drive Time"}</h3><div class="fact-list"><div class="fact"><span>Morning drive</span><strong>${formatMinutes(drive.morningMinutes)}</strong></div><div class="fact"><span>Between jobs</span><strong>${formatMinutes(drive.betweenJobMinutes)}</strong></div><div class="fact"><span>Lab travel</span><strong>${formatMinutes(drive.labMinutes)}</strong></div><div class="fact"><span>Final drive</span><strong>${driveTimeForDay(day)?.finalPending ? "Pending" : formatMinutes(drive.finalMinutes)}</strong></div><div class="fact"><span>Total drive ${currentRange === "week" ? "this week" : "today"}</span><strong>${formatMinutes(drive.totalMinutes)}</strong></div></div>${currentRange === "week" ? weeklyDayBreakdownHtml(person, "drive") : ""}</article>
@@ -1426,6 +1546,7 @@
         <article class="ops-card full"><h3>Today’s Jobs</h3><div class="job-list">${(day?.jobs || []).length ? day.jobs.map(jobCard).join("") : '<div class="empty">No scheduled jobs are available for this period.</div>'}</div></article>
         <article class="ops-card span-8"><h3>Activity Timeline</h3><div class="timeline">${timelineHtml(person, day)}</div></article>
         <article class="ops-card"><h3>Alerts / Exceptions</h3><div class="alert-list">${alerts.length ? alerts.map(item => `<div class="alert-item">${escapeHtml(item)}</div>`).join("") : '<div class="clear-item">✓ No meaningful workflow issues recorded.</div>'}</div></article>
+        <article class="ops-card full"><h3>Arrival Location Review</h3><p class="ops-sub">Inspectors are never blocked. Any unusual location is recorded here for management review, while the original time and GPS evidence remain unchanged.</p>${arrivalReviewHtml(person, day)}</article>
         ${(day?.commentFailures || []).length ? `<article class="ops-card full"><h3>Comment Builder Technical Log</h3><div class="timeline">${day.commentFailures.slice().reverse().map(item => `<div class="timeline-row"><time>${escapeHtml(formatTime(item.timestamp))}</time><span class="timeline-dot"></span><div><strong>${escapeHtml(item.category || "service-error")} · attempt ${escapeHtml(item.attempt || "—")}</strong><small>Request ${escapeHtml(item.requestId || "—")} · ${escapeHtml(item.connectivity || "unknown")} · ${escapeHtml(item.code || item.httpStatus || "no status")} · ${escapeHtml(item.message || "No technical message")}</small></div></div>`).join("")}</div></article>` : ""}
         <article class="ops-card"><h3>Morning Readiness</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${day?.readiness ? "Complete" : "Not recorded"}</strong></div><div class="fact"><span>Completed</span><strong>${formatTime(day?.readiness?.completedAt)}</strong></div><div class="fact"><span>Important notifications</span><strong>${escapeHtml(day?.readiness?.notificationPermission === "granted" ? "Enabled" : day?.readiness?.notificationPermission || "Unknown")}</strong></div></div></article>
         <article class="ops-card"><h3>Lab Activity</h3>${labHtml(day)}</article>
@@ -1721,10 +1842,16 @@
     if (!person || !day || !action || !correctedValue || !reason) return;
     const original = (day.activity || []).find(item => item.action === action && (!jobId || String(item.calendarEventId || item.jobId || "") === jobId));
     const job = (day.jobs || []).find(item => item.id === jobId);
+    const rawSessions = Array.isArray(day.timeClock?.sessions) ? day.timeClock.sessions : [];
+    const originalValue = action === "Hours Worked start"
+      ? rawSessions.find(item => item.clockedInAt)?.clockedInAt || day.timeClock?.hoursWorkedStartedAt || ""
+      : action === "Hours Worked end"
+        ? rawSessions.slice().reverse().find(item => item.clockedOutAt)?.clockedOutAt || ""
+        : original?.timestamp || "";
     const correction = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       date: day.date, targetAction: action, targetEventId: original?.id || "", jobId,
-      property: job?.property || original?.property || "", originalValue: original?.timestamp || "",
+      property: job?.property || original?.property || "", originalValue,
       correctedValue: new Date(correctedValue).toISOString(), reason, correctedAt: new Date().toISOString(),
       correctedById: currentUser.uid, correctedByEmail: shared.normalizeEmail(currentUser.email),
       correctedByName: currentProfile.name || currentUser.displayName || "MPI Admin"
@@ -1751,8 +1878,9 @@
     const active = card.querySelector("[data-person-active]").checked;
     const inspectorId = card.querySelector("[data-person-inspector-id]").value.trim().slice(0, 40);
     const phone = card.querySelector("[data-person-phone]").value.trim().slice(0, 30);
+    const approvedEndAddress = card.querySelector("[data-person-end-address]").value.trim().slice(0, 180);
     try {
-      await shared.db.collection("users").doc(person.id).set({ role, active, inspectorId, phone, updatedAt: shared.serverTimestamp(), updatedBy: currentUser.uid }, { merge: true });
+      await shared.db.collection("users").doc(person.id).set({ role, active, inspectorId, phone, approvedEndAddress, updatedAt: shared.serverTimestamp(), updatedBy: currentUser.uid }, { merge: true });
     } catch (error) {
       authStatus.textContent = error.message || "The account change could not be saved.";
     }
@@ -1932,6 +2060,25 @@
       renderOperations();
       return;
     }
+    const arrivalReview = event.target.closest("[data-arrival-review]");
+    if (arrivalReview) {
+      saveArrivalLocationReview(arrivalReview);
+      return;
+    }
+    const arrivalAdjust = event.target.closest("[data-arrival-adjust]");
+    if (arrivalAdjust) {
+      prefillArrivalTimeAdjustment(arrivalAdjust);
+      return;
+    }
+    const reverseCorrection = event.target.closest("[data-reverse-correction]");
+    if (reverseCorrection) {
+      reverseCorrection.disabled = true;
+      reverseAdminCorrection(reverseCorrection.dataset.reverseCorrection).catch(error => {
+        reverseCorrection.disabled = false;
+        authStatus.textContent = error.message || "The correction could not be reversed.";
+      });
+      return;
+    }
     const quick = event.target.closest("[data-quick-message]");
     if (quick) {
       const textarea = document.getElementById("adminMessageText");
@@ -1990,7 +2137,7 @@
     });
     people = [
       { id: "preview-kevin", name: "Kevin Cave", email: "kev@michiganpropertyinspections.com", role: "owner", active: true, operationsCurrent: makeDay("Kevin Cave", "KC", "INSPECTION IN PROGRESS"), operationsUpdatedAt: new Date() },
-      { id: "preview-cory", name: "Cory Leese", email: "cory@michiganpropertyinspections.com", inspectorId: "NACHI26090138", role: "inspector", active: true, operationsCurrent: makeDay("Cory Leese", "NACHI26090138", "DRIVING TO JOB", 6), operationsUpdatedAt: new Date() },
+      { id: "preview-cory", name: "Cory Leese", email: "cory@michiganpropertyinspections.com", inspectorId: "NACHI26090138", approvedEndAddress: "38948 Koppernick Road, Westland, MI 48185", role: "inspector", active: true, operationsCurrent: makeDay("Cory Leese", "NACHI26090138", "DRIVING TO JOB", 6), operationsUpdatedAt: new Date() },
       { id: "preview-sub", name: "Jason Chamarro", email: "test-subcontractor@mpi.local", phone: "", role: "subcontractor", active: true, notificationDevice: { token: "preview" }, subcontractorCurrent: { date: dateKey(), test: false, subcontractorName: "Jason Chamarro", subcontractorPhone: "", currentJobNumber: 2, currentJob: { number: 2, status: "arrived", onWayAt: at(12, 48), arrivedAt: at(13, 14), completedAt: "" }, completedJobs: [{ number: 1, status: "completed", completedAt: at(11, 32) }], status: "AT JOB – JOB 2", events: [{ id: "sub-a", type: "ON WAY", timestamp: at(12, 48), jobNumber: 2 }, { id: "sub-b", type: "ARRIVED", timestamp: at(13, 14), jobNumber: 2 }], updatedAtClient: new Date().toISOString() } }
     ];
     currentUser = { uid: "preview", email: "kev@michiganpropertyinspections.com", displayName: "Kevin Cave" };
