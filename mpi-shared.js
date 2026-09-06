@@ -71,13 +71,26 @@
     return timeAdjustmentsForDate(adjustments, date).filter(item => accepted.has(item.targetAction)).at(-1) || null;
   }
 
+  function isPaidHoursSession(session, index, sessions, timeClock) {
+    if (!session?.clockedInAt) return false;
+    const source = String(session.startSource || "").trim();
+    if (["morning-readiness", "activity-only"].includes(source)) return false;
+    if (source) return true;
+
+    // Early workflow builds created an unlabelled open session when Morning
+    // Readiness was completed, followed by the real paid session at first-job
+    // arrival. Retain that source record, but never count it as paid time.
+    const sessionStart = timestampMilliseconds(session.clockedInAt);
+    const activityStart = timestampMilliseconds(timeClock?.activityStartedAt || "");
+    return !(Number.isFinite(sessionStart)
+      && Number.isFinite(activityStart)
+      && Math.abs(sessionStart - activityStart) <= 90 * 1000);
+  }
+
   function effectiveTimeClock(timeClock, date, adjustments = []) {
     if (!timeClock || !Array.isArray(timeClock.sessions)) return null;
     const sessions = timeClock.sessions.map(session => ({ ...session }));
-    const paidIndexes = sessions.map((session, index) => {
-      const source = String(session?.startSource || "legacy-manual-clock");
-      return session?.clockedInAt && !["morning-readiness", "activity-only"].includes(source) ? index : -1;
-    }).filter(index => index >= 0);
+    const paidIndexes = sessions.map((session, index) => isPaidHoursSession(session, index, sessions, timeClock) ? index : -1).filter(index => index >= 0);
     const startAdjustment = latestTimeAdjustment(adjustments, date, "Hours Worked start");
     const endAdjustment = latestTimeAdjustment(adjustments, date, ["Hours Worked end", "Clocked off"]);
     if (paidIndexes.length && startAdjustment?.correctedValue) sessions[paidIndexes[0]].clockedInAt = startAdjustment.correctedValue;
@@ -115,14 +128,10 @@
     const allowOpen = options.allowOpen !== undefined ? Boolean(options.allowOpen) : String(date || "") === currentDate;
     const fallbackEnd = timestampMilliseconds(options.fallbackEnd || "");
     const issues = [];
-    const paidSessionIndexes = effective.sessions.map((session, index) => {
-      const source = String(session?.startSource || "legacy-manual-clock");
-      return session?.clockedInAt && !["morning-readiness", "activity-only"].includes(source) ? index : -1;
-    }).filter(index => index >= 0);
+    const paidSessionIndexes = effective.sessions.map((session, index) => isPaidHoursSession(session, index, effective.sessions, effective) ? index : -1).filter(index => index >= 0);
     const finalPaidSessionIndex = paidSessionIndexes.at(-1);
     const intervals = effective.sessions.map((session, index) => {
-      const source = String(session?.startSource || "legacy-manual-clock");
-      if (!session?.clockedInAt || ["morning-readiness", "activity-only"].includes(source)) return null;
+      if (!isPaidHoursSession(session, index, effective.sessions, effective)) return null;
       const start = timestampMilliseconds(session.clockedInAt);
       if (!Number.isFinite(start)) {
         issues.push({ code: "invalid-start", sessionIndex: index, message: "A paid-hours session has an invalid start time." });

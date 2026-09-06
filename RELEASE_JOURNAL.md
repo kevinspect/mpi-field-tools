@@ -2841,3 +2841,9 @@ Status: prepared August 26, 2026 as app Build 96.
 - Confirmed open current-day sessions continue to count while valid, while open historical sessions return zero with a review issue.
 - Confirmed closed sessions, overlapping sessions, management corrections, and per-day weekly aggregation use the same calculation path.
 - Confirmed all Build 154 page, script, version, and offline-cache markers match.
+
+## Build 155 — Historical Morning-Readiness Session Repair
+
+- Recognizes unlabelled legacy sessions that begin at the recorded Morning Readiness time as activity-only rather than paid Hours Worked.
+- Preserves the original legacy session in the audit history while excluding it from daily, weekly, admin, inspector, and weekly-email totals.
+- Keeps the genuine first-job-arrival session as the paid-hours source and removes false historical open-session warnings caused by old builds.
