@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="150">
+  <meta name="app-build" content="151">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5111,7 +5111,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">150</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">151</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -7633,7 +7633,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 150</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 151</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7761,10 +7761,10 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=150"></script>
-  <script src="./mpi-field-sync.js?build=150"></script>
-  <script src="./mpi-subcontractor.js?build=150"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=150"></script>
+  <script src="./mpi-shared.js?build=151"></script>
+  <script src="./mpi-field-sync.js?build=151"></script>
+  <script src="./mpi-subcontractor.js?build=151"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=151"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -14082,6 +14082,7 @@
       let workflowPresenceHeartbeatInterval = 0;
       let unsubscribeInspectorRequests = null;
       let workflowDocumentDbPromise = null;
+      let workflowCocSyncInFlight = false;
       const workflowCocPreviewUrls = new Set();
       const FORM_DRAFT_CONFIG = [
         { form: damageForm, key: "mpiDraftDamageV1", status: damageSubmitStatus, photoReminder: true },
@@ -14436,6 +14437,23 @@
         const effectiveClock = effectiveWorkflowTimeClock(clock);
         const labStop = loadWorkflowLabStop();
         const dayComplete = workflowDayCompleteRecord();
+        const preservedSnapshot = dayComplete?.operationsSnapshotBackup;
+        if (!activity.length && preservedSnapshot) {
+          const { operationsSnapshotBackup, ...dayCompleteCompact } = dayComplete;
+          return {
+            ...preservedSnapshot,
+            date: localDateKey(),
+            updatedAtClient: new Date().toISOString(),
+            inspector: { ...profile },
+            liveStatus: "CLOCKED OUT",
+            timeClock: preservedSnapshot.timeClock || dayComplete?.timeClockBackup || null,
+            driveTime: dayComplete?.driveTimeBackup || preservedSnapshot.driveTime || null,
+            commentUsage: workflowCommentUsageSnapshot(),
+            commentFailures: workflowCommentFailureSnapshot(),
+            dayComplete: dayCompleteCompact
+          };
+        }
+        if (!activity.length && dayComplete?.completedAt && ["console-synced", "sent"].includes(dayComplete.emailStatus)) return null;
         const compactJobs = jobs.map(job => {
           const jobEvents = activity.filter(item => String(item.calendarEventId || item.jobId || "") === String(job.id || ""));
           const eventAt = action => jobEvents.find(item => item.action === action)?.timestamp || "";
@@ -14487,7 +14505,10 @@
           commentUsage: workflowCommentUsageSnapshot(),
           commentFailures: workflowCommentFailureSnapshot(),
           labStop: labStop ? { ...labStop } : null,
-          dayComplete: dayComplete ? { ...dayComplete } : null,
+          dayComplete: dayComplete ? (() => {
+            const { operationsSnapshotBackup, ...compact } = dayComplete;
+            return compact;
+          })() : null,
           alerts: workflowExceptionFlags(),
           activity
         };
@@ -15493,6 +15514,66 @@
         return workflowDocumentRequest("readwrite", store => store.delete(id));
       }
 
+      async function syncWorkflowCocPhotosToOffice(photos = null) {
+        if (workflowCocSyncInFlight || !navigator.onLine) return false;
+        const shared = window.MPI_SHARED;
+        const session = window.MPI_COMPANY_SESSION;
+        const user = shared?.auth?.currentUser;
+        if (!shared?.sendFieldMessage || !session || !user || String(session.role || "").toLowerCase() === "subcontractor") return false;
+        const pending = (photos || await workflowCocPhotosForDate().catch(() => []))
+          .filter(photo => photo?.blob instanceof Blob && !photo.officeMessageId)
+          .sort((left, right) => String(left.createdAt || "").localeCompare(String(right.createdAt || "")));
+        if (!pending.length) return true;
+        workflowCocSyncInFlight = true;
+        try {
+          const profile = {
+            name: session.inspectorName || session.name || loadWorkflowProfile()?.name || user.displayName || "MPI Inspector",
+            email: session.inspectorEmail || session.email || user.email || "",
+            role: session.role || "inspector"
+          };
+          const groups = new Map();
+          pending.forEach(photo => {
+            const key = String(photo.labKey || workflowCocLabKey(photo.date || localDateKey(), photo.labId || "lab"));
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(photo);
+          });
+          for (const group of groups.values()) {
+            for (let offset = 0; offset < group.length; offset += 3) {
+              const batch = group.slice(offset, offset + 3);
+              const first = batch[0];
+              const files = batch.map(photo => new File([photo.blob], photo.name || "MPI-COC-photo.jpg", { type: photo.type || "image/jpeg" }));
+              const result = await shared.sendFieldMessage(user, profile, `${batch.length} Chain of Custody photo${batch.length === 1 ? "" : "s"} recorded at ${first.labName || "the laboratory"}.`, files, {
+                kind: "lab-coc",
+                title: "Chain of Custody photos",
+                notifyOffice: false,
+                context: {
+                  date: first.date || localDateKey(),
+                  labId: first.labId || "",
+                  labName: first.labName || "Laboratory",
+                  jobId: first.jobId || "",
+                  property: first.property || "",
+                  capturedAt: first.createdAt || ""
+                }
+              });
+              await Promise.all(batch.map(photo => saveWorkflowCocPhoto({ ...photo, officeMessageId: result.id, syncedAt: new Date().toISOString() })));
+            }
+          }
+          const closedRecord = workflowDayCompleteRecord();
+          const protectExistingOfficeRecord = closedRecord?.completedAt
+            && ["console-synced", "sent"].includes(closedRecord.emailStatus)
+            && !closedRecord.operationsSnapshotBackup;
+          if (!protectExistingOfficeRecord) {
+            appendWorkflowEvent("Chain of Custody photos synchronized", { photos: pending.length });
+            queueWorkflowOperationsSync();
+          }
+          return true;
+        } catch (_) {
+          return false;
+        } finally {
+          workflowCocSyncInFlight = false;
+        }
+      }
+
       async function clearWorkflowCocPhotos(date = localDateKey()) {
         const photos = await workflowCocPhotosForDate(date);
         await Promise.all(photos.map(photo => deleteWorkflowCocPhoto(photo.id)));
@@ -15590,20 +15671,25 @@
           const available = Math.min(WORKFLOW_COC_MAX_PER_LAB - labPhotos.length, WORKFLOW_COC_MAX_PER_DAY - dayPhotos.length);
           if (available <= 0) throw new Error("The daily COC photo limit has been reached. Contact management before leaving the lab.");
           const selected = files.slice(0, available);
+          const savedPhotos = [];
           for (let index = 0; index < selected.length; index += 1) {
             const blob = await prepareWorkflowCocPhoto(selected[index]);
             const sequence = labPhotos.length + index + 1;
-            await saveWorkflowCocPhoto({
+            const photo = {
               id: window.crypto?.randomUUID?.() || `coc-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 9)}`,
               date: localDateKey(),
               labId: lab.id,
               labName: lab.name,
               labKey: workflowCocLabKey(localDateKey(), lab.id),
+              jobId: String(record.sourceJobId || ""),
+              property: String(record.sourceProperty || ""),
               createdAt: new Date().toISOString(),
               name: `${lab.id}-COC-${sequence}.jpg`,
               type: "image/jpeg",
               blob
-            });
+            };
+            await saveWorkflowCocPhoto(photo);
+            savedPhotos.push(photo);
           }
           appendWorkflowEvent("Chain of Custody photos added", {
             lab: lab.name,
@@ -15612,6 +15698,7 @@
           }, { property: lab.address, calendarEventId: record.sourceJobId });
           if (files.length > selected.length) showToast(`Saved ${selected.length} photo(s); the remaining files exceeded the daily limit`);
           else showToast(`${selected.length} COC photo${selected.length === 1 ? "" : "s"} saved`);
+          await syncWorkflowCocPhotosToOffice(savedPhotos);
         } catch (error) {
           workflowLabCocStatus.textContent = error?.message || "The selected COC photos could not be saved.";
           showToast("COC photo not saved");
@@ -16731,7 +16818,7 @@
         try { localStorage.setItem(WORKFLOW_DAY_COMPLETE_STORAGE_KEY, JSON.stringify(record)); } catch (_) {}
       }
 
-      function clearDeliveredWorkflowLogs(record) {
+      function clearDeliveredWorkflowLogs(record, snapshotBackup = null) {
         const completedJobIds = [...workflowCompletedEventIds()];
         const timeClockBackup = loadWorkflowTimeClock();
         const driveTimeBackup = workflowDriveTimeWithArchives();
@@ -16744,6 +16831,10 @@
           completedJobIds,
           timeClockBackup: timeClockBackup ? { ...timeClockBackup, sessions: workflowPaySessions(timeClockBackup).map(session => ({ ...session })) } : null,
           driveTimeBackup,
+          operationsSnapshotBackup: snapshotBackup ? {
+            ...snapshotBackup,
+            dayComplete: snapshotBackup.dayComplete ? { ...snapshotBackup.dayComplete, operationsSnapshotBackup: undefined } : null
+          } : record.operationsSnapshotBackup || null,
           closeoutNumber: Number(record.closeoutNumber) || Math.max(1, todayArchivedCloseouts().length + 1)
         };
         try {
@@ -17302,9 +17393,10 @@
           delivered.emailedAt = new Date().toISOString();
           saveWorkflowDayCompleteRecord(delivered);
           appendWorkflowEvent("Daily summary submitted to management", { submittedAt: delivered.emailedAt });
-          await syncWorkflowOperationsNow(workflowOperationsSnapshot());
-          await clearWorkflowCocPhotos(delivered.date).catch(() => {});
-          clearDeliveredWorkflowLogs(delivered);
+          const closingSnapshot = workflowOperationsSnapshot();
+          await syncWorkflowOperationsNow(closingSnapshot);
+          if (await syncWorkflowCocPhotosToOffice().catch(() => false)) await clearWorkflowCocPhotos(delivered.date).catch(() => {});
+          clearDeliveredWorkflowLogs(delivered, closingSnapshot);
           renderWorkflowAdmin();
           showToast("Summary sent — phone log cleared");
         } catch (_) {
@@ -17326,14 +17418,16 @@
         if (existing) {
           workflowDailySummaryInFlight = true;
           renderWorkflowDayComplete();
-          const synced = await syncWorkflowOperationsNow(workflowOperationsSnapshot());
+          const closingSnapshot = workflowOperationsSnapshot();
+          const synced = await syncWorkflowOperationsNow(closingSnapshot);
           workflowDailySummaryInFlight = false;
           if (synced) {
             existing.emailStatus = "console-synced";
             existing.consoleSyncedAt = new Date().toISOString();
             saveWorkflowDayCompleteRecord(existing);
             await sendWorkflowWeeklySummaryIfDue().catch(() => false);
-            clearDeliveredWorkflowLogs(existing);
+            if (await syncWorkflowCocPhotosToOffice().catch(() => false)) await clearWorkflowCocPhotos(existing.date).catch(() => {});
+            clearDeliveredWorkflowLogs(existing, closingSnapshot);
           }
           renderWorkflowDayComplete();
           return;
@@ -17367,14 +17461,16 @@
         renderWorkflowDayComplete();
         workflowDailySummaryInFlight = true;
         renderWorkflowDayComplete();
-        const synced = await syncWorkflowOperationsNow(workflowOperationsSnapshot());
+        const closingSnapshot = workflowOperationsSnapshot();
+        const synced = await syncWorkflowOperationsNow(closingSnapshot);
         workflowDailySummaryInFlight = false;
         if (synced) {
           record.emailStatus = "console-synced";
           record.consoleSyncedAt = new Date().toISOString();
           saveWorkflowDayCompleteRecord(record);
           await sendWorkflowWeeklySummaryIfDue().catch(() => false);
-          clearDeliveredWorkflowLogs(record);
+          if (await syncWorkflowCocPhotosToOffice().catch(() => false)) await clearWorkflowCocPhotos(record.date).catch(() => {});
+          clearDeliveredWorkflowLogs(record, closingSnapshot);
           showToast("Day signed off — record saved to Office Console");
         } else {
           showToast("Day signed off — reconnect to save to Office Console");
@@ -17732,6 +17828,7 @@
           updateWorkflowDayCompleteButton();
           renderWorkflowDayComplete();
           queueWorkflowOperationsSync();
+          syncWorkflowCocPhotosToOffice().catch(() => false);
           sendWorkflowWeeklySummaryIfDue().catch(() => false);
         });
         window.addEventListener("offline", () => {
@@ -17746,6 +17843,7 @@
           syncWorkflowCompanyProfile(event);
           watchInspectorRequests(event.detail);
           recoverWorkflowTimeClockFromCompanyAccount(event).finally(queueWorkflowOperationsSync);
+          syncWorkflowCocPhotosToOffice().catch(() => false);
           sendWorkflowWeeklySummaryIfDue().catch(() => false);
         });
         if (window.MPI_COMPANY_SESSION) {
@@ -17753,6 +17851,7 @@
             syncWorkflowCompanyProfile({ detail: window.MPI_COMPANY_SESSION });
             watchInspectorRequests(window.MPI_COMPANY_SESSION);
             queueWorkflowOperationsSync();
+            syncWorkflowCocPhotosToOffice().catch(() => false);
           }
         }
         workflowMessageTemplates.addEventListener("click", selectWorkflowMessageTemplate);
@@ -17784,11 +17883,13 @@
           if (!document.hidden) {
             monitorWorkflowDeparture();
             if (window.MPI_COMPANY_SESSION) queueWorkflowOperationsSync();
+            syncWorkflowCocPhotosToOffice().catch(() => false);
           }
         });
         window.addEventListener("pageshow", () => {
           monitorWorkflowDeparture();
           if (window.MPI_COMPANY_SESSION) queueWorkflowOperationsSync();
+          syncWorkflowCocPhotosToOffice().catch(() => false);
           sendWorkflowWeeklySummaryIfDue().catch(() => false);
         });
         window.addEventListener("focus", monitorWorkflowDeparture);

@@ -383,12 +383,19 @@
     if (selected.some(file => Number(file.size) > 6 * 1024 * 1024)) throw new Error("Each photo must be smaller than 6 MB.");
     const messageRef = db.collection("fieldMessages").doc();
     const senderName = String(options.senderName || profile?.name || user.displayName || "MPI Field User").trim().slice(0, 100);
+    const sourceContext = options.context && typeof options.context === "object" ? options.context : {};
+    const context = Object.fromEntries(Object.entries(sourceContext).slice(0, 12).map(([key, value]) => [
+      String(key || "detail").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || "detail",
+      String(value ?? "").slice(0, 240)
+    ]));
     const base = {
       senderUid: user.uid,
       senderEmail: normalizeEmail(user.email),
       senderName,
       senderRole: String(options.senderRole || profile?.role || "inspector").toLowerCase().slice(0, 30),
       message: text,
+      kind: String(options.kind || "field-message").toLowerCase().slice(0, 40),
+      context,
       replyToUpdateId: String(options.replyToUpdateId || "").slice(0, 160),
       test: Boolean(options.test),
       targetRole: "office",
@@ -424,14 +431,16 @@
       await messageRef.set({ active: false, uploadError: String(error?.message || "Photo upload failed").slice(0, 200) }, { merge: true }).catch(() => {});
       throw error;
     }
-    await sendPushNotification({
-      kind: "field-message",
-      audience: "office",
-      title: `Message from ${senderName}`,
-      body: text || `${attachments.length} field photo${attachments.length === 1 ? "" : "s"} attached.`,
-      link: "./admin.html",
-      tag: `mpi-field-message-${messageRef.id}`
-    }).catch(() => false);
+    if (options.notifyOffice !== false) {
+      await sendPushNotification({
+        kind: String(options.kind || "field-message").toLowerCase().slice(0, 40),
+        audience: "office",
+        title: String(options.title || `Message from ${senderName}`).slice(0, 120),
+        body: text || `${attachments.length} field photo${attachments.length === 1 ? "" : "s"} attached.`,
+        link: "./admin.html",
+        tag: `mpi-field-message-${messageRef.id}`
+      }).catch(() => false);
+    }
     return { id: messageRef.id, ...base, attachments, active: true };
   }
 

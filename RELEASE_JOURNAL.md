@@ -1,5 +1,20 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 151 — Complete Office Job and Lab Records
+
+- Repaired the Team Accounts layout so long names and email addresses can no longer collapse into a one-character-wide column.
+- Made every job in an inspector’s Operations detail expandable, showing Scheduled, On My Way, Arrived, Inspection Started and Job Complete times with direct Edit controls.
+- Made auditable job-time corrections recalculate Hours Worked and Drive Time; correcting the first arrival also corrects the Hours Worked start while preserving the original phone record.
+- Added an Office Console Lab Activity and Chain of Custody panel with lab arrival/completion times, lab travel, synchronized COC photo counts and secure photo viewing.
+- Added background migration of existing COC photos from the inspector phone to the Office Console and removed COC records from the ordinary message inbox.
+- Preserved the complete final operations snapshot before clearing delivered phone logs, preventing later background syncs from replacing completed job and lab detail with an empty record.
+- Added a safe guard for already-completed Build 150 days so an empty local closeout cannot overwrite a fuller Office Console record.
+- Updated the field app, Office Console, version manifest and offline cache to Build 151.
+
+### Validation record
+
+- Confirmed JavaScript syntax, inline script parsing, corrected-time calculations, responsive Team/Operations layouts, build references and clean patch formatting.
+
 ## Build 149 — Adrienne Office Setup
 
 - Added a guided setup path for `adrienne@michiganpropertyinspections.com`; Kevin can assign her Owner access from Team Accounts after her first secure company sign-in.
