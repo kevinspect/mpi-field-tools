@@ -951,7 +951,9 @@
     const explicitStart = effective.startAdjustment;
     if (!arrivalAdjustment?.correctedValue || (explicitStart && String(explicitStart.correctedAt || "") >= String(arrivalAdjustment.correctedAt || ""))) return effective;
     const sessions = effective.sessions.map(session => ({ ...session }));
-    const firstPaid = sessions.findIndex(session => session?.clockedInAt && !["morning-readiness", "activity-only"].includes(String(session.startSource || "legacy-manual-clock")));
+    const firstPaid = Number.isInteger(effective.paidSessionIndexes?.[0])
+      ? effective.paidSessionIndexes[0]
+      : sessions.findIndex(session => session?.clockedInAt && !["morning-readiness", "activity-only"].includes(String(session.startSource || "legacy-manual-clock")));
     if (firstPaid < 0) return effective;
     sessions[firstPaid].clockedInAt = arrivalAdjustment.correctedValue;
     return { ...effective, sessions, hoursWorkedStartedAt: arrivalAdjustment.correctedValue, effectiveHoursWorkedStartedAt: arrivalAdjustment.correctedValue, startAdjustment: arrivalAdjustment };

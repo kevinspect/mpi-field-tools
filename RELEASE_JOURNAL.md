@@ -2847,3 +2847,8 @@ Status: prepared August 26, 2026 as app Build 96.
 - Recognizes unlabelled legacy sessions that begin at the recorded Morning Readiness time as activity-only rather than paid Hours Worked.
 - Preserves the original legacy session in the audit history while excluding it from daily, weekly, admin, inspector, and weekly-email totals.
 - Keeps the genuine first-job-arrival session as the paid-hours source and removes false historical open-session warnings caused by old builds.
+
+## Build 156 — Normalized Legacy Readiness Records
+
+- Handles both blank and explicitly normalized `legacy-manual-clock` source labels when identifying old Morning Readiness sessions.
+- Carries the audited paid-session indexes into management correction logic so an arrival correction can never attach to a Morning Readiness record.

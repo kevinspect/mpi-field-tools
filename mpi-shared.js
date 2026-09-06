@@ -75,7 +75,7 @@
     if (!session?.clockedInAt) return false;
     const source = String(session.startSource || "").trim();
     if (["morning-readiness", "activity-only"].includes(source)) return false;
-    if (source) return true;
+    if (source && source !== "legacy-manual-clock") return true;
 
     // Early workflow builds created an unlabelled open session when Morning
     // Readiness was completed, followed by the real paid session at first-job
@@ -101,6 +101,7 @@
       hoursWorkedStartedAt: sessions[paidIndexes[0]]?.clockedInAt || timeClock.hoursWorkedStartedAt || "",
       effectiveHoursWorkedStartedAt: sessions[paidIndexes[0]]?.clockedInAt || "",
       effectiveClockedOutAt: sessions[paidIndexes.at(-1)]?.clockedOutAt || "",
+      paidSessionIndexes: [...paidIndexes],
       startAdjustment,
       endAdjustment
     };
