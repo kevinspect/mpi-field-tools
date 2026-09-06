@@ -234,7 +234,8 @@ function cleanWeeklyPayload_(input) {
       jobsCompleted: Math.max(0, Math.round(Number(item.jobsCompleted) || 0)),
       hoursStart: safeText_(item.hoursStart, 40),
       clockOut: safeText_(item.clockOut, 40),
-      adjusted: item.adjusted === true
+      adjusted: item.adjusted === true,
+      timeIssue: safeText_(item.timeIssue, 300)
     };
   });
   return {
@@ -255,8 +256,8 @@ function renderWeeklyEmail_(payload) {
     weeklyMetric_("JOBS COMPLETE", String(payload.jobsCompleted)) +
     '</tr></table>';
   var rows = payload.days.length ? payload.days.map(function (day) {
-    return '<tr><td style="padding:13px 8px;border-bottom:1px solid #e4e9f0;color:#11186a;font-weight:800;">' + html_(day.dateLabel) + (day.adjusted ? '<div style="margin-top:4px;color:#b48720;font-size:11px;">Management adjusted</div>' : '') + '</td>' +
-      '<td style="padding:13px 8px;border-bottom:1px solid #e4e9f0;color:#293767;text-align:center;">' + html_(duration_(day.hoursMinutes)) + '</td>' +
+    return '<tr><td style="padding:13px 8px;border-bottom:1px solid #e4e9f0;color:#11186a;font-weight:800;">' + html_(day.dateLabel) + (day.adjusted ? '<div style="margin-top:4px;color:#b48720;font-size:11px;">Management adjusted</div>' : '') + (day.timeIssue ? '<div style="margin-top:4px;color:#9b3838;font-size:11px;">Time entry needs review</div>' : '') + '</td>' +
+      '<td style="padding:13px 8px;border-bottom:1px solid #e4e9f0;color:#293767;text-align:center;">' + (day.timeIssue ? 'Review' : html_(duration_(day.hoursMinutes))) + '</td>' +
       '<td style="padding:13px 8px;border-bottom:1px solid #e4e9f0;color:#293767;text-align:center;">' + html_(duration_(day.driveMinutes)) + '</td>' +
       '<td style="padding:13px 8px;border-bottom:1px solid #e4e9f0;color:#293767;text-align:center;font-weight:800;">' + day.jobsCompleted + '</td></tr>';
   }).join("") : '<tr><td colspan="4" style="padding:16px;color:#66708c;">No recorded workdays were available.</td></tr>';
@@ -281,7 +282,7 @@ function weeklyMetric_(label, value) {
 
 function plainWeeklyText_(payload) {
   var lines = ["MICHIGAN PROPERTY INSPECTIONS", "WEEKLY INSPECTOR SUMMARY", "", "Inspector: " + payload.inspectorName, "Week: " + payload.weekLabel, "Hours Worked: " + duration_(payload.totalHoursMinutes), "Drive Time: " + duration_(payload.totalDriveMinutes), "Jobs Completed: " + payload.jobsCompleted, "", "Daily Breakdown:"];
-  payload.days.forEach(function (day) { lines.push("- " + day.dateLabel + ": " + duration_(day.hoursMinutes) + " worked, " + duration_(day.driveMinutes) + " drive, " + day.jobsCompleted + " jobs"); });
+  payload.days.forEach(function (day) { lines.push("- " + day.dateLabel + ": " + (day.timeIssue ? "time entry needs review" : duration_(day.hoursMinutes) + " worked") + ", " + duration_(day.driveMinutes) + " drive, " + day.jobsCompleted + " jobs"); });
   lines.push("", "Michigan Property Inspections Workflow Management System");
   return lines.join("\n");
 }

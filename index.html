@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="151">
+  <meta name="app-build" content="152">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5111,7 +5111,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">151</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">152</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -7633,7 +7633,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 151</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 152</span></div>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7761,10 +7761,10 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=151"></script>
-  <script src="./mpi-field-sync.js?build=151"></script>
-  <script src="./mpi-subcontractor.js?build=151"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=151"></script>
+  <script src="./mpi-shared.js?build=152"></script>
+  <script src="./mpi-field-sync.js?build=152"></script>
+  <script src="./mpi-subcontractor.js?build=152"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=152"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -15867,7 +15867,7 @@
         record.stage = "arrived";
         record.arrivals = { ...(record.arrivals || {}), [lab.id]: arrivedAt };
         saveWorkflowLabStop(record);
-        appendWorkflowEvent("Arrived at lab", { lab: lab.name, address: lab.address, arrivedAt, driveMinutes }, { property: lab.address, calendarEventId: record.sourceJobId });
+        appendWorkflowEvent("Arrived at lab", { lab: lab.name, address: lab.address, arrivedAt, driveMinutes, driveStoppedAt: arrivedAt, driveStatus: "paused-at-destination" }, { property: lab.address, calendarEventId: record.sourceJobId });
         renderWorkflowLabStop(record);
       }
 
@@ -15970,7 +15970,7 @@
         record.homeArrivedAt = arrivedAt;
         saveWorkflowLabStop(record);
         const approvedEndAddress = loadWorkflowProfile()?.approvedEndAddress || "";
-        const arrivalEvent = appendWorkflowEvent("Arrived home / end location", { arrivedAt, approvedEndAddress, locationStatus: "pending" }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
+        const arrivalEvent = appendWorkflowEvent("Arrived home / end location", { arrivedAt, approvedEndAddress, locationStatus: "pending", driveStoppedAt: arrivedAt, driveStatus: "paused-at-destination" }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
         renderWorkflowApp();
         showToast("Arrival recorded — complete the equipment check, then Clock Out");
         (async () => {
@@ -16600,6 +16600,8 @@
         const arrivedAtNow = arrivalTappedAt;
         const arrivedJob = updateWorkflowStage(job, "arrived", "Arrived", {
           originalTimestamp: arrivalTappedAt,
+          driveStoppedAt: arrivalTappedAt,
+          driveStatus: "paused-at-destination",
           recordedOffline: !navigator.onLine,
           scheduledStart: job.scheduledStart || "",
           verificationStatus: "location-review-pending",
@@ -17284,9 +17286,16 @@
           .forEach(day => byDate.set(day.date, day));
         const corrections = Array.isArray(profile.adminCorrections) ? profile.adminCorrections : workflowAdminCorrections();
         const days = [...byDate.values()].sort((left, right) => String(left.date).localeCompare(String(right.date))).map(day => {
-          const hoursMinutes = window.MPI_SHARED?.workedMilliseconds
-            ? Math.floor(window.MPI_SHARED.workedMilliseconds(day.timeClock, day.date, corrections, Date.now()) / 60000)
-            : Math.max(0, Number(day.timeClock?.workedMinutes) || 0);
+          const allowOpen = day.date === localDateKey()
+            && day.liveStatus !== "CLOCKED OUT"
+            && !day.dayComplete?.completedAt;
+          const timeAudit = window.MPI_SHARED?.workedTimeAudit
+            ? window.MPI_SHARED.workedTimeAudit(day.timeClock, day.date, corrections, Date.now(), { allowOpen })
+            : null;
+          const fallbackMinutes = Math.max(0, Number(day.timeClock?.workedMinutes) || 0);
+          const hoursMinutes = timeAudit
+            ? Math.floor(timeAudit.milliseconds / 60000)
+            : fallbackMinutes <= 18 * 60 ? fallbackMinutes : 0;
           const driveMinutes = Math.max(0, Number(day.driveTime?.totalMinutes) || 0);
           const jobsCompleted = (Array.isArray(day.jobs) ? day.jobs : []).filter(job => job.status === "completed").length;
           const effective = window.MPI_SHARED?.effectiveTimeClock?.(day.timeClock, day.date, corrections);
@@ -17298,7 +17307,8 @@
             jobsCompleted,
             hoursStart: effective?.effectiveHoursWorkedStartedAt ? workflowClock(effective.effectiveHoursWorkedStartedAt) : "Not started",
             clockOut: effective?.effectiveClockedOutAt ? workflowClock(effective.effectiveClockedOutAt) : "Not recorded",
-            adjusted: Boolean(effective?.startAdjustment || effective?.endAdjustment)
+            adjusted: Boolean(effective?.startAdjustment || effective?.endAdjustment),
+            timeIssue: timeAudit?.issues?.map(item => item.message).join(" ") || ""
           };
         });
         const inspectorName = String(profile.name || session.inspectorName || "MPI Inspector").trim().slice(0, 80);

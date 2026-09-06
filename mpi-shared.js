@@ -21,6 +21,7 @@
     "kev@michiganpropertyinspections.com": "NACHI24060423",
     "cory@michiganpropertyinspections.com": "NACHI26090138"
   };
+  const MAX_PAID_SESSION_MS = 18 * 60 * 60 * 1000;
 
   if (!window.firebase?.initializeApp || !window.firebase?.auth || !window.firebase?.firestore) {
     window.MPI_SHARED = { available: false };
@@ -92,15 +93,45 @@
     };
   }
 
-  function workedMilliseconds(timeClock, date, adjustments = [], endTime = Date.now()) {
+  function localDateKeyForTimestamp(value) {
+    const parsed = new Date(value);
+    if (!Number.isFinite(parsed.getTime())) return "";
+    return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`;
+  }
+
+  function workedTimeAudit(timeClock, date, adjustments = [], endTime = Date.now(), options = {}) {
     const effective = effectiveTimeClock(timeClock, date, adjustments);
-    if (!effective) return 0;
-    const intervals = effective.sessions.map(session => {
+    if (!effective) return { milliseconds: 0, intervals: [], issues: [] };
+    const now = Number(endTime);
+    const currentDate = localDateKeyForTimestamp(now);
+    const allowOpen = options.allowOpen !== undefined ? Boolean(options.allowOpen) : String(date || "") === currentDate;
+    const issues = [];
+    const intervals = effective.sessions.map((session, index) => {
       const source = String(session?.startSource || "legacy-manual-clock");
       if (!session?.clockedInAt || ["morning-readiness", "activity-only"].includes(source)) return null;
       const start = new Date(session.clockedInAt).getTime();
-      const end = session.clockedOutAt ? new Date(session.clockedOutAt).getTime() : Number(endTime);
-      return Number.isFinite(start) && Number.isFinite(end) && end > start ? { start, end } : null;
+      if (!Number.isFinite(start)) {
+        issues.push({ code: "invalid-start", sessionIndex: index, message: "A paid-hours session has an invalid start time." });
+        return null;
+      }
+      if (date && localDateKeyForTimestamp(start) !== String(date)) {
+        issues.push({ code: "wrong-day", sessionIndex: index, message: "A paid-hours session starts outside its recorded calendar day." });
+        return null;
+      }
+      if (!session.clockedOutAt && !allowOpen) {
+        issues.push({ code: "historical-open-session", sessionIndex: index, message: "An older paid-hours session was never clocked out and has been excluded from totals." });
+        return null;
+      }
+      const end = session.clockedOutAt ? new Date(session.clockedOutAt).getTime() : now;
+      if (!Number.isFinite(end) || end <= start) {
+        issues.push({ code: "invalid-end", sessionIndex: index, message: "A paid-hours session ends before it starts and has been excluded from totals." });
+        return null;
+      }
+      if (end - start > MAX_PAID_SESSION_MS) {
+        issues.push({ code: "overlong-session", sessionIndex: index, message: "A paid-hours session exceeds 18 hours and has been excluded pending management correction." });
+        return null;
+      }
+      return { start, end, sessionIndex: index };
     }).filter(Boolean).sort((left, right) => left.start - right.start || left.end - right.end);
     const merged = [];
     intervals.forEach(interval => {
@@ -108,7 +139,15 @@
       if (previous && interval.start <= previous.end) previous.end = Math.max(previous.end, interval.end);
       else merged.push({ ...interval });
     });
-    return merged.reduce((total, interval) => total + interval.end - interval.start, 0);
+    return {
+      milliseconds: merged.reduce((total, interval) => total + interval.end - interval.start, 0),
+      intervals: merged,
+      issues
+    };
+  }
+
+  function workedMilliseconds(timeClock, date, adjustments = [], endTime = Date.now(), options = {}) {
+    return workedTimeAudit(timeClock, date, adjustments, endTime, options).milliseconds;
   }
 
   function isCompanyEmail(value) {
@@ -597,6 +636,7 @@
     timeAdjustmentsForDate,
     latestTimeAdjustment,
     effectiveTimeClock,
+    workedTimeAudit,
     workedMilliseconds,
     isCompanyEmail,
     isOwnerEmail,

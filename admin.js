@@ -103,6 +103,7 @@
   let currentRange = "today";
   const COMMENT_MONTHLY_PLANNING_ALLOWANCE = 400;
   let selectedInspectorId = "all";
+  let selectedOperationDate = "";
   let unsubscribePeople = null;
   let unsubscribeUpdates = null;
   let unsubscribeReplies = null;
@@ -867,6 +868,10 @@
     return selectedDays(person).at(-1) || null;
   }
 
+  function selectedOperationDay(person, days = selectedDays(person)) {
+    return days.find(day => day.date === selectedOperationDate) || days.at(-1) || null;
+  }
+
   function correctionsFor(person, day) {
     return (Array.isArray(person?.adminCorrections) ? person.adminCorrections : [])
       .filter(item => item?.date === day?.date)
@@ -962,23 +967,23 @@
     return activityClockOut?.data?.clockedOutAt || activityClockOut?.timestamp || day?.dayComplete?.completedAt || "";
   }
 
+  function workedTimeAuditForDay(person, day) {
+    if (!day?.timeClock || !shared.workedTimeAudit) return { milliseconds: 0, intervals: [], issues: [] };
+    const allowOpen = day.date === dateKey()
+      && day.liveStatus !== "CLOCKED OUT"
+      && !day.dayComplete?.completedAt;
+    return shared.workedTimeAudit(day.timeClock, day.date, person?.adminCorrections || [], Date.now(), { allowOpen });
+  }
+
   function workedMinutes(person, day) {
     if (!day?.timeClock) return 0;
     const effective = effectiveTimeClockFor(person, day);
-    if (!effective?.sessions?.length) return Number(day.timeClock.workedMinutes) || 0;
-    const intervals = effective.sessions.map(session => {
-      if (!session?.clockedInAt || ["morning-readiness", "activity-only"].includes(String(session.startSource || "legacy-manual-clock"))) return null;
-      const start = asDate(session.clockedInAt)?.getTime() || 0;
-      const end = asDate(session.clockedOutAt)?.getTime() || Date.now();
-      return start && end > start ? { start, end } : null;
-    }).filter(Boolean).sort((left, right) => left.start - right.start || left.end - right.end);
-    const merged = [];
-    intervals.forEach(interval => {
-      const previous = merged.at(-1);
-      if (previous && interval.start <= previous.end) previous.end = Math.max(previous.end, interval.end);
-      else merged.push({ ...interval });
-    });
-    return Math.floor(merged.reduce((total, interval) => total + interval.end - interval.start, 0) / 60000);
+    if (!effective?.sessions?.length) {
+      const fallback = Math.max(0, Number(day.timeClock.workedMinutes) || 0);
+      return fallback <= 18 * 60 ? Math.floor(fallback) : 0;
+    }
+    if (shared.workedTimeAudit) return Math.floor(workedTimeAuditForDay(person, day).milliseconds / 60000);
+    return 0;
   }
 
   function weeklyMinutes(person) {
@@ -989,7 +994,8 @@
     const week = operationDays(person).filter(day => rangeDateKeys("week").includes(day.date)).sort((left, right) => String(left.date).localeCompare(String(right.date)));
     return `<details class="ops-breakdown"><summary>View daily breakdown</summary><div class="fact-list">${week.length ? week.map(day => {
       const minutes = metric === "drive" ? Number(driveTimeForDay(day, person)?.totalMinutes) || 0 : workedMinutes(person, day);
-      return `<div class="fact"><span>${escapeHtml(new Date(`${day.date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }))}</span><strong>${formatMinutes(minutes)}</strong></div>`;
+      const issues = metric === "hours" ? workedTimeAuditForDay(person, day).issues : [];
+      return `<button class="fact daily-breakdown-row${day.date === selectedOperationDate ? " selected" : ""}" type="button" data-open-operation-day="${escapeHtml(day.date)}"><span>${escapeHtml(new Date(`${day.date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }))}${issues.length ? `<small>Needs time correction</small>` : ""}</span><strong>${issues.length ? "REVIEW" : formatMinutes(minutes)}</strong></button>`;
     }).join("") : '<div class="empty">No recorded days this week.</div>'}</div></details>`;
   }
 
@@ -1019,6 +1025,9 @@
       if (!reviewed) alerts.push(`${job.property || "Inspection appointment"}: arrival location requires management review.`);
     });
     if (day?.readiness && ["denied", "default"].includes(day.readiness.notificationPermission)) alerts.push("Important notification permissions are not fully enabled.");
+    operationDays(person).filter(item => rangeDateKeys("week").includes(item.date)).forEach(item => {
+      workedTimeAuditForDay(person, item).issues.forEach(issue => alerts.push(`${formatDate(item.date)}: ${issue.message}`));
+    });
     if (weeklyMinutes(person) >= 38 * 60) alerts.push("Weekly hours are approaching the configured 40-hour review point.");
     return [...new Set(alerts)].slice(0, 10);
   }
@@ -1536,7 +1545,7 @@
 
   async function reverseAdminCorrection(correctionId) {
     const person = people.find(item => item.id === selectedInspectorId);
-    const day = latestDay(person);
+    const day = selectedOperationDay(person);
     const original = correctionsFor(person, day).find(item => item.id === correctionId);
     if (!person || !day || !original?.originalValue) return;
     const reversal = {
@@ -1609,7 +1618,7 @@
     button.disabled = true;
     const review = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      date: latestDay(person)?.date || dateKey(),
+      date: selectedOperationDay(person)?.date || dateKey(),
       arrivalEventId: card.dataset.arrivalEventId,
       jobId: card.dataset.arrivalJobId || "",
       originalArrivalAt: card.dataset.arrivalTime || "",
@@ -1662,7 +1671,7 @@
 
   function renderInspectorDetail(person) {
     const days = selectedDays(person);
-    const day = days.at(-1);
+    const day = selectedOperationDay(person, days);
     const counts = jobCounts(day);
     const hours = days.reduce((total, item) => total + workedMinutes(person, item), 0);
     const weekly = weeklyMinutes(person);
@@ -1682,7 +1691,13 @@
     const timeAdjusted = Boolean(effectiveClock?.startAdjustment || effectiveClock?.endAdjustment);
     const activityStart = day?.timeClock?.activityStartedAt || day?.readiness?.completedAt;
     const activityStartMs = asDate(activityStart)?.getTime() || 0;
-    const activityMinutes = activityStartMs ? Math.max(0, Math.floor(((asDate(clockOut)?.getTime() || Date.now()) - activityStartMs) / 60000)) : 0;
+    const lastActivityTime = (day?.activity || []).map(item => asDate(item?.timestamp)?.getTime() || 0).reduce((latest, value) => Math.max(latest, value), 0);
+    const activityCanRun = day?.date === dateKey() && day?.liveStatus !== "CLOCKED OUT" && !day?.dayComplete?.completedAt;
+    const activityEndMs = asDate(clockOut)?.getTime() || (activityCanRun ? Date.now() : lastActivityTime);
+    const activityMinutes = activityStartMs && activityEndMs > activityStartMs && activityEndMs - activityStartMs <= 18 * 60 * 60 * 1000
+      ? Math.floor((activityEndMs - activityStartMs) / 60000)
+      : 0;
+    const timeAudit = workedTimeAuditForDay(person, day);
     const eodStatus = day?.dayComplete?.completedAt ? "CLOCKED OUT" : counts.total && counts.complete === counts.total ? "END-OF-DAY CHECKS" : "DAY IN PROGRESS";
     const correctionActions = ["Hours Worked start", "Hours Worked end", "On My Way selected", "Arrived", "Inspection started", "Final job completion", "Arrived at lab", "Lab visit completed", "Arrived home / end location", "Clocked off"];
     const jobOptions = (day?.jobs || []).map(job => `<option value="${escapeHtml(job.id)}">${escapeHtml(job.property)}</option>`).join("");
@@ -1692,13 +1707,13 @@
       ? `<a href="https://maps.apple.com/?q=${encodeURIComponent(`${lastLocation.latitude},${lastLocation.longitude}`)}" target="_blank" rel="noopener">Open last recorded location ↗</a> · ${escapeHtml(formatTime(lastLocation.timestamp))}`
       : "Not available";
     inspectorDetail.innerHTML = `
-      <div class="detail-hero"><div class="detail-person">${avatarHtml(person, "large")}<div><p class="ops-eyebrow">Inspector operations</p><h2>${escapeHtml(person.name || person.email)}</h2><p>${escapeHtml(person.email || "")} · ${escapeHtml(day?.date ? formatDate(day.date) : "No activity synced for this period")} · ${escapeHtml(syncAgeLabel(person, day))}</p></div></div><div><span class="status-badge ${statusClass(day?.liveStatus, alerts)}">${escapeHtml(day?.liveStatus || "NOT STARTED")}</span><button class="detail-back" type="button" data-back-overview>← All inspectors</button></div></div>
+      <div class="detail-hero"><div class="detail-person">${avatarHtml(person, "large")}<div><p class="ops-eyebrow">Inspector operations</p><h2>${escapeHtml(person.name || person.email)}</h2><p>${escapeHtml(person.email || "")} · Viewing ${escapeHtml(day?.date ? formatDate(day.date) : "no recorded day")} · ${escapeHtml(syncAgeLabel(person, day))}</p></div></div><div><span class="status-badge ${statusClass(day?.liveStatus, alerts)}">${escapeHtml(day?.liveStatus || "NOT STARTED")}</span><button class="detail-back" type="button" data-back-overview>← All inspectors</button></div></div>
       <div class="ops-grid">
         <article class="ops-card span-6"><p class="ops-eyebrow">Current job</p><strong class="ops-primary">${escapeHtml(current?.property || "No job currently open")}</strong><p class="ops-sub">${current ? `Scheduled ${formatTime(current.scheduledStart)} · ${escapeHtml(current.arrivalPerformance || "Arrival not recorded")} · ${escapeHtml(String(current.status || "scheduled").replace(/-/g, " "))}` : "The inspector is not inside an active job workflow."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Arrived</span><strong>${escapeHtml(formatTime(currentArrivedAt))}</strong></div><div class="fact"><span>Inspection started</span><strong>${escapeHtml(formatTime(currentStartedAt))}</strong></div><div class="fact"><span>Time at property</span><strong>${timeAtProperty}</strong></div></div></article>
         <article class="ops-card span-6"><p class="ops-eyebrow">Next appointment</p><strong class="ops-primary">${escapeHtml(next?.property || "No remaining appointment")}</strong><p class="ops-sub">${next ? `${formatTime(next.scheduledStart)} · ${escapeHtml(next.arrivalPerformance || "On schedule")}` : "The scheduled job list is complete."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Estimated drive</span><strong>${current?.departurePlan?.estimatedDriveMinutes ? `${current.departurePlan.estimatedDriveMinutes} min` : "—"}</strong></div><div class="fact"><span>Required departure</span><strong>${escapeHtml(formatTime(current?.departurePlan?.leaveBy))}</strong></div><div class="fact"><span>Schedule status</span><strong>${alerts.some(item => /late|affect next/i.test(item)) ? "ATTENTION REQUIRED" : "ON SCHEDULE"}</strong></div></div></article>
-        <article class="ops-card"><p class="ops-eyebrow">${currentRange === "week" ? "Hours worked this week" : currentRange === "yesterday" ? "Hours worked yesterday" : "Hours worked today"}</p><strong class="ops-primary">${formatMinutes(hours)}</strong><p class="ops-sub">${currentRange === "week" ? `${days.length} recorded day${days.length === 1 ? "" : "s"} included` : `Started ${formatTime(effectiveHoursStart)} · ${clockOut ? `Frozen at ${formatTime(clockOut)}` : day?.timeClock?.active ? "Running now" : "Not started"}${timeAdjusted ? " · Management adjusted" : ""}`}</p></article>
+        <article class="ops-card"><p class="ops-eyebrow">${currentRange === "week" ? "Hours worked this week" : currentRange === "yesterday" ? "Hours worked yesterday" : "Hours worked today"}</p><strong class="ops-primary">${formatMinutes(hours)}</strong><p class="ops-sub">${currentRange === "week" ? `${days.length} recorded day${days.length === 1 ? "" : "s"} included · selected day ${formatDate(day?.date)}` : `Started ${formatTime(effectiveHoursStart)} · ${clockOut ? `Frozen at ${formatTime(clockOut)}` : activityCanRun ? "Running now" : "Not started"}${timeAdjusted ? " · Management adjusted" : ""}`}</p>${timeAudit.issues.length ? `<div class="alert-item" style="margin-top:12px">${escapeHtml(timeAudit.issues.map(item => item.message).join(" "))}</div>` : ""}</article>
         <article class="ops-card"><p class="ops-eyebrow">Activity window</p><strong class="ops-primary">${formatMinutes(activityMinutes)}</strong><p class="ops-sub">Morning readiness ${formatTime(activityStart)} · End ${formatTime(clockOut)}</p></article>
-        <article class="ops-card"><p class="ops-eyebrow">Weekly hours</p><strong class="ops-primary">${formatMinutes(weekly)}</strong><p class="ops-sub">Current Monday-to-today total${weekly >= 38 * 60 ? " · Review threshold approaching" : ""}</p>${weeklyDayBreakdownHtml(person, "hours")}</article>
+        <article class="ops-card"><p class="ops-eyebrow">Weekly hours</p><strong class="ops-primary">${formatMinutes(weekly)}</strong><p class="ops-sub">Current Monday-to-today total${weekly >= 38 * 60 ? " · Review threshold approaching" : ""}. Open a day below to inspect or correct its source times.</p>${weeklyDayBreakdownHtml(person, "hours")}</article>
         <article class="ops-card span-6"><h3>${currentRange === "week" ? "Total Drive Time This Week" : "Drive Time"}</h3><div class="fact-list"><div class="fact"><span>Morning drive</span><strong>${formatMinutes(drive.morningMinutes)}</strong></div><div class="fact"><span>Between jobs</span><strong>${formatMinutes(drive.betweenJobMinutes)}</strong></div><div class="fact"><span>Lab travel</span><strong>${formatMinutes(drive.labMinutes)}</strong></div><div class="fact"><span>Final drive</span><strong>${driveTimeForDay(day, person)?.finalPending ? "Pending" : formatMinutes(drive.finalMinutes)}</strong></div><div class="fact"><span>Total drive ${currentRange === "week" ? "this week" : "today"}</span><strong>${formatMinutes(drive.totalMinutes)}</strong></div></div>${currentRange === "week" ? weeklyDayBreakdownHtml(person, "drive") : ""}</article>
         <article class="ops-card span-6"><h3>Day Progress</h3><strong class="ops-primary">${counts.complete} / ${counts.total} complete</strong><p class="ops-sub">Completed jobs remain visible for the full calendar day.</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Completed</span><strong>${counts.complete}</strong></div><div class="fact"><span>Remaining</span><strong>${Math.max(0, counts.total - counts.complete)}</strong></div><div class="fact"><span>Total jobs</span><strong>${counts.total}</strong></div></div></article>
         <article class="ops-card full"><h3>Job Breakdown</h3><p class="ops-sub">Open any job to review its operational timestamps. Use Edit to add an auditable correction.</p><div class="job-list" style="margin-top:12px">${(day?.jobs || []).length ? day.jobs.map((job, index) => jobCard(person, day, job, index)).join("") : '<div class="empty">No scheduled jobs are available for this period.</div>'}</div></article>
@@ -1991,7 +2006,7 @@
 
   async function addAdminCorrection(formElement) {
     const person = people.find(item => item.id === formElement.dataset.personId);
-    const day = latestDay(person);
+    const day = selectedOperationDay(person);
     const action = formElement.querySelector("#adminCorrectionAction").value;
     const jobId = formElement.querySelector("#adminCorrectionJob").value;
     const correctedValue = formElement.querySelector("#adminCorrectionValue").value;
@@ -2195,17 +2210,23 @@
     sendInspectorMessage(formElement);
   });
   peopleList.addEventListener("change", updatePerson);
-  inspectorSelector.addEventListener("change", () => { selectedInspectorId = inspectorSelector.value; renderOperations(); });
+  inspectorSelector.addEventListener("change", () => {
+    selectedInspectorId = inspectorSelector.value;
+    selectedOperationDate = "";
+    renderOperations();
+  });
   rangePicker.addEventListener("click", event => {
     const button = event.target.closest("[data-range]");
     if (!button) return;
     currentRange = button.dataset.range;
+    selectedOperationDate = "";
     renderOperations();
   });
   teamOverview.addEventListener("click", event => {
     const subcontractor = event.target.closest("[data-open-subcontractor]");
     if (subcontractor) {
       selectedInspectorId = subcontractor.dataset.openSubcontractor;
+      selectedOperationDate = "";
       inspectorSelector.value = selectedInspectorId;
       renderOperations();
       return;
@@ -2213,6 +2234,7 @@
     const row = event.target.closest("[data-open-inspector]");
     if (!row) return;
     selectedInspectorId = row.dataset.openInspector;
+    selectedOperationDate = "";
     inspectorSelector.value = selectedInspectorId;
     renderOperations();
   });
@@ -2229,8 +2251,16 @@
     }
     if (event.target.closest("[data-back-overview]")) {
       selectedInspectorId = "all";
+      selectedOperationDate = "";
       inspectorSelector.value = "all";
       renderOperations();
+      return;
+    }
+    const operationDay = event.target.closest("[data-open-operation-day]");
+    if (operationDay) {
+      selectedOperationDate = operationDay.dataset.openOperationDay || "";
+      const person = people.find(item => item.id === selectedInspectorId);
+      if (person) renderInspectorDetail(person);
       return;
     }
     const arrivalReview = event.target.closest("[data-arrival-review]");

@@ -230,6 +230,10 @@
     .ops-breakdown { margin-top:14px; padding-top:11px; border-top:1px solid #e7ebf2; }
     .ops-breakdown summary { color:var(--blue); font-size:10px; font-weight:900; cursor:pointer; }
     .ops-breakdown .fact-list { margin-top:11px; }
+    .daily-breakdown-row { width:100%; color:inherit; background:transparent; border:0; text-align:left; }
+    .daily-breakdown-row:hover,.daily-breakdown-row:focus-visible { color:var(--navy); background:#f2f7fc; outline:2px solid #c9dff0; outline-offset:3px; }
+    .daily-breakdown-row.selected { padding:9px; background:#edf5fb; border:1px solid #c9dff0; border-radius:9px; }
+    .daily-breakdown-row span small { display:block; margin-top:3px; color:var(--red); font-size:8px; font-weight:850; }
     .job-list,.timeline,.message-history,.correction-history { display:grid; gap:9px; }
     .job-line { overflow:hidden; background:#f6f8fb; border:1px solid #e2e7ef; border-radius:12px; }
     .job-line[open] { background:#fff; border-color:#b9d0e4; box-shadow:0 8px 22px rgba(17,24,106,.07); }
@@ -607,7 +611,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=151"></script>
-  <script src="./admin.js?build=151"></script>
+  <script src="./mpi-shared.js?build=152"></script>
+  <script src="./admin.js?build=152"></script>
 </body>
 </html>
