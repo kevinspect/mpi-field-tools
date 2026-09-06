@@ -131,6 +131,7 @@
     const issues = [];
     const paidSessionIndexes = effective.sessions.map((session, index) => isPaidHoursSession(session, index, effective.sessions, effective) ? index : -1).filter(index => index >= 0);
     const finalPaidSessionIndex = paidSessionIndexes.at(-1);
+    const hasClosedPaidSession = paidSessionIndexes.some(index => Boolean(effective.sessions[index]?.clockedOutAt));
     const intervals = effective.sessions.map((session, index) => {
       if (!isPaidHoursSession(session, index, effective.sessions, effective)) return null;
       const start = timestampMilliseconds(session.clockedInAt);
@@ -146,6 +147,8 @@
         ? fallbackEnd
         : 0;
       if (!session.clockedOutAt && !recoveredEnd && !allowOpen) {
+        const supersededByClosedSession = hasClosedPaidSession && paidSessionIndexes.some(paidIndex => paidIndex > index);
+        if (supersededByClosedSession) return null;
         issues.push({ code: "historical-open-session", sessionIndex: index, message: "An older paid-hours session was never clocked out and has been excluded from totals." });
         return null;
       }

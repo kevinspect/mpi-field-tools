@@ -2852,3 +2852,9 @@ Status: prepared August 26, 2026 as app Build 96.
 
 - Handles both blank and explicitly normalized `legacy-manual-clock` source labels when identifying old Morning Readiness sessions.
 - Carries the audited paid-session indexes into management correction logic so an arrival correction can never attach to a Morning Readiness record.
+
+## Build 157 — Superseded Historical Session Cleanup
+
+- Ignores an abandoned historical open session only when a later paid session for the same day was properly closed and supplies the validated total.
+- Continues to flag any past day that has no valid closed or recoverable paid-hours session.
+- Removes false weekly REVIEW warnings without deleting or rewriting the original audit records.
