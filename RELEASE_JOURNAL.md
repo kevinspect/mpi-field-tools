@@ -1,5 +1,23 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 158 — Stable Mobile Workflow and App Diagnostics
+
+- Fixed the production mobile scrolling failure at its source: repeated company-session updates no longer rebuild the active screen or force the page back to the top.
+- Preserved the inspector's scroll position, focused field, typed information, and open job-notes section during background account, message, hours, GPS, and synchronization updates; genuine navigation still starts the new screen at the top.
+- Confirmed ARRIVED records immediately, starts or resumes Hours Worked before location review, works offline-first, and performs the GPS/geofence comparison afterward without exposing exception details to the inspector.
+- Retained the management-only arrival review with actual-versus-scheduled map evidence, approval or flagging, and separate auditable effective-hours adjustments that preserve the original arrival.
+- Added App Diagnostics / Fix App Issue to the inspector Settings screen. It checks connectivity, server/build, sign-in, saved synchronization, job and hours consistency, permissions, GPS availability, Comment Builder failures, application errors, stale schedules, and offline readiness.
+- Limited automatic recovery to safe actions such as retrying preserved synchronization records and restoring a recoverable clock session. It never deletes jobs, timestamps, hours, offline records, or management corrections.
+- Added Send Diagnostic to Office with offline queueing and a management App Issues area where reports can be tracked as New, Investigating, or Resolved.
+- Updated the field app, Office Console, version manifest, and offline cache to Build 158.
+
+### Validation record
+
+- Reproduced the mobile scrolling failure, verified the corrected page remains at the same middle-page position through repeated background session updates, and confirmed genuine route navigation still resets to the top.
+- Confirmed every primary job, lab, home, and end-of-day control remains present in the mobile layout.
+- Confirmed the diagnostic check completes without changing field records and exposes the Office submission action when an issue is found.
+- Confirmed JavaScript syntax, inline script parsing, unique markup IDs, release markers, and clean patch formatting.
+
 ## Build 151 — Complete Office Job and Lab Records
 
 - Repaired the Team Accounts layout so long names and email addresses can no longer collapse into a one-character-wide column.
