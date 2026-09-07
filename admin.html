@@ -107,6 +107,31 @@
     .request-progress-note { display:grid; gap:4px; margin-top:11px; padding:11px 12px; color:#273b70; background:#eef5fb; border:1px solid #cfdfed; border-radius:10px; }
     .request-progress-note strong { color:var(--navy); font-size:9px; letter-spacing:.05em; text-transform:uppercase; }
     .request-progress-note span { font-size:10.5px; line-height:1.45; white-space:pre-wrap; }
+    .diagnostic-list { display:grid; gap:12px; margin-top:15px; }
+    .diagnostic-card { padding:17px; background:#fff; border:1px solid var(--line); border-left:5px solid var(--red); border-radius:14px; }
+    .diagnostic-card.investigating { border-left-color:var(--blue); }
+    .diagnostic-card.resolved { opacity:.76; border-left-color:var(--green); }
+    .diagnostic-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+    .diagnostic-head h3 { margin:5px 0 0; color:var(--navy); font-size:17px; }
+    .diagnostic-head p { margin:5px 0 0; color:var(--muted); font-size:10.5px; }
+    .diagnostic-status { display:inline-flex; min-height:27px; align-items:center; padding:4px 9px; color:#8d302c; background:#ffe9e6; border-radius:999px; font-size:8.5px; font-weight:950; letter-spacing:.06em; text-transform:uppercase; }
+    .diagnostic-card.investigating .diagnostic-status { color:#18578e; background:#e8f2fb; }
+    .diagnostic-card.resolved .diagnostic-status { color:#1d664f; background:#e5f4ed; }
+    .diagnostic-summary { margin:13px 0 0; color:#323b63; font-size:11px; line-height:1.5; }
+    .diagnostic-issues { display:grid; gap:6px; margin:12px 0 0; padding:0; list-style:none; }
+    .diagnostic-issues li { padding:9px 11px; color:#5e3e13; background:#fff7e2; border:1px solid #edd89c; border-radius:9px; font-size:10px; line-height:1.4; }
+    .diagnostic-facts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:12px; }
+    .diagnostic-fact { padding:10px; background:#f5f7fb; border:1px solid #e0e6ef; border-radius:9px; }
+    .diagnostic-fact span,.diagnostic-fact strong { display:block; }
+    .diagnostic-fact span { color:var(--muted); font-size:8px; font-weight:900; letter-spacing:.07em; text-transform:uppercase; }
+    .diagnostic-fact strong { margin-top:4px; color:var(--navy); font-size:10.5px; overflow-wrap:anywhere; }
+    .diagnostic-details { margin-top:12px; padding:11px 12px; background:#f7f9fc; border:1px solid var(--line); border-radius:10px; }
+    .diagnostic-details summary { color:var(--blue); font-size:10px; font-weight:900; cursor:pointer; }
+    .diagnostic-details pre { max-height:260px; overflow:auto; margin:10px 0 0; padding:10px; color:#2e365b; background:#fff; border:1px solid #e0e5ee; border-radius:8px; font:9px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .diagnostic-controls { display:grid; grid-template-columns:minmax(180px,260px) minmax(0,1fr); gap:10px; align-items:end; margin-top:13px; padding-top:13px; border-top:1px solid var(--line); }
+    .diagnostic-controls label { display:grid; gap:6px; color:var(--navy); font-size:10px; font-weight:900; }
+    .diagnostic-controls select { min-height:42px; padding:0 10px; color:var(--ink); background:#fff; border:1px solid #cbd3e1; border-radius:9px; }
+    .diagnostic-controls span { color:var(--muted); font-size:10px; line-height:1.4; }
     .admin-onboarding[hidden] { display:none; }
     .admin-onboarding { position:fixed; z-index:500; inset:0; display:grid; place-items:center; padding:18px; background:rgba(8,13,66,.78); backdrop-filter:blur(10px); }
     .admin-onboarding-card { width:min(620px,100%); max-height:calc(100vh - 36px); overflow:auto; background:#fff; border:1px solid rgba(255,255,255,.45); border-radius:22px; box-shadow:0 28px 80px rgba(3,8,52,.4); }
@@ -442,7 +467,7 @@
       .stat-grid,.comment-usage-panel,.console-view { grid-column:1; }
       .stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .stat { min-height:82px; }
-      .tabbar { position:fixed; z-index:100; inset:auto 8px max(8px,env(safe-area-inset-bottom)); grid-column:auto; grid-row:auto; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:3px; padding:6px; background:rgba(17,24,106,.97); border:1px solid rgba(255,255,255,.16); border-radius:16px; box-shadow:0 15px 36px rgba(11,18,65,.35); backdrop-filter:blur(16px); }
+      .tabbar { position:fixed; z-index:100; inset:auto 8px max(8px,env(safe-area-inset-bottom)); grid-column:auto; grid-row:auto; display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:3px; padding:6px; background:rgba(17,24,106,.97); border:1px solid rgba(255,255,255,.16); border-radius:16px; box-shadow:0 15px 36px rgba(11,18,65,.35); backdrop-filter:blur(16px); }
       .tabbar .nav-heading { display:none; }
       .tabbar button { display:grid; min-width:0; min-height:58px; place-items:center; align-content:center; gap:3px; padding:5px 2px; border-radius:11px; font-size:10px; text-align:center; }
       .tabbar button .app-icon { width:19px; height:19px; }
@@ -461,6 +486,9 @@
       .job-line-summary .status-badge { grid-column:1/-1; width:max-content; }
       .job-time-panel,.lab-time-row { grid-template-columns:1fr; }
       .comment-usage-panel { grid-template-columns:1fr 1fr; }
+      .diagnostic-head { display:grid; }
+      .diagnostic-facts { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .diagnostic-controls { grid-template-columns:1fr; }
       .admin-onboarding { padding:10px; }
       .admin-onboarding-card { max-height:calc(100vh - 20px); border-radius:17px; }
       .admin-onboarding-head { padding:18px; border-radius:16px 16px 0 0; }
@@ -528,6 +556,7 @@
         <div class="nav-heading">Workspace</div>
         <button class="active" type="button" data-admin-view="operations"><svg class="app-icon"><use href="#icon-grid"></use></svg><span>Operations</span><span class="nav-count" id="adminReplyCount"></span></button>
         <button type="button" data-admin-view="requests"><svg class="app-icon"><use href="#icon-clipboard"></use></svg><span>Requests</span><span class="nav-count" id="adminRequestCount"></span></button>
+        <button type="button" data-admin-view="diagnostics"><svg class="app-icon"><use href="#icon-alert"></use></svg><span>App issues</span><span class="nav-count" id="adminDiagnosticCount"></span></button>
         <button type="button" data-admin-view="publish"><svg class="app-icon"><use href="#icon-send"></use></svg><span>Send to field</span></button>
         <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Sent updates</span></button>
         <button type="button" data-admin-view="people"><svg class="app-icon"><use href="#icon-users"></use></svg><span>Team</span></button>
@@ -563,6 +592,17 @@
             <div class="field"><label for="adminRequestSort">Sort</label><select id="adminRequestSort"><option value="priority">ASAP / overdue / newest</option><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></div>
           </div>
           <div class="request-admin-list" id="adminRequestList" style="margin-top:16px"><div class="empty">No inspector requests have synchronized yet.</div></div>
+        </div>
+      </section>
+
+      <section class="console-view" data-admin-panel="diagnostics">
+        <div class="panel content-panel">
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-alert"></use></svg></span><div><h2>App Issues / Diagnostics</h2><p>Field app checks sent by inspectors. Review the summary, investigate the technical detail when needed, and keep each report accountable through resolution.</p></div></div></div>
+          <div class="operations-toolbar">
+            <div><p class="ops-eyebrow">Issue queue</p><p class="sync-note" id="adminDiagnosticSummary">No diagnostic reports have been submitted.</p></div>
+            <div class="field"><label for="adminDiagnosticStatusFilter">Status</label><select id="adminDiagnosticStatusFilter"><option value="active">New &amp; investigating</option><option value="NEW">New</option><option value="INVESTIGATING">Investigating</option><option value="RESOLVED">Resolved</option><option value="all">All reports</option></select></div>
+          </div>
+          <div class="diagnostic-list" id="adminDiagnosticList"><div class="empty">No app diagnostics have been submitted.</div></div>
         </div>
       </section>
 
@@ -611,7 +651,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=157"></script>
-  <script src="./admin.js?build=157"></script>
+  <script src="./mpi-shared.js?build=158"></script>
+  <script src="./admin.js?build=158"></script>
 </body>
 </html>
