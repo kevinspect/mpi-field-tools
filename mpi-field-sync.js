@@ -47,6 +47,7 @@
   let profileWatchUserId = "";
   let registeredPushToken = "";
   let pendingProfilePhoto = null;
+  let lastPublishedSessionSignature = "";
   const NOTIFIED_UPDATE_STORAGE_KEY = "mpiNotifiedOfficeUpdatesV2";
 
   function notifiedUpdateIds() {
@@ -247,6 +248,9 @@
     const detail = companySessionDetail(user, profile);
     if (!detail) return;
     window.MPI_COMPANY_SESSION = detail;
+    const signature = JSON.stringify(detail);
+    if (signature === lastPublishedSessionSignature) return;
+    lastPublishedSessionSignature = signature;
     window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail }));
   }
 
@@ -457,6 +461,8 @@
     currentProfile = profile;
     accountCard.hidden = false;
     if (!user || !profile) {
+      lastPublishedSessionSignature = "";
+      delete window.MPI_COMPANY_SESSION;
       accountName.textContent = "Not signed in";
       accountRole.textContent = "Sign in once on this company phone to receive individual instructions and training assignments.";
       accountStatus.textContent = error?.message || "Company account required";
