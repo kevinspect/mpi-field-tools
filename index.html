@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="157">
+  <meta name="app-build" content="158">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4818,6 +4818,19 @@
     .settings-status { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding: 12px; background: #eef4fa; border-radius: 11px; }
     .settings-status strong { color: var(--forest); font-size: 11px; }
     .settings-status span { color: var(--bright-blue); font-size: 10px; font-weight: 900; text-align: right; }
+    .app-diagnostics-card { border-top: 5px solid var(--bright-blue); }
+    .app-diagnostics-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 9px; margin-top: 15px; }
+    .app-diagnostics-actions button { min-height: 50px; padding: 10px 13px; color: #fff; background: var(--forest); border: 0; border-radius: 11px; font: inherit; font-size: 10.5px; font-weight: 900; box-shadow: 0 4px 0 var(--gold); cursor: pointer; }
+    .app-diagnostics-actions button.secondary { color: var(--bright-blue); background: #edf5fc; border: 1px solid #cbdff1; box-shadow: none; }
+    .app-diagnostics-actions button:disabled { opacity: .58; cursor: wait; }
+    .app-diagnostics-result { margin-top: 14px; padding: 15px; background: #f3f7fb; border: 1px solid #d6e2ee; border-radius: 12px; }
+    .app-diagnostics-result[hidden] { display: none; }
+    .app-diagnostics-result strong,.app-diagnostics-result span { display: block; }
+    .app-diagnostics-result strong { color: var(--forest); font-size: 13px; }
+    .app-diagnostics-result span { margin-top: 6px; color: var(--ink-2); font-size: 10.5px; line-height: 1.5; }
+    .app-diagnostics-result.is-attention { background: #fff7e2; border-color: #ead38a; }
+    .app-diagnostics-result.is-ready { background: #edf8f2; border-color: #bbdfca; }
+    .app-diagnostics-status { min-height: 18px; margin-top: 10px !important; color: var(--bright-blue) !important; font-weight: 850; }
 
     .mpi-home-updates { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:14px; align-items:center; margin:0 auto 18px; padding:17px 19px; color:#fff; background:linear-gradient(135deg,#2775b9,#11186a); border:1px solid rgba(255,255,255,.2); border-radius:16px; box-shadow:0 12px 28px rgba(17,24,106,.2); }
     .mpi-home-updates span { color:#f1d16f; font-size:9px; font-weight:950; letter-spacing:.12em; text-transform:uppercase; }
@@ -5015,6 +5028,7 @@
       .subcontractor-current { grid-template-columns:1fr; }
       .subcontractor-job-number { min-height:64px; }
       .subcontractor-actions,.subcontractor-tool-grid { grid-template-columns:1fr; }
+      .app-diagnostics-actions { grid-template-columns: 1fr; }
     }
 
     :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
@@ -5111,7 +5125,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">157</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">158</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -7633,7 +7647,18 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 157</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 158</span></div>
+        </section>
+
+        <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
+          <h2 id="appDiagnosticsTitle">App Diagnostics / Fix App Issue</h2>
+          <p>Checks common connection, sign-in, job, Hours Worked, location, notification, synchronization, and Comment Builder problems. Safe recoverable issues may be retried; your jobs, timestamps, hours, and offline records are never deleted.</p>
+          <div class="app-diagnostics-actions">
+            <button id="runAppDiagnosticsBtn" type="button">RUN APP CHECK</button>
+            <button class="secondary" id="sendAppDiagnosticBtn" type="button" hidden>SEND DIAGNOSTIC TO OFFICE</button>
+          </div>
+          <div class="app-diagnostics-result" id="appDiagnosticsResult" role="status" aria-live="polite" hidden><strong id="appDiagnosticsResultTitle"></strong><span id="appDiagnosticsResultBody"></span></div>
+          <p class="app-diagnostics-status" id="appDiagnosticsStatus" aria-live="polite"></p>
         </section>
 
         <details class="panel report-quality-card" id="phoneSetupPanel">
@@ -7761,10 +7786,10 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=157"></script>
-  <script src="./mpi-field-sync.js?build=157"></script>
-  <script src="./mpi-subcontractor.js?build=157"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=157"></script>
+  <script src="./mpi-shared.js?build=158"></script>
+  <script src="./mpi-field-sync.js?build=158"></script>
+  <script src="./mpi-subcontractor.js?build=158"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=158"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -7820,7 +7845,8 @@
         activeJobContextInspector.textContent = `${inspectorName || "Assigned inspector"} · Details are filled into this tool automatically.`;
       }
 
-      function renderAppScreen() {
+      function renderAppScreen(options = {}) {
+        const resetScroll = options.resetScroll === true;
         const rawRequestedScreen = window.location.hash.slice(1);
         const subcontractorMode = document.body.classList.contains("mpi-subcontractor-mode");
         const normalizedScreen = rawRequestedScreen === "today-jobs" ? "job-companion" : rawRequestedScreen;
@@ -7864,12 +7890,15 @@
         document.title = activeScreen === "home"
           ? "MPI Field Tools"
           : `${APP_SCREEN_TITLES[activeScreen]} | MPI Field Tools`;
-        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+        // Only user-initiated route changes belong at the top of a screen.
+        // Company-session refreshes happen in the background and must never
+        // interrupt scrolling, reading, typing, or an expanded field section.
+        if (resetScroll) window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       }
 
-      window.addEventListener("hashchange", renderAppScreen);
-      window.addEventListener("mpi-company-session-ready", renderAppScreen);
-      renderAppScreen();
+      window.addEventListener("hashchange", () => renderAppScreen({ resetScroll: true }));
+      window.addEventListener("mpi-company-session-ready", () => renderAppScreen({ resetScroll: false }));
+      renderAppScreen({ resetScroll: false });
 
       function settleInitialAppPosition() {
         const params = new URLSearchParams(location.search);
@@ -8735,6 +8764,12 @@
       const phonePracticeHelp = document.getElementById("phonePracticeHelp");
       const startPhonePracticeBtn = document.getElementById("startPhonePracticeBtn");
       const clearPhonePracticeBtn = document.getElementById("clearPhonePracticeBtn");
+      const runAppDiagnosticsBtn = document.getElementById("runAppDiagnosticsBtn");
+      const sendAppDiagnosticBtn = document.getElementById("sendAppDiagnosticBtn");
+      const appDiagnosticsResult = document.getElementById("appDiagnosticsResult");
+      const appDiagnosticsResultTitle = document.getElementById("appDiagnosticsResultTitle");
+      const appDiagnosticsResultBody = document.getElementById("appDiagnosticsResultBody");
+      const appDiagnosticsStatus = document.getElementById("appDiagnosticsStatus");
       const onboardingForm = document.getElementById("onboardingForm");
       const onboardingChecks = [...document.querySelectorAll("[data-onboarding-id]")];
       const onboardingStages = [...document.querySelectorAll("[data-onboarding-stage]")];
@@ -8875,6 +8910,8 @@
       let timedAlertAudioContext = null;
       let todayJobsActiveDate = "";
       let todayJobsDateCheckInterval = 0;
+      let latestAppDiagnosticReport = null;
+      let appDiagnosticErrorCaptureReady = false;
 
       const TOOL_GUIDES = [
         {
@@ -14050,6 +14087,8 @@
       const WORKFLOW_CLOSEOUT_HISTORY_STORAGE_KEY = "mpiWorkflowCloseoutHistoryV1";
       const WORKFLOW_TIME_CLOCK_STORAGE_KEY = "mpiWorkflowTimeClockV1";
       const WORKFLOW_GEOCODE_CACHE_STORAGE_KEY = "mpiWorkflowGeocodeCacheV1";
+      const APP_DIAGNOSTIC_ERRORS_STORAGE_KEY = "mpiAppDiagnosticErrorsV1";
+      const APP_DIAGNOSTIC_PENDING_STORAGE_KEY = "mpiPendingDiagnosticReportsV1";
       const WORKFLOW_DOCUMENT_DB_NAME = "mpiWorkflowDocumentsV1";
       const WORKFLOW_DOCUMENT_STORE_NAME = "labCocPhotos";
       const WORKFLOW_COC_MAX_PER_LAB = 8;
@@ -14422,6 +14461,338 @@
         } catch (_) {
           return [];
         }
+      }
+
+      function appDiagnosticId() {
+        try { return crypto.randomUUID(); }
+        catch (_) { return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`; }
+      }
+
+      function loadAppDiagnosticErrors() {
+        try {
+          const records = JSON.parse(localStorage.getItem(APP_DIAGNOSTIC_ERRORS_STORAGE_KEY) || "[]");
+          return Array.isArray(records) ? records.slice(-20) : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function recordAppDiagnosticError(message, source = "app", line = 0) {
+        const normalized = String(message || "Unknown application error").replace(/\s+/g, " ").slice(0, 300);
+        const records = loadAppDiagnosticErrors();
+        const previous = records.at(-1);
+        if (previous?.message === normalized && Date.now() - new Date(previous.timestamp || 0).getTime() < 30000) return;
+        records.push({ timestamp: new Date().toISOString(), message: normalized, source: String(source || "app").slice(0, 80), line: Math.max(0, Number(line) || 0) });
+        try { localStorage.setItem(APP_DIAGNOSTIC_ERRORS_STORAGE_KEY, JSON.stringify(records.slice(-20))); } catch (_) {}
+      }
+
+      function registerAppDiagnosticErrorCapture() {
+        if (appDiagnosticErrorCaptureReady) return;
+        appDiagnosticErrorCaptureReady = true;
+        window.addEventListener("error", event => {
+          let source = "app";
+          try { source = new URL(event.filename || location.href).pathname.split("/").pop() || "app"; } catch (_) {}
+          recordAppDiagnosticError(event.message, source, event.lineno);
+        });
+        window.addEventListener("unhandledrejection", event => {
+          recordAppDiagnosticError(event.reason?.message || event.reason || "Unhandled application request failure", "promise", 0);
+        });
+      }
+
+      function appDiagnosticSyncCounts() {
+        const activity = loadWorkflowActivity();
+        return {
+          pending: activity.filter(item => ["pending", "queued"].includes(String(item.data?.syncStatus || ""))).length,
+          failed: activity.filter(item => String(item.data?.syncStatus || "") === "failed").length,
+          lastSuccessfulAt: activity.map(item => item.data?.syncedAt).filter(Boolean).sort().at(-1) || ""
+        };
+      }
+
+      function loadPendingAppDiagnostics() {
+        try {
+          const records = JSON.parse(localStorage.getItem(APP_DIAGNOSTIC_PENDING_STORAGE_KEY) || "[]");
+          return Array.isArray(records) ? records.slice(-10) : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function savePendingAppDiagnostics(records) {
+        try { localStorage.setItem(APP_DIAGNOSTIC_PENDING_STORAGE_KEY, JSON.stringify((records || []).slice(-10))); } catch (_) {}
+      }
+
+      function queuePendingAppDiagnostic(report) {
+        const records = loadPendingAppDiagnostics().filter(item => item?.id !== report?.id);
+        records.push(report);
+        savePendingAppDiagnostics(records);
+      }
+
+      async function appDiagnosticPermission(name) {
+        if (!navigator.permissions?.query) return "unavailable";
+        try { return (await navigator.permissions.query({ name })).state || "unavailable"; }
+        catch (_) { return "unavailable"; }
+      }
+
+      async function appDiagnosticServerStatus() {
+        if (!navigator.onLine) return { status: "offline", build: 0 };
+        const controller = typeof AbortController === "function" ? new AbortController() : null;
+        const timer = controller ? window.setTimeout(() => controller.abort(), 8000) : 0;
+        try {
+          const response = await fetch(`./version.json?diagnostic=${Date.now()}`, { cache: "no-store", signal: controller?.signal });
+          const data = response.ok ? await response.json() : {};
+          return { status: response.ok ? "connected" : `http-${response.status}`, build: Number(data.build || 0) };
+        } catch (error) {
+          return { status: error?.name === "AbortError" ? "timeout" : "unavailable", build: 0 };
+        } finally {
+          if (timer) window.clearTimeout(timer);
+        }
+      }
+
+      function appDiagnosticDeviceSummary() {
+        const platform = navigator.userAgentData?.platform || navigator.platform || "Unknown platform";
+        const standalone = isStandaloneApp();
+        return {
+          platform: String(platform).slice(0, 80),
+          userAgent: String(navigator.userAgent || "").slice(0, 300),
+          standalone,
+          screen: `${window.screen?.width || 0}x${window.screen?.height || 0}`
+        };
+      }
+
+      function renderAppDiagnosticResult(report) {
+        if (!report || !appDiagnosticsResult) return;
+        appDiagnosticsResult.hidden = false;
+        appDiagnosticsResult.classList.toggle("is-ready", report.outcome !== "support-required");
+        appDiagnosticsResult.classList.toggle("is-attention", report.outcome === "support-required");
+        appDiagnosticsResultTitle.textContent = report.outcome === "healthy"
+          ? "APP CHECK COMPLETE"
+          : report.outcome === "repaired"
+            ? "APP CHECK COMPLETE"
+            : "APP ISSUE DETECTED";
+        appDiagnosticsResultBody.textContent = report.outcome === "healthy"
+          ? "No common issues were detected. Your field information remains unchanged."
+          : report.outcome === "repaired"
+            ? `${report.repairs.length} ${report.repairs.length === 1 ? "issue was" : "issues were"} safely repaired. Your job information was preserved.`
+            : `${report.issues.length} ${report.issues.length === 1 ? "issue requires" : "issues require"} office or support assistance. Your jobs, timestamps, Hours Worked, and offline records have been preserved.`;
+        sendAppDiagnosticBtn.hidden = false;
+      }
+
+      async function runAppDiagnosticsCore() {
+        if (!runAppDiagnosticsBtn) return;
+        runAppDiagnosticsBtn.disabled = true;
+        runAppDiagnosticsBtn.textContent = "CHECKING APP…";
+        sendAppDiagnosticBtn.disabled = false;
+        sendAppDiagnosticBtn.textContent = "SEND DIAGNOSTIC TO OFFICE";
+        sendAppDiagnosticBtn.hidden = true;
+        appDiagnosticsStatus.textContent = "Checking connection, account, job workflow, Hours Worked, location, notifications, and saved field data…";
+        appDiagnosticsResult.hidden = true;
+        const issues = [];
+        const repairs = [];
+        const addIssue = (code, label, detail = "") => issues.push({ code, label, detail: String(detail || "").slice(0, 240) });
+        const online = navigator.onLine;
+        const server = await appDiagnosticServerStatus();
+        if (!online) addIssue("offline", "This phone is currently offline.");
+        else if (server.status !== "connected") addIssue("server", "The app server could not be reached.", server.status);
+        if (server.build && server.build > CURRENT_APP_BUILD) addIssue("update", `A newer app build is available (Build ${server.build}).`);
+
+        const session = window.MPI_COMPANY_SESSION || null;
+        if (!session?.userId) addIssue("authentication", "The MPI company account is not signed in.");
+
+        let sync = appDiagnosticSyncCounts();
+        if ((sync.pending || sync.failed) && online && session?.userId) {
+          const synced = await syncWorkflowOperationsNow();
+          if (synced) repairs.push("Pending field records synchronized with the Office Console.");
+          sync = appDiagnosticSyncCounts();
+        }
+        if (sync.pending) addIssue("pending-sync", `${sync.pending} saved field ${sync.pending === 1 ? "record is" : "records are"} waiting to synchronize.`);
+        if (sync.failed) addIssue("failed-sync", `${sync.failed} field ${sync.failed === 1 ? "record has" : "records have"} a failed synchronization status.`);
+
+        const readiness = workflowReadinessRecord();
+        let clock = loadWorkflowTimeClock();
+        if (readiness && clock && recoverWorkflowTimeClockRecord(clock)) {
+          saveWorkflowTimeClock(clock);
+          repairs.push("A recoverable Hours Worked session was restored from preserved arrival records.");
+          renderWorkflowTimeClock();
+          queueWorkflowOperationsSync();
+        }
+        clock = loadWorkflowTimeClock();
+        const paidSessions = workflowPaySessions(clock);
+        const invalidSessions = paidSessions.filter(item => {
+          const start = new Date(item.clockedInAt || "").getTime();
+          const end = item.clockedOutAt ? new Date(item.clockedOutAt).getTime() : Date.now();
+          return !Number.isFinite(start) || !Number.isFinite(end) || end < start;
+        });
+        if (invalidSessions.length) addIssue("hours-state", "The Hours Worked record needs office review.", `${invalidSessions.length} invalid session interval(s)`);
+
+        const activeJob = loadActiveJob();
+        if (activeJob?.workflowStatus && !WORKFLOW_STAGES.includes(activeJob.workflowStatus)) addIssue("job-state", "The current job workflow state needs support review.", activeJob.workflowStatus);
+        const todayJobs = workflowScheduleJobs();
+        let cachedScheduleDate = "";
+        try { cachedScheduleDate = String(JSON.parse(localStorage.getItem(CALENDAR_CACHE_KEY) || "null")?.date || ""); } catch (_) {}
+        if (cachedScheduleDate && cachedScheduleDate !== localDateKey()) {
+          if (online && savedCalendarToken()) {
+            refreshScheduleForCurrentDate({ force: true });
+            repairs.push("A refresh of the current day’s schedule was started.");
+          } else {
+            addIssue("stale-schedule", "The saved job schedule is from another day.");
+          }
+        }
+
+        const notificationPermission = "Notification" in window ? Notification.permission : "unsupported";
+        if (notificationPermission === "denied") addIssue("notifications", "Notifications are blocked in this phone’s settings.");
+        const locationPermission = await appDiagnosticPermission("geolocation");
+        let gps = { status: locationPermission === "denied" ? "denied" : "not-tested" };
+        if (locationPermission === "granted") gps = await requestWorkflowClockLocation();
+        if (locationPermission === "denied") addIssue("location", "Location access is blocked in this phone’s settings.");
+        else if (locationPermission === "granted" && gps.status !== "recorded") addIssue("gps", "The phone could not obtain a current GPS fix.", gps.status);
+
+        const commentFailures = workflowCommentFailureSnapshot().slice(-8).map(item => ({
+          timestamp: String(item.timestamp || ""),
+          requestId: String(item.requestId || "").slice(0, 80),
+          attempt: Number(item.attempt || 0),
+          category: String(item.category || "unknown").slice(0, 60),
+          connectivity: String(item.connectivity || "").slice(0, 30),
+          code: String(item.code || "").slice(0, 80)
+        }));
+        const recentCommentFailures = commentFailures.filter(item => Date.now() - new Date(item.timestamp || 0).getTime() < 24 * 60 * 60 * 1000);
+        if (recentCommentFailures.length) addIssue("comment-builder", `${recentCommentFailures.length} recent Comment Builder ${recentCommentFailures.length === 1 ? "request failed" : "requests failed"}.`);
+
+        const recentAppErrors = loadAppDiagnosticErrors().filter(item => Date.now() - new Date(item.timestamp || 0).getTime() < 24 * 60 * 60 * 1000).slice(-8);
+        if (recentAppErrors.length) addIssue("app-errors", `${recentAppErrors.length} recent application ${recentAppErrors.length === 1 ? "error was" : "errors were"} detected.`);
+        if (!("serviceWorker" in navigator) || (!navigator.serviceWorker.controller && location.protocol !== "file:")) addIssue("offline-shell", "Offline app files are not yet active on this device.");
+
+        const unresolvedIssues = issues.filter(issue => !repairs.some(repair => issue.code === "pending-sync" && /synchronized/i.test(repair)));
+        const outcome = unresolvedIssues.length ? "support-required" : repairs.length ? "repaired" : "healthy";
+        latestAppDiagnosticReport = {
+          id: appDiagnosticId(),
+          submittedAtClient: "",
+          createdAtClient: new Date().toISOString(),
+          status: "NEW",
+          outcome,
+          summary: outcome === "healthy" ? "No common app issues detected." : outcome === "repaired" ? `${repairs.length} safe recovery action(s) completed.` : `${unresolvedIssues.length} issue(s) require review.`,
+          inspector: { name: String(session?.inspectorName || loadWorkflowProfile()?.name || loadRememberedInspector() || "MPI Inspector").slice(0, 80), id: String(session?.inspectorId || loadWorkflowProfile()?.id || "").slice(0, 40), email: String(session?.inspectorEmail || "").slice(0, 120) },
+          build: CURRENT_APP_BUILD,
+          availableBuild: server.build || CURRENT_APP_BUILD,
+          device: appDiagnosticDeviceSummary(),
+          connectivity: { online, server: server.status },
+          authentication: session?.userId ? "signed-in" : "not-signed-in",
+          sync: { ...sync, pendingDiagnosticReports: loadPendingAppDiagnostics().length },
+          workflow: {
+            status: workflowLiveStatus(activeJob, readiness, loadWorkflowLabStop(), workflowDayCompleteRecord(), clock),
+            hasActiveJob: Boolean(activeJob?.property),
+            activeJobStatus: String(activeJob?.workflowStatus || "none"),
+            todayJobsCount: todayJobs.length,
+            readinessComplete: Boolean(readiness?.completedAt),
+            hoursStarted: workflowHoursHaveStarted(clock),
+            hoursActive: Boolean(workflowActiveClockSession(clock)),
+            workedMinutes: Math.floor(workflowWorkedMilliseconds(clock) / 60000)
+          },
+          permissions: { notifications: notificationPermission, timeSensitiveNotifications: "managed-by-ios", location: locationPermission },
+          gps: { status: String(gps.status || "unavailable"), accuracyFeet: Math.max(0, Number(gps.accuracyFeet) || 0) },
+          commentFailures,
+          recentAppErrors,
+          repairs,
+          issues: unresolvedIssues
+        };
+        renderAppDiagnosticResult(latestAppDiagnosticReport);
+        appDiagnosticsStatus.textContent = "No jobs, timestamps, Hours Worked, offline actions, or admin corrections were deleted or reset.";
+        runAppDiagnosticsBtn.disabled = false;
+        runAppDiagnosticsBtn.textContent = "RUN APP CHECK AGAIN";
+      }
+
+      async function runAppDiagnostics() {
+        try {
+          await runAppDiagnosticsCore();
+        } catch (error) {
+          recordAppDiagnosticError(error, "diagnostic-check");
+          const session = window.MPI_COMPANY_SESSION || null;
+          latestAppDiagnosticReport = {
+            id: appDiagnosticId(),
+            submittedAtClient: "",
+            createdAtClient: new Date().toISOString(),
+            status: "NEW",
+            outcome: "support-required",
+            summary: "The automatic app check could not finish and requires support review.",
+            inspector: {
+              name: String(session?.inspectorName || loadWorkflowProfile()?.name || loadRememberedInspector() || "MPI Inspector").slice(0, 80),
+              id: String(session?.inspectorId || loadWorkflowProfile()?.id || "").slice(0, 40),
+              email: String(session?.inspectorEmail || "").slice(0, 120)
+            },
+            build: CURRENT_APP_BUILD,
+            availableBuild: CURRENT_APP_BUILD,
+            device: appDiagnosticDeviceSummary(),
+            connectivity: { online: navigator.onLine, server: "check-incomplete" },
+            authentication: session?.userId ? "signed-in" : "not-signed-in",
+            sync: { ...appDiagnosticSyncCounts(), pendingDiagnosticReports: loadPendingAppDiagnostics().length },
+            workflow: { status: "diagnostic-check-incomplete" },
+            permissions: {},
+            gps: { status: "not-tested", accuracyFeet: 0 },
+            commentFailures: workflowCommentFailureSnapshot().slice(-8),
+            recentAppErrors: loadAppDiagnosticErrors().slice(-8),
+            repairs: [],
+            issues: [{ code: "diagnostic-check", label: "The automatic app check could not finish.", detail: String(error?.message || "Unknown diagnostic error").slice(0, 240) }]
+          };
+          renderAppDiagnosticResult(latestAppDiagnosticReport);
+          appDiagnosticsStatus.textContent = "The issue report is ready to send to the office. No field records were changed.";
+        } finally {
+          runAppDiagnosticsBtn.disabled = false;
+          runAppDiagnosticsBtn.textContent = "RUN APP CHECK AGAIN";
+        }
+      }
+
+      async function deliverAppDiagnosticReport(report, silent = false) {
+        const session = window.MPI_COMPANY_SESSION;
+        if (!report || !session?.userId || !window.MPI_SHARED?.db || !navigator.onLine) throw new Error("Reconnect and sign in to send this diagnostic.");
+        const submitted = { ...report, submittedAtClient: report.submittedAtClient || new Date().toISOString(), status: report.status || "NEW" };
+        await window.MPI_SHARED.db.collection("users").doc(session.userId).set({
+          appDiagnostics: window.MPI_SHARED.arrayUnion(submitted),
+          diagnosticsUpdatedAt: window.MPI_SHARED.serverTimestamp()
+        }, { merge: true });
+        window.MPI_SHARED.sendPushNotification?.({
+          kind: "app-diagnostic",
+          audience: "office",
+          title: `App diagnostic from ${submitted.inspector?.name || "MPI Inspector"}`,
+          body: submitted.summary || "A field app diagnostic is ready for review.",
+          link: "./admin.html",
+          tag: `mpi-diagnostic-${submitted.id}`
+        }).catch(() => false);
+        const remaining = loadPendingAppDiagnostics().filter(item => item?.id !== submitted.id);
+        savePendingAppDiagnostics(remaining);
+        if (!silent) {
+          latestAppDiagnosticReport = submitted;
+          sendAppDiagnosticBtn.textContent = "SENT TO OFFICE";
+          sendAppDiagnosticBtn.disabled = true;
+          appDiagnosticsStatus.textContent = "Diagnostic sent to the Office Console. Your field records remain preserved.";
+          showToast("Diagnostic sent to MPI Office");
+        }
+        return true;
+      }
+
+      async function sendLatestAppDiagnostic() {
+        if (!latestAppDiagnosticReport) return;
+        sendAppDiagnosticBtn.disabled = true;
+        sendAppDiagnosticBtn.textContent = "SENDING…";
+        try {
+          await deliverAppDiagnosticReport(latestAppDiagnosticReport);
+        } catch (error) {
+          queuePendingAppDiagnostic(latestAppDiagnosticReport);
+          sendAppDiagnosticBtn.disabled = false;
+          sendAppDiagnosticBtn.textContent = "RETRY SEND TO OFFICE";
+          appDiagnosticsStatus.textContent = `${error?.message || "The diagnostic could not be sent."} It is saved on this phone and will retry after reconnection.`;
+        }
+      }
+
+      async function flushPendingAppDiagnostics() {
+        if (!navigator.onLine || !window.MPI_COMPANY_SESSION?.userId) return false;
+        const pending = loadPendingAppDiagnostics();
+        if (!pending.length) return true;
+        const remaining = [];
+        for (const report of pending) {
+          try { await deliverAppDiagnosticReport(report, true); }
+          catch (_) { remaining.push(report); }
+        }
+        savePendingAppDiagnostics(remaining);
+        return remaining.length === 0;
       }
 
       function workflowOperationsSnapshot() {
@@ -16431,9 +16802,12 @@
 
       function renderWorkflowJobNotes(job) {
         if (!workflowJobNotesPanel || !workflowJobNotes) return;
+        const jobId = String(job?.calendarEventId || job?.id || job?.property || "");
+        const preserveOpen = workflowJobNotesPanel.open && workflowJobNotesPanel.dataset.jobId === jobId;
         const lines = workflowJobNotesFor(job);
         workflowJobNotesPanel.hidden = !lines.length;
-        workflowJobNotesPanel.open = false;
+        workflowJobNotesPanel.dataset.jobId = jobId;
+        workflowJobNotesPanel.open = Boolean(lines.length && preserveOpen);
         workflowJobNotes.replaceChildren();
         lines.forEach(line => {
           const row = document.createElement("div");
@@ -21730,6 +22104,10 @@
       });
       startPhonePracticeBtn.addEventListener("click", startPhonePractice);
       clearPhonePracticeBtn.addEventListener("click", clearPhonePractice);
+      runAppDiagnosticsBtn?.addEventListener("click", runAppDiagnostics);
+      sendAppDiagnosticBtn?.addEventListener("click", sendLatestAppDiagnostic);
+      window.addEventListener("online", () => flushPendingAppDiagnostics().catch(() => false));
+      window.addEventListener("mpi-company-session-ready", () => flushPendingAppDiagnostics().catch(() => false));
       onboardingChecks.forEach(check => check.addEventListener("change", () => updateOnboardingMilestone(check)));
       onboardingForm.addEventListener("submit", validateOnboardingSubmission);
       messageAckForm.addEventListener("submit", validateMessageAcknowledgement);
@@ -21967,6 +22345,7 @@
       });
 
       setCommentType("defect");
+      registerAppDiagnosticErrorCapture();
       populateReportItems();
       initializeFieldForms();
       initializeWorkflowApp();
