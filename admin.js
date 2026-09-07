@@ -52,6 +52,10 @@
   const requestAssigneeFilter = document.getElementById("adminRequestAssigneeFilter");
   const requestDateFilter = document.getElementById("adminRequestDateFilter");
   const requestSort = document.getElementById("adminRequestSort");
+  const diagnosticCount = document.getElementById("adminDiagnosticCount");
+  const diagnosticList = document.getElementById("adminDiagnosticList");
+  const diagnosticSummary = document.getElementById("adminDiagnosticSummary");
+  const diagnosticStatusFilter = document.getElementById("adminDiagnosticStatusFilter");
   const officeAlertButtons = [...document.querySelectorAll("[data-enable-office-alerts]")];
   const replyInbox = document.getElementById("adminReplyInbox");
   const replyCount = document.getElementById("adminReplyCount");
@@ -1096,6 +1100,96 @@
     renderOperations();
     renderSubcontractors();
     renderRequestTodos();
+    renderDiagnostics();
+  }
+
+  function allDiagnosticReports() {
+    return people.flatMap(person => (Array.isArray(person.appDiagnostics) ? person.appDiagnostics : []).map(report => ({
+      person,
+      report: { ...report, status: String(report?.status || "NEW").toUpperCase() }
+    }))).filter(item => item.report?.id).sort((left, right) => {
+      const leftTime = asDate(left.report.submittedAtClient || left.report.createdAtClient)?.getTime() || 0;
+      const rightTime = asDate(right.report.submittedAtClient || right.report.createdAtClient)?.getTime() || 0;
+      return rightTime - leftTime;
+    });
+  }
+
+  function diagnosticTechnicalDetail(report) {
+    return {
+      build: report.build,
+      availableBuild: report.availableBuild,
+      device: report.device || {},
+      connectivity: report.connectivity || {},
+      authentication: report.authentication || "unknown",
+      synchronization: report.sync || {},
+      workflow: report.workflow || {},
+      permissions: report.permissions || {},
+      gps: report.gps || {},
+      safeRepairs: report.repairs || [],
+      recentCommentBuilderFailures: report.commentFailures || [],
+      recentApplicationErrors: report.recentAppErrors || []
+    };
+  }
+
+  function renderDiagnostics() {
+    if (!diagnosticList) return;
+    const all = allDiagnosticReports();
+    const active = all.filter(item => item.report.status !== "RESOLVED");
+    const newCount = all.filter(item => item.report.status === "NEW").length;
+    if (diagnosticCount) diagnosticCount.textContent = newCount ? String(newCount) : "";
+    if (diagnosticSummary) diagnosticSummary.textContent = all.length
+      ? `${active.length} active · ${newCount} new · ${all.length} total submitted`
+      : "No diagnostic reports have been submitted.";
+    const filter = diagnosticStatusFilter?.value || "active";
+    const records = all.filter(item => filter === "all" ? true : filter === "active" ? item.report.status !== "RESOLVED" : item.report.status === filter);
+    diagnosticList.innerHTML = records.length ? records.map(({ person, report }) => {
+      const status = ["NEW", "INVESTIGATING", "RESOLVED"].includes(report.status) ? report.status : "NEW";
+      const issues = Array.isArray(report.issues) ? report.issues : [];
+      const repairs = Array.isArray(report.repairs) ? report.repairs : [];
+      const submitted = report.submittedAtClient || report.createdAtClient;
+      return `<article class="diagnostic-card ${escapeHtml(status.toLowerCase())}" data-diagnostic-person="${escapeHtml(person.id)}" data-diagnostic-id="${escapeHtml(report.id)}">
+        <div class="diagnostic-head"><div><span class="ops-eyebrow">Field app diagnostic</span><h3>${escapeHtml(person.name || report.inspector?.name || person.email || "MPI Field User")}</h3><p>Submitted ${escapeHtml(formatDateTime(submitted))} · Build ${escapeHtml(report.build || "Unknown")}</p></div><span class="diagnostic-status">${escapeHtml(status)}</span></div>
+        <p class="diagnostic-summary">${escapeHtml(report.summary || (issues.length ? `${issues.length} app issue(s) require review.` : "No common app issues detected."))}</p>
+        ${issues.length ? `<ul class="diagnostic-issues">${issues.map(issue => `<li><strong>${escapeHtml(issue.label || issue.code || "App issue")}</strong>${issue.detail ? `<br>${escapeHtml(issue.detail)}` : ""}</li>`).join("")}</ul>` : '<p class="diagnostic-summary">✓ No unresolved issue was recorded by this app check.</p>'}
+        ${repairs.length ? `<p class="diagnostic-summary"><strong>Safe recovery:</strong> ${escapeHtml(repairs.join(" "))}</p>` : ""}
+        <div class="diagnostic-facts">
+          <div class="diagnostic-fact"><span>Connection</span><strong>${escapeHtml(report.connectivity?.server || (report.connectivity?.online ? "Connected" : "Offline"))}</strong></div>
+          <div class="diagnostic-fact"><span>Workflow</span><strong>${escapeHtml(report.workflow?.status || "Unknown")}</strong></div>
+          <div class="diagnostic-fact"><span>Pending sync</span><strong>${escapeHtml(Number(report.sync?.pending || 0))}</strong></div>
+          <div class="diagnostic-fact"><span>Location</span><strong>${escapeHtml(report.permissions?.location || report.gps?.status || "Unknown")}</strong></div>
+        </div>
+        <details class="diagnostic-details"><summary>Technical details</summary><pre>${escapeHtml(JSON.stringify(diagnosticTechnicalDetail(report), null, 2))}</pre></details>
+        <div class="diagnostic-controls"><label>Issue status<select data-diagnostic-status><option value="NEW" ${status === "NEW" ? "selected" : ""}>New</option><option value="INVESTIGATING" ${status === "INVESTIGATING" ? "selected" : ""}>Investigating</option><option value="RESOLVED" ${status === "RESOLVED" ? "selected" : ""}>Resolved</option></select></label><span data-diagnostic-save-status>${report.reviewedBy ? `Last updated by ${escapeHtml(report.reviewedBy)} · ${escapeHtml(formatDateTime(report.reviewedAtClient))}` : "Status changes are saved with the administrator and time."}</span></div>
+      </article>`;
+    }).join("") : '<div class="empty">No app diagnostics match this status.</div>';
+  }
+
+  async function updateDiagnosticStatus(select) {
+    const card = select.closest("[data-diagnostic-person]");
+    const person = people.find(item => item.id === card?.dataset.diagnosticPerson);
+    const reportId = String(card?.dataset.diagnosticId || "");
+    if (!person || !reportId || !currentUser || !shared.isAdminRole(currentProfile)) return;
+    const status = String(select.value || "NEW").toUpperCase();
+    if (!["NEW", "INVESTIGATING", "RESOLVED"].includes(status)) return;
+    const statusText = card.querySelector("[data-diagnostic-save-status]");
+    select.disabled = true;
+    if (statusText) statusText.textContent = "Saving status…";
+    const reviewedAtClient = new Date().toISOString();
+    const reviewedBy = currentProfile?.name || currentUser.displayName || currentUser.email || "MPI Admin";
+    const reports = (Array.isArray(person.appDiagnostics) ? person.appDiagnostics : []).map(report => {
+      if (report?.id !== reportId) return report;
+      const history = Array.isArray(report.statusHistory) ? report.statusHistory.slice(-19) : [];
+      history.push({ status, reviewedAtClient, reviewedBy, adminUserId: currentUser.uid });
+      return { ...report, status, reviewedAtClient, reviewedBy, statusHistory: history };
+    });
+    try {
+      await shared.db.collection("users").doc(person.id).set({ appDiagnostics: reports, diagnosticsUpdatedAt: shared.serverTimestamp() }, { merge: true });
+      person.appDiagnostics = reports;
+      renderDiagnostics();
+    } catch (error) {
+      select.disabled = false;
+      if (statusText) statusText.textContent = error?.message || "Status could not be saved.";
+    }
   }
 
   function subcontractorStateCard(person, state, isTest = false) {
@@ -1387,7 +1481,7 @@
     const totalMinutes = days.reduce((total, item) => total + selectedDays(item.person).reduce((sum, day) => sum + workedMinutes(item.person, day), 0), 0);
     statHoursLabel.textContent = currentRange === "week" ? "Hours this week" : currentRange === "yesterday" ? "Hours yesterday" : "Hours today";
     stats.hours.textContent = `${Math.floor(totalMinutes / 60)}:${String(totalMinutes % 60).padStart(2, "0")}`;
-    stats.alerts.textContent = String(days.reduce((total, item) => total + meaningfulAlerts(item.person, item.day).length, 0) + unreadSafetyAlerts().length);
+    stats.alerts.textContent = String(days.reduce((total, item) => total + meaningfulAlerts(item.person, item.day).length, 0) + unreadSafetyAlerts().length + allDiagnosticReports().filter(item => item.report.status !== "RESOLVED").length);
     renderCommentUsageAllowance();
   }
 
@@ -2171,6 +2265,11 @@
     if (button) openAdminAttachment(button);
   });
   [requestStatusFilter, requestInspectorFilter, requestTypeFilter, requestAssigneeFilter, requestDateFilter, requestSort].forEach(control => control?.addEventListener("change", renderRequestTodos));
+  diagnosticStatusFilter?.addEventListener("change", renderDiagnostics);
+  diagnosticList?.addEventListener("change", event => {
+    const select = event.target.closest("[data-diagnostic-status]");
+    if (select) updateDiagnosticStatus(select);
+  });
   requestList?.addEventListener("submit", event => {
     const requestForm = event.target.closest("[data-request-admin-form]");
     if (!requestForm) return;
