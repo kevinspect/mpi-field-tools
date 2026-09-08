@@ -27,8 +27,14 @@
   const messagePhotos = document.getElementById("subcontractorMessagePhotos");
   const messageStatus = document.getElementById("subcontractorMessageStatus");
   const officeUpdateCount = document.getElementById("subcontractorOfficeUpdateCount");
+  const conversation = document.getElementById("subcontractorConversation");
+  const accessGate = document.getElementById("subcontractorAccessGate");
+  const accessTitle = document.getElementById("subcontractorAccessTitle");
+  const accessMessage = document.getElementById("subcontractorAccessMessage");
   const actionStatus = document.getElementById("subcontractorActionStatus");
   const TEST_MODE_KEY = "mpiSubcontractorTestModeV1";
+  const accessKey = String(new URLSearchParams(window.location.search).get("subcontractor") || "").trim().toLowerCase();
+  const productionAccessRequested = Boolean(accessKey);
   const LOCAL_PREVIEW = ["127.0.0.1", "localhost"].includes(window.location.hostname) && new URLSearchParams(window.location.search).get("preview") === "subcontractor";
   const TEST_SUBCONTRACTOR = { name: "Jason Chamarro" };
   const LABS = {
@@ -41,6 +47,9 @@
   let testMode = false;
   let unsubscribeUpdates = null;
   let unsubscribeState = null;
+  let unsubscribeMessages = null;
+  let currentOfficeUpdates = [];
+  let currentFieldMessages = [];
 
   function localDateKey() {
     const now = new Date();
@@ -86,6 +95,71 @@
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "—";
     return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  }
+
+  function escapeHtml(value) {
+    return String(value || "").replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
+  }
+
+  function timestampValue(value) {
+    const date = value?.toDate?.() || new Date(value || "");
+    return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+  }
+
+  function formatDateTime(value) {
+    const date = value?.toDate?.() || new Date(value || "");
+    if (Number.isNaN(date.getTime())) return "Pending synchronization";
+    return date.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  }
+
+  function setProductionAccessState(mode, detail = "") {
+    document.body.classList.toggle("mpi-subcontractor-access-pending", mode === "pending");
+    document.body.classList.toggle("mpi-subcontractor-access-denied", mode === "denied");
+    if (!accessGate) return;
+    accessGate.hidden = mode === "authorized" || mode === "test";
+    if (mode === "pending") {
+      const displayName = accessKey ? `${accessKey.charAt(0).toUpperCase()}${accessKey.slice(1)}` : "Subcontractor";
+      accessTitle.textContent = `${displayName}'s secure field access`;
+      accessMessage.textContent = `Sign in once with the MPI Google account assigned to ${displayName}. This phone remains recognized until the subcontractor signs out or MPI revokes access.`;
+      accessGate.querySelector("button")?.removeAttribute("hidden");
+    } else if (mode === "denied") {
+      accessTitle.textContent = "Subcontractor access not authorized";
+      accessMessage.textContent = detail || "This signed-in account is not authorized for Jason's Subcontractor Field Tool. Ask MPI Office to assign the Subcontractor role or restore access.";
+      accessGate.querySelector("button")?.setAttribute("hidden", "");
+    }
+  }
+
+  function renderConversation() {
+    if (!conversation) return;
+    const office = currentOfficeUpdates
+      .filter(update => update.type === "message" && (!session?.inspectorEmail || String(update.targetEmail || "").toLowerCase() === String(session.inspectorEmail).toLowerCase()))
+      .map(update => ({ direction: "office", timestamp: update.createdAt, message: update.message, author: update.createdByName || "MPI Office", update }));
+    const field = currentFieldMessages.map(message => ({
+      direction: "field",
+      timestamp: message.createdAt || message.createdAtClient,
+      message: message.message || (message.attachments?.length ? `${message.attachments.length} photo(s) sent` : "Message sent"),
+      author: message.senderName || session?.inspectorName || "Jason"
+    }));
+    const values = [...office, ...field].sort((left, right) => timestampValue(left.timestamp) - timestampValue(right.timestamp)).slice(-30);
+    conversation.innerHTML = values.length ? values.map(item => `<article class="subcontractor-message ${item.direction}"><strong>${escapeHtml(item.direction === "office" ? `${item.author} → Jason` : `${item.author} → MPI Office`)}</strong><span>${escapeHtml(item.message || "")}</span><time>${escapeHtml(formatDateTime(item.timestamp))}</time></article>`).join("") : '<div class="subcontractor-conversation-empty">No messages in this conversation yet.</div>';
+    conversation.scrollTop = conversation.scrollHeight;
+    office.filter(item => !item.update?.receipt).forEach(item => {
+      shared.setUpdateStatus?.(item.update.id, shared.auth.currentUser, { name: session?.inspectorName || "Jason" }, "read").catch(() => false);
+    });
+  }
+
+  function watchFieldConversation() {
+    unsubscribeMessages?.();
+    unsubscribeMessages = null;
+    currentFieldMessages = [];
+    if (!session?.userId || !shared?.db || LOCAL_PREVIEW) {
+      renderConversation();
+      return;
+    }
+    unsubscribeMessages = shared.db.collection("fieldMessages").where("senderUid", "==", session.userId).onSnapshot(snapshot => {
+      currentFieldMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(item => item.active !== false && item.kind !== "lab-coc");
+      renderConversation();
+    }, () => renderConversation());
   }
 
   function appendEvent(type, extra = {}) {
@@ -172,7 +246,7 @@
     if (!job) return "READY";
     if (job.status === "on-way") return "ON WAY";
     if (job.status === "arrived") return "ARRIVED / AT JOB";
-    if (job.status === "completed") return `JOB ${job.number} COMPLETE`;
+    if (job.status === "completed") return `JOB ${job.number} COMPLETE / AVAILABLE`;
     return "READY TO START";
   }
 
@@ -243,7 +317,7 @@
   function completeJob() {
     if (state.lab || state.currentJob.status !== "arrived") return;
     state.currentJob.status = "completed";
-    state.status = `JOB ${state.currentJob.number} COMPLETE`;
+    state.status = `JOB ${state.currentJob.number} COMPLETE / AVAILABLE`;
     const timestamp = appendEvent("COMPLETE JOB");
     state.currentJob.completedAt = timestamp;
     state.completedJobs = [...(state.completedJobs || []).filter(item => item.number !== state.currentJob.number), { ...state.currentJob }];
@@ -282,7 +356,9 @@
     if (resume?.currentJob) {
       state.currentJobNumber = resume.currentJobNumber;
       state.currentJob = resume.currentJob;
-      state.status = resume.status;
+      state.status = ["ready", "completed"].includes(resume.currentJob.status)
+        ? "LAB COMPLETE / AVAILABLE"
+        : resume.status;
     }
     const timestamp = appendEvent("LAB COMPLETE", { lab: name });
     const finishedLab = { ...state.lab, status: "completed", completedAt: timestamp };
@@ -350,19 +426,43 @@
   }
 
   function renderOfficeUpdates(updates) {
+    currentOfficeUpdates = Array.isArray(updates) ? updates : [];
     const unread = (updates || []).filter(item => !item.receipt).length;
     officeUpdateCount.textContent = unread ? `${unread} NEW` : "OPEN";
+    renderConversation();
   }
 
   function applySession(nextSession) {
     if (LOCAL_PREVIEW && !nextSession) return;
     session = nextSession;
+    if (!nextSession) {
+      unsubscribeUpdates?.();
+      unsubscribeUpdates = null;
+      unsubscribeState?.();
+      unsubscribeState = null;
+      unsubscribeMessages?.();
+      unsubscribeMessages = null;
+      currentOfficeUpdates = [];
+      currentFieldMessages = [];
+      renderConversation();
+    }
     const role = String(session?.role || "").toLowerCase();
     const isAdmin = ["owner", "admin"].includes(role);
     testMode = isAdmin && localStorage.getItem(TEST_MODE_KEY) === "1";
-    const subcontractorMode = role === "subcontractor" || testMode;
+    const subcontractorMode = role === "subcontractor" || testMode || productionAccessRequested;
     document.body.classList.toggle("mpi-subcontractor-mode", subcontractorMode);
     if (testCard) testCard.hidden = !isAdmin || testMode;
+    if (productionAccessRequested && !nextSession) {
+      setProductionAccessState("pending");
+      window.location.hash = "#subcontractor-home";
+      return;
+    }
+    if (productionAccessRequested && role !== "subcontractor" && !testMode) {
+      setProductionAccessState("denied");
+      window.location.hash = "#subcontractor-home";
+      return;
+    }
+    setProductionAccessState(testMode ? "test" : "authorized");
     if (!subcontractorMode) return;
     state = loadLocalState();
     render();
@@ -373,6 +473,7 @@
     }
     unsubscribeUpdates?.();
     if (shared?.watchUpdates && shared.auth?.currentUser) unsubscribeUpdates = shared.watchUpdates(shared.auth.currentUser, { role }, renderOfficeUpdates);
+    watchFieldConversation();
   }
 
   onWayButton?.addEventListener("click", onWayToJob);
@@ -389,6 +490,7 @@
   window.addEventListener("online", syncState);
   window.addEventListener("mpi-company-session-ready", event => applySession(event.detail));
   if (window.MPI_COMPANY_SESSION) applySession(window.MPI_COMPANY_SESSION);
+  else if (productionAccessRequested) applySession(null);
   if (LOCAL_PREVIEW) {
     applySession({ userId: "local-subcontractor-preview", role: "owner", inspectorName: "Kevin Cave", inspectorEmail: "kev@michiganpropertyinspections.com" });
     enterTestMode();

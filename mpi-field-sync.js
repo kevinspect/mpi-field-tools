@@ -38,6 +38,10 @@
   const teamStatusCard = document.getElementById("workflowTeamStatusCard");
   const teamStatusList = document.getElementById("workflowTeamStatusList");
   const teamStatusUpdated = document.getElementById("workflowTeamStatusUpdated");
+  const OFFICE_TEAM = Object.freeze([
+    { id: "office:adrienne", name: "Adrienne Cave", email: "adrienne@michiganpropertyinspections.com", role: "admin", status: "OFFICE" },
+    { id: "office:brooke", name: "Brooke", email: "admin@michiganpropertyinspections.com", role: "admin", status: "OFFICE" }
+  ]);
   let currentUser = null;
   let currentProfile = null;
   let currentUpdates = [];
@@ -104,7 +108,7 @@
           requireInteraction: true,
           silent: false,
           vibrate: [250, 100, 250, 100, 450],
-          data: { url: "./#team-messages" }
+          data: { url: String(currentProfile?.role || "").toLowerCase() === "subcontractor" ? "./?subcontractor=jason#subcontractor-home" : "./#team-messages" }
         });
       } else {
         new Notification(title, { body, icon: "./icon-192.png", tag: `mpi-office-${update.id}` });
@@ -127,6 +131,16 @@
 
   document.querySelector("[data-team-status-shortcut]")?.addEventListener("click", () => {
     window.setTimeout(() => teamStatusCard?.scrollIntoView({ behavior: "smooth", block: "start" }), 180);
+  });
+
+  document.addEventListener("click", event => {
+    const recipient = event.target.closest("[data-team-message-recipient]")?.dataset.teamMessageRecipient;
+    if (!recipient) return;
+    window.setTimeout(() => {
+      const message = document.getElementById("teamQuestionText");
+      if (message && !message.value.trim()) message.value = `For ${recipient}: `;
+      message?.focus();
+    }, 120);
   });
 
   function savedPushToken() {
@@ -172,7 +186,8 @@
       "DRIVING HOME": "On route home",
       "DRIVING HOME / FINAL DESTINATION": "On route home",
       "END-OF-DAY CHECKS": "End-of-day check",
-      "CLOCKED OUT": "Clocked out"
+      "CLOCKED OUT": "Clocked out",
+      OFFICE: "Office"
     })[String(value || "").toUpperCase()] || "Status unavailable";
   }
 
@@ -234,6 +249,7 @@
     return {
       userId: user.uid,
       role: profile.role || "inspector",
+      active: profile.active !== false,
       inspectorId: String(profile.inspectorId || "").trim(),
       inspectorName: String(profile.name || user.displayName || "").trim(),
       inspectorEmail: String(user.email || profile.email || "").trim(),
@@ -384,22 +400,29 @@
       teamStatusUpdated.textContent = "Reconnect to refresh";
       return;
     }
-    const values = [...records].sort((left, right) => {
+    const values = [...records, ...OFFICE_TEAM].sort((left, right) => {
       if (left.id === currentUser.uid) return -1;
       if (right.id === currentUser.uid) return 1;
+      if (left.role === "admin" && right.role !== "admin") return 1;
+      if (right.role === "admin" && left.role !== "admin") return -1;
       return String(left.name || "").localeCompare(String(right.name || ""));
     });
     teamStatusList.innerHTML = values.length ? values.map(item => {
-      const sameDay = item.date === localDateKey();
-      const rawStatus = sameDay ? item.status : "NOT STARTED";
+      const office = item.role === "admin";
+      const sameDay = office || item.date === localDateKey();
+      const rawStatus = office ? "OFFICE" : sameDay ? item.status : "NOT STARTED";
       const age = teamPresenceAge(item);
       const updated = teamPresenceDate(item);
-      const stale = sameDay && rawStatus !== "CLOCKED OUT" && updated && Date.now() - updated.getTime() > 20 * 60 * 1000;
+      const stale = !office && sameDay && rawStatus !== "CLOCKED OUT" && updated && Date.now() - updated.getTime() > 20 * 60 * 1000;
       const photoSource = item.profilePhoto || item.photoURL;
       const photo = photoSource ? `<img src="${escapeHtml(photoSource)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : "";
-      return `<article class="workflow-team-person${item.id === currentUser.uid ? " is-you" : ""}"><span class="workflow-team-avatar">${photo}<b>${escapeHtml(teamInitials(item.name))}</b></span><div class="workflow-team-copy"><strong>${escapeHtml(item.name || "MPI Inspector")}${item.id === currentUser.uid ? " <small>YOU</small>" : ""}</strong><span>${escapeHtml(stale ? `${age} · confirm status if needed` : age)}</span></div><span class="workflow-team-pill ${teamStatusTone(rawStatus)}${stale ? " stale" : ""}">${escapeHtml(sameDay ? teamStatusLabel(rawStatus) : "Not updated today")}</span></article>`;
+      const detail = office ? "Office team · tap to message office" : stale ? `${age} · confirm status if needed` : age;
+      const content = `<span class="workflow-team-avatar">${photo}<b>${escapeHtml(teamInitials(item.name))}</b></span><div class="workflow-team-copy"><strong>${escapeHtml(item.name || "MPI Team Member")}${item.id === currentUser.uid ? " <small>YOU</small>" : ""}</strong><span>${escapeHtml(detail)}</span></div><span class="workflow-team-pill ${teamStatusTone(rawStatus)}${stale ? " stale" : ""}">${escapeHtml(sameDay ? teamStatusLabel(rawStatus) : "Not updated today")}</span>`;
+      return office
+        ? `<a class="workflow-team-person" href="#team-messages" data-team-message-recipient="${escapeHtml(item.name || "MPI Office")}">${content}</a>`
+        : `<article class="workflow-team-person${item.id === currentUser.uid ? " is-you" : ""}">${content}</article>`;
     }).join("") : '<div class="workflow-team-empty">Team members will appear after their company phones load this update.</div>';
-    teamStatusUpdated.textContent = values.length ? `${values.length} field ${values.length === 1 ? "user" : "users"}` : "Waiting for phones";
+    teamStatusUpdated.textContent = values.length ? `${values.length} team ${values.length === 1 ? "member" : "members"}` : "Waiting for phones";
   }
 
   function formatDate(value) {
@@ -463,6 +486,7 @@
     if (!user || !profile) {
       lastPublishedSessionSignature = "";
       delete window.MPI_COMPANY_SESSION;
+      window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail: null }));
       accountName.textContent = "Not signed in";
       accountRole.textContent = "Sign in once on this company phone to receive individual instructions and training assignments.";
       accountStatus.textContent = error?.message || "Company account required";
@@ -503,6 +527,11 @@
       unsubscribeProfile = shared.db.collection("users").doc(user.uid).onSnapshot(snapshot => {
         if (!snapshot.exists || currentUser?.uid !== user.uid) return;
         currentProfile = { id: snapshot.id, ...snapshot.data() };
+        if (currentProfile.active === false) {
+          renderSession(null, null, new Error("MPI Office has revoked access for this device. Contact management to restore it."));
+          shared.signOut().catch(() => false);
+          return;
+        }
         publishCompanySession(currentUser, currentProfile);
       }, () => {});
     }

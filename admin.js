@@ -119,6 +119,8 @@
   let fieldMessages = [];
   let fieldMessageListenerReady = false;
   let knownFieldMessageIds = new Set();
+  let officeUpdateListenerReady = false;
+  let knownOfficeUpdateIds = new Set();
   let knownReplyKeys = new Set();
   let readReplyKeys = new Set();
   let unreadReplyCount = 0;
@@ -503,9 +505,11 @@
 
   function notificationTokensForUpdate(audience, targetEmail = "") {
     return [...new Set(people.filter(person => {
-      if (person.active === false || !["owner", "inspector", "subcontractor"].includes(String(person.role || "").toLowerCase())) return false;
-      return audience === "all" || shared.normalizeEmail(person.email) === shared.normalizeEmail(targetEmail);
-    }).map(person => person.notificationDevice?.token).filter(Boolean))];
+      const role = String(person.role || "").toLowerCase();
+      if (person.active === false) return false;
+      if (audience === "all") return ["owner", "inspector", "subcontractor"].includes(role);
+      return ["owner", "admin", "inspector", "subcontractor"].includes(role) && shared.normalizeEmail(person.email) === shared.normalizeEmail(targetEmail);
+    }).map(person => person.notificationDevice?.token || person.officeNotificationDevice?.token).filter(Boolean))];
   }
 
   function officeReplyToken() {
@@ -837,6 +841,10 @@
     return people.filter(person => person.active !== false && person.role !== "subcontractor" && (person.role === "inspector" || person.operationsCurrent || person.operationsDays?.length));
   }
 
+  function officePeople() {
+    return people.filter(person => person.active !== false && ["owner", "admin"].includes(String(person.role || "").toLowerCase()));
+  }
+
   function subcontractorEntries() {
     const entries = people.filter(person => person.active !== false && person.role === "subcontractor").map(person => ({ id: `sub:${person.id}`, person, state: person.subcontractorCurrent, test: false }));
     people.filter(person => person.active !== false && person.subcontractorTestCurrent?.test === true).forEach(person => entries.push({ id: `subtest:${person.id}`, person, state: person.subcontractorTestCurrent, test: true }));
@@ -846,7 +854,8 @@
   function teamOverviewEntries() {
     return [
       ...operativePeople().map(person => ({ id: person.id, person, kind: "inspector" })),
-      ...subcontractorEntries().map(entry => ({ ...entry, kind: "subcontractor" }))
+      ...subcontractorEntries().map(entry => ({ ...entry, kind: "subcontractor" })),
+      ...officePeople().filter(person => !operativePeople().some(fieldPerson => fieldPerson.id === person.id)).map(person => ({ id: `office:${person.id}`, person, kind: "office" }))
     ];
   }
 
@@ -1069,7 +1078,7 @@
   function renderInspectorSelector() {
     const selected = selectedInspectorId;
     const entries = teamOverviewEntries();
-    inspectorSelector.innerHTML = '<option value="all">All field users</option>' + entries.map(entry => `<option value="${escapeHtml(entry.id)}">${escapeHtml(entry.kind === "subcontractor" ? `${entry.test ? "TEST · " : ""}${entry.state?.subcontractorName || entry.person.name || entry.person.email} — Subcontractor` : entry.person.name || entry.person.email)}</option>`).join("");
+    inspectorSelector.innerHTML = '<option value="all">All team members</option>' + entries.map(entry => `<option value="${escapeHtml(entry.id)}">${escapeHtml(entry.kind === "subcontractor" ? `${entry.test ? "TEST · " : ""}${entry.state?.subcontractorName || entry.person.name || entry.person.email} — Subcontractor` : entry.kind === "office" ? `${entry.person.name || entry.person.email} — Office` : entry.person.name || entry.person.email)}</option>`).join("");
     selectedInspectorId = entries.some(entry => entry.id === selected) ? selected : "all";
     inspectorSelector.value = selectedInspectorId;
   }
@@ -1096,6 +1105,7 @@
           </select>
           <label class="check" style="padding:8px"><input data-person-active type="checkbox" ${person.active !== false ? "checked" : ""} ${person.role === "owner" ? "disabled" : ""}><span>Active</span></label>
         </div>
+        ${person.role === "subcontractor" ? `<div class="subcontractor-access-actions"><button class="secondary" type="button" data-copy-subcontractor-link="${escapeHtml(person.id)}">COPY PRODUCTION ACCESS LINK</button><button class="danger" type="button" data-revoke-subcontractor="${escapeHtml(person.id)}">REVOKE SUBCONTRACTOR ACCESS</button><span class="status" data-subcontractor-access-status></span></div>` : ""}
       </article>`).join("") : '<div class="empty">No company accounts have signed in yet.</div>';
     renderOperations();
     renderSubcontractors();
@@ -1192,12 +1202,23 @@
     }
   }
 
+  function subcontractorDisplayStatus(state) {
+    const job = state?.currentJob || { number: state?.currentJobNumber || 1, status: "ready" };
+    if (state?.lab?.status === "on-way") return `ON WAY TO ${String(state.lab.name || "LAB").toUpperCase()}`;
+    if (state?.lab?.status === "arrived") return `AT ${String(state.lab.name || "LAB").toUpperCase()}`;
+    if (job.status === "on-way") return `ON WAY – JOB ${job.number || 1}`;
+    if (job.status === "arrived") return `AT JOB – JOB ${job.number || 1}`;
+    if (job.status === "completed") return `JOB ${job.number || 1} COMPLETE / AVAILABLE`;
+    if (/LAB COMPLETE/i.test(String(state?.status || ""))) return "LAB COMPLETE / AVAILABLE";
+    return state?.status || "AVAILABLE / NO CURRENT JOB";
+  }
+
   function subcontractorStateCard(person, state, isTest = false) {
     const job = state?.currentJob || { number: 1, status: "ready" };
     const events = Array.isArray(state?.events) ? state.events.slice(-8).reverse() : [];
     const messages = (Array.isArray(person.subcontractorMessages) ? person.subcontractorMessages : [])
       .filter(item => Boolean(item.test) === Boolean(isTest)).slice(-5).reverse();
-    const status = state?.status || `READY FOR JOB ${job.number || 1}`;
+    const status = subcontractorDisplayStatus(state);
     const completedAt = job.completedAt || state?.completedJobs?.at?.(-1)?.completedAt || "";
     const title = isTest ? (state?.subcontractorName || "TEST SUBCONTRACTOR") : (person.name || person.email || "MPI Subcontractor");
     const phone = state?.subcontractorPhone || person.phone || "";
@@ -1211,7 +1232,8 @@
       </div>
       <div class="subcontractor-admin-events">${events.length ? events.map(item => `<div><strong>${escapeHtml(item.type || "Status updated")}</strong><span>${escapeHtml(formatTime(item.timestamp))}${item.lab ? ` · ${escapeHtml(item.lab)}` : ""}</span></div>`).join("") : '<div><strong>No actions yet</strong><span>Waiting for phone</span></div>'}</div>
       <h3 style="margin-top:16px">Conversation</h3><div class="message-history" id="adminMessageHistory">${messageHistoryHtml(person)}${messages.length ? messages.map(item => `<article><strong>${escapeHtml(formatDateTime(item.createdAt))} · ${escapeHtml(item.senderName || title)} → Office</strong><p>${escapeHtml(item.message || "")}</p></article>`).join("") : ""}</div>
-      <form class="subcontractor-admin-message" data-subcontractor-message-form data-person-id="${escapeHtml(person.id)}"><label class="field">Message subcontractor<textarea data-message-text maxlength="1000" required placeholder="Write a message for ${escapeHtml(title)}"></textarea></label>${chatAttachmentHtml()}<button class="primary" type="submit">MESSAGE SUBCONTRACTOR</button><span class="status" data-message-status></span></form>
+      <form class="subcontractor-admin-message" data-subcontractor-message-form data-person-id="${escapeHtml(person.id)}"><label class="field">Message ${escapeHtml(title)}<textarea data-message-text maxlength="1000" required placeholder="Write a message for ${escapeHtml(title)}"></textarea></label>${chatAttachmentHtml()}<button class="primary" type="submit">MESSAGE ${escapeHtml(String(title).split(/\s+/)[0].toUpperCase())}</button><span class="status" data-message-status></span></form>
+      ${!isTest ? `<div class="subcontractor-access-actions"><button class="secondary" type="button" data-copy-subcontractor-link="${escapeHtml(person.id)}">COPY PRODUCTION ACCESS LINK</button><button class="danger" type="button" data-revoke-subcontractor="${escapeHtml(person.id)}">REVOKE SUBCONTRACTOR ACCESS</button><span class="status" data-subcontractor-access-status></span></div>` : ""}
       ${isTest ? '<button class="danger" type="button" data-reset-admin-test-subcontractor>RESET TEST DAY</button>' : ""}
     </article>`;
   }
@@ -1459,7 +1481,7 @@
     const { person, state, test } = entry;
     const job = state?.currentJob || { number: state?.currentJobNumber || 1, status: "ready" };
     const title = test ? (state?.subcontractorName || "Test Subcontractor") : (person.name || person.email || "MPI Subcontractor");
-    const status = state?.status || `READY FOR JOB ${job.number || 1}`;
+    const status = subcontractorDisplayStatus(state);
     const completed = Array.isArray(state?.completedJobs) ? state.completedJobs.length : 0;
     const lastEvent = Array.isArray(state?.events) ? state.events.at(-1) : null;
     return `<button class="inspector-row subcontractor-row${test ? " test" : ""}" type="button" data-open-subcontractor="${escapeHtml(entry.id)}">
@@ -1469,6 +1491,19 @@
       <div class="row-metric"><span>Completed</span><b>${completed}</b></div>
       <div class="row-metric"><span>Arrived</span><b>${escapeHtml(formatTime(job.arrivedAt))}</b></div>
       <div class="row-metric"><span>Last action</span><b>${escapeHtml(formatTime(lastEvent?.timestamp))}</b></div>
+      <span class="row-open">›</span>
+    </button>`;
+  }
+
+  function officeOverviewRow(entry) {
+    const person = entry.person;
+    return `<button class="inspector-row office-row" type="button" data-open-office="${escapeHtml(entry.id)}">
+      <div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(person.name || person.email || "MPI Office")}</strong><small>Office Team</small><small class="inspector-sync">${escapeHtml(person.lastSeenAt ? `Last active ${formatDateTime(person.lastSeenAt)}` : "Approved office account")}</small></div></div>
+      <div><span class="status-badge neutral">OFFICE</span><small>Tap to open conversation</small></div>
+      <div class="row-metric"><span>Role</span><b>${escapeHtml(person.role === "owner" ? "Owner" : "Office admin")}</b></div>
+      <div class="row-metric"><span>Messages</span><b>${messagesFor(person).length}</b></div>
+      <div class="row-metric"><span>Availability</span><b>Office</b></div>
+      <div class="row-metric"><span>Contact</span><b>Message</b></div>
       <span class="row-open">›</span>
     </button>`;
   }
@@ -1511,15 +1546,27 @@
 
   function renderTeamOverview() {
     const entries = teamOverviewEntries();
+    const fieldEntries = entries.filter(entry => entry.kind !== "office");
+    const officeEntries = entries.filter(entry => entry.kind === "office");
     teamOverview.hidden = false;
     inspectorDetail.hidden = true;
-    teamOverview.innerHTML = entries.length ? entries.map(entry => entry.kind === "subcontractor" ? subcontractorOverviewRow(entry) : overviewRow(entry.person)).join("") : '<div class="empty">No field devices have synced yet. Ask each user to open MPI Field Tools while signed in.</div>';
+    teamOverview.innerHTML = entries.length
+      ? `${fieldEntries.length ? `<div class="team-group-title">Field Team <span>${fieldEntries.length} member${fieldEntries.length === 1 ? "" : "s"}</span></div>${fieldEntries.map(entry => entry.kind === "subcontractor" ? subcontractorOverviewRow(entry) : overviewRow(entry.person)).join("")}` : ""}${officeEntries.length ? `<div class="team-group-title">Office Team <span>${officeEntries.length} member${officeEntries.length === 1 ? "" : "s"}</span></div>${officeEntries.map(officeOverviewRow).join("")}` : ""}`
+      : '<div class="empty">No team accounts have synchronized yet. Ask each user to sign in with their MPI account.</div>';
   }
 
   function renderSubcontractorDetail(entry) {
     inspectorDetail.innerHTML = `<div class="detail-hero"><div class="detail-person">${avatarHtml(entry.person, "large")}<div><p class="ops-eyebrow">Subcontractor operations</p><h2>${escapeHtml(entry.test ? (entry.state?.subcontractorName || "Test Subcontractor") : (entry.person.name || entry.person.email || "MPI Subcontractor"))}</h2><p>Job and lab status · excluded from employee payroll and hours</p></div></div><button class="detail-back" type="button" data-back-overview>← All field users</button></div>${subcontractorStateCard(entry.person, entry.state, entry.test)}`;
     teamOverview.hidden = true;
     inspectorDetail.hidden = false;
+  }
+
+  function renderOfficeDetail(entry) {
+    const person = entry.person;
+    inspectorDetail.innerHTML = `<div class="detail-hero"><div class="detail-person">${avatarHtml(person, "large")}<div><p class="ops-eyebrow">Office team</p><h2>${escapeHtml(person.name || person.email || "MPI Office")}</h2><p>${escapeHtml(person.email || "")} · Internal company conversation</p></div></div><div><span class="status-badge neutral">OFFICE</span><button class="detail-back" type="button" data-back-overview>← All team members</button></div></div><div class="ops-grid"><article class="ops-card full"><h3>Message ${escapeHtml(person.name || "Office")}</h3><p class="ops-sub">Send a quick internal message. It remains a normal conversation unless an administrator deliberately converts a field message into a to-do.</p><form class="compact-form" data-office-message-form data-person-id="${escapeHtml(person.id)}"><div class="field"><label>Message</label><textarea data-message-text maxlength="1000" required placeholder="Write a message for ${escapeHtml(person.name || "the office")}"></textarea></div>${chatAttachmentHtml()}<button class="primary" type="submit">SEND MESSAGE</button><span class="status" data-message-status></span></form><h3 style="margin-top:20px">Conversation</h3><div class="message-history" id="adminMessageHistory">${messageHistoryHtml(person)}</div></article></div>`;
+    teamOverview.hidden = true;
+    inspectorDetail.hidden = false;
+    hydrateMessageReceipts(person);
   }
 
   function jobTimeEditButton(action, job, value) {
@@ -1616,7 +1663,7 @@
     const messages = [...officeMessages, ...fromField].sort((left, right) => (asDate(right.timestamp)?.getTime() || 0) - (asDate(left.timestamp)?.getTime() || 0));
     return messages.length ? messages.slice(0, 30).map(item => {
       const message = item.message;
-      if (item.direction === "field") return `<article><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || person.name || "MPI Field User")} → Office</strong><p>${escapeHtml(message.message || "Photos sent to MPI Office")}</p>${fieldAttachmentsHtml(message)}</article>`;
+      if (item.direction === "field") return `<article><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || person.name || "MPI Field User")} → Office</strong><p>${escapeHtml(message.message || "Photos sent to MPI Office")}</p>${fieldAttachmentsHtml(message)}<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}">CREATE TO-DO</button></article>`;
       const receipt = messageReceiptCache.get(message.id);
       const state = receipt?.status ? receipt.status.replace(/-/g, " ") : "Sent to app";
       return `<article><strong>${escapeHtml(formatDateTime(message.createdAt))} · MPI Office → ${escapeHtml(person.name || "field user")}</strong><p>${escapeHtml(message.message)}</p><p><b>Status:</b> ${escapeHtml(state)}</p>${adminAttachmentsHtml(message)}</article>`;
@@ -1633,6 +1680,51 @@
     if (selectedInspectorId === person.id && !inspectorDetail.hidden) {
       const host = document.getElementById("adminMessageHistory");
       if (host) host.innerHTML = messageHistoryHtml(person);
+    }
+  }
+
+  async function createTodoFromMessage(button) {
+    const person = people.find(item => item.id === button.dataset.messagePerson);
+    const message = fieldMessages.find(item => item.id === button.dataset.createMessageTodo);
+    if (!person || !message || !shared.isAdminRole(currentProfile)) return;
+    button.disabled = true;
+    button.textContent = "CREATING…";
+    const sourceText = String(message.message || "Field message requires office action").trim();
+    const createdAt = new Date().toISOString();
+    const request = {
+      id: `message-${message.id}`,
+      type: "Office follow-up",
+      item: sourceText.slice(0, 90) || "Field message follow-up",
+      details: sourceText.slice(0, 1200),
+      suggestion: "",
+      neededBy: "",
+      asap: false,
+      status: "in-progress",
+      requestedAt: message.createdAtClient || createdAt,
+      inspector: message.senderName || person.name || person.email,
+      inspectorEmail: message.senderEmail || person.email || "",
+      sourceMessageId: message.id,
+      assignedAdmin: shared.normalizeEmail(currentUser.email),
+      assignedAdminName: currentProfile.name || currentUser.displayName || currentUser.email,
+      assignedAt: createdAt,
+      assignedBy: currentProfile.name || currentUser.displayName || currentUser.email,
+      reviewedAt: createdAt,
+      reviewedBy: currentProfile.name || currentUser.displayName || currentUser.email,
+      updatedAt: createdAt
+    };
+    try {
+      const ref = shared.db.collection("users").doc(person.id);
+      await shared.db.runTransaction(async transaction => {
+        const snapshot = await transaction.get(ref);
+        const requests = Array.isArray(snapshot.data()?.fieldRequests) ? snapshot.data().fieldRequests.slice() : [];
+        if (!requests.some(item => item.sourceMessageId === message.id)) requests.push(request);
+        transaction.set(ref, { fieldRequests: requests.slice(-300), requestsUpdatedAt: shared.serverTimestamp() }, { merge: true });
+      });
+      showView("requests");
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = "TRY CREATE TO-DO AGAIN";
+      button.title = error.message || "The to-do could not be created.";
     }
   }
 
@@ -1843,6 +1935,7 @@
       const entry = overviewEntry(selectedInspectorId);
       if (!entry) renderTeamOverview();
       else if (entry.kind === "subcontractor") renderSubcontractorDetail(entry);
+      else if (entry.kind === "office") renderOfficeDetail(entry);
       else if (!preserveCorrectionDraft) renderInspectorDetail(entry.person);
     }
     renderReplyInbox();
@@ -1923,8 +2016,18 @@
       });
       renderPeople();
     }, error => { authStatus.textContent = error.message; });
+    officeUpdateListenerReady = false;
+    knownOfficeUpdateIds = new Set();
     unsubscribeUpdates = shared.db.collection("officeUpdates").orderBy("createdAt", "desc").limit(200).onSnapshot(snapshot => {
-      updates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(update => !update.hidden);
+      const values = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(update => !update.hidden);
+      if (officeUpdateListenerReady) {
+        const myEmail = shared.normalizeEmail(currentUser?.email);
+        const direct = values.find(update => !knownOfficeUpdateIds.has(update.id) && update.type === "message" && shared.normalizeEmail(update.targetEmail) === myEmail && update.createdBy !== currentUser?.uid);
+        if (direct) showOfficeAlert(`Message from ${direct.createdByName || "MPI Office"}`, direct.message || "A new internal message is available.", `mpi-office-team-${direct.id}`);
+      }
+      updates = values;
+      knownOfficeUpdateIds = new Set(values.map(update => update.id));
+      officeUpdateListenerReady = true;
       renderUpdates();
     }, error => { publishStatus.textContent = error.message; publishStatus.className = "status error"; });
     replyListenerReady = false;
@@ -2065,7 +2168,7 @@
         targetTokens: notificationTokensForUpdate("inspector", person.email),
         title: isSafetyReply ? "SAFETY FOLLOW-UP FROM MPI OFFICE" : "Message from MPI Office",
         body: text,
-        link: person.role === "subcontractor" ? "./#office-updates" : "./#team-messages",
+        link: ["owner", "admin"].includes(String(person.role || "").toLowerCase()) ? "./admin.html" : person.role === "subcontractor" ? "./?subcontractor=jason#subcontractor-home" : "./#team-messages",
         tag: `mpi-office-${messageRef.id}`
       }).catch(() => false);
       formElement.reset();
@@ -2100,6 +2203,45 @@
     } catch (error) {
       button.disabled = false;
       button.textContent = error.message || "RESET FAILED — TRY AGAIN";
+    }
+  }
+
+  function subcontractorProductionLink(person) {
+    const firstName = String(person?.name || "subcontractor").trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z0-9-]/g, "") || "subcontractor";
+    return `${window.location.origin}${window.location.pathname.replace(/admin\.html.*$/i, "")}?subcontractor=${encodeURIComponent(firstName)}#subcontractor-home`;
+  }
+
+  async function copySubcontractorLink(button) {
+    const person = people.find(item => item.id === button.dataset.copySubcontractorLink);
+    const status = button.closest("[data-person-id], [data-subcontractor-person]")?.querySelector("[data-subcontractor-access-status]");
+    if (!person) return;
+    const link = subcontractorProductionLink(person);
+    try {
+      await navigator.clipboard.writeText(link);
+      if (status) status.textContent = `Production link copied for ${person.name || "subcontractor"}. The person's own MPI account still verifies identity.`;
+    } catch (_) {
+      if (status) status.textContent = `Copy this link: ${link}`;
+    }
+  }
+
+  async function revokeSubcontractorAccess(button) {
+    const person = people.find(item => item.id === button.dataset.revokeSubcontractor);
+    const status = button.closest("[data-person-id], [data-subcontractor-person]")?.querySelector("[data-subcontractor-access-status]");
+    if (!person || person.role !== "subcontractor" || !shared.isAdminRole(currentProfile)) return;
+    button.disabled = true;
+    if (status) status.textContent = `Revoking ${person.name || "subcontractor"}…`;
+    try {
+      await shared.db.collection("users").doc(person.id).set({
+        active: false,
+        notificationDevice: null,
+        subcontractorAccessRevokedAt: shared.serverTimestamp(),
+        subcontractorAccessRevokedBy: currentUser.uid,
+        subcontractorAccessRevision: Number(person.subcontractorAccessRevision || 0) + 1
+      }, { merge: true });
+      if (status) status.textContent = "Access revoked. This does not affect any other team member.";
+    } catch (error) {
+      button.disabled = false;
+      if (status) status.textContent = error.message || "Access could not be revoked.";
     }
   }
 
@@ -2314,6 +2456,12 @@
     sendInspectorMessage(formElement);
   });
   peopleList.addEventListener("change", updatePerson);
+  peopleList.addEventListener("click", event => {
+    const copy = event.target.closest("[data-copy-subcontractor-link]");
+    if (copy) copySubcontractorLink(copy);
+    const revoke = event.target.closest("[data-revoke-subcontractor]");
+    if (revoke) revokeSubcontractorAccess(revoke);
+  });
   inspectorSelector.addEventListener("change", () => {
     selectedInspectorId = inspectorSelector.value;
     selectedOperationDate = "";
@@ -2327,6 +2475,14 @@
     renderOperations();
   });
   teamOverview.addEventListener("click", event => {
+    const office = event.target.closest("[data-open-office]");
+    if (office) {
+      selectedInspectorId = office.dataset.openOffice;
+      selectedOperationDate = "";
+      inspectorSelector.value = selectedInspectorId;
+      renderOperations();
+      return;
+    }
     const subcontractor = event.target.closest("[data-open-subcontractor]");
     if (subcontractor) {
       selectedInspectorId = subcontractor.dataset.openSubcontractor;
@@ -2343,6 +2499,21 @@
     renderOperations();
   });
   inspectorDetail.addEventListener("click", event => {
+    const messageTodo = event.target.closest("[data-create-message-todo]");
+    if (messageTodo) {
+      createTodoFromMessage(messageTodo);
+      return;
+    }
+    const copyAccess = event.target.closest("[data-copy-subcontractor-link]");
+    if (copyAccess) {
+      copySubcontractorLink(copyAccess);
+      return;
+    }
+    const revokeAccess = event.target.closest("[data-revoke-subcontractor]");
+    if (revokeAccess) {
+      revokeSubcontractorAccess(revokeAccess);
+      return;
+    }
     const fieldAttachment = event.target.closest("[data-open-field-attachment]");
     if (fieldAttachment) {
       openFieldAttachment(fieldAttachment);
@@ -2401,6 +2572,7 @@
     event.preventDefault();
     if (event.target.id === "adminMessageForm") sendInspectorMessage(event.target);
     if (event.target.matches("[data-subcontractor-message-form]")) sendInspectorMessage(event.target);
+    if (event.target.matches("[data-office-message-form]")) sendInspectorMessage(event.target);
     if (event.target.id === "adminCorrectionForm") addAdminCorrection(event.target);
   });
   signInButton.addEventListener("click", async () => {

@@ -216,10 +216,13 @@
     .range-picker button { min-height:42px; padding:0 13px; color:var(--blue); background:#edf5fb; border:1px solid #cbdff0; border-radius:999px; font-size:10px; font-weight:900; }
     .range-picker button.active { color:#fff; background:var(--navy); border-color:var(--navy); }
     .team-overview { display:grid; gap:11px; margin-top:16px; }
+    .team-group-title { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 2px 2px; color:var(--navy); font-size:11px; font-weight:950; letter-spacing:.08em; text-transform:uppercase; }
+    .team-group-title span { color:var(--muted); font-size:9px; font-weight:800; letter-spacing:0; text-transform:none; }
     .inspector-row { display:grid; grid-template-columns:minmax(170px,1.25fr) minmax(135px,.8fr) repeat(4,minmax(105px,.62fr)) 34px; align-items:center; gap:12px; width:100%; padding:16px; color:var(--ink); background:#fff; border:1px solid var(--line); border-left:5px solid var(--blue); border-radius:15px; text-align:left; box-shadow:0 7px 20px rgba(17,24,106,.05); }
     .inspector-row.has-alert { border-left-color:#b94b42; }
     .inspector-row.subcontractor-row { border-left-color:var(--gold); }
     .inspector-row.subcontractor-row.test { background:#fffdf5; }
+    .inspector-row.office-row { border-left-color:#7355a7; }
     .inspector-row strong,.inspector-row span,.inspector-row small { display:block; }
     .inspector-row strong { color:var(--navy); font-size:15px; }
     .inspector-row small { margin-top:4px; color:var(--muted); font-size:9.5px; line-height:1.4; }
@@ -301,6 +304,10 @@
     .message-history article,.correction-history article { padding:12px; background:#f7f9fc; border:1px solid #e3e7ef; border-radius:11px; }
     .message-history strong,.correction-history strong { color:var(--navy); font-size:10.5px; }
     .message-history p,.correction-history p { margin:5px 0 0; color:var(--muted); font-size:9.5px; line-height:1.45; }
+    .message-history .message-todo { min-height:34px; margin-top:9px; padding:0 10px; color:#fff; background:var(--blue); border:0; border-radius:8px; font-size:8.5px; font-weight:900; }
+    .subcontractor-access-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:13px; }
+    .person-card > .subcontractor-access-actions { grid-column:1/-1; margin-top:0; padding-top:12px; border-top:1px solid var(--line); }
+    .subcontractor-access-actions button { min-height:38px; padding:0 11px; border-radius:9px; font-size:9px; font-weight:900; }
     .admin-update-replies { display:grid; gap:7px; margin-top:14px; padding:13px; color:#276853; background:#eaf6f1; border:1px solid #c9e5da; border-radius:11px; }
     .admin-update-replies > strong { font-size:10px; text-transform:uppercase; letter-spacing:.06em; }
     .admin-update-replies p { margin:0; color:#345c51; font-size:10px; line-height:1.45; }
@@ -651,7 +658,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=158"></script>
-  <script src="./admin.js?build=158"></script>
+  <script src="./mpi-shared.js?build=159"></script>
+  <script src="./admin.js?build=159"></script>
 </body>
 </html>

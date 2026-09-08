@@ -1,5 +1,20 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 159 — Subcontractor Production Access and Team Messaging
+
+- Added a dedicated production entry link for each subcontractor. Jason's link opens only the Subcontractor Field Tool, verifies his individual MPI Google account, and keeps that authorized phone signed in through the existing secure Firebase session.
+- Added an explicit Office control to copy a subcontractor's production link and a separate `REVOKE SUBCONTRACTOR ACCESS` action that disables only that person's account and notification device.
+- Made live subcontractor status fully workflow-derived: On Way, At Job, Job Complete / Available, On Way to Water Tech or IMS, At Lab, and Lab Complete / Available update without a second availability control or changing job numbers for lab visits.
+- Added Jason's complete two-way conversation directly inside the Subcontractor Field Tool, with unread Office-message counts, persistent message history, field photo support, and existing foreground/background notifications.
+- Split the Office Console Team view into Field Team and Office Team. Subcontractors appear beside inspectors with a clear role badge; Adrienne and Brooke appear as Office and every Team card opens a direct message conversation.
+- Kept activity/status events separate from human conversation, and added an optional `CREATE TO-DO` action to turn a specific field message into an accountable Office request without converting normal messages automatically.
+- Strengthened access revocation so an already-open subcontractor device is signed out as soon as its active account is revoked.
+- Updated the field app, Office Console, version manifest and offline cache to Build 159.
+
+### Validation record
+
+- Verified JavaScript syntax, inline script parsing, Build 159 references, unique markup IDs, responsive phone/desktop layouts, subcontractor workflow state transitions, lab job-number preservation, production-link routing, Team grouping, message separation, and revocation controls.
+
 ## Build 158 — Stable Mobile Workflow and App Diagnostics
 
 - Fixed the production mobile scrolling failure at its source: repeated company-session updates no longer rebuild the active screen or force the page back to the top.

@@ -282,6 +282,7 @@
         if (profile.active === false) throw new Error("This MPI account is inactive.");
         callback({ user, profile, error: null });
       } catch (error) {
+        if (/inactive|revoked/i.test(String(error?.message || ""))) await auth.signOut().catch(() => false);
         callback({ user, profile: null, error });
       }
     });
