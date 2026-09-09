@@ -31,9 +31,12 @@
   const accessGate = document.getElementById("subcontractorAccessGate");
   const accessTitle = document.getElementById("subcontractorAccessTitle");
   const accessMessage = document.getElementById("subcontractorAccessMessage");
+  const accessButton = document.getElementById("subcontractorAccessButton");
   const actionStatus = document.getElementById("subcontractorActionStatus");
   const TEST_MODE_KEY = "mpiSubcontractorTestModeV1";
-  const accessKey = String(new URLSearchParams(window.location.search).get("subcontractor") || "").trim().toLowerCase();
+  const accessParameters = new URLSearchParams(window.location.search);
+  const accessKey = String(accessParameters.get("subcontractor") || "").trim().toLowerCase();
+  const deviceActivationId = String(accessParameters.get("access") || "").trim();
   const productionAccessRequested = Boolean(accessKey);
   const LOCAL_PREVIEW = ["127.0.0.1", "localhost"].includes(window.location.hostname) && new URLSearchParams(window.location.search).get("preview") === "subcontractor";
   const TEST_SUBCONTRACTOR = { name: "Jason Chamarro" };
@@ -50,6 +53,7 @@
   let unsubscribeMessages = null;
   let currentOfficeUpdates = [];
   let currentFieldMessages = [];
+  let activationRunning = false;
 
   function localDateKey() {
     const now = new Date();
@@ -113,26 +117,78 @@
   }
 
   function setProductionAccessState(mode, detail = "") {
-    document.body.classList.toggle("mpi-subcontractor-access-pending", mode === "pending");
+    document.body.classList.toggle("mpi-subcontractor-access-pending", mode === "pending" || mode === "activating");
     document.body.classList.toggle("mpi-subcontractor-access-denied", mode === "denied");
     if (!accessGate) return;
     accessGate.hidden = mode === "authorized" || mode === "test";
-    if (mode === "pending") {
+    if (mode === "activating") {
+      accessTitle.textContent = "Activating Jason's company phone";
+      accessMessage.textContent = "Please keep this page open for a moment. No Google account or password is required.";
+      if (accessButton) accessButton.hidden = true;
+    } else if (mode === "pending") {
       const displayName = accessKey ? `${accessKey.charAt(0).toUpperCase()}${accessKey.slice(1)}` : "Subcontractor";
-      accessTitle.textContent = `${displayName}'s secure field access`;
-      accessMessage.textContent = `Sign in once with the MPI Google account assigned to ${displayName}. This phone remains recognized until the subcontractor signs out or MPI revokes access.`;
-      accessGate.querySelector("button")?.removeAttribute("hidden");
+      accessTitle.textContent = `${displayName}'s phone is not activated`;
+      accessMessage.textContent = deviceActivationId
+        ? "Tap Activate Company Phone to finish the secure one-time setup. No Google account is needed."
+        : "Open the private activation link supplied by MPI Office on this phone. No Google account is needed.";
+      if (accessButton) {
+        accessButton.hidden = !deviceActivationId;
+        accessButton.textContent = "ACTIVATE COMPANY PHONE";
+      }
     } else if (mode === "denied") {
       accessTitle.textContent = "Subcontractor access not authorized";
-      accessMessage.textContent = detail || "This signed-in account is not authorized for Jason's Subcontractor Field Tool. Ask MPI Office to assign the Subcontractor role or restore access.";
-      accessGate.querySelector("button")?.setAttribute("hidden", "");
+      accessMessage.textContent = detail || "This device is not authorized for Jason's Subcontractor Field Tool. Ask MPI Office to issue a new private activation link.";
+      if (accessButton) {
+        accessButton.hidden = !deviceActivationId;
+        accessButton.textContent = "TRY ACTIVATION AGAIN";
+      }
+    }
+  }
+
+  function removeActivationSecretFromAddress() {
+    const clean = new URL(window.location.href);
+    clean.searchParams.delete("access");
+    window.history.replaceState({}, "", `${clean.pathname}${clean.search}${clean.hash}`);
+  }
+
+  async function activateCompanyPhone() {
+    if (activationRunning || !productionAccessRequested || !deviceActivationId || !shared?.activateSubcontractorDevice) return;
+    activationRunning = true;
+    setProductionAccessState("activating");
+    try {
+      const activated = await shared.activateSubcontractorDevice(deviceActivationId, accessKey);
+      removeActivationSecretFromAddress();
+      const profile = activated.profile || {};
+      applySession({
+        userId: activated.user.uid,
+        role: "subcontractor",
+        active: true,
+        subcontractorOnly: true,
+        subcontractorKey: String(profile.subcontractorKey || accessKey),
+        subcontractorAccessId: String(profile.subcontractorAccessId || deviceActivationId),
+        inspectorName: String(profile.name || TEST_SUBCONTRACTOR.name),
+        inspectorEmail: "",
+        phone: String(profile.phone || "")
+      });
+    } catch (error) {
+      const code = String(error?.code || "");
+      const message = code === "auth/operation-not-allowed"
+        ? "Secure phone activation is not available yet. Contact MPI Office."
+        : code === "auth/network-request-failed"
+          ? "The secure connection could not be reached. Check the phone's signal and try again."
+          : /permission/i.test(String(error?.message || ""))
+            ? "This private link is not active. Ask MPI Office for a replacement link."
+            : error?.message || "This phone could not be activated. Ask MPI Office for a replacement link.";
+      setProductionAccessState("denied", message);
+    } finally {
+      activationRunning = false;
     }
   }
 
   function renderConversation() {
     if (!conversation) return;
     const office = currentOfficeUpdates
-      .filter(update => update.type === "message" && (!session?.inspectorEmail || String(update.targetEmail || "").toLowerCase() === String(session.inspectorEmail).toLowerCase()))
+      .filter(update => update.type === "message" && (String(update.targetUid || "") === String(session?.userId || "") || (!session?.inspectorEmail || String(update.targetEmail || "").toLowerCase() === String(session.inspectorEmail).toLowerCase())))
       .map(update => ({ direction: "office", timestamp: update.createdAt, message: update.message, author: update.createdByName || "MPI Office", update }));
     const field = currentFieldMessages.map(message => ({
       direction: "field",
@@ -449,7 +505,8 @@
     const role = String(session?.role || "").toLowerCase();
     const isAdmin = ["owner", "admin"].includes(role);
     testMode = isAdmin && localStorage.getItem(TEST_MODE_KEY) === "1";
-    const subcontractorMode = role === "subcontractor" || testMode || productionAccessRequested;
+    const subcontractorIdentity = role === "subcontractor" || session?.subcontractorOnly === true;
+    const subcontractorMode = subcontractorIdentity || testMode || productionAccessRequested;
     document.body.classList.toggle("mpi-subcontractor-mode", subcontractorMode);
     if (testCard) testCard.hidden = !isAdmin || testMode;
     if (productionAccessRequested && !nextSession) {
@@ -457,7 +514,7 @@
       window.location.hash = "#subcontractor-home";
       return;
     }
-    if (productionAccessRequested && role !== "subcontractor" && !testMode) {
+    if (productionAccessRequested && !subcontractorIdentity && !testMode) {
       setProductionAccessState("denied");
       window.location.hash = "#subcontractor-home";
       return;
@@ -484,6 +541,7 @@
   labArrivedButton?.addEventListener("click", arriveAtLab);
   labCompleteButton?.addEventListener("click", completeLab);
   messageForm?.addEventListener("submit", sendOfficeMessage);
+  accessButton?.addEventListener("click", activateCompanyPhone);
   startTestButton?.addEventListener("click", enterTestMode);
   exitTestButton?.addEventListener("click", exitTestMode);
   resetButtons.forEach(button => button.addEventListener("click", resetTestDay));
@@ -491,6 +549,7 @@
   window.addEventListener("mpi-company-session-ready", event => applySession(event.detail));
   if (window.MPI_COMPANY_SESSION) applySession(window.MPI_COMPANY_SESSION);
   else if (productionAccessRequested) applySession(null);
+  if (!LOCAL_PREVIEW && productionAccessRequested && deviceActivationId) activateCompanyPhone();
   if (LOCAL_PREVIEW) {
     applySession({ userId: "local-subcontractor-preview", role: "owner", inspectorName: "Kevin Cave", inspectorEmail: "kev@michiganpropertyinspections.com" });
     enterTestMode();

@@ -236,6 +236,60 @@
     return auth.signOut();
   }
 
+  function safeAccessId(value) {
+    const accessId = String(value || "").trim();
+    return /^[A-Za-z0-9_-]{32,120}$/.test(accessId) ? accessId : "";
+  }
+
+  async function activateSubcontractorDevice(accessValue, expectedKey = "") {
+    await authPersistenceReady;
+    const accessId = safeAccessId(accessValue);
+    const targetKey = String(expectedKey || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+    if (!accessId) throw new Error("This activation link is incomplete. Ask MPI Office for a new private link.");
+
+    let user = auth.currentUser;
+    if (!user?.isAnonymous) {
+      if (user) await auth.signOut();
+      const credential = await auth.signInAnonymously();
+      user = credential.user;
+    }
+    if (!user?.isAnonymous) throw new Error("This phone could not create its secure subcontractor session.");
+
+    const accessRef = db.collection("subcontractorAccess").doc(accessId);
+    const userRef = db.collection("users").doc(user.uid);
+    await db.runTransaction(async transaction => {
+      const accessSnapshot = await transaction.get(accessRef);
+      const userSnapshot = await transaction.get(userRef);
+      if (!accessSnapshot.exists) throw new Error("This activation link is not recognized. Ask MPI Office for a new private link.");
+      const access = accessSnapshot.data() || {};
+      if (access.active !== true) throw new Error("MPI Office has revoked this activation link.");
+      if (targetKey && String(access.targetKey || "").toLowerCase() !== targetKey) throw new Error("This link was issued for a different subcontractor.");
+      if (access.deviceUid && access.deviceUid !== user.uid) throw new Error("This link is already registered to another phone. MPI Office can revoke it and issue a replacement.");
+
+      transaction.set(accessRef, {
+        deviceUid: user.uid,
+        activatedAt: access.activatedAt || serverTimestamp(),
+        lastSeenAt: serverTimestamp()
+      }, { merge: true });
+      const profile = {
+        name: String(access.targetName || "MPI Subcontractor").slice(0, 80),
+        email: "",
+        phone: String(access.phone || "").slice(0, 30),
+        role: "subcontractor",
+        active: true,
+        subcontractorOnly: true,
+        subcontractorKey: String(access.targetKey || targetKey || "subcontractor").slice(0, 60),
+        subcontractorAccessId: accessId,
+        sourceProfileId: String(access.sourceProfileId || "").slice(0, 120),
+        lastSeenAt: serverTimestamp()
+      };
+      if (!userSnapshot.exists) profile.createdAt = serverTimestamp();
+      transaction.set(userRef, profile, { merge: true });
+    });
+    const snapshot = await userRef.get();
+    return { user, profile: { id: snapshot.id, ...snapshot.data() } };
+  }
+
   async function ensureProfile(user) {
     if (!user || !isCompanyEmail(user.email)) throw new Error("Use an approved MPI company account.");
     const ref = db.collection("users").doc(user.uid);
@@ -278,6 +332,27 @@
         return;
       }
       try {
+        if (user.isAnonymous) {
+          const ref = db.collection("users").doc(user.uid);
+          const snapshot = await ref.get();
+          if (snapshot.exists) {
+            const profile = { id: snapshot.id, ...snapshot.data() };
+            if (profile.active === false) {
+              await auth.signOut();
+              callback({ user: null, profile: null, error: new Error("MPI Office has revoked access for this device.") });
+              return;
+            }
+            callback({ user, profile, error: null });
+            return;
+          }
+          const stop = ref.onSnapshot(live => {
+            if (!live.exists) return;
+            stop();
+            callback({ user, profile: { id: live.id, ...live.data() }, error: null });
+          }, error => callback({ user: null, profile: null, error }));
+          callback({ user: null, profile: null, error: new Error("Complete this phone's private subcontractor activation link.") });
+          return;
+        }
         const profile = await ensureProfile(user);
         if (profile.active === false) throw new Error("This MPI account is inactive.");
         callback({ user, profile, error: null });
@@ -329,7 +404,8 @@
     }, () => notify());
     const unsubscribers = [
       loadQuery(db.collection("officeUpdates").where("active", "==", true).where("audience", "==", "all")),
-      loadQuery(db.collection("officeUpdates").where("active", "==", true).where("targetEmail", "==", normalizeEmail(user.email)))
+      loadQuery(db.collection("officeUpdates").where("active", "==", true).where("targetEmail", "==", normalizeEmail(user.email))),
+      loadQuery(db.collection("officeUpdates").where("active", "==", true).where("targetUid", "==", user.uid))
     ];
     return () => {
       unsubscribers.forEach(unsubscribe => unsubscribe?.());
@@ -677,6 +753,7 @@
     signIn,
     completeRedirectSignIn,
     signOut,
+    activateSubcontractorDevice,
     ensureProfile,
     watchSession,
     watchUpdates,

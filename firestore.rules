@@ -1,0 +1,259 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function email() {
+      return signedIn() && request.auth.token.get("email", "") is string
+        ? request.auth.token.get("email", "").lower()
+        : "";
+    }
+
+    function companyAccount() {
+      return email() == "kev@michiganpropertyinspections.com"
+        || email().matches(".*@michiganpropertyinspections[.]com$");
+    }
+
+    function activeCompanyUser() {
+      return companyAccount()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true;
+    }
+
+    function currentUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function currentSubcontractorAccess() {
+      return get(/databases/$(database)/documents/subcontractorAccess/$(currentUserData().subcontractorAccessId)).data;
+    }
+
+    function activatedSubcontractor() {
+      return signedIn()
+        && email() == ""
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && currentUserData().active == true
+        && currentUserData().role == "subcontractor"
+        && currentUserData().subcontractorOnly == true
+        && currentUserData().subcontractorAccessId is string
+        && exists(/databases/$(database)/documents/subcontractorAccess/$(currentUserData().subcontractorAccessId))
+        && currentSubcontractorAccess().active == true
+        && currentSubcontractorAccess().deviceUid == request.auth.uid;
+    }
+
+    function activeFieldUser() {
+      return activeCompanyUser() || activatedSubcontractor();
+    }
+
+    function isAdmin() {
+      return activeCompanyUser()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ["owner", "admin"];
+    }
+
+    function isOwner() {
+      return activeCompanyUser()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "owner";
+    }
+
+    match /users/{userId} {
+      allow create: if (signedIn()
+        && request.auth.uid == userId
+        && companyAccount()
+        && request.resource.data.email == email()
+        && request.resource.data.active == true
+        && (
+          (email() == "kev@michiganpropertyinspections.com" && request.resource.data.role == "owner")
+          || (email() != "kev@michiganpropertyinspections.com" && request.resource.data.role == "inspector")
+        )) || (
+          signedIn()
+          && request.auth.uid == userId
+          && email() == ""
+          && request.resource.data.email == ""
+          && request.resource.data.role == "subcontractor"
+          && request.resource.data.active == true
+          && request.resource.data.subcontractorOnly == true
+          && request.resource.data.subcontractorAccessId is string
+          && getAfter(/databases/$(database)/documents/subcontractorAccess/$(request.resource.data.subcontractorAccessId)).data.active == true
+          && getAfter(/databases/$(database)/documents/subcontractorAccess/$(request.resource.data.subcontractorAccessId)).data.deviceUid == request.auth.uid
+        );
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == userId);
+      allow update: if isOwner() || (
+        isAdmin()
+        && resource.data.role != "owner"
+        && request.resource.data.role in ["inspector", "subcontractor", "admin"]
+      ) || (
+        isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(["fieldRequests", "requestsUpdatedAt"])
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.active == resource.data.active
+      ) || (
+        activeFieldUser()
+        && request.auth.uid == userId
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.active == resource.data.active
+      );
+      allow delete: if false;
+    }
+
+    match /teamPresence/{userId} {
+      allow read: if activeFieldUser();
+      allow create, update: if activeFieldUser()
+        && request.auth.uid == userId
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.role in ["owner", "inspector", "subcontractor"]
+        && request.resource.data.role == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        && request.resource.data.photoURL is string
+        && (!("profilePhoto" in request.resource.data)
+          || (request.resource.data.profilePhoto is string && request.resource.data.profilePhoto.size() <= 220000))
+        && request.resource.data.status in [
+          "NOT STARTED",
+          "READY / WAITING TO DEPART",
+          "DRIVING TO JOB",
+          "ARRIVED AT JOB",
+          "INSPECTION IN PROGRESS",
+          "FINAL JOB COMPLETE",
+          "LAB STOP",
+          "DRIVING TO LAB",
+          "AT LAB",
+          "DRIVING TO NEXT JOB",
+          "READY TO DRIVE HOME",
+          "DRIVING HOME",
+          "DRIVING HOME / FINAL DESTINATION",
+          "END-OF-DAY CHECKS",
+          "CLOCKED OUT"
+        ]
+        && request.resource.data.date is string
+        && request.resource.data.active == true
+        && request.resource.data.updatedAtClient is string
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.keys().hasOnly([
+          "userId",
+          "name",
+          "role",
+          "photoURL",
+          "profilePhoto",
+          "status",
+          "date",
+          "active",
+          "updatedAtClient",
+          "updatedAt"
+        ]);
+      allow delete: if false;
+    }
+
+    match /officeUpdates/{updateId} {
+      allow create, update: if isAdmin();
+      allow delete: if false;
+      allow read: if isAdmin() || (
+        activeFieldUser()
+        && resource.data.active == true
+        && (
+          resource.data.audience == "all"
+          || resource.data.targetEmail == email()
+          || resource.data.targetUid == request.auth.uid
+        )
+      );
+
+      match /attachments/{attachmentId} {
+        allow create, update: if isAdmin();
+        allow delete: if false;
+        allow read: if isAdmin() || (
+          activeFieldUser()
+          && resource.data.active == true
+          && (
+            resource.data.audience == "all"
+            || resource.data.targetEmail == email()
+            || resource.data.targetUid == request.auth.uid
+          )
+        );
+
+        match /chunks/{chunkId} {
+          allow create, update: if isAdmin();
+          allow delete: if false;
+          allow read: if isAdmin() || (
+            activeFieldUser()
+            && resource.data.active == true
+            && (
+              resource.data.audience == "all"
+              || resource.data.targetEmail == email()
+              || resource.data.targetUid == request.auth.uid
+            )
+          );
+        }
+      }
+
+      match /receipts/{userId} {
+        allow read: if isAdmin() || (activeFieldUser() && request.auth.uid == userId);
+        allow create, update: if activeFieldUser()
+          && request.auth.uid == userId
+          && request.resource.data.userEmail == email();
+        allow delete: if false;
+      }
+    }
+
+    match /fieldMessages/{messageId} {
+      allow read: if isAdmin() || (
+        activeFieldUser()
+        && resource.data.senderUid == request.auth.uid
+      );
+      allow create: if activeFieldUser()
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.senderEmail == email()
+        && request.resource.data.targetRole == "office";
+      allow update: if activeFieldUser()
+        && resource.data.senderUid == request.auth.uid
+        && request.resource.data.senderUid == resource.data.senderUid
+        && request.resource.data.senderEmail == resource.data.senderEmail
+        && request.resource.data.targetRole == "office";
+      allow delete: if false;
+
+      match /attachments/{attachmentId} {
+        allow read: if isAdmin() || (
+          activeFieldUser()
+          && get(/databases/$(database)/documents/fieldMessages/$(messageId)).data.senderUid == request.auth.uid
+        );
+        allow create: if activeFieldUser()
+          && get(/databases/$(database)/documents/fieldMessages/$(messageId)).data.senderUid == request.auth.uid
+          && request.resource.data.senderUid == request.auth.uid;
+        allow update, delete: if false;
+
+        match /chunks/{chunkId} {
+          allow read: if isAdmin() || (
+            activeFieldUser()
+            && get(/databases/$(database)/documents/fieldMessages/$(messageId)).data.senderUid == request.auth.uid
+          );
+          allow create: if activeFieldUser()
+            && get(/databases/$(database)/documents/fieldMessages/$(messageId)).data.senderUid == request.auth.uid
+            && request.resource.data.senderUid == request.auth.uid;
+          allow update, delete: if false;
+        }
+      }
+    }
+
+    match /subcontractorAccess/{accessId} {
+      allow read, create, update: if isAdmin();
+      allow get: if signedIn()
+        && email() == ""
+        && resource.data.active == true
+        && (!resource.data.keys().hasAny(["deviceUid"]) || resource.data.deviceUid == "" || resource.data.deviceUid == request.auth.uid);
+      allow update: if signedIn()
+        && email() == ""
+        && resource.data.active == true
+        && (!resource.data.keys().hasAny(["deviceUid"]) || resource.data.deviceUid == "" || resource.data.deviceUid == request.auth.uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["deviceUid", "activatedAt", "lastSeenAt"])
+        && request.resource.data.deviceUid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

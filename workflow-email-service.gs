@@ -92,7 +92,9 @@ function handlePushRequest_(input, requestId) {
       return response_({ ok: true, status: "duplicate", requestId: requestId });
     }
     var sender = verifyFirebaseUser_(safeText_(input.idToken, 5000));
-    if (!sender || !sender.emailVerified || !isMpiCompanyEmail_(sender.email)) throw new Error("Company sign-in could not be verified");
+    var companySender = sender && sender.emailVerified && isMpiCompanyEmail_(sender.email);
+    var subcontractorSender = sender && !sender.email && isActiveSubcontractor_(sender.uid);
+    if (!companySender && !subcontractorSender) throw new Error("Company device access could not be verified");
     var targets = cleanStringArray_(input.targetTokens, MPI_PUSH.MAX_TARGETS, 500);
     var targetEmail = safeText_(input.targetEmail, 160).toLowerCase();
     if (!targets.length && safeText_(input.audience, 20) === "office") targets = officeNotificationTokens_(targetEmail);
@@ -138,6 +140,24 @@ function verifyFirebaseUser_(idToken) {
 function isMpiCompanyEmail_(email) {
   var normalized = String(email || "").toLowerCase();
   return normalized === "kev@michiganpropertyinspections.com" || /@michiganpropertyinspections[.]com$/.test(normalized);
+}
+
+function isActiveSubcontractor_(uid) {
+  try {
+    var safeUid = String(uid || "").trim();
+    if (!safeUid) return false;
+    var response = UrlFetchApp.fetch("https://firestore.googleapis.com/v1/projects/" + MPI_PUSH.PROJECT_ID + "/databases/(default)/documents/users/" + encodeURIComponent(safeUid), {
+      headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+      muteHttpExceptions: true
+    });
+    if (response.getResponseCode() !== 200) return false;
+    var fields = (JSON.parse(response.getContentText() || "{}").fields || {});
+    return fields.active && fields.active.booleanValue === true
+      && fields.role && fields.role.stringValue === "subcontractor"
+      && fields.subcontractorOnly && fields.subcontractorOnly.booleanValue === true;
+  } catch (_) {
+    return false;
+  }
 }
 
 function officeNotificationTokens_(targetEmail) {

@@ -503,12 +503,12 @@
     if (selected) hydrateMessageReceipts(selected);
   }
 
-  function notificationTokensForUpdate(audience, targetEmail = "") {
+  function notificationTokensForUpdate(audience, targetEmail = "", targetUid = "") {
     return [...new Set(people.filter(person => {
       const role = String(person.role || "").toLowerCase();
       if (person.active === false) return false;
       if (audience === "all") return ["owner", "inspector", "subcontractor"].includes(role);
-      return ["owner", "admin", "inspector", "subcontractor"].includes(role) && shared.normalizeEmail(person.email) === shared.normalizeEmail(targetEmail);
+      return ["owner", "admin", "inspector", "subcontractor"].includes(role) && (person.id === targetUid || shared.normalizeEmail(person.email) === shared.normalizeEmail(targetEmail));
     }).map(person => person.notificationDevice?.token || person.officeNotificationDevice?.token).filter(Boolean))];
   }
 
@@ -564,7 +564,7 @@
     });
   }
 
-  async function uploadAttachments(updateRef, files, audience, targetEmail, statusElement = publishStatus) {
+  async function uploadAttachments(updateRef, files, audience, targetEmail, statusElement = publishStatus, targetUid = "") {
     const attachments = [];
     for (let fileIndex = 0; fileIndex < files.length; fileIndex += 1) {
       const file = files[fileIndex];
@@ -580,9 +580,9 @@
         size: file.size,
         chunkCount: pieces.length
       };
-      await attachmentRef.set({ ...metadata, audience, targetEmail, active: true, createdAt: shared.serverTimestamp(), createdBy: currentUser.uid });
+      await attachmentRef.set({ ...metadata, audience, targetEmail, targetUid, active: true, createdAt: shared.serverTimestamp(), createdBy: currentUser.uid });
       for (let start = 0; start < pieces.length; start += 6) {
-        await Promise.all(pieces.slice(start, start + 6).map((data, part) => attachmentRef.collection("chunks").doc(String(start + part).padStart(4, "0")).set({ index: start + part, data, audience, targetEmail, active: true })));
+        await Promise.all(pieces.slice(start, start + 6).map((data, part) => attachmentRef.collection("chunks").doc(String(start + part).padStart(4, "0")).set({ index: start + part, data, audience, targetEmail, targetUid, active: true })));
       }
       attachments.push(metadata);
     }
@@ -841,12 +841,23 @@
     return people.filter(person => person.active !== false && person.role !== "subcontractor" && (person.role === "inspector" || person.operationsCurrent || person.operationsDays?.length));
   }
 
+  function preferredSubcontractors(source = people.filter(person => person.role === "subcontractor")) {
+    const grouped = new Map();
+    source.forEach(person => {
+      const key = String(person.subcontractorKey || person.name || person.id || "subcontractor").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+      const existing = grouped.get(key);
+      const score = value => (value?.subcontractorOnly ? 8 : 0) + (value?.subcontractorCurrent ? 4 : 0) + (value?.active !== false ? 2 : 0) + (!/@mpi\.local$/i.test(String(value?.email || "")) ? 1 : 0);
+      if (!existing || score(person) > score(existing)) grouped.set(key, person);
+    });
+    return [...grouped.values()];
+  }
+
   function officePeople() {
     return people.filter(person => person.active !== false && ["owner", "admin"].includes(String(person.role || "").toLowerCase()));
   }
 
   function subcontractorEntries() {
-    const entries = people.filter(person => person.active !== false && person.role === "subcontractor").map(person => ({ id: `sub:${person.id}`, person, state: person.subcontractorCurrent, test: false }));
+    const entries = preferredSubcontractors(people.filter(person => person.active !== false && person.role === "subcontractor")).map(person => ({ id: `sub:${person.id}`, person, state: person.subcontractorCurrent, test: false }));
     people.filter(person => person.active !== false && person.subcontractorTestCurrent?.test === true).forEach(person => entries.push({ id: `subtest:${person.id}`, person, state: person.subcontractorTestCurrent, test: true }));
     return entries;
   }
@@ -1070,9 +1081,12 @@
 
   function renderTargetOptions() {
     const selected = targetInput.value;
-    const fieldPeople = people.filter(person => person.active !== false && ["inspector", "subcontractor"].includes(String(person.role || "").toLowerCase()));
-    targetInput.innerHTML = '<option value="">Choose field user</option>' + fieldPeople.map(person => `<option value="${escapeHtml(person.email)}">${escapeHtml(person.name || person.email)} — ${escapeHtml(person.role === "subcontractor" ? "Subcontractor" : "Inspector")}</option>`).join("");
-    if (fieldPeople.some(person => person.email === selected)) targetInput.value = selected;
+    const fieldPeople = [
+      ...people.filter(person => person.active !== false && person.role === "inspector"),
+      ...preferredSubcontractors(people.filter(person => person.active !== false && person.role === "subcontractor"))
+    ];
+    targetInput.innerHTML = '<option value="">Choose field user</option>' + fieldPeople.map(person => `<option value="${escapeHtml(person.id)}">${escapeHtml(person.name || person.email || "MPI Field User")} — ${escapeHtml(person.role === "subcontractor" ? "Subcontractor" : "Inspector")}</option>`).join("");
+    if (fieldPeople.some(person => person.id === selected)) targetInput.value = selected;
   }
 
   function renderInspectorSelector() {
@@ -1090,9 +1104,10 @@
   function renderPeople() {
     renderTargetOptions();
     renderInspectorSelector();
-    peopleList.innerHTML = people.length ? people.map(person => `
+    const accountPeople = [...people.filter(person => person.role !== "subcontractor"), ...preferredSubcontractors()];
+    peopleList.innerHTML = accountPeople.length ? accountPeople.map(person => `
       <article class="person-card" data-person-id="${escapeHtml(person.id)}">
-        <div class="person-main inspector-identity">${avatarHtml(person)}<div><span class="person-role-badge ${escapeHtml(String(person.role || "inspector").toLowerCase())}">${escapeHtml(teamRoleLabel(person.role))}</span><strong>${escapeHtml(person.name || "MPI Team Member")}</strong><small>${escapeHtml(person.email)}</small><small>${person.role === "subcontractor" ? "External field partner" : person.inspectorId ? `Inspector number: ${escapeHtml(person.inspectorId)}` : "Inspector number not assigned"}</small></div></div>
+        <div class="person-main inspector-identity">${avatarHtml(person)}<div><span class="person-role-badge ${escapeHtml(String(person.role || "inspector").toLowerCase())}">${escapeHtml(teamRoleLabel(person.role))}</span><strong>${escapeHtml(person.name || "MPI Team Member")}</strong><small>${escapeHtml(person.email || "Secure company phone access")}</small><small>${person.role === "subcontractor" ? "External field partner" : person.inspectorId ? `Inspector number: ${escapeHtml(person.inspectorId)}` : "Inspector number not assigned"}</small></div></div>
         <div class="person-controls">
           <input data-person-inspector-id aria-label="Inspector number for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.inspectorId || "")}" maxlength="40" placeholder="Inspector number" ${person.role === "owner" ? "disabled" : ""}>
           <input data-person-phone aria-label="Phone number for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.phone || "")}" maxlength="30" placeholder="Phone number" ${person.role === "owner" ? "disabled" : ""}>
@@ -1105,7 +1120,7 @@
           </select>
           <label class="check" style="padding:8px"><input data-person-active type="checkbox" ${person.active !== false ? "checked" : ""} ${person.role === "owner" ? "disabled" : ""}><span>Active</span></label>
         </div>
-        ${person.role === "subcontractor" ? `<div class="subcontractor-access-actions"><button class="secondary" type="button" data-copy-subcontractor-link="${escapeHtml(person.id)}">COPY PRODUCTION ACCESS LINK</button><button class="danger" type="button" data-revoke-subcontractor="${escapeHtml(person.id)}">REVOKE SUBCONTRACTOR ACCESS</button><span class="status" data-subcontractor-access-status></span></div>` : ""}
+        ${person.role === "subcontractor" ? `<div class="subcontractor-access-actions"><button class="secondary" type="button" data-copy-subcontractor-link="${escapeHtml(person.id)}">COPY PRIVATE PHONE LINK</button><button class="danger" type="button" data-revoke-subcontractor="${escapeHtml(person.id)}">REVOKE SUBCONTRACTOR ACCESS</button><span class="status" data-subcontractor-access-status></span></div>` : ""}
       </article>`).join("") : '<div class="empty">No company accounts have signed in yet.</div>';
     renderOperations();
     renderSubcontractors();
@@ -1233,7 +1248,7 @@
       <div class="subcontractor-admin-events">${events.length ? events.map(item => `<div><strong>${escapeHtml(item.type || "Status updated")}</strong><span>${escapeHtml(formatTime(item.timestamp))}${item.lab ? ` · ${escapeHtml(item.lab)}` : ""}</span></div>`).join("") : '<div><strong>No actions yet</strong><span>Waiting for phone</span></div>'}</div>
       <h3 style="margin-top:16px">Conversation</h3><div class="message-history" id="adminMessageHistory">${messageHistoryHtml(person)}${messages.length ? messages.map(item => `<article><strong>${escapeHtml(formatDateTime(item.createdAt))} · ${escapeHtml(item.senderName || title)} → Office</strong><p>${escapeHtml(item.message || "")}</p></article>`).join("") : ""}</div>
       <form class="subcontractor-admin-message" data-subcontractor-message-form data-person-id="${escapeHtml(person.id)}"><label class="field">Message ${escapeHtml(title)}<textarea data-message-text maxlength="1000" required placeholder="Write a message for ${escapeHtml(title)}"></textarea></label>${chatAttachmentHtml()}<button class="primary" type="submit">MESSAGE ${escapeHtml(String(title).split(/\s+/)[0].toUpperCase())}</button><span class="status" data-message-status></span></form>
-      ${!isTest ? `<div class="subcontractor-access-actions"><button class="secondary" type="button" data-copy-subcontractor-link="${escapeHtml(person.id)}">COPY PRODUCTION ACCESS LINK</button><button class="danger" type="button" data-revoke-subcontractor="${escapeHtml(person.id)}">REVOKE SUBCONTRACTOR ACCESS</button><span class="status" data-subcontractor-access-status></span></div>` : ""}
+      ${!isTest ? `<div class="subcontractor-access-actions"><button class="secondary" type="button" data-copy-subcontractor-link="${escapeHtml(person.id)}">COPY PRIVATE PHONE LINK</button><button class="danger" type="button" data-revoke-subcontractor="${escapeHtml(person.id)}">REVOKE SUBCONTRACTOR ACCESS</button><span class="status" data-subcontractor-access-status></span></div>` : ""}
       ${isTest ? '<button class="danger" type="button" data-reset-admin-test-subcontractor>RESET TEST DAY</button>' : ""}
     </article>`;
   }
@@ -1654,7 +1669,7 @@
   }
 
   function messagesFor(person) {
-    return updates.filter(update => update.type === "message" && shared.normalizeEmail(update.targetEmail) === shared.normalizeEmail(person.email));
+    return updates.filter(update => update.type === "message" && (String(update.targetUid || "") === String(person.id || "") || (person.email && shared.normalizeEmail(update.targetEmail) === shared.normalizeEmail(person.email))));
   }
 
   function messageHistoryHtml(person) {
@@ -2060,14 +2075,15 @@
     event.preventDefault();
     if (!currentUser || !shared.isAdminRole(currentProfile)) return;
     const audience = audienceInput.value;
-    const targetEmail = audience === "inspector" ? shared.normalizeEmail(targetInput.value) : "";
-    if (audience === "inspector" && !targetEmail) {
+    const targetPerson = audience === "inspector" ? people.find(person => person.id === targetInput.value) : null;
+    const targetUid = targetPerson?.id || "";
+    const targetEmail = targetPerson ? shared.normalizeEmail(targetPerson.email) : "";
+    if (audience === "inspector" && !targetPerson) {
       publishStatus.textContent = "Choose the inspector who should receive this item.";
       publishStatus.className = "status error";
       targetInput.focus();
       return;
     }
-    const targetPerson = people.find(person => shared.normalizeEmail(person.email) === targetEmail);
     const filesToUpload = [...selectedFiles];
     const notificationTitle = titleInput.value.trim();
     const notificationBody = messageInput.value.trim();
@@ -2081,6 +2097,7 @@
         type: typeInput.value,
         priority: priorityInput.value,
         audience: audience === "all" ? "all" : "inspector",
+        targetUid,
         targetEmail,
         targetName: targetPerson?.name || "",
         title: notificationTitle,
@@ -2099,7 +2116,7 @@
         createdByName: currentProfile.name || currentUser.displayName || "MPI Management"
       });
       if (filesToUpload.length) {
-        const attachments = await uploadAttachments(updateRef, filesToUpload, audience === "all" ? "all" : "inspector", targetEmail);
+        const attachments = await uploadAttachments(updateRef, filesToUpload, audience === "all" ? "all" : "inspector", targetEmail, publishStatus, targetUid);
         await updateRef.update({ attachments, attachmentUploadStatus: "complete", active: true, publishedAt: shared.serverTimestamp() });
       }
       form.reset();
@@ -2113,7 +2130,7 @@
       const pushRequested = await shared.sendPushNotification({
         kind: "office-update",
         audience: audience === "all" ? "all" : "inspector",
-        targetTokens: notificationTokensForUpdate(audience === "all" ? "all" : "inspector", targetEmail),
+        targetTokens: notificationTokensForUpdate(audience === "all" ? "all" : "inspector", targetEmail, targetUid),
         title: notificationTitle || "New message from MPI Office",
         body: notificationBody || "Open MPI Field Tools to review the new information.",
         link: "./#team-messages",
@@ -2151,7 +2168,7 @@
       messageRef = shared.db.collection("officeUpdates").doc();
       await messageRef.set({
         type: "message", priority: isSafetyReply ? "critical" : "important", audience: "inspector",
-        targetEmail: shared.normalizeEmail(person.email), targetName: person.name || "",
+        targetUid: person.id || "", targetEmail: shared.normalizeEmail(person.email), targetName: person.name || "",
         title: isSafetyReply ? "Safety follow-up from MPI Office" : "Message from MPI Office", message: text, link: "", dueDate: "", requiresAcknowledgement: isSafetyReply, active: files.length === 0, attachments: [],
         replyToSafetyAlertId: safetyAlertId,
         replyNotificationToken: officeReplyToken(),
@@ -2159,13 +2176,13 @@
         createdByEmail: shared.normalizeEmail(currentUser.email), createdByName: currentProfile.name || currentUser.displayName || "MPI Management"
       });
       if (files.length) {
-        const attachments = await uploadAttachments(messageRef, files, "inspector", shared.normalizeEmail(person.email), status);
+        const attachments = await uploadAttachments(messageRef, files, "inspector", shared.normalizeEmail(person.email), status, person.id || "");
         await messageRef.update({ attachments, active: true, attachmentUploadStatus: "complete", publishedAt: shared.serverTimestamp() });
       }
       const pushRequested = await shared.sendPushNotification({
         kind: "office-message",
         audience: "inspector",
-        targetTokens: notificationTokensForUpdate("inspector", person.email),
+        targetTokens: notificationTokensForUpdate("inspector", person.email, person.id),
         title: isSafetyReply ? "SAFETY FOLLOW-UP FROM MPI OFFICE" : "Message from MPI Office",
         body: text,
         link: ["owner", "admin"].includes(String(person.role || "").toLowerCase()) ? "./admin.html" : person.role === "subcontractor" ? "./?subcontractor=jason#subcontractor-home" : "./#team-messages",
@@ -2206,21 +2223,69 @@
     }
   }
 
-  function subcontractorProductionLink(person) {
-    const firstName = String(person?.name || "subcontractor").trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z0-9-]/g, "") || "subcontractor";
-    return `${window.location.origin}${window.location.pathname.replace(/admin\.html.*$/i, "")}?subcontractor=${encodeURIComponent(firstName)}#subcontractor-home`;
+  function subcontractorKey(person) {
+    return String(person?.subcontractorKey || person?.name || "subcontractor").trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z0-9-]/g, "") || "subcontractor";
+  }
+
+  function newSubcontractorAccessId() {
+    const bytes = new Uint8Array(32);
+    window.crypto.getRandomValues(bytes);
+    return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  }
+
+  function subcontractorProductionLink(person, accessId) {
+    const base = window.location.pathname.replace(/admin\.html.*$/i, "");
+    return `${window.location.origin}${base}?subcontractor=${encodeURIComponent(subcontractorKey(person))}&access=${encodeURIComponent(accessId)}#subcontractor-home`;
+  }
+
+  async function activeSubcontractorAccess(person) {
+    const existingId = String(person?.subcontractorAccessId || "").trim();
+    if (existingId) {
+      const snapshot = await shared.db.collection("subcontractorAccess").doc(existingId).get();
+      if (snapshot.exists && snapshot.data()?.active === true) {
+        if (snapshot.data()?.deviceUid) throw new Error("This subcontractor phone is already activated. Revoke access first only when replacing the phone.");
+        return { id: existingId, ...snapshot.data() };
+      }
+    }
+    const accessId = newSubcontractorAccessId();
+    const access = {
+      targetKey: subcontractorKey(person),
+      targetName: String(person?.name || "MPI Subcontractor").slice(0, 80),
+      phone: String(person?.phone || "").slice(0, 30),
+      sourceProfileId: String(person?.sourceProfileId || person?.id || "").slice(0, 120),
+      active: true,
+      deviceUid: "",
+      createdAt: shared.serverTimestamp(),
+      createdBy: currentUser.uid,
+      createdByEmail: shared.normalizeEmail(currentUser.email)
+    };
+    await shared.db.collection("subcontractorAccess").doc(accessId).set(access);
+    await shared.db.collection("users").doc(person.id).set({
+      active: true,
+      subcontractorKey: access.targetKey,
+      subcontractorAccessId: accessId,
+      subcontractorAccessIssuedAt: shared.serverTimestamp(),
+      subcontractorAccessIssuedBy: currentUser.uid
+    }, { merge: true });
+    return { id: accessId, ...access };
   }
 
   async function copySubcontractorLink(button) {
     const person = people.find(item => item.id === button.dataset.copySubcontractorLink);
     const status = button.closest("[data-person-id], [data-subcontractor-person]")?.querySelector("[data-subcontractor-access-status]");
     if (!person) return;
-    const link = subcontractorProductionLink(person);
+    button.disabled = true;
+    let link = "";
     try {
+      if (!shared.isAdminRole(currentProfile)) throw new Error("Office access is required.");
+      const access = await activeSubcontractorAccess(person);
+      link = subcontractorProductionLink(person, access.id);
       await navigator.clipboard.writeText(link);
-      if (status) status.textContent = `Production link copied for ${person.name || "subcontractor"}. The person's own MPI account still verifies identity.`;
-    } catch (_) {
-      if (status) status.textContent = `Copy this link: ${link}`;
+      if (status) status.textContent = `Private phone-activation link copied for ${person.name || "subcontractor"}. No Google account is required.`;
+    } catch (error) {
+      if (status) status.textContent = link ? `Copy this private activation link: ${link}` : error?.message || "The private activation link could not be created.";
+    } finally {
+      button.disabled = false;
     }
   }
 
@@ -2231,13 +2296,18 @@
     button.disabled = true;
     if (status) status.textContent = `Revoking ${person.name || "subcontractor"}…`;
     try {
-      await shared.db.collection("users").doc(person.id).set({
-        active: false,
-        notificationDevice: null,
-        subcontractorAccessRevokedAt: shared.serverTimestamp(),
-        subcontractorAccessRevokedBy: currentUser.uid,
-        subcontractorAccessRevision: Number(person.subcontractorAccessRevision || 0) + 1
-      }, { merge: true });
+      const accessId = String(person.subcontractorAccessId || "").trim();
+      const related = people.filter(item => item.role === "subcontractor" && (item.id === person.id || (accessId && item.subcontractorAccessId === accessId) || (person.sourceProfileId && item.id === person.sourceProfileId) || (item.sourceProfileId && item.sourceProfileId === person.id)));
+      const batch = shared.db.batch();
+      related.forEach(item => batch.set(shared.db.collection("users").doc(item.id), {
+          active: false,
+          notificationDevice: null,
+          subcontractorAccessRevokedAt: shared.serverTimestamp(),
+          subcontractorAccessRevokedBy: currentUser.uid,
+          subcontractorAccessRevision: Number(item.subcontractorAccessRevision || 0) + 1
+        }, { merge: true }));
+      if (accessId) batch.set(shared.db.collection("subcontractorAccess").doc(accessId), { active: false, revokedAt: shared.serverTimestamp(), revokedBy: currentUser.uid }, { merge: true });
+      await batch.commit();
       if (status) status.textContent = "Access revoked. This does not affect any other team member.";
     } catch (error) {
       button.disabled = false;

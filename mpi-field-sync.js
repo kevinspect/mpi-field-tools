@@ -250,6 +250,9 @@
       userId: user.uid,
       role: profile.role || "inspector",
       active: profile.active !== false,
+      subcontractorOnly: profile.subcontractorOnly === true,
+      subcontractorKey: String(profile.subcontractorKey || "").trim(),
+      subcontractorAccessId: String(profile.subcontractorAccessId || "").trim(),
       inspectorId: String(profile.inspectorId || "").trim(),
       inspectorName: String(profile.name || user.displayName || "").trim(),
       inspectorEmail: String(user.email || profile.email || "").trim(),
@@ -510,7 +513,7 @@
     }
     accountName.textContent = profile.name || user.displayName || "MPI Team Member";
     accountRole.textContent = shared.isAdminRole(profile) ? "Owner / office administrator" : roleLabel(profile);
-    accountStatus.textContent = user.email || "Signed in";
+    accountStatus.textContent = profile.subcontractorOnly ? "Secure company phone" : user.email || "Signed in";
     renderProfile(user, profile);
     signInButtons.forEach(button => { button.hidden = true; });
     signOutButtons.forEach(button => { button.hidden = false; });

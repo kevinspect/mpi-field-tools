@@ -1,5 +1,20 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 160 — Account-Free Subcontractor Phone Activation
+
+- Replaced Jason's Google-account requirement with a private, one-device activation link created by MPI Office.
+- Added persistent anonymous device authorization, automatic Jason identity, and removal of the private activation value from the browser address after setup.
+- Added backend access rules that restrict each activation to one phone and preserve immediate, individual revocation.
+- Kept Jason inside the normal Field Team roster while excluding the subcontractor-only device from employee and admin screens.
+- Extended direct messages, attachments, receipts, and live status to the activated subcontractor phone, and prepared matching subcontractor verification in the tracked push-service source.
+- Updated the Office Console to create and copy a private activation link, prevent accidental second-device activation, and revoke the linked phone without affecting anyone else.
+- Added UID-targeted office updates so an account-free subcontractor can receive private messages without an email address.
+
+### Validation record
+
+- Enabled Firebase Anonymous Sign-In, compiled and deployed the updated Firestore rules, and verified a temporary account-free device could bind its private link, create its Jason profile, publish live team presence, and send a message to Office. The temporary test account and records were removed afterward.
+- Rechecked JavaScript syntax, inline script parsing, Build 160 references, private-link routing, Team deduplication, UID-targeted updates, and revocation controls before production release.
+
 ## Build 159 — Subcontractor Production Access and Team Messaging
 
 - Added a dedicated production entry link for each subcontractor. Jason's link opens only the Subcontractor Field Tool, verifies his individual MPI Google account, and keeps that authorized phone signed in through the existing secure Firebase session.
