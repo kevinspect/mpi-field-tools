@@ -1,5 +1,10 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 165 — Cory Hours for Office Admin
+
+- Made Cory's prominent weekly-hours and overtime panel visible to Brooke and every authorized Office Admin.
+- Kept the counter on the existing effective payroll calculation so Admin time corrections immediately update the displayed totals.
+
 ## Build 164 — Stable Private Message Drafts
 
 - Prevented live Operations, hours and presence refreshes from replacing an open Team message composer while an admin is typing.

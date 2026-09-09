@@ -1671,7 +1671,7 @@
     const coryMinutes = cory ? weeklyMinutes(cory) : 0;
     const coryOvertime = Math.max(0, coryMinutes - 40 * 60);
     const coryStatus = coryMinutes >= 40 * 60 ? "red" : coryMinutes >= 35 * 60 ? "amber" : "green";
-    const canSeeCoryHours = currentProfile?.role === "owner" || /^adrienne\b/i.test(String(currentProfile?.name || currentUser?.displayName || ""));
+    const canSeeCoryHours = ["owner", "admin"].includes(String(currentProfile?.role || "").toLowerCase());
     const coryCounter = canSeeCoryHours && cory
       ? `<section class="cory-hours-card ${coryStatus}" aria-label="Cory weekly hours"><div><span>CORY · WEEKLY HOURS WORKED</span><strong>${formatMinutes(coryMinutes)}</strong><small>Uses the same effective payroll time and Admin corrections as the workweek report.</small></div><div class="cory-overtime"><span>OVERTIME HOURS WORKED</span><strong>${formatMinutes(coryOvertime)}</strong><small>${coryOvertime ? "40-hour threshold exceeded" : "No overtime recorded"}</small></div></section>`
       : "";
