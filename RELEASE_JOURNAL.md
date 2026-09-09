@@ -1,5 +1,12 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 164 — Stable Private Message Drafts
+
+- Prevented live Operations, hours and presence refreshes from replacing an open Team message composer while an admin is typing.
+- Preserved selected PDF/image attachments during background dashboard refreshes.
+- Added per-conversation draft retention on the inspector Team page so unfinished private messages survive Team updates and reopening the profile.
+- Kept successful-send behavior unchanged: the composer clears only after the private message has been stored successfully.
+
 ## Build 163 — September 9 Field Testing Update
 
 - Repaired the Comment Builder request path identified by reference `c15e48cb-cde3-4eb9-99ad-595e8d3eaf65`: transient timeout/high-demand failures now retry once on the stable fallback model with the same request ID, while preserving the original note and disabling Copy until valid output exists.

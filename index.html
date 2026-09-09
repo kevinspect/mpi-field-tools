@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="163">
+  <meta name="app-build" content="164">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5161,7 +5161,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">163</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">164</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -7721,7 +7721,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 163</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 164</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -7860,10 +7860,10 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=163"></script>
-  <script src="./mpi-field-sync.js?build=163"></script>
-  <script src="./mpi-subcontractor.js?build=163"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=163"></script>
+  <script src="./mpi-shared.js?build=164"></script>
+  <script src="./mpi-field-sync.js?build=164"></script>
+  <script src="./mpi-subcontractor.js?build=164"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=164"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -14195,6 +14195,7 @@
       const APP_DIAGNOSTIC_PENDING_STORAGE_KEY = "mpiPendingDiagnosticReportsV1";
       const WORKFLOW_DOCUMENT_DB_NAME = "mpiWorkflowDocumentsV1";
       const WORKFLOW_DOCUMENT_STORE_NAME = "labCocPhotos";
+      const TEAM_MESSAGE_DRAFT_STORAGE_KEY = "mpiTeamMessageDraftsV1";
       const WORKFLOW_COC_MAX_PER_LAB = 8;
       const WORKFLOW_COC_MAX_PER_DAY = 12;
       const WORKFLOW_COC_MAX_BYTES = 600000;
@@ -18628,6 +18629,34 @@
         return teamDirectMessages.filter(item => item.conversationId === conversationId).sort((left, right) => new Date(left.createdAtClient || left.createdAt?.toDate?.() || 0) - new Date(right.createdAtClient || right.createdAt?.toDate?.() || 0));
       }
 
+      function loadTeamMessageDrafts() {
+        try {
+          const drafts = JSON.parse(localStorage.getItem(TEAM_MESSAGE_DRAFT_STORAGE_KEY) || "{}");
+          return drafts && typeof drafts === "object" ? drafts : {};
+        } catch (_) {
+          return {};
+        }
+      }
+
+      function teamMessageDraftKey(userId = selectedTeamMemberId) {
+        const currentUid = window.MPI_COMPANY_SESSION?.userId || "";
+        return window.MPI_SHARED?.directConversationId?.(currentUid, userId) || String(userId || "");
+      }
+
+      function saveTeamMessageDraft(value, userId = selectedTeamMemberId) {
+        const key = teamMessageDraftKey(userId);
+        if (!key) return;
+        const drafts = loadTeamMessageDrafts();
+        const text = String(value || "").slice(0, 1200);
+        if (text) drafts[key] = text;
+        else delete drafts[key];
+        try { localStorage.setItem(TEAM_MESSAGE_DRAFT_STORAGE_KEY, JSON.stringify(drafts)); } catch (_) {}
+      }
+
+      function teamMessageDraft(userId = selectedTeamMemberId) {
+        return String(loadTeamMessageDrafts()[teamMessageDraftKey(userId)] || "");
+      }
+
       function teamRoleLabel(member) {
         const role = String(member?.role || "inspector").toLowerCase();
         const email = String(member?.email || "").trim().toLowerCase();
@@ -18688,10 +18717,12 @@
       function openTeamProfile(userId) {
         const member = teamMemberRecord(userId);
         if (!member || userId === window.MPI_COMPANY_SESSION?.userId) return;
+        const changedPerson = selectedTeamMemberId !== userId;
         selectedTeamMemberId = userId;
         teamDirectoryView.hidden = true;
         teamPrivateProfile.hidden = false;
         teamPrivateSendStatus.textContent = "";
+        if (changedPerson || !teamPrivateText.value) teamPrivateText.value = teamMessageDraft(userId);
         renderTeamPrivateThread();
         window.MPI_SHARED?.markDirectConversationRead?.(window.MPI_SHARED.auth.currentUser, userId).catch(() => false);
       }
@@ -18716,6 +18747,7 @@
         try {
           await window.MPI_SHARED.sendDirectMessage(user, { name: session.inspectorName, role: session.role }, member, teamPrivateText.value, [...teamPrivateFiles.files]);
           teamPrivateForm.reset();
+          saveTeamMessageDraft("", selectedTeamMemberId);
           teamPrivateSendStatus.className = "damage-submit-status success";
           teamPrivateSendStatus.textContent = `Private message sent only to ${teamDisplayName(member.name)}.`;
         } catch (error) {
@@ -22525,6 +22557,7 @@
       });
       teamProfileBack?.addEventListener("click", closeTeamProfile);
       teamPrivateForm?.addEventListener("submit", sendTeamPrivateMessage);
+      teamPrivateText?.addEventListener("input", () => saveTeamMessageDraft(teamPrivateText.value));
       teamPrivateThread?.addEventListener("click", event => {
         const button = event.target.closest("[data-team-file]");
         if (button) openTeamAttachment(button);

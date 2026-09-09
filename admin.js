@@ -1163,6 +1163,22 @@
     );
   }
 
+  function messageComposerIsActive(personId = "") {
+    const messageForm = inspectorDetail.querySelector("#adminMessageForm, [data-office-message-form], [data-subcontractor-message-form]");
+    if (!messageForm || (personId && String(messageForm.dataset.personId || "") !== String(personId))) return false;
+    const textarea = messageForm.querySelector("[data-message-text], #adminMessageText");
+    return Boolean(
+      messageForm.contains(document.activeElement)
+      || textarea?.value.trim()
+      || (Array.isArray(messageForm._mpiFiles) && messageForm._mpiFiles.length)
+    );
+  }
+
+  function refreshOpenConversation(person) {
+    const history = document.getElementById("adminMessageHistory");
+    if (history && person) history.innerHTML = messageHistoryHtml(person);
+  }
+
   function renderTargetOptions() {
     const selected = targetInput.value;
     const fieldPeople = [
@@ -2057,6 +2073,7 @@
     else {
       const entry = overviewEntry(selectedInspectorId);
       if (!entry) renderTeamOverview();
+      else if (messageComposerIsActive(entry.person?.id)) refreshOpenConversation(entry.person);
       else if (entry.kind === "subcontractor") renderSubcontractorDetail(entry);
       else if (entry.kind === "office") renderOfficeDetail(entry);
       else if (!preserveCorrectionDraft) renderInspectorDetail(entry.person);
