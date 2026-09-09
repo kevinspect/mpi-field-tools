@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="161">
+  <meta name="app-build" content="162">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5140,7 +5140,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">161</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">162</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -7668,7 +7668,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 161</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 162</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -7807,10 +7807,10 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=161"></script>
-  <script src="./mpi-field-sync.js?build=161"></script>
-  <script src="./mpi-subcontractor.js?build=161"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=161"></script>
+  <script src="./mpi-shared.js?build=162"></script>
+  <script src="./mpi-field-sync.js?build=162"></script>
+  <script src="./mpi-subcontractor.js?build=162"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=162"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -14268,7 +14268,6 @@
         if (String(event?.detail?.role || "").toLowerCase() === "subcontractor") return;
         window.setTimeout(() => {
           renderWorkflowTimeClock();
-          queueWorkflowOperationsSync();
         }, 0);
         const inspectorId = String(event?.detail?.inspectorId || "").trim().slice(0, 40);
         const inspectorName = String(event?.detail?.inspectorName || "").trim().slice(0, 80);
@@ -14278,7 +14277,6 @@
           const created = { name: inspectorName, id: inspectorId, phone: String(event?.detail?.phone || "").trim().slice(0, 30), vehicle: String(event?.detail?.assignedVehicle || "").trim().slice(0, 80), approvedEndAddress: String(event?.detail?.approvedEndAddress || "").trim().slice(0, 180), savedAt: new Date().toISOString() };
           try { localStorage.setItem(WORKFLOW_PROFILE_STORAGE_KEY, JSON.stringify(created)); } catch (_) {}
           saveInspectorName(inspectorName);
-          appendWorkflowEvent("Company-phone profile synchronized", { inspectorId });
           renderWorkflowApp();
           showToast(`${inspectorName} is ready on this company phone`);
           return;
@@ -14290,7 +14288,6 @@
         const updated = { ...profile, name: inspectorName, id: inspectorId, phone, vehicle, approvedEndAddress, savedAt: new Date().toISOString() };
         try { localStorage.setItem(WORKFLOW_PROFILE_STORAGE_KEY, JSON.stringify(updated)); } catch (_) {}
         saveInspectorName(inspectorName);
-        appendWorkflowEvent("Company-phone profile synchronized", { inspectorId });
         renderWorkflowApp();
         showToast("Company inspector profile updated");
       }
@@ -14830,6 +14827,8 @@
         const labStop = loadWorkflowLabStop();
         const dayComplete = workflowDayCompleteRecord();
         const preservedSnapshot = dayComplete?.operationsSnapshotBackup;
+        const hasFieldActivity = activity.some(item => item.action !== "Company-phone profile synchronized");
+        if (!hasFieldActivity && !jobs.length && !active && !readiness && !labStop && !dayComplete) return null;
         if (!activity.length && preservedSnapshot) {
           const { operationsSnapshotBackup, ...dayCompleteCompact } = dayComplete;
           return {

@@ -676,29 +676,132 @@
     return JSON.parse(JSON.stringify(value, (_, item) => item === undefined ? null : item));
   }
 
+  function operationsValuePresent(value) {
+    if (value === null || value === undefined || value === "") return false;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === "object") return Object.keys(value).length > 0;
+    return true;
+  }
+
+  function mergeOperationsObject(previous = {}, incoming = {}) {
+    const merged = { ...(previous || {}) };
+    Object.entries(incoming || {}).forEach(([key, value]) => {
+      if (operationsValuePresent(value)) merged[key] = value;
+    });
+    return merged;
+  }
+
+  function operationsJobKey(job = {}) {
+    return String(job.id || `${job.property || "job"}|${job.scheduledStart || ""}`);
+  }
+
+  function mergeOperationsJobs(previous = [], incoming = []) {
+    const jobs = new Map();
+    [...(Array.isArray(previous) ? previous : []), ...(Array.isArray(incoming) ? incoming : [])].forEach(job => {
+      if (!job || typeof job !== "object") return;
+      const key = operationsJobKey(job);
+      const existing = jobs.get(key);
+      if (!existing) {
+        jobs.set(key, { ...job });
+        return;
+      }
+      const merged = mergeOperationsObject(existing, job);
+      const rank = status => ({ scheduled: 1, "on my way": 2, arrived: 3, started: 4, "in progress": 4, completed: 5 }[String(status || "").toLowerCase()] || 0);
+      if (rank(existing.status) > rank(job.status)) merged.status = existing.status;
+      ["onMyWayAt", "arrivedAt", "inspectionStartedAt", "completedAt"].forEach(field => {
+        merged[field] = String(job[field] || existing[field] || "");
+      });
+      jobs.set(key, merged);
+    });
+    return [...jobs.values()].sort((left, right) => String(left.scheduledStart || "").localeCompare(String(right.scheduledStart || "")));
+  }
+
+  function operationsEventKey(event = {}) {
+    return String(event.id || `${event.timestamp || ""}|${event.action || ""}|${event.calendarEventId || event.jobId || ""}`);
+  }
+
+  function mergeOperationsActivity(previous = [], incoming = []) {
+    const events = new Map();
+    [...(Array.isArray(previous) ? previous : []), ...(Array.isArray(incoming) ? incoming : [])].forEach(event => {
+      if (!event || typeof event !== "object") return;
+      const key = operationsEventKey(event);
+      events.set(key, mergeOperationsObject(events.get(key), event));
+    });
+    return [...events.values()].sort((left, right) => String(left.timestamp || "").localeCompare(String(right.timestamp || ""))).slice(-500);
+  }
+
+  function operationsDayStrength(day = {}) {
+    const jobs = Array.isArray(day.jobs) ? day.jobs : [];
+    const activity = (Array.isArray(day.activity) ? day.activity : []).filter(item => item?.action !== "Company-phone profile synchronized");
+    const completedJobs = jobs.filter(job => String(job?.status || "").toLowerCase() === "completed").length;
+    const sessions = Array.isArray(day.timeClock?.sessions) ? day.timeClock.sessions.length : 0;
+    return jobs.length * 30 + completedJobs * 30 + activity.length * 4 + sessions * 20
+      + (day.readiness ? 10 : 0) + (day.labStop ? 10 : 0) + (day.dayComplete ? 20 : 0);
+  }
+
+  function timeClockStrength(clock = {}) {
+    const sessions = Array.isArray(clock?.sessions) ? clock.sessions.length : 0;
+    return sessions * 10000 + Number(clock?.workedMinutes || 0) + (clock?.effectiveClockedOutAt ? 1000 : 0);
+  }
+
+  function mergeOperationsDay(previous = {}, incoming = {}) {
+    if (!previous?.date) return { ...(incoming || {}) };
+    if (!incoming?.date) return { ...(previous || {}) };
+    const previousStrength = operationsDayStrength(previous);
+    const incomingStrength = operationsDayStrength(incoming);
+    const dominant = incomingStrength >= previousStrength ? incoming : previous;
+    const secondary = dominant === incoming ? previous : incoming;
+    const merged = mergeOperationsObject(secondary, dominant);
+    merged.jobs = mergeOperationsJobs(previous.jobs, incoming.jobs);
+    merged.activity = mergeOperationsActivity(previous.activity, incoming.activity);
+    merged.readiness = incoming.readiness || previous.readiness || null;
+    merged.labStop = incoming.labStop || previous.labStop || null;
+    merged.dayComplete = incoming.dayComplete || previous.dayComplete || null;
+    merged.currentJob = incoming.currentJob || previous.currentJob || null;
+    merged.nextJob = incoming.nextJob || previous.nextJob || null;
+    merged.timeClock = timeClockStrength(incoming.timeClock) >= timeClockStrength(previous.timeClock)
+      ? (incoming.timeClock || previous.timeClock || null)
+      : (previous.timeClock || incoming.timeClock || null);
+    merged.driveTime = Number(incoming.driveTime?.totalMinutes || 0) >= Number(previous.driveTime?.totalMinutes || 0)
+      ? (incoming.driveTime || previous.driveTime || null)
+      : (previous.driveTime || incoming.driveTime || null);
+    const incomingHasFieldActivity = (Array.isArray(incoming.jobs) && incoming.jobs.length > 0)
+      || (Array.isArray(incoming.activity) && incoming.activity.some(item => item?.action !== "Company-phone profile synchronized"))
+      || Boolean(incoming.readiness || incoming.labStop || incoming.dayComplete || incoming.currentJob || incoming.nextJob);
+    merged.liveStatus = incomingHasFieldActivity ? (incoming.liveStatus || previous.liveStatus || "NOT STARTED") : (previous.liveStatus || incoming.liveStatus || "NOT STARTED");
+    merged.updatedAtClient = [previous.updatedAtClient, incoming.updatedAtClient].filter(Boolean).sort().at(-1) || "";
+    return merged;
+  }
+
   async function syncOperationsSnapshot(snapshot) {
     const user = auth.currentUser;
     if (!user || !snapshot?.date) return false;
     const ref = db.collection("users").doc(user.uid);
     const clean = cleanOperationsValue(snapshot);
     let profile = {};
+    let savedSnapshot = clean;
     await db.runTransaction(async transaction => {
       const current = await transaction.get(ref);
       profile = current.data() || {};
       const existingDays = Array.isArray(profile.operationsDays) ? profile.operationsDays : [];
+      const sameDateDays = existingDays.filter(day => day?.date === clean.date);
+      if (profile.operationsCurrent?.date === clean.date) sameDateDays.push(profile.operationsCurrent);
+      const merged = sameDateDays.reduce((result, day) => mergeOperationsDay(result, day), {});
+      const saved = mergeOperationsDay(merged, clean);
       const days = existingDays
         .filter(day => day?.date && day.date !== clean.date)
-        .concat(clean)
+        .concat(saved)
         .sort((left, right) => String(left.date).localeCompare(String(right.date)))
         .slice(-14);
       transaction.set(ref, {
-        operationsCurrent: clean,
+        operationsCurrent: saved,
         operationsDays: days,
         operationsUpdatedAt: serverTimestamp()
       }, { merge: true });
+      savedSnapshot = saved;
     });
     const role = String(profile.role || "inspector").toLowerCase();
-    const status = TEAM_STATUS_VALUES.has(String(clean.liveStatus || "")) ? String(clean.liveStatus) : "NOT STARTED";
+    const status = TEAM_STATUS_VALUES.has(String(savedSnapshot.liveStatus || "")) ? String(savedSnapshot.liveStatus) : "NOT STARTED";
     const teamVisible = profile.active !== false && ["owner", "inspector", "subcontractor"].includes(role);
     await db.collection("teamPresence").doc(user.uid).set({
       userId: user.uid,
@@ -707,7 +810,7 @@
       photoURL: String(user.photoURL || profile.photoURL || "").slice(0, 1000),
       profilePhoto: String(profile.profilePhoto || "").slice(0, 220000),
       status,
-      date: String(clean.date || ""),
+      date: String(savedSnapshot.date || ""),
       active: teamVisible,
       updatedAtClient: new Date().toISOString(),
       updatedAt: serverTimestamp()

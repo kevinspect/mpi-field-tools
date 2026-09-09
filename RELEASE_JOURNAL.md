@@ -1,5 +1,12 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 162 — Protect Field History From Empty Secondary Devices
+
+- Prevented an office computer or other secondary device with no local workflow history from replacing an inspector phone's completed jobs, activity timeline, lab visit, Chain of Custody record, or day closeout.
+- Changed daily synchronization to merge job and activity records by stable identifiers, preserve completed status and recorded timestamps, retain the strongest time-clock and drive-time data, and collapse duplicate day snapshots.
+- Removed the non-operational “Company-phone profile synchronized” event from field history and stopped profile-only devices from producing an empty daily operations snapshot.
+- Kept richer inspector-phone data authoritative while still allowing later phone events and newly scheduled jobs to synchronize normally.
+
 ## Build 161 — Hide Legacy Subcontractor Test Activity
 
 - Removed the duplicate Jason row from the live Operations dashboard by suppressing a legacy test-mode subcontractor record whenever the matching real subcontractor profile exists.
