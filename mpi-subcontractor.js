@@ -51,8 +51,12 @@
   let unsubscribeUpdates = null;
   let unsubscribeState = null;
   let unsubscribeMessages = null;
+  let unsubscribeDirectMessages = null;
+  let unsubscribeDirectory = null;
   let currentOfficeUpdates = [];
   let currentFieldMessages = [];
+  let currentDirectMessages = [];
+  let teamDirectory = [];
   let activationRunning = false;
 
   function localDateKey() {
@@ -196,7 +200,13 @@
       message: message.message || (message.attachments?.length ? `${message.attachments.length} photo(s) sent` : "Message sent"),
       author: message.senderName || session?.inspectorName || "Jason"
     }));
-    const values = [...office, ...field].sort((left, right) => timestampValue(left.timestamp) - timestampValue(right.timestamp)).slice(-30);
+    const direct = currentDirectMessages.map(message => ({
+      direction: message.senderUid === session?.userId ? "field" : "office",
+      timestamp: message.createdAt || message.createdAtClient,
+      message: message.message || (message.attachments?.length ? `${message.attachments.length} attachment(s)` : "Message sent"),
+      author: message.senderName || "MPI Team Member"
+    }));
+    const values = [...office, ...field, ...direct].sort((left, right) => timestampValue(left.timestamp) - timestampValue(right.timestamp)).slice(-30);
     conversation.innerHTML = values.length ? values.map(item => `<article class="subcontractor-message ${item.direction}"><strong>${escapeHtml(item.direction === "office" ? `${item.author} → Jason` : `${item.author} → MPI Office`)}</strong><span>${escapeHtml(item.message || "")}</span><time>${escapeHtml(formatDateTime(item.timestamp))}</time></article>`).join("") : '<div class="subcontractor-conversation-empty">No messages in this conversation yet.</div>';
     conversation.scrollTop = conversation.scrollHeight;
     office.filter(item => !item.update?.receipt).forEach(item => {
@@ -216,6 +226,26 @@
       currentFieldMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(item => item.active !== false && item.kind !== "lab-coc");
       renderConversation();
     }, () => renderConversation());
+  }
+
+  function watchDirectConversation() {
+    unsubscribeDirectMessages?.();
+    unsubscribeDirectory?.();
+    currentDirectMessages = [];
+    teamDirectory = [];
+    if (!session?.userId || LOCAL_PREVIEW) return;
+    unsubscribeDirectMessages = shared.watchDirectMessages?.(shared.auth.currentUser, (records, error) => {
+      if (error) return;
+      currentDirectMessages = records;
+      const incoming = records.filter(item => item.senderUid !== session.userId);
+      const unread = incoming.filter(item => !(Array.isArray(item.readBy) && item.readBy.includes(session.userId)));
+      officeUpdateCount.textContent = unread.length ? `${unread.length} NEW` : "OPEN";
+      [...new Set(unread.map(item => item.senderUid))].forEach(uid => shared.markDirectConversationRead?.(shared.auth.currentUser, uid).catch(() => false));
+      renderConversation();
+    });
+    unsubscribeDirectory = shared.watchTeamDirectory?.((records, error) => {
+      if (!error) teamDirectory = records;
+    });
   }
 
   function appendEvent(type, extra = {}) {
@@ -442,7 +472,12 @@
     messageForm.querySelector("button").disabled = true;
     messageStatus.textContent = "Sending…";
     try {
-      await shared.sendFieldMessage(shared.auth.currentUser, { name: record.senderName, role: "subcontractor" }, message, photos, { senderName: record.senderName, senderRole: "subcontractor", test: testMode });
+      const latestIncoming = currentDirectMessages.filter(item => item.senderUid !== session.userId).sort((left, right) => timestampValue(right.createdAt || right.createdAtClient) - timestampValue(left.createdAt || left.createdAtClient))[0];
+      const target = teamDirectory.find(item => item.id === latestIncoming?.senderUid)
+        || teamDirectory.find(item => String(item.email || "").toLowerCase() === "kev@michiganpropertyinspections.com")
+        || null;
+      if (target && shared.sendDirectMessage) await shared.sendDirectMessage(shared.auth.currentUser, { name: record.senderName, role: "subcontractor" }, target, message, photos);
+      else await shared.sendFieldMessage(shared.auth.currentUser, { name: record.senderName, role: "subcontractor" }, message, photos, { senderName: record.senderName, senderRole: "subcontractor", test: testMode });
       messageInput.value = "";
       if (messagePhotos) messagePhotos.value = "";
       messageStatus.textContent = photos.length ? `Message and ${photos.length} photo${photos.length === 1 ? "" : "s"} sent to MPI Office.` : "Message sent to MPI Office.";
@@ -498,6 +533,10 @@
       unsubscribeState = null;
       unsubscribeMessages?.();
       unsubscribeMessages = null;
+      unsubscribeDirectMessages?.();
+      unsubscribeDirectMessages = null;
+      unsubscribeDirectory?.();
+      unsubscribeDirectory = null;
       currentOfficeUpdates = [];
       currentFieldMessages = [];
       renderConversation();
@@ -531,6 +570,7 @@
     unsubscribeUpdates?.();
     if (shared?.watchUpdates && shared.auth?.currentUser) unsubscribeUpdates = shared.watchUpdates(shared.auth.currentUser, { role }, renderOfficeUpdates);
     watchFieldConversation();
+    watchDirectConversation();
   }
 
   onWayButton?.addEventListener("click", onWayToJob);

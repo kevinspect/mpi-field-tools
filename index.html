@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="162">
+  <meta name="app-build" content="163">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4396,6 +4396,11 @@
     }
     .workflow-time-clock-card .workflow-card-header h3 { color: #fff; }
     .workflow-time-clock-card .workflow-card-header p { color: rgba(255,255,255,.72); }
+    .workflow-training-card { border-color: rgba(39,116,181,.28); background: linear-gradient(145deg, #ffffff 0%, #eef7ff 100%); }
+    .workflow-training-status { display: grid; gap: 6px; margin: 0 0 18px; padding: 18px; border: 1px solid rgba(39,116,181,.2); border-radius: 16px; background: rgba(255,255,255,.82); text-align: center; }
+    .workflow-training-status span { color: var(--ink-2); font-size: 11px; font-weight: 900; letter-spacing: .12em; }
+    .workflow-training-status strong { color: var(--forest); font-size: 34px; line-height: 1; }
+    .workflow-training-status small { color: var(--ink-2); font-size: 12px; }
     .workflow-time-clock-status { display: grid; gap: 5px; margin: 0 0 14px; padding: 15px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.17); border-radius: 13px; }
     .workflow-time-clock-status span { color: #e4c569; font-size: 9px; font-weight: 950; letter-spacing: .09em; text-transform: uppercase; }
     .workflow-time-clock-status strong { color: #fff; font-size: 21px; line-height: 1.25; }
@@ -4712,6 +4717,22 @@
     .workflow-team-pill.stale { color: #81322e; background: #ffe6e3; }
     .workflow-team-empty { padding: 18px 12px; color: var(--ink-2); background: #f7f9fc; border: 1px dashed #cbd4e2; border-radius: 12px; font-size: 10.5px; line-height: 1.5; text-align: center; }
     .workflow-team-privacy { margin: 12px 1px 0; color: var(--ink-2); font-size: 9px; line-height: 1.45; }
+    .team-directory-panel { margin-bottom:18px; }
+    .team-directory-list { display:grid; gap:9px; margin-top:14px; }
+    .team-directory-group { margin:12px 2px 2px; color:var(--gold-dark); font-size:10px; font-weight:950; letter-spacing:.14em; text-transform:uppercase; }
+    .team-directory-person { display:grid; grid-template-columns:46px minmax(0,1fr) auto; gap:11px; align-items:center; width:100%; min-height:66px; padding:10px 12px; color:inherit; background:#f7f9fc; border:1px solid #dce3ee; border-radius:13px; text-align:left; }
+    .team-directory-person strong,.team-profile-name { display:block; color:var(--forest); font-size:12px; }
+    .team-directory-person small { display:block; margin-top:3px; color:var(--ink-2); font-size:9px; }
+    .team-unread { min-width:27px; padding:5px 8px; color:#fff; background:var(--bright-blue); border-radius:999px; font-size:8px; font-weight:950; text-align:center; }
+    .team-profile-head { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:13px; }
+    .team-profile-back { min-height:38px; padding:0 11px; color:var(--bright-blue); background:#edf5fb; border:1px solid #c8ddec; border-radius:9px; font-weight:900; }
+    .team-private-thread { display:grid; gap:8px; max-height:360px; overflow:auto; margin:12px 0; padding:11px; background:#f6f8fb; border:1px solid #e0e5ed; border-radius:12px; }
+    .team-private-message { max-width:86%; padding:10px 12px; background:#fff; border:1px solid #dce3ed; border-radius:12px; }
+    .team-private-message.mine { justify-self:end; color:#fff; background:var(--forest); border-color:var(--forest); }
+    .team-private-message strong,.team-private-message small { display:block; font-size:8px; }
+    .team-private-message p { margin:5px 0 0; font-size:10px; line-height:1.45; white-space:pre-wrap; }
+    .team-private-form { display:grid; gap:9px; }
+    .team-private-form textarea { width:100%; min-height:90px; padding:12px; border:1px solid #cfd7e4; border-radius:11px; font:inherit; }
     .timed-alert-dialog { width: min(92vw, 460px); padding: 0; overflow: hidden; border: 0; border-radius: 20px; box-shadow: 0 28px 80px rgba(7,12,56,.34); }
     .timed-alert-dialog::backdrop { background: rgba(7,12,56,.72); }
     .timed-alert-inner { padding: 26px 22px; color: #fff; background: linear-gradient(145deg, #11186a, #222a83); text-align: center; }
@@ -5140,7 +5161,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">162</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">163</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -5356,6 +5377,20 @@
             <a href="#settings">OPEN NOTIFICATION SETTINGS</a>
           </div>
           <button class="workflow-button" id="workflowReadyBtn" type="button">READY FOR WORK</button>
+        </section>
+
+        <section class="workflow-card workflow-training-card" id="workflowNachiTrainingCard" aria-labelledby="workflow-nachi-training-title" hidden>
+          <div class="workflow-card-header">
+            <span class="workflow-status-pill" id="workflowNachiTrainingBadge">Cory work mode</span>
+            <h3 id="workflow-nachi-training-title">NACHI Training</h3>
+            <p>Use this when completing approved InterNACHI training from home. Starting training begins Hours Worked.</p>
+          </div>
+          <div class="workflow-training-status">
+            <span>NACHI TRAINING TIME TODAY</span>
+            <strong id="workflowNachiTrainingTime">0:00</strong>
+            <small id="workflowNachiTrainingDetail">Training has not started.</small>
+          </div>
+          <button class="workflow-button" id="workflowNachiTrainingBtn" type="button">START NACHI TRAINING</button>
         </section>
 
         <section class="workflow-card" id="workflowTodayCard" aria-labelledby="workflow-today-title" hidden>
@@ -7298,6 +7333,24 @@
         <p>Receive company push notifications, read published reminders offline, and submit a field question or support request when connected.</p>
       </div>
 
+      <section class="panel team-directory-panel" aria-labelledby="team-directory-title">
+        <div class="panel-heading"><div><h2 id="team-directory-title">Team</h2><p>Open one person first, then message only that person.</p></div><span class="step-count" id="teamDirectoryStatus">Private</span></div>
+        <div id="teamDirectoryView">
+          <div class="team-directory-list" id="teamDirectoryList"><div class="workflow-team-empty">Team members will appear after the company connection is ready.</div></div>
+        </div>
+        <div id="teamPrivateProfile" hidden>
+          <div class="team-profile-head"><div><small id="teamProfileRole">MPI TEAM</small><strong class="team-profile-name" id="teamProfileName">Team member</strong></div><button class="team-profile-back" id="teamProfileBack" type="button">← TEAM</button></div>
+          <div class="team-private-thread" id="teamPrivateThread"><div class="workflow-team-empty">No messages in this private conversation yet.</div></div>
+          <form class="team-private-form" id="teamPrivateForm">
+            <label for="teamPrivateText"><strong id="teamPrivateLabel">Message team member</strong></label>
+            <textarea id="teamPrivateText" maxlength="1200" required placeholder="Write a private MPI team message"></textarea>
+            <label class="mpi-reply-photo" for="teamPrivateFiles">ATTACH PHOTOS OR PDF<input id="teamPrivateFiles" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple><small>Optional · up to 3 files · 8 MB each.</small></label>
+            <button class="decode-btn" id="teamPrivateSend" type="submit">SEND PRIVATE MESSAGE</button>
+            <p class="damage-submit-status" id="teamPrivateSendStatus" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+
       <details class="panel escalation-guide" id="escalationGuide">
         <summary>
           <span><strong>What needs attention?</strong><small>Choose the situation to open the correct MPI response.</small></span>
@@ -7668,7 +7721,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 162</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 163</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -7807,10 +7860,10 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=162"></script>
-  <script src="./mpi-field-sync.js?build=162"></script>
-  <script src="./mpi-subcontractor.js?build=162"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=162"></script>
+  <script src="./mpi-shared.js?build=163"></script>
+  <script src="./mpi-field-sync.js?build=163"></script>
+  <script src="./mpi-subcontractor.js?build=163"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=163"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -8464,6 +8517,11 @@
       const workflowReadinessChecks = [...document.querySelectorAll("[data-workflow-readiness]")];
       const workflowNotificationWarning = document.getElementById("workflowNotificationWarning");
       const workflowReadyBtn = document.getElementById("workflowReadyBtn");
+      const workflowNachiTrainingCard = document.getElementById("workflowNachiTrainingCard");
+      const workflowNachiTrainingBadge = document.getElementById("workflowNachiTrainingBadge");
+      const workflowNachiTrainingTime = document.getElementById("workflowNachiTrainingTime");
+      const workflowNachiTrainingDetail = document.getElementById("workflowNachiTrainingDetail");
+      const workflowNachiTrainingBtn = document.getElementById("workflowNachiTrainingBtn");
       const workflowTodayCard = document.getElementById("workflowTodayCard");
       const workflowTodayInspector = document.getElementById("workflowTodayInspector");
       const workflowScheduleStatus = document.getElementById("workflowScheduleStatus");
@@ -8830,6 +8888,20 @@
       const teamQuestionSubmitBtn = document.getElementById("teamQuestionSubmitBtn");
       const teamQuestionStatus = document.getElementById("teamQuestionStatus");
       const teamQuestionSuccess = document.getElementById("teamQuestionSuccess");
+      const teamDirectoryStatus = document.getElementById("teamDirectoryStatus");
+      const teamDirectoryView = document.getElementById("teamDirectoryView");
+      const teamDirectoryList = document.getElementById("teamDirectoryList");
+      const teamPrivateProfile = document.getElementById("teamPrivateProfile");
+      const teamProfileRole = document.getElementById("teamProfileRole");
+      const teamProfileName = document.getElementById("teamProfileName");
+      const teamProfileBack = document.getElementById("teamProfileBack");
+      const teamPrivateThread = document.getElementById("teamPrivateThread");
+      const teamPrivateForm = document.getElementById("teamPrivateForm");
+      const teamPrivateText = document.getElementById("teamPrivateText");
+      const teamPrivateFiles = document.getElementById("teamPrivateFiles");
+      const teamPrivateLabel = document.getElementById("teamPrivateLabel");
+      const teamPrivateSend = document.getElementById("teamPrivateSend");
+      const teamPrivateSendStatus = document.getElementById("teamPrivateSendStatus");
       const safetyNoticeForm = document.getElementById("safetyNoticeForm");
       const safetyNoticeInspector = document.getElementById("safetyNoticeInspector");
       const safetyNoticeProperty = document.getElementById("safetyNoticeProperty");
@@ -8918,6 +8990,8 @@
         ims: { id: "ims", name: "IMS Laboratory", address: "3130 Old Farm Lane, Suite 1, Commerce Township, MI 48390" }
       };
       let commentType = "defect";
+      let activeCommentRequestId = "";
+      let activeCommentRequestSignature = "";
       let copyPayload = "";
       let toastTimer;
       let activeSopId = "";
@@ -8933,6 +9007,14 @@
       let todayJobsDateCheckInterval = 0;
       let latestAppDiagnosticReport = null;
       let appDiagnosticErrorCaptureReady = false;
+      let teamDirectoryRecords = [];
+      let teamPresenceRecords = [];
+      let teamDirectMessages = [];
+      let selectedTeamMemberId = "";
+      let unsubscribeTeamDirectory = null;
+      let unsubscribeTeamPresence = null;
+      let unsubscribeTeamDirectMessages = null;
+      let teamDirectListenerReady = false;
 
       const TOOL_GUIDES = [
         {
@@ -14107,6 +14189,7 @@
       const WORKFLOW_DAY_COMPLETE_STORAGE_KEY = "mpiWorkflowDayCompleteV1";
       const WORKFLOW_CLOSEOUT_HISTORY_STORAGE_KEY = "mpiWorkflowCloseoutHistoryV1";
       const WORKFLOW_TIME_CLOCK_STORAGE_KEY = "mpiWorkflowTimeClockV1";
+      const WORKFLOW_NACHI_TRAINING_STORAGE_KEY = "mpiWorkflowNachiTrainingV1";
       const WORKFLOW_GEOCODE_CACHE_STORAGE_KEY = "mpiWorkflowGeocodeCacheV1";
       const APP_DIAGNOSTIC_ERRORS_STORAGE_KEY = "mpiAppDiagnosticErrorsV1";
       const APP_DIAGNOSTIC_PENDING_STORAGE_KEY = "mpiPendingDiagnosticReportsV1";
@@ -14434,6 +14517,7 @@
 
       function workflowLiveStatus(active, readiness, labStop, dayComplete, clockRecord) {
         if (dayComplete?.completedAt && !workflowActiveClockSession(clockRecord)) return "CLOCKED OUT";
+        if (loadWorkflowNachiTraining()?.active) return "NACHI TRAINING";
         if (labStop) {
           if (labStop.stage === "travel") return "DRIVING TO LAB";
           if (labStop.stage === "arrived") return "AT LAB";
@@ -14829,7 +14913,7 @@
         const preservedSnapshot = dayComplete?.operationsSnapshotBackup;
         const hasFieldActivity = activity.some(item => item.action !== "Company-phone profile synchronized");
         if (!hasFieldActivity && !jobs.length && !active && !readiness && !labStop && !dayComplete) return null;
-        if (!activity.length && preservedSnapshot) {
+        if (!hasFieldActivity && preservedSnapshot) {
           const { operationsSnapshotBackup, ...dayCompleteCompact } = dayComplete;
           return {
             ...preservedSnapshot,
@@ -14839,6 +14923,7 @@
             liveStatus: "CLOCKED OUT",
             timeClock: preservedSnapshot.timeClock || dayComplete?.timeClockBackup || null,
             driveTime: dayComplete?.driveTimeBackup || preservedSnapshot.driveTime || null,
+            nachiTraining: workflowNachiTrainingSnapshot() || preservedSnapshot.nachiTraining || null,
             commentUsage: workflowCommentUsageSnapshot(),
             commentFailures: workflowCommentFailureSnapshot(),
             dayComplete: dayCompleteCompact
@@ -14892,6 +14977,7 @@
             managementAdjusted: Boolean(effectiveClock?.startAdjustment || effectiveClock?.endAdjustment),
             appliedAdjustments: [effectiveClock?.startAdjustment, effectiveClock?.endAdjustment].filter(Boolean).map(item => ({ ...item }))
           } : null,
+          nachiTraining: workflowNachiTrainingSnapshot(),
           driveTime: dayComplete?.driveTimeBackup || workflowDriveTimeWithArchives(activity),
           commentUsage: workflowCommentUsageSnapshot(),
           commentFailures: workflowCommentFailureSnapshot(),
@@ -14969,6 +15055,105 @@
         } catch (_) {
           return null;
         }
+      }
+
+      function isCoryWorkflowUser(profile = loadWorkflowProfile()) {
+        const session = window.MPI_COMPANY_SESSION || {};
+        const values = [profile?.name, profile?.id, session.inspectorName, session.inspectorId, session.inspectorEmail]
+          .map(value => String(value || "").trim().toLowerCase());
+        return values.some(value => value === "nachi26090138" || value === "cory" || value.startsWith("cory ") || value.startsWith("cory@"));
+      }
+
+      function loadWorkflowNachiTraining() {
+        try {
+          const record = JSON.parse(localStorage.getItem(WORKFLOW_NACHI_TRAINING_STORAGE_KEY) || "null");
+          if (!record || record.date !== localDateKey()) return null;
+          const sessions = (Array.isArray(record.sessions) ? record.sessions : []).slice(0, 12).map(session => ({
+            startedAt: String(session?.startedAt || ""),
+            endedAt: String(session?.endedAt || "")
+          })).filter(session => session.startedAt);
+          return { date: record.date, active: Boolean(record.active && sessions.at(-1) && !sessions.at(-1).endedAt), sessions };
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function saveWorkflowNachiTraining(record) {
+        try {
+          if (record) localStorage.setItem(WORKFLOW_NACHI_TRAINING_STORAGE_KEY, JSON.stringify(record));
+          else localStorage.removeItem(WORKFLOW_NACHI_TRAINING_STORAGE_KEY);
+        } catch (_) {}
+      }
+
+      function workflowNachiTrainingMinutes(record = loadWorkflowNachiTraining(), endTime = Date.now()) {
+        return (record?.sessions || []).reduce((total, session) => {
+          const start = new Date(session.startedAt || "").getTime();
+          const end = session.endedAt ? new Date(session.endedAt).getTime() : endTime;
+          return total + (Number.isFinite(start) && Number.isFinite(end) && end > start ? Math.floor((end - start) / 60000) : 0);
+        }, 0);
+      }
+
+      function workflowNachiTrainingSnapshot() {
+        const record = loadWorkflowNachiTraining();
+        if (!record) return null;
+        return { active: record.active, totalMinutes: workflowNachiTrainingMinutes(record), sessions: record.sessions.map(session => ({ ...session })) };
+      }
+
+      function renderWorkflowNachiTraining() {
+        if (!workflowNachiTrainingCard) return;
+        const record = loadWorkflowNachiTraining();
+        const active = Boolean(record?.active);
+        const minutes = workflowNachiTrainingMinutes(record);
+        workflowNachiTrainingBadge.textContent = active ? "Training active" : minutes ? "Training recorded" : "Cory work mode";
+        workflowNachiTrainingTime.textContent = `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`;
+        workflowNachiTrainingDetail.textContent = active
+          ? `Started at ${workflowClock(record.sessions.at(-1)?.startedAt)} · Hours Worked continues running.`
+          : minutes
+            ? "Training is complete. Hours Worked remains active until end-of-day Clock Out."
+            : "Training has not started.";
+        workflowNachiTrainingBtn.textContent = active ? "END NACHI TRAINING" : "START NACHI TRAINING";
+      }
+
+      function toggleWorkflowNachiTraining() {
+        const profile = loadWorkflowProfile();
+        if (!profile || !isCoryWorkflowUser(profile) || !workflowReadinessRecord() || loadActiveJob()?.property) return;
+        const now = new Date().toISOString();
+        const record = loadWorkflowNachiTraining() || { date: localDateKey(), active: false, sessions: [] };
+        if (record.active) {
+          const session = record.sessions.at(-1);
+          if (session && !session.endedAt) session.endedAt = now;
+          record.active = false;
+          saveWorkflowNachiTraining(record);
+          const totalMinutes = workflowNachiTrainingMinutes(record, new Date(now).getTime());
+          appendWorkflowEvent("NACHI training ended", { endedAt: now, trainingMinutes: totalMinutes }, null);
+          if (!workflowNextScheduledJob()) {
+            saveWorkflowLabStop({
+              date: localDateKey(), stage: "home-arrived", sourceJobId: "nachi-training", sourceProperty: "NACHI Training",
+              nextJobId: "", nextProperty: "", nextScheduledStart: "", finalStop: true, entryPoint: "nachi-training",
+              labs: [], currentIndex: 0, noLab: true, homeArrivedAt: now, createdAt: now
+            });
+          }
+          showToast(`NACHI Training ended · ${Math.floor(totalMinutes / 60)} hr ${totalMinutes % 60} min recorded`);
+        } else {
+          if (workflowDayCompleteRecord()?.completedAt) return;
+          record.sessions.push({ startedAt: now, endedAt: "" });
+          record.active = true;
+          saveWorkflowNachiTraining(record);
+          const clock = ensureWorkflowTimeClockRecord(profile, workflowReadinessRecord());
+          if (!workflowActiveClockSession(clock)) {
+            startWorkflowHoursAtVerifiedArrival(
+              { calendarEventId: "nachi-training", property: "NACHI Training" }, now,
+              { status: "training-from-approved-home", recordedAt: now },
+              { verificationStatus: "approved-training-mode", trainingMode: "NACHI TRAINING" },
+              "nachi-training"
+            );
+          }
+          appendWorkflowEvent("NACHI training started", { startedAt: now, hoursWorkedContinues: true }, null);
+          showToast(`NACHI Training started at ${workflowClock(now)}`);
+        }
+        renderWorkflowApp();
+        renderWorkflowTimeClock();
+        queueWorkflowOperationsSync();
       }
 
       function saveWorkflowTimeClock(record) {
@@ -15461,7 +15646,9 @@
         const jobs = workflowScheduleJobs();
         const completed = workflowCompletedEventIds();
         const allJobsComplete = jobs.length > 0 && jobs.every(job => completed.has(job.id));
-        if (!activeClock || !allJobsComplete) return false;
+        const training = loadWorkflowNachiTraining();
+        const trainingDayComplete = Boolean(isCoryWorkflowUser() && training && !training.active && training.sessions.length && !workflowNextScheduledJob(jobs));
+        if (!activeClock || (!allJobsComplete && !trainingDayComplete)) return false;
         const labStop = loadWorkflowLabStop();
         if (!labStop) return true;
         return Boolean(labStop.finalStop && ["proceed-home", "driving-home", "home-arrived"].includes(labStop.stage));
@@ -15499,10 +15686,12 @@
         const jobs = workflowScheduleJobs();
         const completed = workflowCompletedEventIds();
         const allJobsComplete = jobs.length > 0 && jobs.every(job => completed.has(job.id));
+        const training = loadWorkflowNachiTraining();
+        const trainingDayComplete = Boolean(isCoryWorkflowUser() && training && !training.active && training.sessions.length && !workflowNextScheduledJob(jobs));
         const finalReturn = loadWorkflowLabStop();
         const returnedHome = finalReturn?.finalStop && finalReturn.stage === "home-arrived";
         const equipmentConfirmed = workflowEndOfDayChecks.length > 0 && workflowEndOfDayChecks.every(check => check.checked);
-        const finalCloseoutBlocked = Boolean(active && allJobsComplete && (!returnedHome || !equipmentConfirmed));
+        const finalCloseoutBlocked = Boolean(active && (allJobsComplete || trainingDayComplete) && (!returnedHome || !equipmentConfirmed));
         if (workflowClockHomeReminder) {
           workflowClockHomeReminder.hidden = !workflowFinalTravelNeedsClockOff();
           const heading = workflowClockHomeReminder.querySelector("strong");
@@ -15523,6 +15712,7 @@
         workflowClockOffBtn.hidden = !hoursStarted;
         workflowClockRetryLocationBtn.hidden = true;
         workflowClockRetryLocationBtn.disabled = workflowTimeClockInFlight;
+        renderWorkflowNachiTraining();
       }
 
       function startWorkflowHoursAtVerifiedArrival(job, arrivalAt, location, arrivalVerification, startSource = "verified-first-arrival") {
@@ -15568,7 +15758,9 @@
         const jobs = workflowScheduleJobs();
         const completed = workflowCompletedEventIds();
         const allJobsComplete = jobs.length > 0 && jobs.every(job => completed.has(job.id));
-        if (allJobsComplete) {
+        const training = loadWorkflowNachiTraining();
+        const trainingDayComplete = Boolean(isCoryWorkflowUser() && training && !training.active && training.sessions.length && !workflowNextScheduledJob(jobs));
+        if (allJobsComplete || trainingDayComplete) {
           const finalReturn = loadWorkflowLabStop();
           if (!finalReturn?.finalStop || finalReturn.stage !== "home-arrived") {
             showToast("Confirm ARRIVED HOME before Clocking Out");
@@ -16196,6 +16388,7 @@
         }
         workflowIdentityCard.hidden = true;
         workflowReadinessCard.hidden = true;
+        workflowNachiTrainingCard.hidden = true;
         workflowTodayCard.hidden = true;
         workflowJobCard.hidden = true;
         workflowEquipmentCard.hidden = true;
@@ -16324,6 +16517,7 @@
         const driving = record.stage === "driving-home";
         workflowIdentityCard.hidden = true;
         workflowReadinessCard.hidden = true;
+        workflowNachiTrainingCard.hidden = true;
         workflowTodayCard.hidden = true;
         workflowJobCard.hidden = true;
         workflowEquipmentCard.hidden = true;
@@ -16868,6 +17062,7 @@
         }
         workflowIdentityCard.hidden = true;
         workflowReadinessCard.hidden = true;
+        workflowNachiTrainingCard.hidden = true;
         workflowTodayCard.hidden = true;
         workflowEquipmentCard.hidden = job.workflowStatus !== "equipment";
         workflowJobCard.hidden = job.workflowStatus === "equipment";
@@ -17084,6 +17279,7 @@
       function renderWorkflowEquipment(job = loadActiveJob()) {
         workflowIdentityCard.hidden = true;
         workflowReadinessCard.hidden = true;
+        workflowNachiTrainingCard.hidden = true;
         workflowTodayCard.hidden = true;
         workflowJobCard.hidden = true;
         workflowEquipmentCard.hidden = false;
@@ -17277,6 +17473,8 @@
         "Arrival performance calculated": "Arrival performance recorded",
         "Arrival verification failed": "Arrival could not be verified",
         "Hours worked started": "Hours Worked started",
+        "NACHI training started": "NACHI Training started",
+        "NACHI training ended": "NACHI Training ended",
         "Inspection started": "Inspection started",
         "Job Complete selected": "Job completion started",
         "Used tools back on truck confirmed": "Used tools confirmed back on truck",
@@ -17510,7 +17708,8 @@
         const sessions = workflowPaySessions(effectiveRecord);
         const first = sessions[0];
         const last = sessions[sessions.length - 1];
-        const activityStartedAt = record?.activityStartedAt || readiness?.completedAt || "";
+        const readinessCorrection = workflowAdminCorrections().filter(item => item?.date === localDateKey() && item?.targetAction === "Morning readiness completed").at(-1);
+        const activityStartedAt = readinessCorrection?.correctedValue || record?.activityStartedAt || readiness?.completedAt || "";
         if (!record && !activityStartedAt) return null;
         const activityEndedAt = last?.clockedOutAt || "";
         const activityMilliseconds = activityStartedAt && activityEndedAt
@@ -18128,6 +18327,7 @@
         const active = loadActiveJob();
         workflowIdentityCard.hidden = Boolean(profile);
         workflowReadinessCard.hidden = true;
+        workflowNachiTrainingCard.hidden = true;
         workflowTodayCard.hidden = true;
         workflowJobCard.hidden = true;
         workflowEquipmentCard.hidden = true;
@@ -18181,6 +18381,11 @@
           renderWorkflowJob(active);
           return;
         }
+        if (isCoryWorkflowUser(profile)) {
+          workflowNachiTrainingCard.hidden = false;
+          renderWorkflowNachiTraining();
+          if (loadWorkflowNachiTraining()?.active) return;
+        }
         workflowTodayCard.hidden = false;
         renderWorkflowTodayJobs();
       }
@@ -18190,6 +18395,7 @@
         workflowIdentityForm.addEventListener("submit", saveWorkflowProfile);
         workflowReadinessChecks.forEach(check => check.addEventListener("change", updateWorkflowReadinessButton));
         workflowReadyBtn.addEventListener("click", completeWorkflowReadiness);
+        workflowNachiTrainingBtn.addEventListener("click", toggleWorkflowNachiTraining);
         workflowClockOffBtn.addEventListener("click", clockWorkflowOff);
         workflowClockRetryLocationBtn.addEventListener("click", retryWorkflowClockLocation);
         workflowJobsList.addEventListener("click", handleWorkflowJobSelection);
@@ -18261,6 +18467,7 @@
           }
           syncWorkflowCompanyProfile(event);
           watchInspectorRequests(event.detail);
+          startTeamConnection(event.detail);
           recoverWorkflowTimeClockFromCompanyAccount(event).finally(queueWorkflowOperationsSync);
           syncWorkflowCocPhotosToOffice().catch(() => false);
           sendWorkflowWeeklySummaryIfDue().catch(() => false);
@@ -18269,6 +18476,7 @@
           if (String(window.MPI_COMPANY_SESSION.role || "").toLowerCase() !== "subcontractor") {
             syncWorkflowCompanyProfile({ detail: window.MPI_COMPANY_SESSION });
             watchInspectorRequests(window.MPI_COMPANY_SESSION);
+            startTeamConnection(window.MPI_COMPANY_SESSION);
             queueWorkflowOperationsSync();
             syncWorkflowCocPhotosToOffice().catch(() => false);
           }
@@ -18401,6 +18609,175 @@
         requestItem.value = "Field tool or equipment issue";
         if (!requestDetails.value.trim()) requestDetails.value = "Tool/model and condition: ";
         if (!requestNeededBy.value) requestNeededBy.value = localDateKey();
+      }
+
+      function teamDisplayName(value) {
+        const name = String(value || "MPI Team Member").trim();
+        return /^corey leese$/i.test(name) ? "Cory Leese" : name;
+      }
+
+      function teamMemberRecord(userId) {
+        const directory = teamDirectoryRecords.find(item => item.id === userId || item.userId === userId);
+        const presence = teamPresenceRecords.find(item => item.id === userId || item.userId === userId);
+        return directory ? { ...directory, presence } : null;
+      }
+
+      function teamMessagesWith(userId) {
+        const currentUid = window.MPI_COMPANY_SESSION?.userId || "";
+        const conversationId = window.MPI_SHARED?.directConversationId?.(currentUid, userId) || "";
+        return teamDirectMessages.filter(item => item.conversationId === conversationId).sort((left, right) => new Date(left.createdAtClient || left.createdAt?.toDate?.() || 0) - new Date(right.createdAtClient || right.createdAt?.toDate?.() || 0));
+      }
+
+      function teamRoleLabel(member) {
+        const role = String(member?.role || "inspector").toLowerCase();
+        const email = String(member?.email || "").trim().toLowerCase();
+        if (role === "subcontractor") return "SUBCONTRACTOR";
+        if (email === "kev@michiganpropertyinspections.com") return "FIELD TEAM";
+        return ["owner", "admin"].includes(role) ? "OFFICE" : "FIELD TEAM";
+      }
+
+      function teamStatusLabel(member) {
+        if (teamRoleLabel(member) === "OFFICE") return "OFFICE";
+        return String(member?.presence?.status || (member?.role === "subcontractor" ? "AVAILABLE" : "NOT STARTED"));
+      }
+
+      function teamAvatarMarkup(member) {
+        const name = teamDisplayName(member?.name);
+        const initials = name.split(/\s+/).map(value => value[0] || "").join("").slice(0, 2).toUpperCase() || "MPI";
+        const source = String(member?.profilePhoto || member?.photoURL || "");
+        return `<span class="workflow-team-avatar"><b>${escapeHtml(initials)}</b>${source ? `<img src="${escapeHtml(source)}" alt="">` : ""}</span>`;
+      }
+
+      function renderTeamDirectory() {
+        if (!teamDirectoryList) return;
+        const currentUid = window.MPI_COMPANY_SESSION?.userId || "";
+        const ordered = teamDirectoryRecords.filter(item => item.active !== false).slice().sort((left, right) => {
+          const roleOrder = member => teamRoleLabel(member) === "OFFICE" ? 1 : 0;
+          return roleOrder(left) - roleOrder(right) || teamDisplayName(left.name).localeCompare(teamDisplayName(right.name));
+        });
+        teamDirectoryStatus.textContent = ordered.length ? `${ordered.length} members` : "Connecting";
+        const personRow = member => {
+          const isYou = member.id === currentUid || member.userId === currentUid;
+          const unread = teamMessagesWith(member.id).filter(message => message.senderUid !== currentUid && !(Array.isArray(message.readBy) && message.readBy.includes(currentUid))).length;
+          return `<button class="team-directory-person" type="button" data-team-member="${escapeHtml(member.id)}" ${isYou ? "disabled" : ""}>${teamAvatarMarkup(member)}<span><strong>${escapeHtml(teamDisplayName(member.name))}${isYou ? " · YOU" : ""}</strong><small>${escapeHtml(teamRoleLabel(member))} · ${escapeHtml(teamStatusLabel(member))}</small></span>${unread ? `<span class="team-unread">${unread} NEW</span>` : '<span aria-hidden="true">›</span>'}</button>`;
+        };
+        const field = ordered.filter(member => teamRoleLabel(member) !== "OFFICE");
+        const office = ordered.filter(member => teamRoleLabel(member) === "OFFICE");
+        teamDirectoryList.innerHTML = ordered.length
+          ? `${field.length ? `<div class="team-directory-group">FIELD TEAM</div>${field.map(personRow).join("")}` : ""}${office.length ? `<div class="team-directory-group">OFFICE TEAM</div>${office.map(personRow).join("")}` : ""}`
+          : '<div class="workflow-team-empty">Team members will appear after an office administrator opens the current Office Console once.</div>';
+        if (selectedTeamMemberId && !teamMemberRecord(selectedTeamMemberId)) closeTeamProfile();
+      }
+
+      function renderTeamPrivateThread() {
+        const member = teamMemberRecord(selectedTeamMemberId);
+        if (!member) return;
+        const currentUid = window.MPI_COMPANY_SESSION?.userId || "";
+        teamProfileName.textContent = teamDisplayName(member.name);
+        teamProfileRole.textContent = `${teamRoleLabel(member)} · ${teamStatusLabel(member)}`;
+        teamPrivateLabel.textContent = `MESSAGE ${teamDisplayName(member.name).toUpperCase()}`;
+        const messages = teamMessagesWith(selectedTeamMemberId);
+        teamPrivateThread.innerHTML = messages.length ? messages.map(message => {
+          const mine = message.senderUid === currentUid;
+          const files = (message.attachments || []).map(file => `<button type="button" class="team-profile-back" data-team-file="${escapeHtml(file.id)}" data-team-message="${escapeHtml(message.id)}">${escapeHtml(file.name || "Attachment")}</button>`).join("");
+          return `<article class="team-private-message${mine ? " mine" : ""}"><strong>${escapeHtml(mine ? "YOU" : teamDisplayName(message.senderName))}</strong><small>${escapeHtml(new Date(message.createdAtClient || message.createdAt?.toDate?.() || Date.now()).toLocaleString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" }))}</small><p>${escapeHtml(message.message || "Attachment sent")}</p>${files}</article>`;
+        }).join("") : '<div class="workflow-team-empty">No messages in this private conversation yet.</div>';
+        teamPrivateThread.scrollTop = teamPrivateThread.scrollHeight;
+      }
+
+      function openTeamProfile(userId) {
+        const member = teamMemberRecord(userId);
+        if (!member || userId === window.MPI_COMPANY_SESSION?.userId) return;
+        selectedTeamMemberId = userId;
+        teamDirectoryView.hidden = true;
+        teamPrivateProfile.hidden = false;
+        teamPrivateSendStatus.textContent = "";
+        renderTeamPrivateThread();
+        window.MPI_SHARED?.markDirectConversationRead?.(window.MPI_SHARED.auth.currentUser, userId).catch(() => false);
+      }
+
+      function closeTeamProfile() {
+        selectedTeamMemberId = "";
+        teamDirectoryView.hidden = false;
+        teamPrivateProfile.hidden = true;
+        teamPrivateText.value = "";
+        teamPrivateFiles.value = "";
+        teamPrivateSendStatus.textContent = "";
+      }
+
+      async function sendTeamPrivateMessage(event) {
+        event.preventDefault();
+        const member = teamMemberRecord(selectedTeamMemberId);
+        const user = window.MPI_SHARED?.auth?.currentUser;
+        const session = window.MPI_COMPANY_SESSION;
+        if (!member || !user || !session?.userId) return;
+        teamPrivateSend.disabled = true;
+        teamPrivateSendStatus.textContent = `Sending only to ${teamDisplayName(member.name)}…`;
+        try {
+          await window.MPI_SHARED.sendDirectMessage(user, { name: session.inspectorName, role: session.role }, member, teamPrivateText.value, [...teamPrivateFiles.files]);
+          teamPrivateForm.reset();
+          teamPrivateSendStatus.className = "damage-submit-status success";
+          teamPrivateSendStatus.textContent = `Private message sent only to ${teamDisplayName(member.name)}.`;
+        } catch (error) {
+          teamPrivateSendStatus.className = "damage-submit-status error";
+          teamPrivateSendStatus.textContent = error?.message || "The private message could not be sent.";
+        } finally {
+          teamPrivateSend.disabled = false;
+        }
+      }
+
+      async function openTeamAttachment(button) {
+        const message = teamDirectMessages.find(item => item.id === button.dataset.teamMessage);
+        const attachment = message?.attachments?.find(item => item.id === button.dataset.teamFile);
+        if (!message || !attachment) return;
+        button.disabled = true;
+        try {
+          const blob = await window.MPI_SHARED.loadDirectAttachment(message.id, attachment);
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = attachment.name || "MPI-team-attachment";
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(url), 300000);
+        } catch (error) {
+          teamPrivateSendStatus.textContent = error?.message || "The attachment could not be opened.";
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      function startTeamConnection(session = window.MPI_COMPANY_SESSION) {
+        if (!session?.userId || !window.MPI_SHARED?.watchTeamDirectory) return;
+        unsubscribeTeamDirectory?.();
+        unsubscribeTeamPresence?.();
+        unsubscribeTeamDirectMessages?.();
+        teamDirectListenerReady = false;
+        unsubscribeTeamDirectory = window.MPI_SHARED.watchTeamDirectory((records, error) => {
+          if (!error) teamDirectoryRecords = records.map(item => ({
+            ...item,
+            name: String(item.email || "").trim().toLowerCase() === "admin@michiganpropertyinspections.com"
+              ? "Brooke"
+              : teamDisplayName(item.name)
+          }));
+          renderTeamDirectory();
+          if (selectedTeamMemberId) renderTeamPrivateThread();
+          const target = new URL(window.location.href).searchParams.get("team") || "";
+          if (target && teamMemberRecord(target)) openTeamProfile(target);
+        });
+        unsubscribeTeamPresence = window.MPI_SHARED.watchTeamPresence((records, error) => {
+          if (!error) teamPresenceRecords = records;
+          renderTeamDirectory();
+        });
+        unsubscribeTeamDirectMessages = window.MPI_SHARED.watchDirectMessages(window.MPI_SHARED.auth.currentUser, (records, error) => {
+          if (error) return;
+          const known = new Set(teamDirectMessages.map(item => item.id));
+          const fresh = teamDirectListenerReady ? records.find(item => !known.has(item.id) && item.senderUid !== session.userId) : null;
+          teamDirectMessages = records;
+          if (fresh) showToast(`New private message from ${teamDisplayName(fresh.senderName)}`);
+          teamDirectListenerReady = true;
+          renderTeamDirectory();
+          if (selectedTeamMemberId) renderTeamPrivateThread();
+        });
       }
 
       function loadActiveJob() {
@@ -21839,6 +22216,8 @@
 
       function setCommentType(type) {
         commentType = type;
+        activeCommentRequestId = "";
+        activeCommentRequestSignature = "";
         const limitation = type === "limit";
         defectModeBtn.setAttribute("aria-pressed", String(type === "defect"));
         limitationModeBtn.setAttribute("aria-pressed", String(limitation));
@@ -21952,6 +22331,8 @@
         commentOutput.scrollLeft = 0;
         sizeCommentOutput();
         copyCommentBtn.disabled = true;
+        activeCommentRequestId = "";
+        activeCommentRequestSignature = "";
         commentFailureActions.hidden = true;
         defectInput.focus();
       });
@@ -22004,10 +22385,16 @@
         commentFailureActions.hidden = true;
         try {
           if (!window.MPI_COMMENT_AI?.generate) throw new Error("The secure MPI Comment Builder is still loading. Wait a moment and try again.");
+          const requestSignature = JSON.stringify([note, commentArea.value, commentType]);
+          if (!activeCommentRequestId || activeCommentRequestSignature !== requestSignature) {
+            activeCommentRequestId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+            activeCommentRequestSignature = requestSignature;
+          }
           commentOutput.value = await window.MPI_COMMENT_AI.generate({
             note,
             component: commentArea.value,
-            mode: commentType
+            mode: commentType,
+            id: activeCommentRequestId
           });
           copyCommentBtn.disabled = false;
           commentModeBadge.textContent = "Ready";
@@ -22132,6 +22519,16 @@
       onboardingForm.addEventListener("submit", validateOnboardingSubmission);
       messageAckForm.addEventListener("submit", validateMessageAcknowledgement);
       teamQuestionForm.addEventListener("submit", validateTeamQuestionSubmission);
+      teamDirectoryList?.addEventListener("click", event => {
+        const button = event.target.closest("[data-team-member]");
+        if (button) openTeamProfile(button.dataset.teamMember);
+      });
+      teamProfileBack?.addEventListener("click", closeTeamProfile);
+      teamPrivateForm?.addEventListener("submit", sendTeamPrivateMessage);
+      teamPrivateThread?.addEventListener("click", event => {
+        const button = event.target.closest("[data-team-file]");
+        if (button) openTeamAttachment(button);
+      });
       escalationGuide.addEventListener("click", routeEscalation);
       safetyInformedOptions.forEach(option => option.addEventListener("change", event => updateSafetyInformedSelection(event.currentTarget)));
       safetyOtherInformedName.addEventListener("input", () => updateSafetyInformedSelection());

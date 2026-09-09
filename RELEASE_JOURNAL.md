@@ -1,5 +1,18 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 163 — September 9 Field Testing Update
+
+- Repaired the Comment Builder request path identified by reference `c15e48cb-cde3-4eb9-99ad-595e8d3eaf65`: transient timeout/high-demand failures now retry once on the stable fallback model with the same request ID, while preserving the original note and disabling Copy until valid output exists.
+- Added auditable Morning Readiness corrections. Admin can set an effective management activity-start time with a required reason while preserving the original timestamp and keeping Hours Worked independent.
+- Added individual Team profiles and persistent one-to-one conversations for Kevin, Cory, Jason, Adrienne and Brooke, including fixed recipients, attachments, unread counts, exact-conversation notification links and optional message-to-To-Do conversion.
+- Added Cory's NACHI Training work mode. Starting training begins the existing Hours Worked clock; ending training records a separate duration without stopping paid hours, then routes to the next job or end-of-day checks.
+- Added Cory's effective weekly-hours and overtime counters for Kevin and Adrienne, with green/amber/red status at 35 and 40 hours and automatic recalculation after Admin corrections.
+- Restored completed jobs, lab visits, Chain of Custody records and drive data in Admin when a later sparse phone sync follows a richer daily closeout.
+
+### Validation record
+
+- Passed JavaScript and inline-script parsing, a headless mobile Cory training start/end test, continuous Hours Worked verification, no-job end-of-day routing, Admin Team/counter rendering, completed-job/lab merge recovery, and the 34h/37h/40h/42h30 overtime thresholds.
+
 ## Build 162 — Protect Field History From Empty Secondary Devices
 
 - Prevented an office computer or other secondary device with no local workflow history from replacing an inspector phone's completed jobs, activity timeline, lab visit, Chain of Custody record, or day closeout.

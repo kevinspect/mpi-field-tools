@@ -81,6 +81,8 @@
     "Directions selected": "Directions opened",
     Arrived: "Arrived at job",
     "Hours worked started": "Hours Worked started",
+    "NACHI training started": "NACHI Training started",
+    "NACHI training ended": "NACHI Training ended",
     "Inspection started": "Inspection started",
     "Job Complete selected": "Job completion selected",
     "Used tools back on truck confirmed": "Used tools back on truck",
@@ -112,11 +114,14 @@
   let unsubscribeUpdates = null;
   let unsubscribeReplies = null;
   let unsubscribeFieldMessages = null;
+  let unsubscribeDirectMessages = null;
   let replyRefreshTimer = 0;
   let repliesRefreshing = false;
   let selectedFiles = [];
   let inspectorReplies = [];
   let fieldMessages = [];
+  let directMessages = [];
+  let directMessageListenerReady = false;
   let fieldMessageListenerReady = false;
   let knownFieldMessageIds = new Set();
   let officeUpdateListenerReady = false;
@@ -140,6 +145,7 @@
   const ADMIN_ONBOARDING_VERSION = 1;
   const ADMIN_ONBOARDING_EMAILS = new Set(["adrienne@michiganpropertyinspections.com"]);
   let adminOnboardingStep = 0;
+  let teamDeepLinkApplied = false;
 
   const adminOnboardingSteps = [
     () => ({
@@ -245,7 +251,7 @@
     } catch (_) {}
   }
 
-  async function showOfficeAlert(title, body, tag = "mpi-office-alert") {
+  async function showOfficeAlert(title, body, tag = "mpi-office-alert", url = "./admin.html") {
     playOfficeAlertTone();
     try { navigator.vibrate?.([250, 100, 250, 100, 450]); } catch (_) {}
     if (!("Notification" in window) || Notification.permission !== "granted") return;
@@ -261,11 +267,11 @@
           requireInteraction: true,
           silent: false,
           vibrate: [250, 100, 250, 100, 450],
-          data: { url: "./admin.html" }
+          data: { url }
         });
       } else {
         const notification = new Notification(title, { body, icon: "./icon-192.png", tag });
-        notification.onclick = () => window.focus();
+        notification.onclick = () => { window.location.href = url; window.focus(); };
       }
     } catch (_) {}
   }
@@ -630,6 +636,33 @@
     return `<div class="admin-attachments"><strong>${attachments.length} field photo${attachments.length === 1 ? "" : "s"}</strong>${attachments.map(file => `<button class="admin-attachment-open" type="button" data-open-field-attachment="${escapeHtml(file.id)}" data-field-message-id="${escapeHtml(message.id)}"><span>IMG · ${escapeHtml(file.name)} · ${escapeHtml(formatFileSize(file.size))}</span><span>OPEN ↗</span></button>`).join("")}</div>`;
   }
 
+  function directAttachmentsHtml(message) {
+    const attachments = Array.isArray(message?.attachments) ? message.attachments : [];
+    if (!attachments.length) return "";
+    return `<div class="admin-attachments"><strong>${attachments.length} attached file${attachments.length === 1 ? "" : "s"}</strong>${attachments.map(file => `<button class="admin-attachment-open" type="button" data-open-direct-attachment="${escapeHtml(file.id)}" data-direct-message-id="${escapeHtml(message.id)}"><span>${escapeHtml(attachmentKind(file))} · ${escapeHtml(file.name)} · ${escapeHtml(formatFileSize(file.size))}</span><span>OPEN ↗</span></button>`).join("")}</div>`;
+  }
+
+  async function openDirectAttachment(button) {
+    const message = directMessages.find(item => item.id === button.dataset.directMessageId);
+    const attachment = message?.attachments?.find(item => item.id === button.dataset.openDirectAttachment);
+    if (!message || !attachment) return;
+    button.disabled = true;
+    try {
+      const blob = await shared.loadDirectAttachment(message.id, attachment);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = attachment.name || "MPI-team-attachment";
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 5 * 60 * 1000);
+    } catch (error) {
+      publishStatus.textContent = error?.message || "The team attachment could not be opened.";
+      publishStatus.className = "status error";
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   async function openFieldAttachment(button) {
     const message = fieldMessages.find(item => item.id === button.dataset.fieldMessageId);
     const attachment = message?.attachments?.find(item => item.id === button.dataset.openFieldAttachment);
@@ -879,13 +912,57 @@
     return teamOverviewEntries().find(entry => entry.id === id) || null;
   }
 
+  function unreadDirectFor(person) {
+    return messagesFor(person).filter(message => message.senderUid !== currentUser?.uid && !(Array.isArray(message.readBy) && message.readBy.includes(currentUser?.uid))).length;
+  }
+
   function operationDays(person) {
     const daysByDate = new Map();
     (Array.isArray(person?.operationsDays) ? person.operationsDays : []).forEach(day => {
-      if (day?.date) daysByDate.set(day.date, day);
+      if (day?.date) daysByDate.set(day.date, mergeAdminOperationDay(daysByDate.get(day.date), day));
     });
-    if (person?.operationsCurrent?.date) daysByDate.set(person.operationsCurrent.date, person.operationsCurrent);
+    if (person?.operationsCurrent?.date) daysByDate.set(person.operationsCurrent.date, mergeAdminOperationDay(daysByDate.get(person.operationsCurrent.date), person.operationsCurrent));
     return [...daysByDate.values()];
+  }
+
+  function mergeAdminOperationDay(previous = null, incoming = null) {
+    if (!previous) return incoming || {};
+    if (!incoming) return previous;
+    const mergeRows = (left, right, keyFn) => {
+      const rows = new Map();
+      [...(Array.isArray(left) ? left : []), ...(Array.isArray(right) ? right : [])].forEach((item, index) => {
+        const key = keyFn(item) || `row-${index}`;
+        const existing = rows.get(key);
+        if (!existing || JSON.stringify(item || {}).length >= JSON.stringify(existing || {}).length) rows.set(key, item);
+      });
+      return [...rows.values()];
+    };
+    const jobs = mergeRows(previous.jobs, incoming.jobs, item => String(item?.id || `${item?.property || ""}|${item?.scheduledStart || ""}`));
+    const activity = mergeRows(previous.activity, incoming.activity, item => String(item?.id || `${item?.timestamp || ""}|${item?.action || ""}|${eventJobId(item)}`))
+      .sort((left, right) => (asDate(left?.timestamp)?.getTime() || 0) - (asDate(right?.timestamp)?.getTime() || 0));
+    const previousClock = previous.timeClock || null;
+    const incomingClock = incoming.timeClock || null;
+    const clockScore = clock => (Array.isArray(clock?.sessions) ? clock.sessions.length * 100000 : 0) + Number(clock?.workedMinutes || 0);
+    const timeClock = clockScore(incomingClock) >= clockScore(previousClock) ? (incomingClock || previousClock) : (previousClock || incomingClock);
+    const driveTime = Number(incoming.driveTime?.totalMinutes || 0) >= Number(previous.driveTime?.totalMinutes || 0)
+      ? (incoming.driveTime || previous.driveTime) : (previous.driveTime || incoming.driveTime);
+    const latest = (asDate(incoming.updatedAtClient)?.getTime() || 0) >= (asDate(previous.updatedAtClient)?.getTime() || 0) ? incoming : previous;
+    return {
+      ...previous,
+      ...incoming,
+      liveStatus: latest.liveStatus || incoming.liveStatus || previous.liveStatus,
+      updatedAtClient: latest.updatedAtClient || incoming.updatedAtClient || previous.updatedAtClient,
+      jobs,
+      activity,
+      timeClock,
+      driveTime,
+      readiness: incoming.readiness || previous.readiness || null,
+      labStop: incoming.labStop || previous.labStop || null,
+      dayComplete: incoming.dayComplete || previous.dayComplete || null,
+      nachiTraining: incoming.nachiTraining || previous.nachiTraining || null,
+      currentJob: incoming.currentJob || previous.currentJob || null,
+      nextJob: incoming.nextJob || previous.nextJob || null
+    };
   }
 
   function selectedDays(person) {
@@ -924,6 +1001,7 @@
     const wantedJob = String(jobId || "");
     const event = (day?.activity || []).filter(item => item?.action === action && (!wantedJob || eventJobId(item) === wantedJob)).at(-1);
     if (event?.timestamp) return event.timestamp;
+    if (action === "Morning readiness completed") return day?.readiness?.completedAt || day?.timeClock?.activityStartedAt || "";
     const job = (day?.jobs || []).find(item => String(item.id || "") === wantedJob);
     if (!job) return "";
     return ({
@@ -984,6 +1062,7 @@
       ? effective.paidSessionIndexes[0]
       : sessions.findIndex(session => session?.clockedInAt && !["morning-readiness", "activity-only"].includes(String(session.startSource || "legacy-manual-clock")));
     if (firstPaid < 0) return effective;
+    if (String(sessions[firstPaid]?.startSource || "").toLowerCase() === "nachi-training") return effective;
     sessions[firstPaid].clockedInAt = arrivalAdjustment.correctedValue;
     return { ...effective, sessions, hoursWorkedStartedAt: arrivalAdjustment.correctedValue, effectiveHoursWorkedStartedAt: arrivalAdjustment.correctedValue, startAdjustment: arrivalAdjustment };
   }
@@ -1486,14 +1565,15 @@
     const latestSync = latestSyncDate(person, day);
     const stale = !["NOT STARTED", "CLOCKED OUT"].includes(status) && latestSync && Date.now() - latestSync.getTime() > 20 * 60 * 1000;
     const punctuality = day?.currentJob?.arrivalPerformance || next?.arrivalPerformance || (alerts.some(item => /late/i.test(item)) ? "Needs review" : "On schedule");
-    return `<button class="inspector-row${alerts.length ? " has-alert" : ""}" type="button" data-open-inspector="${escapeHtml(person.id)}">
+    const unread = unreadDirectFor(person);
+    return `<button class="inspector-row${alerts.length || unread ? " has-alert" : ""}" type="button" data-open-inspector="${escapeHtml(person.id)}">
       <div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(person.name || person.email)}</strong><small>${escapeHtml(day?.currentJob?.property || (next ? `Next: ${next.property}` : "No current appointment"))}</small><small class="inspector-sync${stale ? " stale" : ""}">${escapeHtml(syncAgeLabel(person, day))}${stale ? " · confirm status" : ""}</small></div></div>
       <div><span class="status-badge ${statusClass(status, alerts)}${stale ? " stale" : ""}">${escapeHtml(status)}</span><small>${alerts[0] ? escapeHtml(alerts[0]) : escapeHtml(punctuality)}</small></div>
       <div class="row-metric"><span>Jobs</span><b>${counts.complete} / ${counts.total}</b></div>
       <div class="row-metric"><span>Hours worked</span><b>${formatMinutes(hours)}</b></div>
       <div class="row-metric"><span>Drive time</span><b>${formatMinutes(drive)}</b></div>
       <div class="row-metric"><span>Next appointment</span><b>${next ? formatTime(next.scheduledStart) : "—"}</b></div>
-      <span class="row-open">›</span>
+      <span class="row-open">${unread ? `${unread} new · ` : ""}›</span>
     </button>`;
   }
 
@@ -1505,24 +1585,26 @@
     const status = subcontractorDisplayStatus(state);
     const completed = Array.isArray(state?.completedJobs) ? state.completedJobs.length : 0;
     const lastEvent = Array.isArray(state?.events) ? state.events.at(-1) : null;
-    return `<button class="inspector-row subcontractor-row${test ? " test" : ""}" type="button" data-open-subcontractor="${escapeHtml(entry.id)}">
+    const unread = test ? 0 : unreadDirectFor(person);
+    return `<button class="inspector-row subcontractor-row${test ? " test" : ""}${unread ? " has-alert" : ""}" type="button" data-open-subcontractor="${escapeHtml(entry.id)}">
       <div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(title)}</strong><small>${escapeHtml(test ? "Test subcontractor · excluded from payroll" : "Subcontractor")}</small><small class="inspector-sync">${escapeHtml(state?.updatedAtClient ? `Updated ${formatDateTime(state.updatedAtClient)}` : "Waiting for phone sync")}</small></div></div>
       <div><span class="status-badge">${escapeHtml(status)}</span><small>${escapeHtml(lastEvent?.type || "No action recorded yet")}</small></div>
       <div class="row-metric"><span>Current job</span><b>${escapeHtml(job ? `Job ${job.number || 1}` : "—")}</b></div>
       <div class="row-metric"><span>Completed</span><b>${completed}</b></div>
       <div class="row-metric"><span>Arrived</span><b>${escapeHtml(formatTime(job?.arrivedAt))}</b></div>
       <div class="row-metric"><span>Last action</span><b>${escapeHtml(formatTime(lastEvent?.timestamp))}</b></div>
-      <span class="row-open">›</span>
+      <span class="row-open">${unread ? `${unread} new · ` : ""}›</span>
     </button>`;
   }
 
   function officeOverviewRow(entry) {
     const person = entry.person;
-    return `<button class="inspector-row office-row" type="button" data-open-office="${escapeHtml(entry.id)}">
+    const unread = unreadDirectFor(person);
+    return `<button class="inspector-row office-row${unread ? " has-alert" : ""}" type="button" data-open-office="${escapeHtml(entry.id)}">
       <div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(person.name || person.email || "MPI Office")}</strong><small>Office Team</small><small class="inspector-sync">${escapeHtml(person.lastSeenAt ? `Last active ${formatDateTime(person.lastSeenAt)}` : "Approved office account")}</small></div></div>
       <div><span class="status-badge neutral">OFFICE</span><small>Tap to open conversation</small></div>
       <div class="row-metric"><span>Role</span><b>${escapeHtml(person.role === "owner" ? "Owner" : "Office admin")}</b></div>
-      <div class="row-metric"><span>Messages</span><b>${messagesFor(person).length}</b></div>
+      <div class="row-metric"><span>Messages</span><b>${unread ? `${unread} unread` : messagesFor(person).length}</b></div>
       <div class="row-metric"><span>Availability</span><b>Office</b></div>
       <div class="row-metric"><span>Contact</span><b>Message</b></div>
       <span class="row-open">›</span>
@@ -1569,17 +1651,27 @@
     const entries = teamOverviewEntries();
     const fieldEntries = entries.filter(entry => entry.kind !== "office");
     const officeEntries = entries.filter(entry => entry.kind === "office");
+    const cory = operativePeople().find(person => /^cory\b/i.test(String(person.name || "")) || shared.normalizeEmail(person.email) === "cory@michiganpropertyinspections.com");
+    const coryMinutes = cory ? weeklyMinutes(cory) : 0;
+    const coryOvertime = Math.max(0, coryMinutes - 40 * 60);
+    const coryStatus = coryMinutes >= 40 * 60 ? "red" : coryMinutes >= 35 * 60 ? "amber" : "green";
+    const canSeeCoryHours = currentProfile?.role === "owner" || /^adrienne\b/i.test(String(currentProfile?.name || currentUser?.displayName || ""));
+    const coryCounter = canSeeCoryHours && cory
+      ? `<section class="cory-hours-card ${coryStatus}" aria-label="Cory weekly hours"><div><span>CORY · WEEKLY HOURS WORKED</span><strong>${formatMinutes(coryMinutes)}</strong><small>Uses the same effective payroll time and Admin corrections as the workweek report.</small></div><div class="cory-overtime"><span>OVERTIME HOURS WORKED</span><strong>${formatMinutes(coryOvertime)}</strong><small>${coryOvertime ? "40-hour threshold exceeded" : "No overtime recorded"}</small></div></section>`
+      : "";
     teamOverview.hidden = false;
     inspectorDetail.hidden = true;
     teamOverview.innerHTML = entries.length
-      ? `${fieldEntries.length ? `<div class="team-group-title">Field Team <span>${fieldEntries.length} member${fieldEntries.length === 1 ? "" : "s"}</span></div>${fieldEntries.map(entry => entry.kind === "subcontractor" ? subcontractorOverviewRow(entry) : overviewRow(entry.person)).join("")}` : ""}${officeEntries.length ? `<div class="team-group-title">Office Team <span>${officeEntries.length} member${officeEntries.length === 1 ? "" : "s"}</span></div>${officeEntries.map(officeOverviewRow).join("")}` : ""}`
+      ? `${coryCounter}${fieldEntries.length ? `<div class="team-group-title">Field Team <span>${fieldEntries.length} member${fieldEntries.length === 1 ? "" : "s"}</span></div>${fieldEntries.map(entry => entry.kind === "subcontractor" ? subcontractorOverviewRow(entry) : overviewRow(entry.person)).join("")}` : ""}${officeEntries.length ? `<div class="team-group-title">Office Team <span>${officeEntries.length} member${officeEntries.length === 1 ? "" : "s"}</span></div>${officeEntries.map(officeOverviewRow).join("")}` : ""}`
       : '<div class="empty">No team accounts have synchronized yet. Ask each user to sign in with their MPI account.</div>';
   }
 
   function renderSubcontractorDetail(entry) {
-    inspectorDetail.innerHTML = `<div class="detail-hero"><div class="detail-person">${avatarHtml(entry.person, "large")}<div><p class="ops-eyebrow">Subcontractor operations</p><h2>${escapeHtml(entry.test ? (entry.state?.subcontractorName || "Test Subcontractor") : (entry.person.name || entry.person.email || "MPI Subcontractor"))}</h2><p>Job and lab status · excluded from employee payroll and hours</p></div></div><button class="detail-back" type="button" data-back-overview>← All field users</button></div>${subcontractorStateCard(entry.person, entry.state, entry.test)}`;
+    const person = entry.person;
+    inspectorDetail.innerHTML = `<div class="detail-hero"><div class="detail-person">${avatarHtml(person, "large")}<div><p class="ops-eyebrow">Subcontractor operations</p><h2>${escapeHtml(entry.test ? (entry.state?.subcontractorName || "Test Subcontractor") : (person.name || person.email || "MPI Subcontractor"))}</h2><p>Job and lab status · excluded from employee payroll and hours</p></div></div><button class="detail-back" type="button" data-back-overview>← All field users</button></div>${subcontractorStateCard(person, entry.state, entry.test)}`;
     teamOverview.hidden = true;
     inspectorDetail.hidden = false;
+    if (!entry.test) hydrateMessageReceipts(person);
   }
 
   function renderOfficeDetail(entry) {
@@ -1675,15 +1767,18 @@
   }
 
   function messagesFor(person) {
-    return updates.filter(update => update.type === "message" && (String(update.targetUid || "") === String(person.id || "") || (person.email && shared.normalizeEmail(update.targetEmail) === shared.normalizeEmail(person.email))));
+    const conversationId = shared.directConversationId?.(currentUser?.uid, person?.id) || "";
+    return directMessages.filter(message => message.conversationId === conversationId);
   }
 
   function messageHistoryHtml(person) {
-    const officeMessages = messagesFor(person).map(message => ({ direction: "office", timestamp: message.createdAt, message }));
-    const fromField = fieldMessages.filter(message => message.kind !== "lab-coc" && (message.senderUid === person.id || shared.normalizeEmail(message.senderEmail) === shared.normalizeEmail(person.email))).map(message => ({ direction: "field", timestamp: message.createdAt || message.createdAtClient, message }));
-    const messages = [...officeMessages, ...fromField].sort((left, right) => (asDate(right.timestamp)?.getTime() || 0) - (asDate(left.timestamp)?.getTime() || 0));
+    const privateMessages = messagesFor(person).map(message => ({ direction: message.senderUid === currentUser?.uid ? "office" : "field", timestamp: message.createdAt || message.createdAtClient, message, direct: true }));
+    const legacyOffice = updates.filter(update => update.type === "message" && update.createdBy === currentUser?.uid && (String(update.targetUid || "") === String(person.id || "") || (person.email && shared.normalizeEmail(update.targetEmail) === shared.normalizeEmail(person.email)))).map(message => ({ direction: "office", timestamp: message.createdAt, message }));
+    const legacyField = fieldMessages.filter(message => message.kind !== "lab-coc" && (message.senderUid === person.id || shared.normalizeEmail(message.senderEmail) === shared.normalizeEmail(person.email))).map(message => ({ direction: "field", timestamp: message.createdAt || message.createdAtClient, message }));
+    const messages = [...privateMessages, ...legacyOffice, ...legacyField].sort((left, right) => (asDate(right.timestamp)?.getTime() || 0) - (asDate(left.timestamp)?.getTime() || 0));
     return messages.length ? messages.slice(0, 30).map(item => {
       const message = item.message;
+      if (item.direct) return `<article class="${item.direction}"><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || "MPI Team Member")}</strong><p>${escapeHtml(message.message || "Attachment sent")}</p>${directAttachmentsHtml(message)}${item.direction === "field" ? `<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}" data-direct-message="true">CREATE TO-DO</button>` : ""}</article>`;
       if (item.direction === "field") return `<article><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || person.name || "MPI Field User")} → Office</strong><p>${escapeHtml(message.message || "Photos sent to MPI Office")}</p>${fieldAttachmentsHtml(message)}<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}">CREATE TO-DO</button></article>`;
       const receipt = messageReceiptCache.get(message.id);
       const state = receipt?.status ? receipt.status.replace(/-/g, " ") : "Sent to app";
@@ -1692,6 +1787,7 @@
   }
 
   async function hydrateMessageReceipts(person) {
+    shared.markDirectConversationRead?.(currentUser, person.id).catch(() => false);
     await Promise.all(messagesFor(person).slice(0, 20).map(async message => {
       try {
         const receipt = await shared.db.collection("officeUpdates").doc(message.id).collection("receipts").doc(person.id).get();
@@ -1706,7 +1802,9 @@
 
   async function createTodoFromMessage(button) {
     const person = people.find(item => item.id === button.dataset.messagePerson);
-    const message = fieldMessages.find(item => item.id === button.dataset.createMessageTodo);
+    const message = button.dataset.directMessage === "true"
+      ? directMessages.find(item => item.id === button.dataset.createMessageTodo)
+      : fieldMessages.find(item => item.id === button.dataset.createMessageTodo);
     if (!person || !message || !shared.isAdminRole(currentProfile)) return;
     button.disabled = true;
     button.textContent = "CREATING…";
@@ -1901,7 +1999,10 @@
     const effectiveClock = effectiveTimeClockFor(person, day);
     const effectiveHoursStart = effectiveClock?.effectiveHoursWorkedStartedAt || day?.timeClock?.hoursWorkedStartedAt || "";
     const timeAdjusted = Boolean(effectiveClock?.startAdjustment || effectiveClock?.endAdjustment);
-    const activityStart = day?.timeClock?.activityStartedAt || day?.readiness?.completedAt;
+    const originalReadiness = day?.readiness?.completedAt || day?.timeClock?.activityStartedAt || "";
+    const readinessCorrection = latestActionCorrection(person, day, "Morning readiness completed");
+    const effectiveReadiness = readinessCorrection?.correctedValue || originalReadiness;
+    const activityStart = effectiveReadiness;
     const activityStartMs = asDate(activityStart)?.getTime() || 0;
     const lastActivityTime = (day?.activity || []).map(item => asDate(item?.timestamp)?.getTime() || 0).reduce((latest, value) => Math.max(latest, value), 0);
     const activityCanRun = day?.date === dateKey() && day?.liveStatus !== "CLOCKED OUT" && !day?.dayComplete?.completedAt;
@@ -1911,7 +2012,7 @@
       : 0;
     const timeAudit = workedTimeAuditForDay(person, day);
     const eodStatus = day?.dayComplete?.completedAt ? "CLOCKED OUT" : counts.total && counts.complete === counts.total ? "END-OF-DAY CHECKS" : "DAY IN PROGRESS";
-    const correctionActions = ["Hours Worked start", "Hours Worked end", "On My Way selected", "Arrived", "Inspection started", "Final job completion", "Arrived at lab", "Lab visit completed", "Arrived home / end location", "Clocked off"];
+    const correctionActions = ["Morning readiness completed", "Hours Worked start", "Hours Worked end", "On My Way selected", "Arrived", "Inspection started", "Final job completion", "Arrived at lab", "Lab visit completed", "Arrived home / end location", "Clocked off"];
     const jobOptions = (day?.jobs || []).map(job => `<option value="${escapeHtml(job.id)}">${escapeHtml(job.property)}</option>`).join("");
     const timeAtProperty = currentArrivedAt && asDate(currentArrivedAt) ? formatMinutes(Math.floor((Date.now() - asDate(currentArrivedAt).getTime()) / 60000)) : "—";
     const lastLocation = lastLocationForDay(day);
@@ -1926,6 +2027,7 @@
         <article class="ops-card"><p class="ops-eyebrow">${currentRange === "week" ? "Hours worked this week" : currentRange === "yesterday" ? "Hours worked yesterday" : "Hours worked today"}</p><strong class="ops-primary">${formatMinutes(hours)}</strong><p class="ops-sub">${currentRange === "week" ? `${days.length} recorded day${days.length === 1 ? "" : "s"} included · selected day ${formatDate(day?.date)}` : `Started ${formatTime(effectiveHoursStart)} · ${clockOut ? `Frozen at ${formatTime(clockOut)}` : activityCanRun ? "Running now" : "Not started"}${timeAdjusted ? " · Management adjusted" : ""}`}</p>${timeAudit.issues.length ? `<div class="alert-item" style="margin-top:12px">${escapeHtml(timeAudit.issues.map(item => item.message).join(" "))}</div>` : ""}</article>
         <article class="ops-card"><p class="ops-eyebrow">Activity window</p><strong class="ops-primary">${formatMinutes(activityMinutes)}</strong><p class="ops-sub">Morning readiness ${formatTime(activityStart)} · End ${formatTime(clockOut)}</p></article>
         <article class="ops-card"><p class="ops-eyebrow">Weekly hours</p><strong class="ops-primary">${formatMinutes(weekly)}</strong><p class="ops-sub">Current Monday-to-today total${weekly >= 38 * 60 ? " · Review threshold approaching" : ""}. Open a day below to inspect or correct its source times.</p>${weeklyDayBreakdownHtml(person, "hours")}</article>
+        ${day?.nachiTraining ? `<article class="ops-card"><p class="ops-eyebrow">NACHI Training Time</p><strong class="ops-primary">${formatMinutes(day.nachiTraining.totalMinutes)}</strong><p class="ops-sub">${day.nachiTraining.active ? "Training is active now and is included in Hours Worked." : "Recorded separately and included in the same effective payroll hours."}</p></article>` : ""}
         <article class="ops-card span-6"><h3>${currentRange === "week" ? "Total Drive Time This Week" : "Drive Time"}</h3><div class="fact-list"><div class="fact"><span>Morning drive</span><strong>${formatMinutes(drive.morningMinutes)}</strong></div><div class="fact"><span>Between jobs</span><strong>${formatMinutes(drive.betweenJobMinutes)}</strong></div><div class="fact"><span>Lab travel</span><strong>${formatMinutes(drive.labMinutes)}</strong></div><div class="fact"><span>Final drive</span><strong>${driveTimeForDay(day, person)?.finalPending ? "Pending" : formatMinutes(drive.finalMinutes)}</strong></div><div class="fact"><span>Total drive ${currentRange === "week" ? "this week" : "today"}</span><strong>${formatMinutes(drive.totalMinutes)}</strong></div></div>${currentRange === "week" ? weeklyDayBreakdownHtml(person, "drive") : ""}</article>
         <article class="ops-card span-6"><h3>Day Progress</h3><strong class="ops-primary">${counts.complete} / ${counts.total} complete</strong><p class="ops-sub">Completed jobs remain visible for the full calendar day.</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Completed</span><strong>${counts.complete}</strong></div><div class="fact"><span>Remaining</span><strong>${Math.max(0, counts.total - counts.complete)}</strong></div><div class="fact"><span>Total jobs</span><strong>${counts.total}</strong></div></div></article>
         <article class="ops-card full"><h3>Job Breakdown</h3><p class="ops-sub">Open any job to review its operational timestamps. Use Edit to add an auditable correction.</p><div class="job-list" style="margin-top:12px">${(day?.jobs || []).length ? day.jobs.map((job, index) => jobCard(person, day, job, index)).join("") : '<div class="empty">No scheduled jobs are available for this period.</div>'}</div></article>
@@ -1933,7 +2035,7 @@
         <article class="ops-card"><h3>Alerts / Exceptions</h3><div class="alert-list">${alerts.length ? alerts.map(item => `<div class="alert-item">${escapeHtml(item)}</div>`).join("") : '<div class="clear-item">✓ No meaningful workflow issues recorded.</div>'}</div></article>
         <article class="ops-card full"><h3>Arrival Location Review</h3><p class="ops-sub">Inspectors are never blocked. Any unusual location is recorded here for management review, while the original time and GPS evidence remain unchanged.</p>${arrivalReviewHtml(person, day)}</article>
         ${(day?.commentFailures || []).length ? `<article class="ops-card full"><h3>Comment Builder Technical Log</h3><div class="timeline">${day.commentFailures.slice().reverse().map(item => `<div class="timeline-row"><time>${escapeHtml(formatTime(item.timestamp))}</time><span class="timeline-dot"></span><div><strong>${escapeHtml(item.category || "service-error")} · attempt ${escapeHtml(item.attempt || "—")}</strong><small>Request ${escapeHtml(item.requestId || "—")} · ${escapeHtml(item.connectivity || "unknown")} · ${escapeHtml(item.code || item.httpStatus || "no status")} · ${escapeHtml(item.message || "No technical message")}</small></div></div>`).join("")}</div></article>` : ""}
-        <article class="ops-card"><h3>Morning Readiness</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${day?.readiness ? "Complete" : "Not recorded"}</strong></div><div class="fact"><span>Completed</span><strong>${formatTime(day?.readiness?.completedAt)}</strong></div><div class="fact"><span>Important notifications</span><strong>${escapeHtml(day?.readiness?.notificationPermission === "granted" ? "Enabled" : day?.readiness?.notificationPermission || "Unknown")}</strong></div></div></article>
+        <article class="ops-card"><h3>Morning Readiness</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${day?.readiness ? "Complete" : "Not recorded"}</strong></div><div class="fact"><span>Original time</span><strong>${formatTime(originalReadiness)}</strong></div>${readinessCorrection ? `<div class="fact"><span>Admin-adjusted time</span><strong>${formatTime(readinessCorrection.correctedValue)}</strong></div><div class="fact"><span>Effective activity start</span><strong>${formatTime(effectiveReadiness)}</strong></div><div class="fact"><span>Changed by</span><strong>${escapeHtml(readinessCorrection.correctedByName || readinessCorrection.correctedByEmail || "MPI Admin")}</strong></div><div class="fact"><span>Changed</span><strong>${escapeHtml(formatDateTime(readinessCorrection.correctedAt))}</strong></div><div class="fact"><span>Reason</span><strong>${escapeHtml(readinessCorrection.reason || "—")}</strong></div>` : `<div class="fact"><span>Effective activity start</span><strong>${formatTime(effectiveReadiness)}</strong></div>`}<div class="fact"><span>Important notifications</span><strong>${escapeHtml(day?.readiness?.notificationPermission === "granted" ? "Enabled" : day?.readiness?.notificationPermission || "Unknown")}</strong></div></div></article>
         <article class="ops-card span-6"><h3>Lab Activity &amp; Chain of Custody</h3>${labHtml(person, day)}</article>
         <article class="ops-card"><h3>End-of-Day Status</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${escapeHtml(eodStatus)}</strong></div><div class="fact"><span>Clock out</span><strong>${formatTime(clockOut)}</strong></div><div class="fact"><span>Last recorded location</span><strong>${locationLink}</strong></div><div class="fact"><span>Equipment check</span><strong>${day?.dayComplete?.equipment?.length ? "Complete" : "Pending"}</strong></div></div><p class="ops-sub">Location is event-based, not continuous. Never treat a stale location as live.</p></article>
         <article class="ops-card span-6"><h3>Message Inspector</h3><div class="quick-messages" id="adminQuickMessages">${["CALL OFFICE", "PLEASE CHECK APP", "RUNNING LATE – UPDATE OFFICE", "REMEMBER LAB DROP", "PLEASE CONFIRM STATUS", "CONTACT CLIENT"].map(value => `<button type="button" data-quick-message="${escapeHtml(value)}">${escapeHtml(value)}</button>`).join("")}</div><form class="compact-form" id="adminMessageForm" data-person-id="${escapeHtml(person.id)}"><div class="field"><label for="adminMessageText">Review or write the message</label><textarea id="adminMessageText" maxlength="1000" required placeholder="Type a clear operational message for ${escapeHtml(person.name || "the inspector")}"></textarea></div>${chatAttachmentHtml()}<button class="primary" type="submit">SEND TO INSPECTOR APP</button><span class="status" id="adminMessageStatus"></span></form><h3 style="margin-top:20px">Conversation</h3><div class="message-history" id="adminMessageHistory">${messageHistoryHtml(person)}</div></article>
@@ -1995,13 +2097,50 @@
     if (selectedInspectorId !== "all") renderOperations();
   }
 
+  function canonicalTeamName(person) {
+    const email = shared.normalizeEmail(person?.email);
+    if (email === "admin@michiganpropertyinspections.com") return "Brooke";
+    if (/^corey leese$/i.test(String(person?.name || "").trim())) return "Cory Leese";
+    return String(person?.name || person?.email || "MPI Team Member");
+  }
+
+  function syncTeamDirectory() {
+    if (!currentUser || !shared.isAdminRole(currentProfile) || !people.length) return;
+    const batch = shared.db.batch();
+    const directoryPeople = [
+      ...people.filter(person => person.active !== false && person.role !== "subcontractor"),
+      ...preferredSubcontractors(people.filter(person => person.active !== false && person.role === "subcontractor"))
+    ];
+    directoryPeople.forEach(person => {
+      const correctedName = canonicalTeamName(person);
+      batch.set(shared.db.collection("teamDirectory").doc(person.id), {
+        userId: person.id,
+        name: correctedName.slice(0, 80),
+        email: shared.normalizeEmail(person.email),
+        role: String(person.role || "inspector").toLowerCase(),
+        photoURL: String(person.photoURL || "").slice(0, 1000),
+        profilePhoto: String(person.profilePhoto || "").slice(0, 220000),
+        notificationToken: String(person.notificationDevice?.token || person.officeNotificationDevice?.token || "").slice(0, 500),
+        active: true,
+        updatedAt: shared.serverTimestamp()
+      }, { merge: true });
+    });
+    batch.commit().catch(() => false);
+  }
+
   function startAdminData() {
     unsubscribePeople?.();
     unsubscribeUpdates?.();
     unsubscribeReplies?.();
     unsubscribeFieldMessages?.();
+    unsubscribeDirectMessages?.();
     unsubscribePeople = shared.db.collection("users").orderBy("name").onSnapshot(snapshot => {
-      people = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      people = snapshot.docs.map(doc => {
+        const value = { id: doc.id, ...doc.data() };
+        if (/^corey leese$/i.test(String(value.name || "").trim())) value.name = "Cory Leese";
+        if (shared.normalizeEmail(value.email) === "admin@michiganpropertyinspections.com") value.name = "Brooke";
+        return value;
+      });
       people.forEach(person => progressAssignedRequests(person));
       if (!legacyRequestChecked) {
         legacyRequestChecked = true;
@@ -2035,6 +2174,17 @@
           shared.db.collection("users").doc(person.id).set({ inspectorId, updatedAt: shared.serverTimestamp(), updatedBy: currentUser?.uid || "system" }, { merge: true }).catch(() => {});
         }
       });
+      syncTeamDirectory();
+      if (!teamDeepLinkApplied) {
+        const targetUid = new URL(window.location.href).searchParams.get("team") || "";
+        const targetEntry = teamOverviewEntries().find(entry => entry.person?.id === targetUid);
+        if (targetEntry) {
+          selectedInspectorId = targetEntry.id;
+          selectedOperationDate = "";
+          inspectorSelector.value = selectedInspectorId;
+        }
+        teamDeepLinkApplied = true;
+      }
       renderPeople();
     }, error => { authStatus.textContent = error.message; });
     officeUpdateListenerReady = false;
@@ -2061,6 +2211,24 @@
     unsubscribeFieldMessages = shared.db.collection("fieldMessages").orderBy("createdAt", "desc").limit(200).onSnapshot(processFieldMessages, () => {
       fieldMessages = [];
       renderReplyInbox();
+    });
+    directMessageListenerReady = false;
+    unsubscribeDirectMessages = shared.watchDirectMessages(currentUser, (values, error) => {
+      if (error) return;
+      const previousIds = new Set(directMessages.map(item => item.id));
+      const fresh = directMessageListenerReady ? values.filter(item => !previousIds.has(item.id) && item.senderUid !== currentUser.uid) : [];
+      directMessages = values;
+      if (fresh.length) {
+        const latest = fresh[0];
+        showOfficeAlert(
+          `Message from ${latest.senderName || "MPI Team Member"}`,
+          latest.message || "A team attachment is available.",
+          `mpi-team-${latest.id}`,
+          `./admin.html?team=${encodeURIComponent(latest.senderUid || "")}`
+        );
+      }
+      directMessageListenerReady = true;
+      renderOperations();
     });
     if (!replyRefreshTimer) {
       replyRefreshTimer = window.setInterval(async () => {
@@ -2171,6 +2339,15 @@
     status.textContent = "Sending…";
     let messageRef = null;
     try {
+      if (!isSafetyReply) {
+        await shared.sendDirectMessage(currentUser, currentProfile, person, text, files);
+        formElement.reset();
+        formElement._mpiFiles = [];
+        renderChatFiles(formElement);
+        status.textContent = `Private message sent only to ${person.name || "this team member"}.`;
+        status.className = "status success";
+        return;
+      }
       messageRef = shared.db.collection("officeUpdates").doc();
       await messageRef.set({
         type: "message", priority: isSafetyReply ? "critical" : "important", audience: "inspector",
@@ -2348,8 +2525,9 @@
     };
     const corrections = [correction];
     const firstScheduledJob = (day.jobs || []).slice().sort((left, right) => (asDate(left.scheduledStart)?.getTime() || 0) - (asDate(right.scheduledStart)?.getTime() || 0))[0];
-    if (action === "Arrived" && jobId && String(firstScheduledJob?.id || "") === String(jobId)) {
-      const originalHoursStart = rawSessions.find(item => item.clockedInAt && !["morning-readiness", "activity-only"].includes(String(item.startSource || "legacy-manual-clock")))?.clockedInAt
+    const firstPaidSession = rawSessions.find(item => item.clockedInAt && !["morning-readiness", "activity-only"].includes(String(item.startSource || "legacy-manual-clock")));
+    if (action === "Arrived" && jobId && String(firstScheduledJob?.id || "") === String(jobId) && String(firstPaidSession?.startSource || "").toLowerCase() !== "nachi-training") {
+      const originalHoursStart = firstPaidSession?.clockedInAt
         || day.timeClock?.hoursWorkedStartedAt
         || originalValue;
       corrections.push({
@@ -2593,6 +2771,11 @@
     const fieldAttachment = event.target.closest("[data-open-field-attachment]");
     if (fieldAttachment) {
       openFieldAttachment(fieldAttachment);
+      return;
+    }
+    const directAttachment = event.target.closest("[data-open-direct-attachment]");
+    if (directAttachment) {
+      openDirectAttachment(directAttachment);
       return;
     }
     const officeAttachment = event.target.closest("[data-open-admin-attachment]");

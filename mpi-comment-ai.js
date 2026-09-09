@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app-check.js";
 import { getAI, getGenerativeModel, GoogleAIBackend, Schema } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-ai.js";
 
@@ -18,6 +18,8 @@ const USAGE_STORAGE_KEY = "mpiCommentBuilderUsageV1";
 const COMMENT_TIMEOUT_MS = 35000;
 const COMMENT_LOG_STORAGE_KEY = "mpiCommentBuilderTechnicalLogV1";
 const COMMENT_RESULT_CACHE_KEY = "mpiCommentBuilderResultCacheV1";
+const PRIMARY_MODEL = "gemini-3.7-flash";
+const FALLBACK_MODEL = "gemini-3.5-flash";
 
 const SYSTEM_INSTRUCTION = `You write inspection report comments for Michigan Property Inspections.
 
@@ -45,7 +47,8 @@ const RESPONSE_SCHEMA = Schema.object({
   }
 });
 
-let modelPromise;
+const modelPromises = new Map();
+let aiPromise;
 
 function usageRecord() {
   try {
@@ -119,10 +122,10 @@ function technicalCategory(error) {
   if (!navigator.onLine || /network|failed to fetch|load failed/.test(text)) return "network";
   if (/app.?check|recaptcha/.test(text)) return "app-check";
   if (/auth|unauthor|forbidden|permission|401|403/.test(text)) return "auth-session";
-  if (/429|quota|resource.?exhausted|rate/.test(text)) return "rate-limit";
+  if (/429|quota|resource.?exhausted|rate.?limit/.test(text)) return "rate-limit";
   if (/timeout|timed out/.test(text)) return "timeout";
   if (/json|parse|incomplete|malformed/.test(text)) return "malformed-response";
-  if (/503|unavailable|overloaded|busy/.test(text)) return "service-unavailable";
+  if (/500|502|503|504|unavailable|overloaded|high demand|busy|fetch-error/.test(text)) return "service-unavailable";
   return "unknown";
 }
 
@@ -155,17 +158,33 @@ function requireCompanySession() {
   return session;
 }
 
-async function getModel() {
-  if (!modelPromise) {
-    modelPromise = Promise.resolve().then(() => {
-      const app = initializeApp(FIREBASE_CONFIG, "mpi-comment-builder");
-      initializeAppCheck(app, {
-        provider: new ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY),
-        isTokenAutoRefreshEnabled: true
-      });
-      const ai = getAI(app, { backend: new GoogleAIBackend() });
+function getAIClient() {
+  if (!aiPromise) {
+    aiPromise = Promise.resolve().then(() => {
+      const app = getApps().find(candidate => candidate.name === "mpi-comment-builder")
+        || initializeApp(FIREBASE_CONFIG, "mpi-comment-builder");
+      try {
+        initializeAppCheck(app, {
+          provider: new ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY),
+          isTokenAutoRefreshEnabled: true
+        });
+      } catch (error) {
+        if (!/already exists|already been initialized/i.test(String(error?.message || ""))) throw error;
+      }
+      return getAI(app, { backend: new GoogleAIBackend() });
+    }).catch(error => {
+      aiPromise = null;
+      throw error;
+    });
+  }
+  return aiPromise;
+}
+
+async function getModel(modelName) {
+  if (!modelPromises.has(modelName)) {
+    const promise = getAIClient().then(ai => {
       return getGenerativeModel(ai, {
-        model: "gemini-3.7-flash",
+        model: modelName,
         systemInstruction: SYSTEM_INSTRUCTION,
         generationConfig: {
           temperature: 0.15,
@@ -175,11 +194,12 @@ async function getModel() {
         }
       });
     }).catch(error => {
-      modelPromise = null;
+      modelPromises.delete(modelName);
       throw error;
     });
+    modelPromises.set(modelName, promise);
   }
-  return modelPromise;
+  return modelPromises.get(modelName);
 }
 
 function commentError(message, status = "Unavailable") {
@@ -211,7 +231,7 @@ function friendlyCommentError(error) {
   if (/app.?check|recaptcha|403|permission.?denied|unauthori[sz]ed|forbidden/.test(combined)) {
     return commentError("MPI secure access could not be verified on this phone. Close and reopen MPI Field Tools, then try again. If it repeats, contact management.", "Access check failed");
   }
-  if (/429|quota|resource.?exhausted|too many|busy|overloaded|503|unavailable/.test(combined)) {
+  if (/429|500|502|503|504|quota|resource.?exhausted|too many|busy|overloaded|high demand|unavailable/.test(combined)) {
     return commentError("The MPI Comment Builder is temporarily busy. Wait a minute and try again; your note has not been lost.", "Service busy");
   }
   return commentError("The MPI Comment Builder service could not complete this comment. Try again; if it repeats, contact management and keep the note on screen.", "Service error");
@@ -298,31 +318,57 @@ async function generate({ note, component = "auto", mode = "defect", id = reques
   if (prior) return prior;
   let lastError;
   for (let attempt = 1; attempt <= 2; attempt += 1) {
+    const modelName = attempt === 1 ? PRIMARY_MODEL : FALLBACK_MODEL;
+    const startedAt = Date.now();
+    let stage = "model-initialization";
     try {
-      const model = await getModel();
+      const model = await getModel(modelName);
+      stage = "model-request";
       const result = await withTimeout(model.generateContent(`${prompt}\nRequest ID: ${id}`));
+      stage = "response-validation";
       const output = parseResponse(result.response.text(), cleanNote, mode, component);
       cacheResult(id, output);
       recordUsage();
-      writeTechnicalLog({ requestId: id, attempt, result: "success", category: "none", connectivity: "online", inspector: session.inspectorEmail || session.inspectorName || "signed-in" });
+      writeTechnicalLog({
+        requestId: id,
+        attempt,
+        result: "success",
+        category: "none",
+        connectivity: "online",
+        authenticationStatus: "company-session-valid",
+        backend: "firebase-ai-logic",
+        model: modelName,
+        stage,
+        durationMs: Date.now() - startedAt,
+        inspector: session.inspectorEmail || session.inspectorName || "signed-in"
+      });
       return output;
     } catch (error) {
       lastError = error;
       const category = technicalCategory(error);
+      const errorText = `${error?.code || ""} ${error?.message || ""}`;
+      const parsedStatus = errorText.match(/\[(\d{3})\s*\]/)?.[1] || errorText.match(/\b(4\d\d|5\d\d)\b/)?.[1] || "";
+      const retryable = navigator.onLine && ["timeout", "network", "service-unavailable", "unknown"].includes(category);
       writeTechnicalLog({
         requestId: id,
         attempt,
         result: "failed",
         category,
         connectivity: navigator.onLine ? "online" : "offline",
+        authenticationStatus: "company-session-valid",
+        backend: "firebase-ai-logic",
+        model: modelName,
+        stage,
+        durationMs: Date.now() - startedAt,
+        retryPlanned: attempt < 2 && retryable,
         inspector: session.inspectorEmail || session.inspectorName || "signed-in",
         code: String(error?.code || "").slice(0, 100),
-        httpStatus: Number(error?.status || error?.httpStatus || 0) || "",
+        httpStatus: Number(error?.status || error?.httpStatus || parsedStatus || 0) || "",
         message: String(error?.message || "Unknown service error").slice(0, 240)
       });
-      console.warn("MPI Comment Builder request failed", { requestId: id, attempt, category, error });
-      if (attempt < 2 && navigator.onLine && !["rate-limit"].includes(category)) {
-        if (["auth-session", "app-check", "service-unavailable"].includes(category)) modelPromise = null;
+      console.warn("MPI Comment Builder request failed", { requestId: id, attempt, category, model: modelName, stage, error });
+      if (attempt < 2 && retryable) {
+        modelPromises.delete(modelName);
         await new Promise(resolve => window.setTimeout(resolve, 700));
         continue;
       }
@@ -334,5 +380,5 @@ async function generate({ note, component = "auto", mode = "defect", id = reques
   throw friendly;
 }
 
-window.MPI_COMMENT_AI = { generate, usageSnapshot, technicalLog: () => { try { return JSON.parse(localStorage.getItem(COMMENT_LOG_STORAGE_KEY) || "[]"); } catch (_) { return []; } }, dailyLimit: DAILY_LIMIT, monthlyLimit: MONTHLY_LIMIT };
+window.MPI_COMMENT_AI = { generate, usageSnapshot, technicalLog: () => { try { return JSON.parse(localStorage.getItem(COMMENT_LOG_STORAGE_KEY) || "[]"); } catch (_) { return []; } }, dailyLimit: DAILY_LIMIT, monthlyLimit: MONTHLY_LIMIT, primaryModel: PRIMARY_MODEL, fallbackModel: FALLBACK_MODEL };
 window.dispatchEvent(new CustomEvent("mpi-comment-ai-ready"));

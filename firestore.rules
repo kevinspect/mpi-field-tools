@@ -127,6 +127,7 @@ service cloud.firestore {
           "DRIVING HOME",
           "DRIVING HOME / FINAL DESTINATION",
           "END-OF-DAY CHECKS",
+          "NACHI TRAINING",
           "CLOCKED OUT"
         ]
         && request.resource.data.date is string
@@ -146,6 +147,58 @@ service cloud.firestore {
           "updatedAt"
         ]);
       allow delete: if false;
+    }
+
+    match /teamDirectory/{userId} {
+      allow read: if activeFieldUser();
+      allow create, update: if isAdmin() || (
+        activeFieldUser()
+        && request.auth.uid == userId
+        && request.resource.data.userId == request.auth.uid
+      );
+      allow delete: if false;
+    }
+
+    match /teamMessages/{messageId} {
+      allow read: if activeFieldUser() && request.auth.uid in resource.data.participantIds;
+      allow create: if activeFieldUser()
+        && request.resource.data.senderUid == request.auth.uid
+        && request.auth.uid in request.resource.data.participantIds
+        && request.resource.data.targetUid in request.resource.data.participantIds
+        && request.resource.data.participantIds.size() == 2;
+      allow update: if activeFieldUser()
+        && request.auth.uid in resource.data.participantIds
+        && request.resource.data.senderUid == resource.data.senderUid
+        && request.resource.data.targetUid == resource.data.targetUid
+        && request.resource.data.participantIds == resource.data.participantIds
+        && request.resource.data.conversationId == resource.data.conversationId
+        && (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(["readBy", "readAt"])
+          || (
+            request.auth.uid == resource.data.senderUid
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(["attachments", "active", "uploadedAt", "uploadError"])
+          )
+        );
+      allow delete: if false;
+
+      match /attachments/{attachmentId} {
+        allow read: if activeFieldUser()
+          && request.auth.uid in get(/databases/$(database)/documents/teamMessages/$(messageId)).data.participantIds;
+        allow create: if activeFieldUser()
+          && get(/databases/$(database)/documents/teamMessages/$(messageId)).data.senderUid == request.auth.uid
+          && request.resource.data.senderUid == request.auth.uid;
+        allow update, delete: if false;
+
+        match /chunks/{chunkId} {
+          allow read: if activeFieldUser()
+            && request.auth.uid in get(/databases/$(database)/documents/teamMessages/$(messageId)).data.participantIds;
+          allow create: if activeFieldUser()
+            && get(/databases/$(database)/documents/teamMessages/$(messageId)).data.senderUid == request.auth.uid
+            && request.resource.data.senderUid == request.auth.uid;
+          allow update, delete: if false;
+        }
+      }
     }
 
     match /officeUpdates/{updateId} {

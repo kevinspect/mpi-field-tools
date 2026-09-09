@@ -50,6 +50,7 @@
     "DRIVING HOME",
     "DRIVING HOME / FINAL DESTINATION",
     "END-OF-DAY CHECKS",
+    "NACHI TRAINING",
     "CLOCKED OUT"
   ]);
 
@@ -590,6 +591,113 @@
     return { id: messageRef.id, ...base, attachments, active: true };
   }
 
+  function directConversationId(firstUid, secondUid) {
+    return [String(firstUid || "").trim(), String(secondUid || "").trim()].filter(Boolean).sort().join("__");
+  }
+
+  async function sendDirectMessage(user, profile, target, message, files = []) {
+    const targetUid = String(target?.id || target?.userId || "").trim();
+    const text = String(message || "").trim().slice(0, 1200);
+    const selected = [...files].filter(file => /^image\//i.test(file?.type || "") || /application\/pdf/i.test(file?.type || "") || /\.(jpe?g|png|webp|heic|heif|pdf)$/i.test(file?.name || "")).slice(0, 3);
+    if (!user || !targetUid || targetUid === user.uid) throw new Error("Choose another MPI team member.");
+    if (!text && !selected.length) throw new Error("Write a message or attach a file first.");
+    if (selected.some(file => Number(file.size) > 8 * 1024 * 1024)) throw new Error("Each attachment must be smaller than 8 MB.");
+    const messageRef = db.collection("teamMessages").doc();
+    const conversationId = directConversationId(user.uid, targetUid);
+    const senderName = String(profile?.name || user.displayName || "MPI Team Member").trim().slice(0, 100);
+    const targetName = String(target?.name || "MPI Team Member").trim().slice(0, 100);
+    const base = {
+      conversationId,
+      participantIds: [user.uid, targetUid].sort(),
+      senderUid: user.uid,
+      senderEmail: normalizeEmail(user.email),
+      senderName,
+      senderRole: String(profile?.role || "inspector").toLowerCase().slice(0, 30),
+      targetUid,
+      targetEmail: normalizeEmail(target?.email),
+      targetName,
+      targetRole: String(target?.role || "inspector").toLowerCase().slice(0, 30),
+      message: text,
+      attachments: [],
+      readBy: [user.uid],
+      active: selected.length === 0,
+      createdAt: serverTimestamp(),
+      createdAtClient: new Date().toISOString()
+    };
+    await messageRef.set(base);
+    const attachments = [];
+    try {
+      for (const original of selected) {
+        const file = /^image\//i.test(original.type || "") ? await prepareFieldImage(original) : original;
+        const encoded = await fileAsBase64(file);
+        const pieces = [];
+        for (let offset = 0; offset < encoded.length; offset += 600000) pieces.push(encoded.slice(offset, offset + 600000));
+        const attachmentRef = messageRef.collection("attachments").doc();
+        const metadata = { id: attachmentRef.id, name: String(file.name || "team-file").slice(0, 160), type: file.type || "application/octet-stream", size: Number(file.size) || 0, chunkCount: pieces.length };
+        await attachmentRef.set({ ...metadata, senderUid: user.uid, active: true, createdAt: serverTimestamp() });
+        for (let start = 0; start < pieces.length; start += 6) {
+          await Promise.all(pieces.slice(start, start + 6).map((data, part) => attachmentRef.collection("chunks").doc(String(start + part).padStart(4, "0")).set({ index: start + part, data, senderUid: user.uid, active: true })));
+        }
+        attachments.push(metadata);
+      }
+      if (selected.length) await messageRef.update({ attachments, active: true, uploadedAt: serverTimestamp() });
+    } catch (error) {
+      await messageRef.set({ active: false, uploadError: String(error?.message || "Attachment upload failed").slice(0, 200) }, { merge: true }).catch(() => {});
+      throw error;
+    }
+    const targetTokens = [target?.notificationDevice?.token, target?.officeNotificationDevice?.token, target?.notificationToken].filter(Boolean);
+    await sendPushNotification({
+      kind: "team-message",
+      audience: ["owner", "admin"].includes(String(target?.role || "").toLowerCase()) ? "office" : "inspector",
+      targetEmail: target?.email || "",
+      targetTokens,
+      title: `Message from ${senderName}`,
+      body: text || `${attachments.length} attachment${attachments.length === 1 ? "" : "s"}`,
+      link: ["owner", "admin"].includes(String(target?.role || "").toLowerCase())
+        ? `./admin.html?team=${encodeURIComponent(user.uid)}`
+        : `./?team=${encodeURIComponent(user.uid)}#team-messages`,
+      tag: `mpi-team-${messageRef.id}`
+    }).catch(() => false);
+    return { id: messageRef.id, ...base, attachments, active: true };
+  }
+
+  function watchDirectMessages(user, callback) {
+    if (!user || typeof callback !== "function") return () => {};
+    return db.collection("teamMessages").where("participantIds", "array-contains", user.uid).onSnapshot(snapshot => {
+      const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(item => item.active !== false)
+        .sort((left, right) => timestampMilliseconds(right.createdAt || right.createdAtClient) - timestampMilliseconds(left.createdAt || left.createdAtClient));
+      callback(records, null);
+    }, error => callback([], error));
+  }
+
+  async function markDirectConversationRead(user, otherUid) {
+    if (!user || !otherUid) return false;
+    const conversationId = directConversationId(user.uid, otherUid);
+    const snapshot = await db.collection("teamMessages").where("conversationId", "==", conversationId).get();
+    const unread = snapshot.docs.filter(doc => !Array.isArray(doc.data()?.readBy) || !doc.data().readBy.includes(user.uid));
+    for (let start = 0; start < unread.length; start += 400) {
+      const batch = db.batch();
+      unread.slice(start, start + 400).forEach(doc => batch.set(doc.ref, { readBy: arrayUnion(user.uid), readAt: serverTimestamp() }, { merge: true }));
+      await batch.commit();
+    }
+    return true;
+  }
+
+  async function loadDirectAttachment(messageId, attachment) {
+    const messageKey = String(messageId || "").trim();
+    const attachmentKey = String(attachment?.id || "").trim();
+    if (!messageKey || !attachmentKey) throw new Error("This attachment is missing its secure file reference.");
+    const snapshot = await db.collection("teamMessages").doc(messageKey).collection("attachments").doc(attachmentKey).collection("chunks").orderBy("index", "asc").get();
+    const chunks = snapshot.docs.map(doc => doc.data()).sort((left, right) => Number(left.index) - Number(right.index));
+    if (!chunks.length || (attachment.chunkCount && chunks.length !== Number(attachment.chunkCount))) throw new Error("The complete attachment has not synchronized yet.");
+    const encoded = chunks.map(chunk => String(chunk.data || "")).join("");
+    const binary = window.atob(encoded);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+    return new Blob([bytes], { type: attachment.type || "application/octet-stream" });
+  }
+
   async function sendSafetyAlert(user, profile, report = {}) {
     if (!user) throw new Error("Sign in with the inspector’s MPI company account before submitting a safety notice.");
     const senderName = String(report.inspector || profile?.name || user.displayName || "MPI Inspector").trim().slice(0, 100);
@@ -744,6 +852,13 @@
     return sessions * 10000 + Number(clock?.workedMinutes || 0) + (clock?.effectiveClockedOutAt ? 1000 : 0);
   }
 
+  function teamDirectoryName(profile = {}, user = {}) {
+    const email = normalizeEmail(profile.email || user.email);
+    if (email === "admin@michiganpropertyinspections.com") return "Brooke";
+    const name = String(profile.name || user.displayName || "MPI Team Member").trim();
+    return /^corey leese$/i.test(name) ? "Cory Leese" : name;
+  }
+
   function mergeOperationsDay(previous = {}, incoming = {}) {
     if (!previous?.date) return { ...(incoming || {}) };
     if (!incoming?.date) return { ...(previous || {}) };
@@ -805,7 +920,7 @@
     const teamVisible = profile.active !== false && ["owner", "inspector", "subcontractor"].includes(role);
     await db.collection("teamPresence").doc(user.uid).set({
       userId: user.uid,
-      name: String(profile.name || user.displayName || "MPI Team Member").slice(0, 80),
+      name: teamDirectoryName(profile, user).slice(0, 80),
       role,
       photoURL: String(user.photoURL || profile.photoURL || "").slice(0, 1000),
       profilePhoto: String(profile.profilePhoto || "").slice(0, 220000),
@@ -813,6 +928,17 @@
       date: String(savedSnapshot.date || ""),
       active: teamVisible,
       updatedAtClient: new Date().toISOString(),
+      updatedAt: serverTimestamp()
+    }, { merge: true }).catch(() => false);
+    await db.collection("teamDirectory").doc(user.uid).set({
+      userId: user.uid,
+      name: teamDirectoryName(profile, user).slice(0, 80),
+      email: normalizeEmail(profile.email || user.email),
+      role,
+      photoURL: String(user.photoURL || profile.photoURL || "").slice(0, 1000),
+      profilePhoto: String(profile.profilePhoto || "").slice(0, 220000),
+      notificationToken: String(profile.notificationDevice?.token || profile.officeNotificationDevice?.token || "").slice(0, 500),
+      active: teamVisible || (["owner", "admin"].includes(role) && profile.active !== false),
       updatedAt: serverTimestamp()
     }, { merge: true }).catch(() => false);
     return true;
@@ -824,6 +950,15 @@
       const records = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(item => ["owner", "inspector", "subcontractor"].includes(String(item.role || "").toLowerCase()))
+        .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")));
+      callback(records, null);
+    }, error => callback([], error));
+  }
+
+  function watchTeamDirectory(callback) {
+    if (typeof callback !== "function") return () => {};
+    return db.collection("teamDirectory").where("active", "==", true).onSnapshot(snapshot => {
+      const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
         .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")));
       callback(records, null);
     }, error => callback([], error));
@@ -864,11 +999,17 @@
     clearUpdate,
     replyToUpdate,
     sendFieldMessage,
+    sendDirectMessage,
+    watchDirectMessages,
+    markDirectConversationRead,
     sendSafetyAlert,
     sendPushNotification,
     loadOfficeAttachment,
     loadFieldAttachment,
+    loadDirectAttachment,
     syncOperationsSnapshot,
-    watchTeamPresence
+    watchTeamPresence,
+    watchTeamDirectory,
+    directConversationId
   };
 })();
