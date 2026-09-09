@@ -1,5 +1,11 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 161 — Hide Legacy Subcontractor Test Activity
+
+- Removed the duplicate Jason row from the live Operations dashboard by suppressing a legacy test-mode subcontractor record whenever the matching real subcontractor profile exists.
+- Preserved the underlying test data for audit and troubleshooting without presenting simulated jobs as real field activity.
+- Changed an unactivated subcontractor profile to show no current job instead of the placeholder “Job 1.”
+
 ## Build 160 — Account-Free Subcontractor Phone Activation
 
 - Replaced Jason's Google-account requirement with a private, one-device activation link created by MPI Office.

@@ -857,8 +857,13 @@
   }
 
   function subcontractorEntries() {
-    const entries = preferredSubcontractors(people.filter(person => person.active !== false && person.role === "subcontractor")).map(person => ({ id: `sub:${person.id}`, person, state: person.subcontractorCurrent, test: false }));
-    people.filter(person => person.active !== false && person.subcontractorTestCurrent?.test === true).forEach(person => entries.push({ id: `subtest:${person.id}`, person, state: person.subcontractorTestCurrent, test: true }));
+    const productionPeople = preferredSubcontractors(people.filter(person => person.active !== false && person.role === "subcontractor"));
+    const entries = productionPeople.map(person => ({ id: `sub:${person.id}`, person, state: person.subcontractorCurrent, test: false }));
+    const productionNames = new Set(productionPeople.map(person => String(person.name || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "")).filter(Boolean));
+    people.filter(person => person.active !== false && person.subcontractorTestCurrent?.test === true).forEach(person => {
+      const testName = String(person.subcontractorTestCurrent?.subcontractorName || person.name || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (!testName || !productionNames.has(testName)) entries.push({ id: `subtest:${person.id}`, person, state: person.subcontractorTestCurrent, test: true });
+    });
     return entries;
   }
 
@@ -1494,7 +1499,8 @@
 
   function subcontractorOverviewRow(entry) {
     const { person, state, test } = entry;
-    const job = state?.currentJob || { number: state?.currentJobNumber || 1, status: "ready" };
+    const hasCurrentJob = Boolean(state?.currentJob || state?.currentJobNumber);
+    const job = state?.currentJob || (hasCurrentJob ? { number: state.currentJobNumber, status: "ready" } : null);
     const title = test ? (state?.subcontractorName || "Test Subcontractor") : (person.name || person.email || "MPI Subcontractor");
     const status = subcontractorDisplayStatus(state);
     const completed = Array.isArray(state?.completedJobs) ? state.completedJobs.length : 0;
@@ -1502,9 +1508,9 @@
     return `<button class="inspector-row subcontractor-row${test ? " test" : ""}" type="button" data-open-subcontractor="${escapeHtml(entry.id)}">
       <div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(title)}</strong><small>${escapeHtml(test ? "Test subcontractor · excluded from payroll" : "Subcontractor")}</small><small class="inspector-sync">${escapeHtml(state?.updatedAtClient ? `Updated ${formatDateTime(state.updatedAtClient)}` : "Waiting for phone sync")}</small></div></div>
       <div><span class="status-badge">${escapeHtml(status)}</span><small>${escapeHtml(lastEvent?.type || "No action recorded yet")}</small></div>
-      <div class="row-metric"><span>Current job</span><b>${escapeHtml(`Job ${job.number || 1}`)}</b></div>
+      <div class="row-metric"><span>Current job</span><b>${escapeHtml(job ? `Job ${job.number || 1}` : "—")}</b></div>
       <div class="row-metric"><span>Completed</span><b>${completed}</b></div>
-      <div class="row-metric"><span>Arrived</span><b>${escapeHtml(formatTime(job.arrivedAt))}</b></div>
+      <div class="row-metric"><span>Arrived</span><b>${escapeHtml(formatTime(job?.arrivedAt))}</b></div>
       <div class="row-metric"><span>Last action</span><b>${escapeHtml(formatTime(lastEvent?.timestamp))}</b></div>
       <span class="row-open">›</span>
     </button>`;

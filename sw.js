@@ -1,5 +1,5 @@
-const CACHE_NAME = "mpi-field-tools-shell-v160";
-const APP_SHELL = ["./", "./index.html", "./admin.html", "./mpi-shared.js", "./mpi-shared.js?build=160", "./mpi-field-sync.js", "./mpi-field-sync.js?build=160", "./mpi-subcontractor.js", "./mpi-subcontractor.js?build=160", "./mpi-comment-ai.js", "./mpi-comment-ai.js?build=160", "./admin.js", "./admin.js?build=160", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./mpi-logo.png", "./tool-thumbnails.png", "./mpi-email-template.html"];
+const CACHE_NAME = "mpi-field-tools-shell-v161";
+const APP_SHELL = ["./", "./index.html", "./admin.html", "./mpi-shared.js", "./mpi-shared.js?build=161", "./mpi-field-sync.js", "./mpi-field-sync.js?build=161", "./mpi-subcontractor.js", "./mpi-subcontractor.js?build=161", "./mpi-comment-ai.js", "./mpi-comment-ai.js?build=161", "./admin.js", "./admin.js?build=161", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./mpi-logo.png", "./tool-thumbnails.png", "./mpi-email-template.html"];
 
 async function fetchFresh(resource) {
   return fetch(resource, { cache: "no-store" });
