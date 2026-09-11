@@ -1,5 +1,17 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 166 — Stable Field Scrolling and Arrival Review
+
+- Eliminated the remaining mobile scroll-to-top path by making both screen routing and workflow-card rendering idempotent. Background account, message, Hours Worked, GPS, timer and presence updates no longer hide and remount the active field view.
+- Cancelled the delayed initial-position adjustment as soon as the inspector touches, scrolls or wheels the page, preventing startup work from overriding an active gesture.
+- Kept ARRIVED non-blocking: the device timestamp and Hours Worked start are saved immediately online or offline, while GPS/geofence verification finishes in the background and stays invisible to the inspector.
+- Expanded the management-only arrival review to show the scheduled and actual coordinates, recorded distance and GPS accuracy beside the two-location map, without changing the original arrival record.
+- Retained the existing auditable effective Hours Worked start/end corrections and App Diagnostics queue; all payroll-facing totals continue to use the shared effective-time calculation.
+
+### Validation record
+
+- Passed JavaScript parsing; mobile mid-page and bottom-page scroll holds through background session refreshes and a 30-second Hours Worked update; complete ARRIVED-to-end-of-day control flow; online outside-geofence and offline ARRIVED; hidden inspector exception details; shared effective-time recalculation; and Office Console correction/diagnostic checks.
+
 ## Build 165 — Cory Hours for Office Admin
 
 - Made Cory's prominent weekly-hours and overtime panel visible to Brooke and every authorized Office Admin.

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="165">
+  <meta name="app-build" content="166">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5161,7 +5161,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">165</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">166</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -7721,7 +7721,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 165</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 166</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -7860,10 +7860,10 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=165"></script>
-  <script src="./mpi-field-sync.js?build=165"></script>
-  <script src="./mpi-subcontractor.js?build=165"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=165"></script>
+  <script src="./mpi-shared.js?build=166"></script>
+  <script src="./mpi-field-sync.js?build=166"></script>
+  <script src="./mpi-subcontractor.js?build=166"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=166"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -7919,6 +7919,8 @@
         activeJobContextInspector.textContent = `${inspectorName || "Assigned inspector"} · Details are filled into this tool automatically.`;
       }
 
+      let currentRenderedAppRoute = "";
+
       function renderAppScreen(options = {}) {
         const resetScroll = options.resetScroll === true;
         const rawRequestedScreen = window.location.hash.slice(1);
@@ -7929,36 +7931,45 @@
           ? requestedScreen
           : (subcontractorMode ? "subcontractor-home" : (rawRequestedScreen ? "home" : "job-companion"));
         if (rawRequestedScreen === "today-jobs") history.replaceState(null, "", `${location.pathname}${location.search}#job-companion`);
-        for (const view of screenViews) view.hidden = view.dataset.appScreen !== activeScreen;
-        screenNav.hidden = activeScreen === "home" || activeScreen === "subcontractor-home";
-        screenTitle.textContent = APP_SCREEN_TITLES[activeScreen];
-        screenBack.href = subcontractorMode
-          ? "#subcontractor-home"
-          : toolScreens.has(activeScreen) && activeScreen !== "field-tools"
-          ? "#field-tools"
-          : contactScreens.has(activeScreen) && activeScreen !== "contact-mpi"
-            ? "#contact-mpi"
-            : "#home";
-        screenBack.setAttribute("aria-label",
-          subcontractorMode
-            ? "Back to Subcontractor Field Tool"
+        const screenSignature = `${subcontractorMode ? "subcontractor" : "team"}:${activeScreen}`;
+        const screenChanged = currentRenderedAppRoute !== screenSignature;
+        if (screenChanged) {
+          // Do not hide and immediately re-show the active screen during a
+          // background account, message, clock, or presence refresh. Mobile
+          // Safari can clamp the page to scroll position zero during that
+          // transient layout collapse.
+          for (const view of screenViews) view.hidden = view.dataset.appScreen !== activeScreen;
+          screenNav.hidden = activeScreen === "home" || activeScreen === "subcontractor-home";
+          screenTitle.textContent = APP_SCREEN_TITLES[activeScreen];
+          screenBack.href = subcontractorMode
+            ? "#subcontractor-home"
             : toolScreens.has(activeScreen) && activeScreen !== "field-tools"
-            ? "Back to Field Tools"
+            ? "#field-tools"
             : contactScreens.has(activeScreen) && activeScreen !== "contact-mpi"
-              ? "Back to Contact MPI"
-              : "Back to Home"
-        );
-        const activeBottom = activeScreen === "job-companion"
-          ? "job-companion"
-          : toolScreens.has(activeScreen)
-            ? "field-tools"
-            : activeScreen === "training-center"
-              ? "training-center"
-              : "home";
-        bottomNavLinks.forEach(link => {
-          if (link.dataset.bottomScreen === activeBottom) link.setAttribute("aria-current", "page");
-          else link.removeAttribute("aria-current");
-        });
+              ? "#contact-mpi"
+              : "#home";
+          screenBack.setAttribute("aria-label",
+            subcontractorMode
+              ? "Back to Subcontractor Field Tool"
+              : toolScreens.has(activeScreen) && activeScreen !== "field-tools"
+              ? "Back to Field Tools"
+              : contactScreens.has(activeScreen) && activeScreen !== "contact-mpi"
+                ? "Back to Contact MPI"
+                : "Back to Home"
+          );
+          const activeBottom = activeScreen === "job-companion"
+            ? "job-companion"
+            : toolScreens.has(activeScreen)
+              ? "field-tools"
+              : activeScreen === "training-center"
+                ? "training-center"
+                : "home";
+          bottomNavLinks.forEach(link => {
+            if (link.dataset.bottomScreen === activeBottom) link.setAttribute("aria-current", "page");
+            else link.removeAttribute("aria-current");
+          });
+          currentRenderedAppRoute = screenSignature;
+        }
         updateJobContextBanner(activeScreen);
         document.body.classList.toggle("app-tool-open", activeScreen !== "home");
         document.title = activeScreen === "home"
@@ -7967,14 +7978,21 @@
         // Only user-initiated route changes belong at the top of a screen.
         // Company-session refreshes happen in the background and must never
         // interrupt scrolling, reading, typing, or an expanded field section.
-        if (resetScroll) window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+        if (resetScroll && screenChanged) window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       }
 
       window.addEventListener("hashchange", () => renderAppScreen({ resetScroll: true }));
       window.addEventListener("mpi-company-session-ready", () => renderAppScreen({ resetScroll: false }));
       renderAppScreen({ resetScroll: false });
 
+      let initialAppPositionInterrupted = false;
+      const interruptInitialAppPosition = () => { initialAppPositionInterrupted = true; };
+      window.addEventListener("touchstart", interruptInitialAppPosition, { passive: true, once: true });
+      window.addEventListener("pointerdown", interruptInitialAppPosition, { passive: true, once: true });
+      window.addEventListener("wheel", interruptInitialAppPosition, { passive: true, once: true });
+
       function settleInitialAppPosition() {
+        if (initialAppPositionInterrupted || window.scrollY > 4) return;
         const params = new URLSearchParams(location.search);
         const activeScreen = location.hash.slice(1);
         let exactTarget = null;
@@ -15673,13 +15691,12 @@
           workflowWeeklyHoursDetail.textContent = `HOURS WORKED THIS WEEK · ${Math.floor(weekMinutes / 60)}:${String(weekMinutes % 60).padStart(2, "0")}`;
         }
         const lastSession = sessions[sessions.length - 1];
-        const lastLocation = active?.clockInLocation || lastSession?.clockOutLocation || lastSession?.clockInLocation;
         workflowTimeClockDetail.textContent = workflowTimeClockInFlight
-          ? "Recording the time and requesting this phone’s location…"
+          ? "Recording the time…"
           : active
-            ? `Started at ${workflowClock(active.clockedInAt)} · ${workflowClockLocationDetail(active.clockInLocation)}`
+            ? `Started at ${workflowClock(active.clockedInAt)} · Arrival recorded`
             : hoursStarted
-              ? `Clocked off at ${workflowClock(lastSession?.clockedOutAt)} · ${workflowClockLocationDetail(lastLocation)}`
+              ? `Clocked off at ${workflowClock(lastSession?.clockedOutAt)}`
               : readiness
                 ? "Activity tracking is active for management. Paid hours begin when ARRIVED is tapped at the first inspection."
                 : "Complete Morning Readiness to begin the working-day activity record.";
@@ -16382,21 +16399,11 @@
           return;
         }
         if (record.finalStop && record.stage === "home-arrived") {
-          workflowLabCard.hidden = true;
-          workflowHomeCard.hidden = true;
+          setWorkflowPrimaryCards(workflowDayCompleteCard);
           renderWorkflowDayComplete();
           return;
         }
-        workflowIdentityCard.hidden = true;
-        workflowReadinessCard.hidden = true;
-        workflowNachiTrainingCard.hidden = true;
-        workflowTodayCard.hidden = true;
-        workflowJobCard.hidden = true;
-        workflowEquipmentCard.hidden = true;
-        workflowLabCard.hidden = true;
-        workflowHomeCard.hidden = true;
-        workflowDayCompleteCard.hidden = true;
-        workflowLabCard.hidden = false;
+        setWorkflowPrimaryCards(workflowLabCard);
         workflowLabChooser.hidden = record.stage !== "choose";
         workflowLabRoute.hidden = record.stage === "choose";
         const morningLabChoice = record.entryPoint === "morning-readiness";
@@ -16516,15 +16523,7 @@
       function renderWorkflowHomeReturn(record = loadWorkflowLabStop()) {
         if (!record || !workflowHomeCard) return;
         const driving = record.stage === "driving-home";
-        workflowIdentityCard.hidden = true;
-        workflowReadinessCard.hidden = true;
-        workflowNachiTrainingCard.hidden = true;
-        workflowTodayCard.hidden = true;
-        workflowJobCard.hidden = true;
-        workflowEquipmentCard.hidden = true;
-        workflowLabCard.hidden = true;
-        workflowDayCompleteCard.hidden = true;
-        workflowHomeCard.hidden = false;
+        setWorkflowPrimaryCards(workflowHomeCard);
         workflowHomeEyebrow.textContent = driving ? "Final journey" : "End of inspections";
         workflowHomeTitle.textContent = driving ? "DRIVING HOME" : "INSPECTIONS COMPLETE";
         workflowHomeMessage.textContent = driving
@@ -17061,15 +17060,7 @@
           renderWorkflowApp();
           return;
         }
-        workflowIdentityCard.hidden = true;
-        workflowReadinessCard.hidden = true;
-        workflowNachiTrainingCard.hidden = true;
-        workflowTodayCard.hidden = true;
-        workflowEquipmentCard.hidden = job.workflowStatus !== "equipment";
-        workflowJobCard.hidden = job.workflowStatus === "equipment";
-        workflowLabCard.hidden = true;
-        workflowHomeCard.hidden = true;
-        workflowDayCompleteCard.hidden = true;
+        setWorkflowPrimaryCards(job.workflowStatus === "equipment" ? workflowEquipmentCard : workflowJobCard);
         if (job.workflowStatus === "equipment") {
           renderWorkflowEquipment(job);
           return;
@@ -17278,15 +17269,7 @@
       }
 
       function renderWorkflowEquipment(job = loadActiveJob()) {
-        workflowIdentityCard.hidden = true;
-        workflowReadinessCard.hidden = true;
-        workflowNachiTrainingCard.hidden = true;
-        workflowTodayCard.hidden = true;
-        workflowJobCard.hidden = true;
-        workflowEquipmentCard.hidden = false;
-        workflowLabCard.hidden = true;
-        workflowHomeCard.hidden = true;
-        workflowDayCompleteCard.hidden = true;
+        setWorkflowPrimaryCards(workflowEquipmentCard);
         workflowEquipmentJob.textContent = `${job?.property || "Current job"} · ${workflowServiceLabel(job)}`;
         updateWorkflowEquipmentButton();
       }
@@ -18321,21 +18304,19 @@
         renderWorkflowApp();
       }
 
+      function setWorkflowPrimaryCards(...visibleCards) {
+        const visible = new Set(visibleCards.filter(Boolean));
+        [workflowIdentityCard, workflowReadinessCard, workflowNachiTrainingCard, workflowTodayCard, workflowJobCard, workflowEquipmentCard, workflowLabCard, workflowHomeCard, workflowDayCompleteCard]
+          .forEach(card => { if (card) card.hidden = !visible.has(card); });
+      }
+
       function renderWorkflowApp() {
         if (!workflowIdentityCard) return;
         const profile = loadWorkflowProfile();
         const readiness = workflowReadinessRecord();
         const active = loadActiveJob();
-        workflowIdentityCard.hidden = Boolean(profile);
-        workflowReadinessCard.hidden = true;
-        workflowNachiTrainingCard.hidden = true;
-        workflowTodayCard.hidden = true;
-        workflowJobCard.hidden = true;
-        workflowEquipmentCard.hidden = true;
-        workflowLabCard.hidden = true;
-        workflowHomeCard.hidden = true;
-        workflowDayCompleteCard.hidden = true;
         if (!profile) {
+          setWorkflowPrimaryCards(workflowIdentityCard);
           renderWorkflowTimeClock();
           workflowInspectorName.value = loadRememberedInspector();
           workflowInspectorId.value = "";
@@ -18351,7 +18332,7 @@
           return;
         }
         if (!readiness) {
-          workflowReadinessCard.hidden = false;
+          setWorkflowPrimaryCards(workflowReadinessCard);
           renderWorkflowNotificationReadiness();
           updateWorkflowReadinessButton();
           return;
@@ -18359,7 +18340,7 @@
         const completedDay = workflowDayCompleteRecord();
         if (completedDay?.completedAt && !workflowActiveClockSession()) {
           workflowTimeClockCard.hidden = false;
-          workflowTodayCard.hidden = false;
+          setWorkflowPrimaryCards(workflowTodayCard, workflowDayCompleteCard);
           renderWorkflowTodayJobs();
           renderWorkflowDayComplete();
           return;
@@ -18372,6 +18353,7 @@
             return;
           }
           if (labStop.finalStop && labStop.stage === "home-arrived") {
+            setWorkflowPrimaryCards(workflowDayCompleteCard);
             renderWorkflowDayComplete();
             return;
           }
@@ -18383,11 +18365,15 @@
           return;
         }
         if (isCoryWorkflowUser(profile)) {
-          workflowNachiTrainingCard.hidden = false;
           renderWorkflowNachiTraining();
-          if (loadWorkflowNachiTraining()?.active) return;
+          if (loadWorkflowNachiTraining()?.active) {
+            setWorkflowPrimaryCards(workflowNachiTrainingCard);
+            return;
+          }
+          setWorkflowPrimaryCards(workflowNachiTrainingCard, workflowTodayCard);
+        } else {
+          setWorkflowPrimaryCards(workflowTodayCard);
         }
-        workflowTodayCard.hidden = false;
         renderWorkflowTodayJobs();
       }
 
@@ -18412,8 +18398,7 @@
         workflowStartInspectionBtn.addEventListener("click", startWorkflowInspection);
         workflowJobCompleteBtn.addEventListener("click", selectWorkflowJobComplete);
         workflowBackToJobs.addEventListener("click", () => {
-          workflowJobCard.hidden = true;
-          workflowTodayCard.hidden = false;
+          setWorkflowPrimaryCards(workflowTodayCard);
           renderWorkflowTodayJobs();
         });
         workflowEquipmentCompleteBtn.addEventListener("click", completeWorkflowEquipment);

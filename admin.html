@@ -208,6 +208,11 @@
     .arrival-review > div:first-child strong { color:var(--navy); font-size:16px; }
     .arrival-review > div:first-child small { color:var(--muted); line-height:1.45; }
     .arrival-review > a { color:var(--blue); font-weight:900; }
+    .arrival-evidence { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .arrival-evidence div { padding:10px 11px; background:#f5f7fb; border:1px solid #e0e6ef; border-radius:9px; }
+    .arrival-evidence span,.arrival-evidence strong { display:block; }
+    .arrival-evidence span { color:var(--muted); font-size:8px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; }
+    .arrival-evidence strong { margin-top:4px; color:var(--navy); font-size:10px; overflow-wrap:anywhere; }
     .inspector-sync.stale { color:#9a332d !important; }
     .empty { padding:34px 20px; color:var(--muted); background:#f8fafc; border:1px dashed #cad3e2; border-radius:14px; text-align:center; }
     .notice { padding:14px 16px; color:#634d0f; background:#fff8df; border:1px solid #edd891; border-radius:12px; font-size:11px; line-height:1.5; }
@@ -506,6 +511,7 @@
       .diagnostic-head { display:grid; }
       .diagnostic-facts { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .diagnostic-controls { grid-template-columns:1fr; }
+      .arrival-evidence { grid-template-columns:1fr; }
       .admin-onboarding { padding:10px; }
       .admin-onboarding-card { max-height:calc(100vh - 20px); border-radius:17px; }
       .admin-onboarding-head { padding:18px; border-radius:16px 16px 0 0; }
@@ -668,7 +674,7 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=165"></script>
-  <script src="./admin.js?build=165"></script>
+  <script src="./mpi-shared.js?build=166"></script>
+  <script src="./admin.js?build=166"></script>
 </body>
 </html>
