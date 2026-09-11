@@ -52,7 +52,12 @@
   let registeredPushToken = "";
   let pendingProfilePhoto = null;
   let lastPublishedSessionSignature = "";
+  let liveLocationInterval = 0;
+  let liveLocationInFlight = false;
+  let lastLiveLocationAttemptAt = 0;
+  let lastLiveLocationRequestId = "";
   const NOTIFIED_UPDATE_STORAGE_KEY = "mpiNotifiedOfficeUpdatesV2";
+  const LIVE_LOCATION_INTERVAL_MS = 3 * 60 * 1000;
 
   function notifiedUpdateIds() {
     try {
@@ -217,6 +222,107 @@
 
   function localDateKey(date = new Date()) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+
+  function activeLiveLocationState(profile = currentProfile) {
+    const role = String(profile?.role || "").toLowerCase();
+    if (!profile || profile.active === false || !["owner", "inspector", "subcontractor"].includes(role)) return null;
+    const today = localDateKey();
+    const operation = profile.operationsCurrent;
+    if (operation?.date === today) {
+      const status = String(operation.liveStatus || "NOT STARTED").toUpperCase();
+      if (!["NOT STARTED", "CLOCKED OUT"].includes(status)) return { status, date: today };
+    }
+    if (role === "subcontractor") {
+      const record = profile.subcontractorCurrent || profile.subcontractorTestCurrent;
+      const status = String(record?.status || "").toUpperCase();
+      const recordDate = String(record?.date || record?.updatedAtClient || "").slice(0, 10);
+      if (recordDate === today && status && !/AVAILABLE|NO CURRENT JOB|CLOCKED OUT/.test(status)) return { status, date: today };
+    }
+    return null;
+  }
+
+  function browserLocation(options = {}) {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Location is unavailable on this device."));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: options.timeout || 15000,
+        maximumAge: options.maximumAge ?? 60000
+      });
+    });
+  }
+
+  async function publishLiveLocation(reason = "automatic", requestId = "") {
+    const state = activeLiveLocationState();
+    if (!currentUser || !currentProfile || !state || document.hidden || liveLocationInFlight || !navigator.onLine) return false;
+    const now = Date.now();
+    if (reason === "automatic" && now - lastLiveLocationAttemptAt < LIVE_LOCATION_INTERVAL_MS - 15000) return false;
+    liveLocationInFlight = true;
+    lastLiveLocationAttemptAt = now;
+    try {
+      const position = await browserLocation({ maximumAge: reason === "office-request" ? 0 : 60000 });
+      const recordedAtClient = new Date().toISOString();
+      const location = {
+        latitude: Number(position.coords.latitude.toFixed(7)),
+        longitude: Number(position.coords.longitude.toFixed(7)),
+        accuracyFeet: Math.max(0, Math.round(Number(position.coords.accuracy || 0) * 3.28084)),
+        recordedAtClient,
+        workStatus: state.status,
+        workDate: state.date,
+        source: reason,
+        requestId: String(requestId || "").slice(0, 100),
+        status: "recorded"
+      };
+      await shared.db.collection("users").doc(currentUser.uid).set({
+        liveLocation: location,
+        liveLocationStatus: { status: "recorded", recordedAtClient, requestId: location.requestId },
+        liveLocationUpdatedAt: shared.serverTimestamp()
+      }, { merge: true });
+      return true;
+    } catch (error) {
+      const status = Number(error?.code) === 1 ? "permission-denied" : Number(error?.code) === 3 ? "timed-out" : "unavailable";
+      await shared.db.collection("users").doc(currentUser.uid).set({
+        liveLocationStatus: {
+          status,
+          recordedAtClient: new Date().toISOString(),
+          requestId: String(requestId || "").slice(0, 100)
+        },
+        liveLocationUpdatedAt: shared.serverTimestamp()
+      }, { merge: true }).catch(() => false);
+      return false;
+    } finally {
+      liveLocationInFlight = false;
+    }
+  }
+
+  function handleLiveLocationRequest(profile = currentProfile) {
+    const requestId = String(profile?.liveLocationRequest?.id || "");
+    if (!requestId || requestId === lastLiveLocationRequestId) return;
+    if (!activeLiveLocationState(profile) || document.hidden || !navigator.onLine) return;
+    lastLiveLocationRequestId = requestId;
+    publishLiveLocation("office-request", requestId).then(success => {
+      if (!success && lastLiveLocationRequestId === requestId) lastLiveLocationRequestId = "";
+    }).catch(() => {
+      if (lastLiveLocationRequestId === requestId) lastLiveLocationRequestId = "";
+    });
+  }
+
+  function stopLiveLocationSharing() {
+    if (liveLocationInterval) window.clearInterval(liveLocationInterval);
+    liveLocationInterval = 0;
+    liveLocationInFlight = false;
+  }
+
+  function startLiveLocationSharing() {
+    stopLiveLocationSharing();
+    if (!currentUser || !currentProfile) return;
+    window.setTimeout(() => publishLiveLocation("automatic").catch(() => false), 1200);
+    liveLocationInterval = window.setInterval(() => publishLiveLocation("automatic").catch(() => false), LIVE_LOCATION_INTERVAL_MS);
+    handleLiveLocationRequest(currentProfile);
   }
 
   function teamInitials(name) {
@@ -487,6 +593,7 @@
     currentProfile = profile;
     accountCard.hidden = false;
     if (!user || !profile) {
+      stopLiveLocationSharing();
       lastPublishedSessionSignature = "";
       delete window.MPI_COMPANY_SESSION;
       window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail: null }));
@@ -524,6 +631,7 @@
     updatesContent.hidden = false;
     registerPushDevice(user, profile).catch(() => {});
     publishCompanySession(user, profile);
+    startLiveLocationSharing();
     if (profileWatchUserId !== user.uid) {
       unsubscribeProfile?.();
       profileWatchUserId = user.uid;
@@ -536,6 +644,10 @@
           return;
         }
         publishCompanySession(currentUser, currentProfile);
+        handleLiveLocationRequest(currentProfile);
+        if (activeLiveLocationState(currentProfile) && Date.now() - lastLiveLocationAttemptAt >= LIVE_LOCATION_INTERVAL_MS) {
+          publishLiveLocation("automatic").catch(() => false);
+        }
       }, () => {});
     }
     unsubscribeUpdates?.();
@@ -662,5 +774,12 @@
   window.addEventListener("mpi-push-token-ready", event => {
     if (currentUser && currentProfile) registerPushDevice(currentUser, currentProfile, event.detail?.token).catch(() => {});
   });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && currentUser && currentProfile) {
+      handleLiveLocationRequest(currentProfile);
+      publishLiveLocation("automatic").catch(() => false);
+    }
+  });
+  window.addEventListener("online", () => publishLiveLocation("automatic").catch(() => false));
   shared.watchSession(({ user, profile, error }) => renderSession(user, profile, error));
 })();

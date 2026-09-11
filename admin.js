@@ -38,6 +38,11 @@
   const safetyAlertCenter = document.getElementById("adminSafetyAlerts");
   const safetyAlertCount = document.getElementById("adminSafetyAlertCount");
   const safetyAlertList = document.getElementById("adminSafetyAlertList");
+  const liveLocationPanel = document.getElementById("adminLiveLocationPanel");
+  const liveLocationMapElement = document.getElementById("adminLiveLocationMap");
+  const liveLocationList = document.getElementById("adminLiveLocationList");
+  const liveLocationStatus = document.getElementById("adminLiveLocationStatus");
+  const liveLocationRefresh = document.getElementById("adminLiveLocationRefresh");
   const commentUsageUsed = document.getElementById("commentUsageUsed");
   const commentUsagePanel = document.getElementById("commentUsagePanel");
   const commentUsageRemaining = document.getElementById("commentUsageRemaining");
@@ -146,6 +151,10 @@
   const ADMIN_ONBOARDING_EMAILS = new Set(["adrienne@michiganpropertyinspections.com"]);
   let adminOnboardingStep = 0;
   let teamDeepLinkApplied = false;
+  let liveLocationMap = null;
+  let liveLocationLayer = null;
+  let liveLocationMapSignature = "";
+  let liveLocationAgeTimer = 0;
 
   const adminOnboardingSteps = [
     () => ({
@@ -906,6 +915,146 @@
       ...subcontractorEntries().map(entry => ({ ...entry, kind: "subcontractor" })),
       ...officePeople().filter(person => !operativePeople().some(fieldPerson => fieldPerson.id === person.id)).map(person => ({ id: `office:${person.id}`, person, kind: "office" }))
     ];
+  }
+
+  function liveLocationPeople() {
+    const values = [
+      ...operativePeople(),
+      ...subcontractorEntries().filter(entry => !entry.test).map(entry => entry.person)
+    ];
+    return [...new Map(values.map(person => [person.id, person])).values()];
+  }
+
+  function liveWorkState(person) {
+    const today = dateKey();
+    const role = String(person?.role || "").toLowerCase();
+    const operation = person?.operationsCurrent;
+    if (operation?.date === today) {
+      const status = String(operation.liveStatus || "NOT STARTED").toUpperCase();
+      return { active: !["NOT STARTED", "CLOCKED OUT"].includes(status), status, date: today };
+    }
+    if (role === "subcontractor") {
+      const record = person?.subcontractorCurrent || person?.subcontractorTestCurrent;
+      const status = String(record?.status || "AVAILABLE / NO CURRENT JOB").toUpperCase();
+      const recordDate = String(record?.date || record?.updatedAtClient || "").slice(0, 10);
+      return { active: recordDate === today && !/AVAILABLE|NO CURRENT JOB|CLOCKED OUT/.test(status), status, date: recordDate };
+    }
+    return { active: false, status: "NOT STARTED", date: "" };
+  }
+
+  function liveLocationRecord(person) {
+    const location = person?.liveLocation || {};
+    const latitude = Number(location.latitude);
+    const longitude = Number(location.longitude);
+    const recordedAt = asDate(location.recordedAtClient) || asDate(person?.liveLocationUpdatedAt);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !recordedAt) return null;
+    return {
+      latitude,
+      longitude,
+      recordedAt,
+      accuracyFeet: Math.max(0, Math.round(Number(location.accuracyFeet) || 0)),
+      workStatus: String(location.workStatus || "")
+    };
+  }
+
+  function liveLocationAge(record) {
+    if (!record?.recordedAt) return { minutes: Infinity, label: "No location yet", tone: "unavailable" };
+    const minutes = Math.max(0, Math.floor((Date.now() - record.recordedAt.getTime()) / 60000));
+    if (minutes < 1) return { minutes, label: "Updated just now", tone: "current" };
+    if (minutes <= 7) return { minutes, label: `Updated ${minutes} min ago`, tone: "current" };
+    if (minutes <= 15) return { minutes, label: `Delayed · ${minutes} min ago`, tone: "delayed" };
+    return { minutes, label: `Stale · ${minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)} hr`} ago`, tone: "stale" };
+  }
+
+  function ensureLiveLocationMap() {
+    if (liveLocationMap || !liveLocationMapElement || !window.L) return liveLocationMap;
+    liveLocationMap = window.L.map(liveLocationMapElement, { zoomControl: true, scrollWheelZoom: false }).setView([42.62, -83.25], 8);
+    window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(liveLocationMap);
+    liveLocationLayer = window.L.layerGroup().addTo(liveLocationMap);
+    return liveLocationMap;
+  }
+
+  function renderLiveLocationMap() {
+    if (!liveLocationPanel || !liveLocationList) return;
+    const values = liveLocationPeople().map(person => {
+      const state = liveWorkState(person);
+      const location = liveLocationRecord(person);
+      const age = liveLocationAge(location);
+      const visibleLocation = state.active ? location : null;
+      const statusAttempt = String(person?.liveLocationStatus?.status || "");
+      return { person, state, location: visibleLocation, age, statusAttempt };
+    });
+    const current = values.filter(item => item.location && item.age.tone === "current");
+    const delayed = values.filter(item => item.location && item.age.tone !== "current");
+    liveLocationList.innerHTML = values.length ? values.map(item => {
+      const tone = !item.state.active ? "off-duty" : item.location ? item.age.tone : "unavailable";
+      const locationDetail = !item.state.active
+        ? "Not sharing · workday inactive"
+        : item.location
+          ? `${item.age.label}${item.location.accuracyFeet ? ` · accuracy ~${item.location.accuracyFeet} ft` : ""}`
+          : item.statusAttempt === "permission-denied"
+            ? "Location permission is blocked on phone"
+            : "Waiting for the field app";
+      return `<article class="live-location-person ${escapeHtml(tone)}"><span class="live-location-dot" aria-hidden="true"></span><div><strong>${escapeHtml(canonicalTeamName(item.person))}</strong><span>${escapeHtml(locationDetail)}</span></div><b>${escapeHtml(item.state.status.replace(/_/g, " "))}</b></article>`;
+    }).join("") : '<div class="empty">No active field users are configured.</div>';
+    liveLocationStatus.textContent = current.length
+      ? `${current.length} current position${current.length === 1 ? "" : "s"}${delayed.length ? ` · ${delayed.length} delayed` : ""}`
+      : delayed.length
+        ? `${delayed.length} delayed position${delayed.length === 1 ? "" : "s"}`
+        : "Waiting for an active field device to share its location.";
+
+    const map = ensureLiveLocationMap();
+    if (!map || !liveLocationLayer) {
+      liveLocationMapElement.innerHTML = '<div class="empty">The map tiles could not load. Location timestamps remain available beside the map.</div>';
+      return;
+    }
+    liveLocationLayer.clearLayers();
+    const plotted = values.filter(item => item.location);
+    plotted.forEach(item => {
+      const name = canonicalTeamName(item.person);
+      const icon = window.L.divIcon({ className: "", html: `<span class="mpi-live-marker">${escapeHtml(initials(name))}</span>`, iconSize: [34, 34], iconAnchor: [17, 17] });
+      const marker = window.L.marker([item.location.latitude, item.location.longitude], { icon }).bindPopup(`<strong>${escapeHtml(name)}</strong><br>${escapeHtml(item.state.status.replace(/_/g, " "))}<br>${escapeHtml(item.age.label)}${item.location.accuracyFeet ? `<br>GPS accuracy about ${escapeHtml(item.location.accuracyFeet)} ft` : ""}`);
+      liveLocationLayer.addLayer(marker);
+    });
+    const signature = plotted.map(item => `${item.person.id}:${item.location.latitude}:${item.location.longitude}`).sort().join("|");
+    if (signature !== liveLocationMapSignature) {
+      liveLocationMapSignature = signature;
+      if (plotted.length === 1) map.setView([plotted[0].location.latitude, plotted[0].location.longitude], 13);
+      else if (plotted.length > 1) map.fitBounds(plotted.map(item => [item.location.latitude, item.location.longitude]), { padding: [32, 32], maxZoom: 13 });
+      else map.setView([42.62, -83.25], 8);
+    }
+    window.setTimeout(() => map.invalidateSize(), 0);
+  }
+
+  async function requestLiveLocationRefresh() {
+    if (!currentUser || !shared.isAdminRole(currentProfile) || !liveLocationRefresh) return;
+    const targets = liveLocationPeople().filter(person => liveWorkState(person).active);
+    if (!targets.length) {
+      liveLocationStatus.textContent = "No inspectors currently have an active workday.";
+      return;
+    }
+    liveLocationRefresh.disabled = true;
+    liveLocationRefresh.textContent = "REQUESTING…";
+    const request = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      requestedAtClient: new Date().toISOString(),
+      requestedById: currentUser.uid,
+      requestedByName: currentProfile?.name || currentUser.displayName || "MPI Office"
+    };
+    try {
+      const batch = shared.db.batch();
+      targets.forEach(person => batch.set(shared.db.collection("users").doc(person.id), { liveLocationRequest: request }, { merge: true }));
+      await batch.commit();
+      liveLocationStatus.textContent = `Update requested from ${targets.length} active field device${targets.length === 1 ? "" : "s"}. Open phones respond immediately.`;
+    } catch (error) {
+      liveLocationStatus.textContent = error?.message || "The location update request could not be sent.";
+    } finally {
+      liveLocationRefresh.disabled = false;
+      liveLocationRefresh.textContent = "UPDATE NOW";
+    }
   }
 
   function overviewEntry(id) {
@@ -2081,6 +2230,7 @@
     }
     renderReplyInbox();
     renderSafetyAlerts();
+    renderLiveLocationMap();
   }
 
   async function receiptSummary(updateId) {
@@ -2152,6 +2302,7 @@
     unsubscribeReplies?.();
     unsubscribeFieldMessages?.();
     unsubscribeDirectMessages?.();
+    if (!liveLocationAgeTimer) liveLocationAgeTimer = window.setInterval(renderLiveLocationMap, 60000);
     unsubscribePeople = shared.db.collection("users").orderBy("name").onSnapshot(snapshot => {
       people = snapshot.docs.map(doc => {
         const value = { id: doc.id, ...doc.data() };
@@ -2746,6 +2897,7 @@
     selectedOperationDate = "";
     renderOperations();
   });
+  liveLocationRefresh?.addEventListener("click", requestLiveLocationRefresh);
   teamOverview.addEventListener("click", event => {
     const office = event.target.closest("[data-open-office]");
     if (office) {
@@ -2901,10 +3053,10 @@
       ]
     });
     people = [
-      { id: "preview-kevin", name: "Kevin Cave", email: "kev@michiganpropertyinspections.com", role: "owner", active: true, operationsCurrent: makeDay("Kevin Cave", "KC", "INSPECTION IN PROGRESS"), operationsUpdatedAt: new Date() },
-      { id: "preview-cory", name: "Cory Leese", email: "cory@michiganpropertyinspections.com", inspectorId: "NACHI26090138", approvedEndAddress: "38948 Koppernick Road, Westland, MI 48185", role: "inspector", active: true, operationsCurrent: makeDay("Cory Leese", "NACHI26090138", "DRIVING TO JOB", 6), operationsUpdatedAt: new Date() },
+      { id: "preview-kevin", name: "Kevin Cave", email: "kev@michiganpropertyinspections.com", role: "owner", active: true, operationsCurrent: makeDay("Kevin Cave", "KC", "INSPECTION IN PROGRESS"), operationsUpdatedAt: new Date(), liveLocation: { latitude: 42.5295, longitude: -83.7802, accuracyFeet: 36, recordedAtClient: new Date().toISOString(), workStatus: "INSPECTION IN PROGRESS" }, liveLocationStatus: { status: "recorded" } },
+      { id: "preview-cory", name: "Cory Leese", email: "cory@michiganpropertyinspections.com", inspectorId: "NACHI26090138", approvedEndAddress: "38948 Koppernick Road, Westland, MI 48185", role: "inspector", active: true, operationsCurrent: makeDay("Cory Leese", "NACHI26090138", "DRIVING TO JOB", 6), operationsUpdatedAt: new Date(), liveLocation: { latitude: 42.3314, longitude: -83.0458, accuracyFeet: 52, recordedAtClient: new Date(Date.now() - 4 * 60000).toISOString(), workStatus: "DRIVING TO JOB" }, liveLocationStatus: { status: "recorded" } },
       { id: "preview-adrienne", name: "Adrienne Cave", email: "adrienne@michiganpropertyinspections.com", role: "admin", active: true },
-      { id: "preview-sub", name: "Jason Chamarro", email: "test-subcontractor@mpi.local", phone: "", role: "subcontractor", active: true, notificationDevice: { token: "preview" }, subcontractorCurrent: { date: dateKey(), test: false, subcontractorName: "Jason Chamarro", subcontractorPhone: "", currentJobNumber: 2, currentJob: { number: 2, status: "arrived", onWayAt: at(12, 48), arrivedAt: at(13, 14), completedAt: "" }, completedJobs: [{ number: 1, status: "completed", completedAt: at(11, 32) }], status: "AT JOB – JOB 2", events: [{ id: "sub-a", type: "ON WAY", timestamp: at(12, 48), jobNumber: 2 }, { id: "sub-b", type: "ARRIVED", timestamp: at(13, 14), jobNumber: 2 }], updatedAtClient: new Date().toISOString() } }
+      { id: "preview-sub", name: "Jason Chamarro", email: "test-subcontractor@mpi.local", phone: "", role: "subcontractor", active: true, notificationDevice: { token: "preview" }, liveLocation: { latitude: 42.2808, longitude: -83.743, accuracyFeet: 70, recordedAtClient: new Date(Date.now() - 9 * 60000).toISOString(), workStatus: "AT JOB – JOB 2" }, liveLocationStatus: { status: "recorded" }, subcontractorCurrent: { date: dateKey(), test: false, subcontractorName: "Jason Chamarro", subcontractorPhone: "", currentJobNumber: 2, currentJob: { number: 2, status: "arrived", onWayAt: at(12, 48), arrivedAt: at(13, 14), completedAt: "" }, completedJobs: [{ number: 1, status: "completed", completedAt: at(11, 32) }], status: "AT JOB – JOB 2", events: [{ id: "sub-a", type: "ON WAY", timestamp: at(12, 48), jobNumber: 2 }, { id: "sub-b", type: "ARRIVED", timestamp: at(13, 14), jobNumber: 2 }], updatedAtClient: new Date().toISOString() } }
     ];
     currentUser = { uid: "preview", email: "kev@michiganpropertyinspections.com", displayName: "Kevin Cave" };
     currentProfile = { name: "Kevin Cave", role: "owner", active: true };

@@ -1,5 +1,13 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 167 — Live Inspector Operations Map
+
+- Added a branded live inspector map to the Office Console Operations home screen.
+- Active field devices publish a fresh company-device location about every three minutes while the Field Tools app is open and the workday is active.
+- Added an **UPDATE NOW** control that asks every active field device for a fresh GPS position.
+- Every marker shows the inspector, current workflow status, GPS age, and accuracy; delayed and stale positions are clearly identified.
+- Location sharing stops when the workday is not active. iOS may pause updates while the Field Tools app is fully closed, so the console never labels an old position as current.
+
 ## Build 166 — Stable Field Scrolling and Arrival Review
 
 - Eliminated the remaining mobile scroll-to-top path by making both screen routing and workflow-card rendering idempotent. Background account, message, Hours Worked, GPS, timer and presence updates no longer hide and remount the active field view.
