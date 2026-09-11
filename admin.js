@@ -43,6 +43,10 @@
   const liveLocationList = document.getElementById("adminLiveLocationList");
   const liveLocationStatus = document.getElementById("adminLiveLocationStatus");
   const liveLocationRefresh = document.getElementById("adminLiveLocationRefresh");
+  const liveLocationHistory = document.getElementById("adminLiveLocationHistory");
+  const liveLocationShowAll = document.getElementById("adminLiveLocationShowAll");
+  const liveRouteDate = document.getElementById("adminLiveRouteDate");
+  const liveLocationRouteStatus = document.getElementById("adminLiveLocationRouteStatus");
   const commentUsageUsed = document.getElementById("commentUsageUsed");
   const commentUsagePanel = document.getElementById("commentUsagePanel");
   const commentUsageRemaining = document.getElementById("commentUsageRemaining");
@@ -153,8 +157,14 @@
   let teamDeepLinkApplied = false;
   let liveLocationMap = null;
   let liveLocationLayer = null;
+  let liveLocationRouteLayer = null;
+  let liveLocationMarkers = new Map();
   let liveLocationMapSignature = "";
   let liveLocationAgeTimer = 0;
+  let selectedLiveLocationPersonId = "";
+  let liveLocationMapMode = "all";
+  let liveLocationRouteVisible = false;
+  let liveLocationRouteLoading = false;
 
   const adminOnboardingSteps = [
     () => ({
@@ -969,17 +979,18 @@
   function ensureLiveLocationMap() {
     if (liveLocationMap || !liveLocationMapElement || !window.L) return liveLocationMap;
     liveLocationMap = window.L.map(liveLocationMapElement, { zoomControl: true, scrollWheelZoom: false }).setView([42.62, -83.25], 8);
-    window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(liveLocationMap);
+    if (window.L.maplibreGL && window.maplibregl) {
+      window.L.maplibreGL({ style: "https://tiles.openfreemap.org/styles/positron", attribution: "OpenFreeMap © OpenMapTiles Data from OpenStreetMap" }).addTo(liveLocationMap);
+    } else {
+      window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(liveLocationMap);
+    }
     liveLocationLayer = window.L.layerGroup().addTo(liveLocationMap);
+    liveLocationRouteLayer = window.L.layerGroup().addTo(liveLocationMap);
     return liveLocationMap;
   }
 
-  function renderLiveLocationMap() {
-    if (!liveLocationPanel || !liveLocationList) return;
-    const values = liveLocationPeople().map(person => {
+  function liveLocationValues() {
+    return liveLocationPeople().map(person => {
       const state = liveWorkState(person);
       const location = liveLocationRecord(person);
       const age = liveLocationAge(location);
@@ -987,6 +998,30 @@
       const statusAttempt = String(person?.liveLocationStatus?.status || "");
       return { person, state, location: visibleLocation, age, statusAttempt };
     });
+  }
+
+  function frameAllLiveLocations(map, plotted = liveLocationValues().filter(item => item.location)) {
+    if (!map) return;
+    liveLocationMapMode = "all";
+    if (plotted.length === 1) map.setView([plotted[0].location.latitude, plotted[0].location.longitude], 10);
+    else if (plotted.length > 1) map.fitBounds(plotted.map(item => [item.location.latitude, item.location.longitude]), { padding: [38, 38], maxZoom: 10 });
+    else map.setView([42.62, -83.25], 8);
+  }
+
+  function updateLiveLocationControls() {
+    const person = liveLocationPeople().find(item => item.id === selectedLiveLocationPersonId);
+    if (liveLocationHistory) {
+      liveLocationHistory.disabled = !person || liveLocationRouteLoading;
+      liveLocationHistory.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationRouteVisible ? "HIDE ROUTE" : "SHOW ROUTE";
+    }
+    if (!liveLocationRouteStatus) return;
+    if (!person) liveLocationRouteStatus.textContent = "Select an operative to inspect their position or route.";
+    else if (!liveLocationRouteVisible && !liveLocationRouteLoading) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> selected. Choose a date and press Show Route.`;
+  }
+
+  function renderLiveLocationMap() {
+    if (!liveLocationPanel || !liveLocationList) return;
+    const values = liveLocationValues();
     const current = values.filter(item => item.location && item.age.tone === "current");
     const delayed = values.filter(item => item.location && item.age.tone !== "current");
     liveLocationList.innerHTML = values.length ? values.map(item => {
@@ -998,7 +1033,8 @@
           : item.statusAttempt === "permission-denied"
             ? "Location permission is blocked on phone"
             : "Waiting for the field app";
-      return `<article class="live-location-person ${escapeHtml(tone)}"><span class="live-location-dot" aria-hidden="true"></span><div><strong>${escapeHtml(canonicalTeamName(item.person))}</strong><span>${escapeHtml(locationDetail)}</span></div><b>${escapeHtml(item.state.status.replace(/_/g, " "))}</b></article>`;
+      const selected = item.person.id === selectedLiveLocationPersonId ? " selected" : "";
+      return `<button type="button" class="live-location-person ${escapeHtml(tone)}${selected}" data-live-location-person="${escapeHtml(item.person.id)}" aria-pressed="${selected ? "true" : "false"}"><span class="live-location-dot" aria-hidden="true"></span><div><strong>${escapeHtml(canonicalTeamName(item.person))}</strong><span>${escapeHtml(locationDetail)}</span></div><b>${escapeHtml(item.state.status.replace(/_/g, " "))}</b></button>`;
     }).join("") : '<div class="empty">No active field users are configured.</div>';
     liveLocationStatus.textContent = current.length
       ? `${current.length} current position${current.length === 1 ? "" : "s"}${delayed.length ? ` · ${delayed.length} delayed` : ""}`
@@ -1012,21 +1048,115 @@
       return;
     }
     liveLocationLayer.clearLayers();
+    liveLocationMarkers = new Map();
     const plotted = values.filter(item => item.location);
     plotted.forEach(item => {
       const name = canonicalTeamName(item.person);
       const icon = window.L.divIcon({ className: "", html: `<span class="mpi-live-marker">${escapeHtml(initials(name))}</span>`, iconSize: [34, 34], iconAnchor: [17, 17] });
       const marker = window.L.marker([item.location.latitude, item.location.longitude], { icon }).bindPopup(`<strong>${escapeHtml(name)}</strong><br>${escapeHtml(item.state.status.replace(/_/g, " "))}<br>${escapeHtml(item.age.label)}${item.location.accuracyFeet ? `<br>GPS accuracy about ${escapeHtml(item.location.accuracyFeet)} ft` : ""}`);
       liveLocationLayer.addLayer(marker);
+      liveLocationMarkers.set(item.person.id, marker);
     });
     const signature = plotted.map(item => `${item.person.id}:${item.location.latitude}:${item.location.longitude}`).sort().join("|");
-    if (signature !== liveLocationMapSignature) {
+    if (signature !== liveLocationMapSignature && liveLocationMapMode === "all" && !liveLocationRouteVisible) {
       liveLocationMapSignature = signature;
-      if (plotted.length === 1) map.setView([plotted[0].location.latitude, plotted[0].location.longitude], 13);
-      else if (plotted.length > 1) map.fitBounds(plotted.map(item => [item.location.latitude, item.location.longitude]), { padding: [32, 32], maxZoom: 13 });
-      else map.setView([42.62, -83.25], 8);
+      frameAllLiveLocations(map, plotted);
+    } else if (liveLocationMapMode === "focus" && !liveLocationRouteVisible) {
+      const selected = plotted.find(item => item.person.id === selectedLiveLocationPersonId);
+      if (selected) map.panTo([selected.location.latitude, selected.location.longitude]);
     }
+    updateLiveLocationControls();
     window.setTimeout(() => map.invalidateSize(), 0);
+  }
+
+  function hideHistoricalRoute({ keepSelection = true } = {}) {
+    liveLocationRouteVisible = false;
+    liveLocationRouteLoading = false;
+    liveLocationRouteLayer?.clearLayers();
+    if (!keepSelection) selectedLiveLocationPersonId = "";
+    updateLiveLocationControls();
+    renderLiveLocationMap();
+  }
+
+  function focusLiveLocationPerson(personId) {
+    const item = liveLocationValues().find(value => value.person.id === personId);
+    if (!item) return;
+    if (selectedLiveLocationPersonId !== personId) hideHistoricalRoute({ keepSelection: true });
+    selectedLiveLocationPersonId = personId;
+    liveLocationMapMode = "focus";
+    liveLocationRouteVisible = false;
+    liveLocationRouteLayer?.clearLayers();
+    renderLiveLocationMap();
+    const marker = liveLocationMarkers.get(personId);
+    if (item.location && liveLocationMap) {
+      liveLocationMap.setView([item.location.latitude, item.location.longitude], 15);
+      marker?.openPopup();
+    }
+    updateLiveLocationControls();
+  }
+
+  function routePointRecord(value) {
+    const latitude = Number(value?.latitude);
+    const longitude = Number(value?.longitude);
+    const recordedAt = asDate(value?.recordedAtClient) || asDate(value?.recordedAt);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !recordedAt) return null;
+    return { latitude, longitude, recordedAt, accuracyFeet: Math.max(0, Math.round(Number(value?.accuracyFeet) || 0)), workStatus: String(value?.workStatus || "") };
+  }
+
+  async function loadHistoricalRoute() {
+    if (liveLocationRouteLoading) return;
+    if (liveLocationRouteVisible) {
+      hideHistoricalRoute({ keepSelection: true });
+      return;
+    }
+    const person = liveLocationPeople().find(item => item.id === selectedLiveLocationPersonId);
+    if (!person || !liveLocationMap || !liveLocationRouteLayer) return;
+    const selectedDate = liveRouteDate?.value || dateKey();
+    liveLocationRouteLoading = true;
+    updateLiveLocationControls();
+    if (liveLocationRouteStatus) liveLocationRouteStatus.textContent = `Loading ${canonicalTeamName(person)}'s recorded route…`;
+    try {
+      let points = [];
+      if (localPreview) {
+        const origin = liveLocationRecord(person);
+        if (origin) points = [-0.035, -0.022, -0.01, 0].map((offset, index) => ({ latitude: origin.latitude + offset * .45, longitude: origin.longitude + offset, recordedAt: new Date(Date.now() - (3 - index) * 18 * 60000), accuracyFeet: origin.accuracyFeet, workStatus: origin.workStatus }));
+      } else {
+        const snapshot = await shared.db.collection("users").doc(person.id).collection("locationRouteDays").doc(selectedDate).collection("points").orderBy("recordedAtClient", "asc").limit(500).get();
+        points = snapshot.docs.map(doc => routePointRecord(doc.data())).filter(Boolean);
+      }
+      liveLocationRouteLayer.clearLayers();
+      liveLocationRouteVisible = true;
+      if (!points.length) {
+        if (liveLocationRouteStatus) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> has no recorded route points for ${escapeHtml(new Date(`${selectedDate}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }))}. Route recording begins with Build 168.`;
+        return;
+      }
+      const latLngs = points.map(point => [point.latitude, point.longitude]);
+      if (points.length > 1) liveLocationRouteLayer.addLayer(window.L.polyline(latLngs, { color: "#2775b9", weight: 5, opacity: .85, lineJoin: "round" }));
+      const start = points[0];
+      const end = points.at(-1);
+      liveLocationRouteLayer.addLayer(window.L.circleMarker([start.latitude, start.longitude], { radius: 7, color: "#fff", weight: 2, fillColor: "#28765e", fillOpacity: 1 }).bindPopup(`<strong>${escapeHtml(canonicalTeamName(person))}</strong><br>Route started ${escapeHtml(formatTime(start.recordedAt))}`));
+      if (points.length > 1) liveLocationRouteLayer.addLayer(window.L.circleMarker([end.latitude, end.longitude], { radius: 7, color: "#fff", weight: 2, fillColor: "#9b3838", fillOpacity: 1 }).bindPopup(`<strong>${escapeHtml(canonicalTeamName(person))}</strong><br>Latest point ${escapeHtml(formatTime(end.recordedAt))}`));
+      liveLocationMapMode = "route";
+      if (points.length === 1) liveLocationMap.setView(latLngs[0], 14);
+      else liveLocationMap.fitBounds(latLngs, { padding: [38, 38], maxZoom: 15 });
+      if (liveLocationRouteStatus) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> · ${escapeHtml(points.length)} route point${points.length === 1 ? "" : "s"} · ${escapeHtml(formatTime(start.recordedAt))}–${escapeHtml(formatTime(end.recordedAt))}`;
+    } catch (error) {
+      liveLocationRouteVisible = false;
+      if (liveLocationRouteStatus) liveLocationRouteStatus.textContent = error?.message || "The route could not be loaded.";
+    } finally {
+      liveLocationRouteLoading = false;
+      updateLiveLocationControls();
+    }
+  }
+
+  function showAllLiveLocations() {
+    liveLocationRouteLayer?.clearLayers();
+    liveLocationRouteVisible = false;
+    selectedLiveLocationPersonId = "";
+    liveLocationMapSignature = "";
+    const map = ensureLiveLocationMap();
+    frameAllLiveLocations(map);
+    renderLiveLocationMap();
   }
 
   async function requestLiveLocationRefresh() {
@@ -2897,7 +3027,24 @@
     selectedOperationDate = "";
     renderOperations();
   });
+  if (liveRouteDate) {
+    liveRouteDate.value = dateKey();
+    liveRouteDate.max = dateKey();
+    liveRouteDate.addEventListener("change", () => {
+      if (liveLocationRouteVisible) {
+        liveLocationRouteVisible = false;
+        liveLocationRouteLayer?.clearLayers();
+        loadHistoricalRoute().catch(() => false);
+      }
+    });
+  }
   liveLocationRefresh?.addEventListener("click", requestLiveLocationRefresh);
+  liveLocationHistory?.addEventListener("click", () => loadHistoricalRoute().catch(() => false));
+  liveLocationShowAll?.addEventListener("click", showAllLiveLocations);
+  liveLocationList?.addEventListener("click", event => {
+    const person = event.target.closest("[data-live-location-person]");
+    if (person) focusLiveLocationPerson(person.dataset.liveLocationPerson);
+  });
   teamOverview.addEventListener("click", event => {
     const office = event.target.closest("[data-open-office]");
     if (office) {

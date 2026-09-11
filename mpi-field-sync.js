@@ -53,9 +53,11 @@
   let pendingProfilePhoto = null;
   let lastPublishedSessionSignature = "";
   let liveLocationInterval = 0;
+  let liveLocationWatchId = null;
   let liveLocationInFlight = false;
   let lastLiveLocationAttemptAt = 0;
   let lastLiveLocationRequestId = "";
+  let lastObservedLivePosition = null;
   const NOTIFIED_UPDATE_STORAGE_KEY = "mpiNotifiedOfficeUpdatesV2";
   const LIVE_LOCATION_INTERVAL_MS = 3 * 60 * 1000;
 
@@ -256,32 +258,62 @@
     });
   }
 
-  async function publishLiveLocation(reason = "automatic", requestId = "") {
+  function liveLocationValue(position, state, reason, requestId) {
+    const recordedAtClient = new Date().toISOString();
+    return {
+      latitude: Number(position.coords.latitude.toFixed(7)),
+      longitude: Number(position.coords.longitude.toFixed(7)),
+      accuracyFeet: Math.max(0, Math.round(Number(position.coords.accuracy || 0) * 3.28084)),
+      heading: Number.isFinite(Number(position.coords.heading)) ? Math.round(Number(position.coords.heading)) : null,
+      speedMph: Number.isFinite(Number(position.coords.speed)) ? Number((Number(position.coords.speed) * 2.23694).toFixed(1)) : null,
+      recordedAtClient,
+      workStatus: state.status,
+      workDate: state.date,
+      source: reason,
+      requestId: String(requestId || "").slice(0, 100),
+      status: "recorded"
+    };
+  }
+
+  async function storeRoutePoint(location) {
+    if (!currentUser || !location?.workDate) return false;
+    const pointId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    const point = {
+      userId: currentUser.uid,
+      date: location.workDate,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      accuracyFeet: location.accuracyFeet,
+      heading: location.heading,
+      speedMph: location.speedMph,
+      recordedAtClient: location.recordedAtClient,
+      workStatus: location.workStatus,
+      source: location.source,
+      recordedAt: shared.serverTimestamp()
+    };
+    await shared.db.collection("users").doc(currentUser.uid).collection("locationRouteDays").doc(location.workDate).collection("points").doc(pointId).set(point);
+    return true;
+  }
+
+  async function publishLiveLocation(reason = "automatic", requestId = "", suppliedPosition = null) {
     const state = activeLiveLocationState();
-    if (!currentUser || !currentProfile || !state || document.hidden || liveLocationInFlight || !navigator.onLine) return false;
+    if (!currentUser || !currentProfile || !state || liveLocationInFlight || !navigator.onLine) return false;
     const now = Date.now();
     if (reason === "automatic" && now - lastLiveLocationAttemptAt < LIVE_LOCATION_INTERVAL_MS - 15000) return false;
     liveLocationInFlight = true;
     lastLiveLocationAttemptAt = now;
     try {
-      const position = await browserLocation({ maximumAge: reason === "office-request" ? 0 : 60000 });
-      const recordedAtClient = new Date().toISOString();
-      const location = {
-        latitude: Number(position.coords.latitude.toFixed(7)),
-        longitude: Number(position.coords.longitude.toFixed(7)),
-        accuracyFeet: Math.max(0, Math.round(Number(position.coords.accuracy || 0) * 3.28084)),
-        recordedAtClient,
-        workStatus: state.status,
-        workDate: state.date,
-        source: reason,
-        requestId: String(requestId || "").slice(0, 100),
-        status: "recorded"
-      };
+      const observedPosition = reason === "automatic" && lastObservedLivePosition && Date.now() - Number(lastObservedLivePosition.timestamp || 0) <= 90000
+        ? lastObservedLivePosition
+        : null;
+      const position = suppliedPosition || observedPosition || await browserLocation({ maximumAge: reason === "office-request" ? 0 : 60000 });
+      const location = liveLocationValue(position, state, reason, requestId);
       await shared.db.collection("users").doc(currentUser.uid).set({
         liveLocation: location,
-        liveLocationStatus: { status: "recorded", recordedAtClient, requestId: location.requestId },
+        liveLocationStatus: { status: "recorded", recordedAtClient: location.recordedAtClient, requestId: location.requestId },
         liveLocationUpdatedAt: shared.serverTimestamp()
       }, { merge: true });
+      await storeRoutePoint(location).catch(() => false);
       return true;
     } catch (error) {
       const status = Number(error?.code) === 1 ? "permission-denied" : Number(error?.code) === 3 ? "timed-out" : "unavailable";
@@ -302,9 +334,9 @@
   function handleLiveLocationRequest(profile = currentProfile) {
     const requestId = String(profile?.liveLocationRequest?.id || "");
     if (!requestId || requestId === lastLiveLocationRequestId) return;
-    if (!activeLiveLocationState(profile) || document.hidden || !navigator.onLine) return;
+    if (!activeLiveLocationState(profile) || !navigator.onLine) return;
     lastLiveLocationRequestId = requestId;
-    publishLiveLocation("office-request", requestId).then(success => {
+    publishLiveLocation("office-request", requestId, null).then(success => {
       if (!success && lastLiveLocationRequestId === requestId) lastLiveLocationRequestId = "";
     }).catch(() => {
       if (lastLiveLocationRequestId === requestId) lastLiveLocationRequestId = "";
@@ -314,14 +346,41 @@
   function stopLiveLocationSharing() {
     if (liveLocationInterval) window.clearInterval(liveLocationInterval);
     liveLocationInterval = 0;
+    if (liveLocationWatchId !== null && navigator.geolocation?.clearWatch) navigator.geolocation.clearWatch(liveLocationWatchId);
+    liveLocationWatchId = null;
+    lastObservedLivePosition = null;
     liveLocationInFlight = false;
   }
 
+  function ensureLiveLocationWatch() {
+    if (!activeLiveLocationState() || liveLocationWatchId !== null || !navigator.geolocation?.watchPosition) return;
+    liveLocationWatchId = navigator.geolocation.watchPosition(position => {
+      lastObservedLivePosition = position;
+      if (Date.now() - lastLiveLocationAttemptAt >= LIVE_LOCATION_INTERVAL_MS - 15000) {
+        publishLiveLocation("automatic", "", position).catch(() => false);
+      }
+    }, () => {}, { enableHighAccuracy: true, maximumAge: 60000, timeout: 30000 });
+  }
+
+  function syncLiveLocationSharing() {
+    if (activeLiveLocationState()) ensureLiveLocationWatch();
+    else if (liveLocationWatchId !== null && navigator.geolocation?.clearWatch) {
+      navigator.geolocation.clearWatch(liveLocationWatchId);
+      liveLocationWatchId = null;
+      lastObservedLivePosition = null;
+    }
+  }
+
   function startLiveLocationSharing() {
-    stopLiveLocationSharing();
-    if (!currentUser || !currentProfile) return;
-    window.setTimeout(() => publishLiveLocation("automatic").catch(() => false), 1200);
-    liveLocationInterval = window.setInterval(() => publishLiveLocation("automatic").catch(() => false), LIVE_LOCATION_INTERVAL_MS);
+    if (!currentUser || !currentProfile) {
+      stopLiveLocationSharing();
+      return;
+    }
+    syncLiveLocationSharing();
+    if (!liveLocationInterval) {
+      window.setTimeout(() => publishLiveLocation("automatic").catch(() => false), 1200);
+      liveLocationInterval = window.setInterval(() => publishLiveLocation("automatic").catch(() => false), LIVE_LOCATION_INTERVAL_MS);
+    }
     handleLiveLocationRequest(currentProfile);
   }
 
@@ -644,6 +703,7 @@
           return;
         }
         publishCompanySession(currentUser, currentProfile);
+        syncLiveLocationSharing();
         handleLiveLocationRequest(currentProfile);
         if (activeLiveLocationState(currentProfile) && Date.now() - lastLiveLocationAttemptAt >= LIVE_LOCATION_INTERVAL_MS) {
           publishLiveLocation("automatic").catch(() => false);
@@ -776,6 +836,7 @@
   });
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && currentUser && currentProfile) {
+      syncLiveLocationSharing();
       handleLiveLocationRequest(currentProfile);
       publishLiveLocation("automatic").catch(() => false);
     }

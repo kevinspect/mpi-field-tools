@@ -101,6 +101,35 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /users/{userId}/locationRouteDays/{date}/points/{pointId} {
+      allow read: if isAdmin() || (activeFieldUser() && request.auth.uid == userId);
+      allow create: if activeFieldUser()
+        && request.auth.uid == userId
+        && request.resource.data.userId == userId
+        && request.resource.data.date == date
+        && request.resource.data.latitude is number
+        && request.resource.data.longitude is number
+        && request.resource.data.accuracyFeet is number
+        && request.resource.data.recordedAtClient is string
+        && request.resource.data.workStatus is string
+        && request.resource.data.source is string
+        && request.resource.data.recordedAt is timestamp
+        && request.resource.data.keys().hasOnly([
+          "userId",
+          "date",
+          "latitude",
+          "longitude",
+          "accuracyFeet",
+          "heading",
+          "speedMph",
+          "recordedAtClient",
+          "workStatus",
+          "source",
+          "recordedAt"
+        ]);
+      allow update, delete: if false;
+    }
+
     match /teamPresence/{userId} {
       allow read: if activeFieldUser();
       allow create, update: if activeFieldUser()

@@ -1,5 +1,17 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 168 — Stable Live Map and Route History
+
+- Fixed the Office Console map distortion at its source by correcting the blocked Leaflet stylesheet and moving the base map to the no-key OpenFreeMap service.
+- The default view now frames every active operative with a clear initial marker; selecting a name zooms directly to that operative and **Show All** returns to the team view.
+- Added dated historical-route playback. Active field devices retain one throttled route point about every three minutes, and Admin can select an operative and date to draw the recorded route with start and latest-position markers.
+- Improved iPhone continuity from Morning Ready until Clock Off with a continuous geolocation watch, background attempts while iOS keeps the web app alive, and immediate recovery when the app returns to the foreground. iOS can still suspend a home-screen web app; guaranteed always-on background tracking requires a native iOS build.
+- Kept routes management-only, stopped route collection outside an active workday, and deployed the matching Firestore access rules.
+
+### Validation record
+
+- Verified all three preview operatives plot on the zoomed-out team map, each person row focuses correctly, dated route playback draws, Show All resets the selection, the replacement base map renders without blank strips or API-key watermarks, JavaScript parses, and the new Firestore rules compile and deploy successfully.
+
 ## Build 167 — Live Inspector Operations Map
 
 - Added a branded live inspector map to the Office Console Operations home screen.

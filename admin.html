@@ -8,7 +8,8 @@
   <meta name="apple-mobile-web-app-title" content="MPI Office">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynh8tKqMZcT2bdgMZ7aSxjN9gNJ8=" crossorigin="">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.css">
   <title>MPI Inspector Operations</title>
   <style>
     :root { --navy:#11186a; --navy-2:#202977; --blue:#2775b9; --gold:#c89b27; --ink:#161b3f; --muted:#626a8a; --line:#dce3ee; --paper:#fff; --soft:#f3f6fa; --green:#28765e; --red:#9b3838; color-scheme:light; font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
@@ -218,13 +219,16 @@
     .live-location-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
     .live-location-head h3 { margin:0; color:var(--navy); font-size:18px; }
     .live-location-head p { margin:5px 0 0; color:var(--muted); font-size:10px; line-height:1.45; }
-    .live-location-actions { display:flex; align-items:center; gap:10px; }
+    .live-location-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px; }
     .live-location-actions .secondary { min-height:40px; white-space:nowrap; }
+    .live-location-actions input { min-height:40px; max-width:150px; padding:7px 9px; color:var(--navy); background:#fff; border:1px solid #cbdff0; border-radius:10px; font-size:9px; font-weight:850; }
     .live-location-status { max-width:280px; color:var(--muted); font-size:9px; line-height:1.35; text-align:right; }
     .live-location-layout { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(250px,.7fr); gap:12px; margin-top:14px; }
     .live-location-map { height:380px; overflow:hidden; background:#e7edf5; border:1px solid #d6dfea; border-radius:13px; }
     .live-location-list { display:grid; align-content:start; gap:8px; }
-    .live-location-person { display:grid; grid-template-columns:12px minmax(0,1fr) auto; gap:9px; align-items:center; padding:11px; background:#fff; border:1px solid var(--line); border-radius:11px; }
+    .live-location-person { display:grid; width:100%; grid-template-columns:12px minmax(0,1fr) auto; gap:9px; align-items:center; padding:11px; color:inherit; background:#fff; border:1px solid var(--line); border-radius:11px; text-align:left; cursor:pointer; }
+    .live-location-person:hover,.live-location-person:focus-visible { border-color:#8db8db; box-shadow:0 0 0 3px rgba(39,117,185,.11); outline:0; }
+    .live-location-person.selected { border-color:var(--blue); box-shadow:0 0 0 3px rgba(39,117,185,.13); }
     .live-location-dot { width:12px; height:12px; background:var(--green); border:3px solid #dff1ea; border-radius:50%; }
     .live-location-person.delayed .live-location-dot { background:#b68116; border-color:#fff0c7; }
     .live-location-person.stale .live-location-dot,.live-location-person.unavailable .live-location-dot { background:#9b3838; border-color:#fde4e1; }
@@ -233,6 +237,8 @@
     .live-location-person strong { color:var(--navy); font-size:10.5px; }
     .live-location-person span { margin-top:3px; color:var(--muted); font-size:8.5px; line-height:1.35; }
     .live-location-person b { color:var(--navy); font-size:8px; text-transform:uppercase; }
+    .live-location-route-note { min-height:18px; margin:9px 0 0; color:var(--muted); font-size:9px; line-height:1.4; }
+    .live-location-route-note strong { color:var(--navy); }
     .mpi-live-marker { display:grid; width:34px; height:34px; place-items:center; color:#fff; background:var(--navy); border:3px solid #e0b94e; border-radius:50%; box-shadow:0 4px 12px rgba(17,24,106,.35); font-size:10px; font-weight:950; }
     .leaflet-popup-content { color:var(--ink); font:11px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
     .leaflet-popup-content strong { color:var(--navy); }
@@ -537,8 +543,9 @@
       .arrival-evidence { grid-template-columns:1fr; }
       .live-location-head,.live-location-actions { align-items:stretch; }
       .live-location-head { display:grid; }
-      .live-location-actions { display:grid; grid-template-columns:1fr; }
+      .live-location-actions { display:grid; grid-template-columns:1fr 1fr; }
       .live-location-status { max-width:none; text-align:left; }
+      .live-location-status,.live-location-actions input,#adminLiveLocationRefresh { grid-column:1/-1; max-width:none; width:100%; }
       .live-location-layout { grid-template-columns:1fr; }
       .live-location-map { height:330px; }
       .admin-onboarding { padding:10px; }
@@ -628,8 +635,8 @@
           </section>
           <section class="office-reply-inbox" id="adminReplyInbox" aria-live="polite"><div class="office-reply-head"><h3>Inspector Replies</h3><span>0</span></div><div class="office-reply-list"><div class="empty">No inspector replies yet.</div></div></section>
           <section class="live-location-panel" id="adminLiveLocationPanel" aria-labelledby="adminLiveLocationTitle">
-            <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Live Inspector Map</h3><p>Company-device locations refresh about every three minutes during an active workday. Every position includes its actual update time.</p></div><div class="live-location-actions"><span class="live-location-status" id="adminLiveLocationStatus">Waiting for active field devices.</span><button class="secondary" id="adminLiveLocationRefresh" type="button">UPDATE NOW</button></div></div>
-            <div class="live-location-layout"><div class="live-location-map" id="adminLiveLocationMap" aria-label="Map of current inspector locations"></div><div class="live-location-list" id="adminLiveLocationList"><div class="empty">Waiting for inspector locations.</div></div></div>
+            <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Live Inspector Map</h3><p>The map frames the active field team. Tap a name to zoom in, or select a date and show that operative's recorded route.</p></div><div class="live-location-actions"><span class="live-location-status" id="adminLiveLocationStatus">Waiting for active field devices.</span><input id="adminLiveRouteDate" type="date" aria-label="Historical route date"><button class="secondary" id="adminLiveLocationHistory" type="button" disabled>SHOW ROUTE</button><button class="secondary" id="adminLiveLocationShowAll" type="button">SHOW ALL</button><button class="secondary" id="adminLiveLocationRefresh" type="button">UPDATE NOW</button></div></div>
+            <div class="live-location-layout"><div><div class="live-location-map" id="adminLiveLocationMap" aria-label="Map of current inspector locations"></div><p class="live-location-route-note" id="adminLiveLocationRouteStatus">Select an operative to inspect their position or route.</p></div><div class="live-location-list" id="adminLiveLocationList"><div class="empty">Waiting for inspector locations.</div></div></div>
           </section>
           <div class="team-overview" id="adminTeamOverview"><div class="empty">No inspector activity has synced yet.</div></div>
           <div class="detail-shell" id="adminInspectorDetail" hidden></div>
@@ -708,7 +715,9 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="./mpi-shared.js?build=167"></script>
-  <script src="./admin.js?build=167"></script>
+  <script src="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
+  <script src="./mpi-shared.js?build=168"></script>
+  <script src="./admin.js?build=168"></script>
 </body>
 </html>
