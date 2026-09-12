@@ -58,6 +58,10 @@
   let lastLiveLocationAttemptAt = 0;
   let lastLiveLocationRequestId = "";
   let lastObservedLivePosition = null;
+  let nativeLocationListener = null;
+  let nativeResumeListener = null;
+  let nativeLocationContextSignature = "";
+  let nativeLocationSyncInFlight = false;
   const NOTIFIED_UPDATE_STORAGE_KEY = "mpiNotifiedOfficeUpdatesV2";
   const LIVE_LOCATION_INTERVAL_MS = 3 * 60 * 1000;
 
@@ -271,13 +275,15 @@
       workDate: state.date,
       source: reason,
       requestId: String(requestId || "").slice(0, 100),
+      nativePointId: String(position.nativeId || "").slice(0, 100),
       status: "recorded"
     };
   }
 
   async function storeRoutePoint(location) {
     if (!currentUser || !location?.workDate) return false;
-    const pointId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    const nativePointId = String(location.nativePointId || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 100);
+    const pointId = nativePointId ? `native-${nativePointId}` : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     const point = {
       userId: currentUser.uid,
       date: location.workDate,
@@ -289,6 +295,7 @@
       recordedAtClient: location.recordedAtClient,
       workStatus: location.workStatus,
       source: location.source,
+      nativePointId,
       recordedAt: shared.serverTimestamp()
     };
     await shared.db.collection("users").doc(currentUser.uid).collection("locationRouteDays").doc(location.workDate).collection("points").doc(pointId).set(point);
@@ -296,7 +303,11 @@
   }
 
   async function publishLiveLocation(reason = "automatic", requestId = "", suppliedPosition = null) {
-    const state = activeLiveLocationState();
+    const nativeContext = suppliedPosition?.nativeContext;
+    const nativeState = nativeContext?.workDate && (!nativeContext.userId || nativeContext.userId === currentUser?.uid)
+      ? { status: nativeContext.workStatus || "ACTIVE WORKDAY", date: nativeContext.workDate }
+      : null;
+    const state = nativeState || activeLiveLocationState();
     if (!currentUser || !currentProfile || !state || liveLocationInFlight || !navigator.onLine) return false;
     const now = Date.now();
     if (reason === "automatic" && now - lastLiveLocationAttemptAt < LIVE_LOCATION_INTERVAL_MS - 15000) return false;
@@ -314,6 +325,9 @@
         liveLocationUpdatedAt: shared.serverTimestamp()
       }, { merge: true });
       await storeRoutePoint(location).catch(() => false);
+      if (suppliedPosition?.nativeId) {
+        await window.MPI_NATIVE?.acknowledgeLocations?.([suppliedPosition.nativeId]).catch(() => false);
+      }
       return true;
     } catch (error) {
       const status = Number(error?.code) === 1 ? "permission-denied" : Number(error?.code) === 3 ? "timed-out" : "unavailable";
@@ -350,6 +364,53 @@
     liveLocationWatchId = null;
     lastObservedLivePosition = null;
     liveLocationInFlight = false;
+    nativeLocationContextSignature = "";
+    window.MPI_NATIVE?.stopWorkdayLocation?.().catch(() => false);
+  }
+
+  async function flushNativeLocations() {
+    if (!window.MPI_NATIVE?.isNative || nativeLocationSyncInFlight || !currentUser || !navigator.onLine) return false;
+    nativeLocationSyncInFlight = true;
+    try {
+      const points = await window.MPI_NATIVE.pendingLocations();
+      let synced = false;
+      for (const point of points.slice(0, 120)) {
+        if (point.nativeContext?.userId && point.nativeContext.userId !== currentUser.uid) continue;
+        const result = await publishLiveLocation("native-background", "", point);
+        synced = result || synced;
+        if (!result) break;
+      }
+      return synced;
+    } catch (_) {
+      return false;
+    } finally {
+      nativeLocationSyncInFlight = false;
+    }
+  }
+
+  async function ensureNativeLocationSharing(state) {
+    if (!window.MPI_NATIVE?.isNative || !currentUser || !state) return false;
+    if (!nativeLocationListener) {
+      nativeLocationListener = await window.MPI_NATIVE.addLocationListener(position => {
+        lastObservedLivePosition = position;
+        if (navigator.onLine && Date.now() - lastLiveLocationAttemptAt >= LIVE_LOCATION_INTERVAL_MS - 15000) {
+          publishLiveLocation("native-background", "", position).catch(() => false);
+        }
+      });
+    }
+    if (!nativeResumeListener) {
+      nativeResumeListener = await window.MPI_NATIVE.addResumeListener(() => flushNativeLocations().catch(() => false));
+    }
+    const context = { userId: currentUser.uid, workDate: state.date, workStatus: state.status };
+    const signature = `${context.userId}:${context.workDate}:${context.workStatus}`;
+    if (!nativeLocationContextSignature) {
+      await window.MPI_NATIVE.startWorkdayLocation(context);
+    } else if (nativeLocationContextSignature !== signature) {
+      await window.MPI_NATIVE.updateWorkdayLocationContext(context);
+    }
+    nativeLocationContextSignature = signature;
+    await flushNativeLocations();
+    return true;
   }
 
   function ensureLiveLocationWatch() {
@@ -363,11 +424,22 @@
   }
 
   function syncLiveLocationSharing() {
-    if (activeLiveLocationState()) ensureLiveLocationWatch();
+    const state = activeLiveLocationState();
+    if (state && window.MPI_NATIVE?.isNative) {
+      ensureNativeLocationSharing(state).catch(() => false);
+      if (liveLocationWatchId !== null && navigator.geolocation?.clearWatch) navigator.geolocation.clearWatch(liveLocationWatchId);
+      liveLocationWatchId = null;
+      return;
+    }
+    if (state) ensureLiveLocationWatch();
     else if (liveLocationWatchId !== null && navigator.geolocation?.clearWatch) {
       navigator.geolocation.clearWatch(liveLocationWatchId);
       liveLocationWatchId = null;
       lastObservedLivePosition = null;
+    }
+    if (!state && nativeLocationContextSignature) {
+      nativeLocationContextSignature = "";
+      window.MPI_NATIVE?.stopWorkdayLocation?.().catch(() => false);
     }
   }
 
@@ -378,8 +450,14 @@
     }
     syncLiveLocationSharing();
     if (!liveLocationInterval) {
-      window.setTimeout(() => publishLiveLocation("automatic").catch(() => false), 1200);
-      liveLocationInterval = window.setInterval(() => publishLiveLocation("automatic").catch(() => false), LIVE_LOCATION_INTERVAL_MS);
+      window.setTimeout(() => {
+        if (window.MPI_NATIVE?.isNative) flushNativeLocations().catch(() => false);
+        else publishLiveLocation("automatic").catch(() => false);
+      }, 1200);
+      liveLocationInterval = window.setInterval(() => {
+        if (window.MPI_NATIVE?.isNative) flushNativeLocations().catch(() => false);
+        else publishLiveLocation("automatic").catch(() => false);
+      }, LIVE_LOCATION_INTERVAL_MS);
     }
     handleLiveLocationRequest(currentProfile);
   }
@@ -625,6 +703,7 @@
 
   function renderUpdates(updates) {
     currentUpdates = updates;
+    window.dispatchEvent(new CustomEvent("mpi-inbox-updates", { detail: { updates } }));
     alertForNewUpdates(updates);
     const unread = updates.filter(item => !item.receipt).length;
     homeCard.hidden = !updates.length;
@@ -842,5 +921,6 @@
     }
   });
   window.addEventListener("online", () => publishLiveLocation("automatic").catch(() => false));
+  window.addEventListener("online", () => flushNativeLocations().catch(() => false));
   shared.watchSession(({ user, profile, error }) => renderSession(user, profile, error));
 })();

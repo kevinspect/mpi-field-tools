@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="168">
+  <meta name="app-build" content="169">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4733,6 +4733,20 @@
     .team-private-message p { margin:5px 0 0; font-size:10px; line-height:1.45; white-space:pre-wrap; }
     .team-private-form { display:grid; gap:9px; }
     .team-private-form textarea { width:100%; min-height:90px; padding:12px; border:1px solid #cfd7e4; border-radius:11px; font:inherit; }
+    .field-inbox-panel { max-width:820px; margin:0 auto 18px; padding:20px; }
+    .field-inbox-summary { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:13px; }
+    .field-inbox-summary strong { color:var(--forest); font-size:16px; }
+    .field-inbox-count { display:grid; min-width:34px; min-height:28px; place-items:center; padding:4px 9px; color:#fff; background:var(--bright-blue); border-radius:999px; font-size:9px; font-weight:950; }
+    .field-inbox-count:empty { display:none; }
+    .field-inbox-list { display:grid; gap:9px; }
+    .field-inbox-item { display:grid; grid-template-columns:42px minmax(0,1fr) auto; gap:11px; align-items:center; width:100%; min-height:72px; padding:11px 12px; color:inherit; background:#f7f9fc; border:1px solid #dce3ee; border-radius:13px; text-align:left; }
+    .field-inbox-item.unread { background:#eef6fc; border-left:5px solid var(--orange); }
+    .field-inbox-icon { display:grid; width:42px; height:42px; place-items:center; color:#fff; background:linear-gradient(145deg,#11186a,#2f75b5); border-radius:12px; font-size:18px; font-weight:950; }
+    .field-inbox-copy strong,.field-inbox-copy span,.field-inbox-copy small { display:block; }
+    .field-inbox-copy strong { color:var(--forest); font-size:11.5px; }
+    .field-inbox-copy span { margin-top:3px; overflow:hidden; color:var(--ink-2); font-size:9.5px; line-height:1.4; text-overflow:ellipsis; white-space:nowrap; }
+    .field-inbox-copy small { margin-top:4px; color:var(--bright-blue); font-size:8px; font-weight:850; }
+    .field-inbox-arrow { color:var(--orange-dark); font-size:18px; }
     .timed-alert-dialog { width: min(92vw, 460px); padding: 0; overflow: hidden; border: 0; border-radius: 20px; box-shadow: 0 28px 80px rgba(7,12,56,.34); }
     .timed-alert-dialog::backdrop { background: rgba(7,12,56,.72); }
     .timed-alert-inner { padding: 26px 22px; color: #fff; background: linear-gradient(145deg, #11186a, #222a83); text-align: center; }
@@ -5010,7 +5024,7 @@
       bottom: 0;
       left: 0;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       min-height: calc(64px + env(safe-area-inset-bottom));
       padding: 6px max(8px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(8px, env(safe-area-inset-left));
       background: #fff;
@@ -5024,9 +5038,12 @@
     .app-bottom-nav a::before { font-size: 19px; line-height: 1; }
     .app-bottom-nav a[data-bottom-screen="home"]::before { content: "⌂"; }
     .app-bottom-nav a[data-bottom-screen="job-companion"]::before { content: "▣"; }
+    .app-bottom-nav a[data-bottom-screen="inbox"]::before { content: "✉"; }
     .app-bottom-nav a[data-bottom-screen="field-tools"]::before { content: "◆"; }
     .app-bottom-nav a[data-bottom-screen="training-center"]::before { content: "★"; }
     .app-bottom-nav a[aria-current="page"] { color: #fff; background: var(--forest); }
+    .app-bottom-nav a[data-bottom-screen="inbox"] { position:relative; }
+    .bottom-inbox-badge { position:absolute; top:3px; right:calc(50% - 23px); display:grid; min-width:17px; height:17px; place-items:center; padding:0 4px; color:#11186a; background:#edcf74; border:1px solid #fff; border-radius:999px; font-size:7px; font-weight:950; }
 
     #tool-check { display: none !important; }
     #workflowAdminPanel { display: none !important; }
@@ -5143,6 +5160,11 @@
       <a class="home-tool-card" href="#training-center">
         <span class="home-tool-icon icon-training" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>Training</strong><small>Assigned courses, due dates, MPI refreshers, and InterNACHI progress.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="home-tool-card" href="#inbox">
+        <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
+        <span class="home-tool-copy"><strong>Inbox</strong><small>Office updates, assignments, attachments, and private team messages in one place.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
       <a class="home-tool-card" href="#contact-mpi">
@@ -7324,6 +7346,17 @@
       <a class="back-to-tools" href="#home">↑ Back to all field tools</a>
     </section>
 
+    <section class="field-app-section app-screen-view" id="inbox" data-app-screen="inbox" aria-labelledby="field-inbox-title">
+      <div class="field-section-heading">
+        <div><p class="eyebrow">MPI communications</p><h2 id="field-inbox-title">Inbox</h2></div>
+        <p>Office updates, assignments, attachments, and private team conversations appear here automatically.</p>
+      </div>
+      <section class="panel field-inbox-panel" aria-live="polite">
+        <div class="field-inbox-summary"><strong>Messages &amp; updates</strong><span class="field-inbox-count" id="fieldInboxCount"></span></div>
+        <div class="field-inbox-list" id="fieldInboxList"><div class="workflow-team-empty">Connecting to the MPI inbox…</div></div>
+      </section>
+    </section>
+
     <section class="field-app-section app-screen-view" id="team-messages" data-app-screen="team-messages" aria-labelledby="team-messages-title">
       <div class="field-section-heading">
         <div>
@@ -7721,7 +7754,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 168</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 169</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -7846,6 +7879,7 @@
   <nav class="app-bottom-nav" id="appBottomNav" aria-label="Main app navigation">
     <a href="#home" data-bottom-screen="home">Home</a>
     <a href="#job-companion" data-bottom-screen="job-companion">My Day</a>
+    <a href="#inbox" data-bottom-screen="inbox">Inbox<span class="bottom-inbox-badge" id="fieldBottomInboxCount" hidden></span></a>
     <a href="#field-tools" data-bottom-screen="field-tools">Tools</a>
     <a href="#training-center" data-bottom-screen="training-center">Training</a>
   </nav>
@@ -7860,10 +7894,11 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-shared.js?build=168"></script>
-  <script src="./mpi-field-sync.js?build=168"></script>
-  <script src="./mpi-subcontractor.js?build=168"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=168"></script>
+  <script src="./mpi-native-bridge.js?build=169"></script>
+  <script src="./mpi-shared.js?build=169"></script>
+  <script src="./mpi-field-sync.js?build=169"></script>
+  <script src="./mpi-subcontractor.js?build=169"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=169"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -7877,6 +7912,7 @@
         "home": "MPI Field Tools",
         "subcontractor-home": "MPI Subcontractor Field Tool",
         "job-companion": "My Day",
+        "inbox": "Inbox",
         "field-tools": "Field Tools",
         "contact-mpi": "Contact MPI",
         "age-finder": "Equipment Age Finder",
@@ -7959,6 +7995,8 @@
           );
           const activeBottom = activeScreen === "job-companion"
             ? "job-companion"
+            : activeScreen === "inbox" || activeScreen === "office-updates" || activeScreen === "team-messages"
+              ? "inbox"
             : toolScreens.has(activeScreen)
               ? "field-tools"
               : activeScreen === "training-center"
@@ -8907,6 +8945,9 @@
       const teamQuestionStatus = document.getElementById("teamQuestionStatus");
       const teamQuestionSuccess = document.getElementById("teamQuestionSuccess");
       const teamDirectoryStatus = document.getElementById("teamDirectoryStatus");
+      const fieldInboxList = document.getElementById("fieldInboxList");
+      const fieldInboxCount = document.getElementById("fieldInboxCount");
+      const fieldBottomInboxCount = document.getElementById("fieldBottomInboxCount");
       const teamDirectoryView = document.getElementById("teamDirectoryView");
       const teamDirectoryList = document.getElementById("teamDirectoryList");
       const teamPrivateProfile = document.getElementById("teamPrivateProfile");
@@ -9028,6 +9069,7 @@
       let teamDirectoryRecords = [];
       let teamPresenceRecords = [];
       let teamDirectMessages = [];
+      let fieldInboxUpdates = [];
       let selectedTeamMemberId = "";
       let unsubscribeTeamDirectory = null;
       let unsubscribeTeamPresence = null;
@@ -13314,6 +13356,12 @@
       }
 
       async function requestCalendarAccess() {
+        if (window.MPI_NATIVE?.isNative) {
+          await window.MPI_SHARED.signIn();
+          const token = savedCalendarToken();
+          if (!token) throw new Error("Google Calendar access was not returned. Select the MPI company account and try again.");
+          return token;
+        }
         await waitForGoogleIdentity();
         return new Promise((resolve, reject) => {
           let settled = false;
@@ -13431,17 +13479,45 @@
         const registry = loadFieldAlarmRegistry();
         const existing = registry[groupId];
         if (!existing) return;
-        const token = savedCalendarToken();
-        if (token) await Promise.all((existing.events || []).map(item => deleteCalendarFieldAlarm(item.id, token)));
+        if (existing.native && window.MPI_NATIVE?.isNative) {
+          await window.MPI_NATIVE.cancelAlarms((existing.events || []).map(item => item.id));
+        } else {
+          const token = savedCalendarToken();
+          if (token) await Promise.all((existing.events || []).map(item => deleteCalendarFieldAlarm(item.id, token)));
+        }
         delete registry[groupId];
         saveFieldAlarmRegistry(registry);
       }
 
-      async function syncFieldAlarmGroup(groupId, alerts, { token = savedCalendarToken(), force = false } = {}) {
+      async function syncFieldAlarmGroup(groupId, alerts, { token = savedCalendarToken(), force = false, url = "./#job-companion" } = {}) {
         const futureAlerts = (alerts || []).filter(alert => new Date(alert.at).getTime() > Date.now() + 10000);
         const registry = loadFieldAlarmRegistry();
         const signature = fieldAlarmSignature(futureAlerts);
         if (!force && registry[groupId]?.signature === signature && registry[groupId]?.events?.length === futureAlerts.length) return { scheduled: futureAlerts.length, unchanged: true };
+        if (window.MPI_NATIVE?.isNative) {
+          if (registry[groupId]?.events?.length) await window.MPI_NATIVE.cancelAlarms(registry[groupId].events.map(item => item.id));
+          const created = [];
+          try {
+            for (const alert of futureAlerts) {
+              const id = `${groupId}-${alert.id}`;
+              await window.MPI_NATIVE.scheduleAlarm({
+                id,
+                at: alert.at,
+                title: alert.title,
+                body: alert.body,
+                extra: { url, alarmGroup: groupId, alarmId: String(alert.id || "") }
+              });
+              created.push({ id, at: alert.at, title: alert.title });
+            }
+            registry[groupId] = { signature, events: created, native: true, updatedAt: new Date().toISOString() };
+            saveFieldAlarmRegistry(registry);
+            setFieldAlarmReady(true);
+            return { scheduled: created.length, native: true };
+          } catch (error) {
+            setFieldAlarmReady(false);
+            return { scheduled: created.length, needsSetup: true, error };
+          }
+        }
         if (!token) return { scheduled: 0, needsSetup: true };
         if (registry[groupId]) await Promise.all((registry[groupId].events || []).map(item => deleteCalendarFieldAlarm(item.id, token)));
         const created = [];
@@ -14066,9 +14142,10 @@
       function renderPhoneSetup() {
         let pushToken = "";
         try { pushToken = localStorage.getItem("mpiPushTokenV1") || ""; } catch (_) {}
-        const installed = isStandaloneApp();
-        const offline = Boolean(navigator.serviceWorker?.controller);
-        const notifications = "Notification" in window && Notification.permission === "granted" && Boolean(pushToken);
+        const nativeApp = Boolean(window.MPI_NATIVE?.isNative);
+        const installed = nativeApp || isStandaloneApp();
+        const offline = nativeApp || Boolean(navigator.serviceWorker?.controller);
+        const notifications = Boolean(pushToken) && (nativeApp || ("Notification" in window && Notification.permission === "granted"));
         const inspector = Boolean(loadRememberedInspector());
         setPhoneSetupIndicator(phoneSetupInstalled, installed, "Installed");
         setPhoneSetupIndicator(phoneSetupOffline, offline, "Saved offline");
@@ -14759,9 +14836,15 @@
           }
         }
 
-        const notificationPermission = "Notification" in window ? Notification.permission : "unsupported";
+        let notificationPermission = "Notification" in window ? Notification.permission : "unsupported";
+        if (window.MPI_NATIVE?.isNative) {
+          try { notificationPermission = (await window.MPI_NATIVE.pushPermission()).receive || "prompt"; } catch (_) {}
+        }
         if (notificationPermission === "denied") addIssue("notifications", "Notifications are blocked in this phone’s settings.");
-        const locationPermission = await appDiagnosticPermission("geolocation");
+        let locationPermission = await appDiagnosticPermission("geolocation");
+        if (window.MPI_NATIVE?.isNative) {
+          try { locationPermission = (await window.MPI_NATIVE.locationPermission()).location || locationPermission; } catch (_) {}
+        }
         let gps = { status: locationPermission === "denied" ? "denied" : "not-tested" };
         if (locationPermission === "granted") gps = await requestWorkflowClockLocation();
         if (locationPermission === "denied") addIssue("location", "Location access is blocked in this phone’s settings.");
@@ -14780,7 +14863,7 @@
 
         const recentAppErrors = loadAppDiagnosticErrors().filter(item => Date.now() - new Date(item.timestamp || 0).getTime() < 24 * 60 * 60 * 1000).slice(-8);
         if (recentAppErrors.length) addIssue("app-errors", `${recentAppErrors.length} recent application ${recentAppErrors.length === 1 ? "error was" : "errors were"} detected.`);
-        if (!("serviceWorker" in navigator) || (!navigator.serviceWorker.controller && location.protocol !== "file:")) addIssue("offline-shell", "Offline app files are not yet active on this device.");
+        if (!window.MPI_NATIVE?.isNative && (!("serviceWorker" in navigator) || (!navigator.serviceWorker.controller && location.protocol !== "file:"))) addIssue("offline-shell", "Offline app files are not yet active on this device.");
 
         const unresolvedIssues = issues.filter(issue => !repairs.some(repair => issue.code === "pending-sync" && /synchronized/i.test(repair)));
         const outcome = unresolvedIssues.length ? "support-required" : repairs.length ? "repaired" : "healthy";
@@ -15922,7 +16005,11 @@
 
       function renderWorkflowNotificationReadiness() {
         if (!workflowNotificationWarning) return;
-        const browserNotifications = "Notification" in window && Notification.permission === "granted";
+        let nativeToken = "";
+        try { nativeToken = localStorage.getItem(PUSH_TOKEN_STORAGE_KEY) || ""; } catch (_) {}
+        const browserNotifications = window.MPI_NATIVE?.isNative
+          ? Boolean(nativeToken)
+          : "Notification" in window && Notification.permission === "granted";
         workflowNotificationWarning.hidden = browserNotifications && fieldAlarmReady();
       }
 
@@ -16873,6 +16960,7 @@
           if (timedAlertAudioContext?.state === "suspended") await timedAlertAudioContext.resume();
         } catch (_) {}
         try {
+          if (window.MPI_NATIVE?.isNative) return;
           if ("Notification" in window && Notification.permission === "default") await Notification.requestPermission();
         } catch (_) {}
       }
@@ -16901,6 +16989,18 @@
       }
 
       async function postTimedNotification(alert) {
+        if (window.MPI_NATIVE?.isNative) {
+          try {
+            await window.MPI_NATIVE.scheduleAlarm({
+              id: `immediate-${alert.id}`,
+              title: alert.title,
+              body: alert.body,
+              extra: { url: alert.url || "./#job-companion", timedAlertId: alert.id }
+            });
+            await window.MPI_NATIVE.prominentHaptic();
+          } catch (_) {}
+          return;
+        }
         if (!("Notification" in window) || Notification.permission !== "granted" || !("serviceWorker" in navigator)) return;
         try {
           const registration = await navigator.serviceWorker.ready;
@@ -18602,6 +18702,56 @@
         return /^corey leese$/i.test(name) ? "Cory Leese" : name;
       }
 
+      function inboxDate(value) {
+        const date = value?.toDate?.() || new Date(value || 0);
+        return Number.isNaN(date.getTime()) ? new Date(0) : date;
+      }
+
+      function renderFieldInbox() {
+        if (!fieldInboxList) return;
+        const currentUid = window.MPI_COMPANY_SESSION?.userId || "";
+        const updates = fieldInboxUpdates.map(update => ({
+          kind: "update",
+          id: update.id,
+          title: update.title || "Update from MPI Office",
+          body: update.message || "Open this office update.",
+          meta: `${update.createdByName || "MPI Office"} · ${inboxDate(update.createdAt || update.createdAtClient).toLocaleString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}`,
+          timestamp: inboxDate(update.createdAt || update.createdAtClient).getTime(),
+          unread: !update.receipt,
+          icon: update.attachments?.length ? "▣" : "!"
+        }));
+        const conversations = new Map();
+        teamDirectMessages.forEach(message => {
+          const otherUid = message.senderUid === currentUid ? message.targetUid : message.senderUid;
+          if (!otherUid) return;
+          const timestamp = inboxDate(message.createdAt || message.createdAtClient).getTime();
+          const existing = conversations.get(otherUid);
+          const unread = message.senderUid !== currentUid && !(Array.isArray(message.readBy) && message.readBy.includes(currentUid));
+          if (!existing || timestamp > existing.timestamp) {
+            const member = teamMemberRecord(otherUid);
+            conversations.set(otherUid, {
+              kind: "message",
+              id: message.id,
+              otherUid,
+              title: teamDisplayName(member?.name || (message.senderUid === currentUid ? message.targetName : message.senderName)),
+              body: message.message || `${message.attachments?.length || 1} attachment${message.attachments?.length === 1 ? "" : "s"}`,
+              meta: `Private message · ${inboxDate(message.createdAt || message.createdAtClient).toLocaleString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}`,
+              timestamp,
+              unread,
+              icon: "✉"
+            });
+          } else if (unread) existing.unread = true;
+        });
+        const items = [...updates, ...conversations.values()].sort((left, right) => right.timestamp - left.timestamp);
+        const unread = items.filter(item => item.unread).length;
+        if (fieldInboxCount) fieldInboxCount.textContent = unread ? `${unread} NEW` : "UP TO DATE";
+        if (fieldBottomInboxCount) {
+          fieldBottomInboxCount.hidden = !unread;
+          fieldBottomInboxCount.textContent = unread > 99 ? "99+" : String(unread);
+        }
+        fieldInboxList.innerHTML = items.length ? items.map(item => `<button class="field-inbox-item${item.unread ? " unread" : ""}" type="button" ${item.kind === "update" ? `data-inbox-update="${escapeHtml(item.id)}"` : `data-inbox-team="${escapeHtml(item.otherUid)}"`}><span class="field-inbox-icon" aria-hidden="true">${escapeHtml(item.icon)}</span><span class="field-inbox-copy"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.body)}</span><small>${escapeHtml(item.meta)}</small></span><span class="field-inbox-arrow" aria-hidden="true">›</span></button>`).join("") : '<div class="workflow-team-empty"><strong>Your inbox is clear.</strong><br>New office updates and private messages will appear here automatically.</div>';
+      }
+
       function teamMemberRecord(userId) {
         const directory = teamDirectoryRecords.find(item => item.id === userId || item.userId === userId);
         const presence = teamPresenceRecords.find(item => item.id === userId || item.userId === userId);
@@ -18777,6 +18927,7 @@
               : teamDisplayName(item.name)
           }));
           renderTeamDirectory();
+          renderFieldInbox();
           if (selectedTeamMemberId) renderTeamPrivateThread();
           const target = new URL(window.location.href).searchParams.get("team") || "";
           if (target && teamMemberRecord(target)) openTeamProfile(target);
@@ -18784,6 +18935,7 @@
         unsubscribeTeamPresence = window.MPI_SHARED.watchTeamPresence((records, error) => {
           if (!error) teamPresenceRecords = records;
           renderTeamDirectory();
+          renderFieldInbox();
         });
         unsubscribeTeamDirectMessages = window.MPI_SHARED.watchDirectMessages(window.MPI_SHARED.auth.currentUser, (records, error) => {
           if (error) return;
@@ -18793,6 +18945,7 @@
           if (fresh) showToast(`New private message from ${teamDisplayName(fresh.senderName)}`);
           teamDirectListenerReady = true;
           renderTeamDirectory();
+          renderFieldInbox();
           if (selectedTeamMemberId) renderTeamPrivateThread();
         });
       }
@@ -20355,6 +20508,11 @@
       }
 
       async function checkForAppUpdate(manual = false) {
+        if (window.MPI_NATIVE?.isNative) {
+          appUpdateNotice.hidden = true;
+          if (manual) showToast(`Installed app build ${CURRENT_APP_BUILD} is current. Future releases arrive through TestFlight or the App Store.`);
+          return;
+        }
         if (location.protocol === "file:") {
           if (manual) showToast("Update checks start after the app is published");
           return;
@@ -20395,6 +20553,11 @@
       }
 
       async function loadLatestAppUpdate() {
+        if (window.MPI_NATIVE?.isNative) {
+          appUpdateNotice.hidden = true;
+          showToast("Installed app updates arrive through TestFlight or the App Store");
+          return;
+        }
         const targetBuild = latestAvailableBuild || CURRENT_APP_BUILD;
         loadAppUpdateBtn.disabled = true;
         loadAppUpdateBtn.textContent = "Installing…";
@@ -20419,10 +20582,20 @@
 
       function initializeAppUpdates() {
         appBuildNumber.textContent = String(CURRENT_APP_BUILD);
+        if (window.MPI_NATIVE?.isNative) {
+          appUpdateNotice.hidden = true;
+          checkForUpdatesBtn.textContent = "Check installed version";
+          return;
+        }
         setTimeout(() => checkForAppUpdate(false), 1200);
       }
 
       async function initializeOfflineAccess() {
+        if (window.MPI_NATIVE?.isNative) {
+          offlineStatus.textContent = "Included in installed app";
+          renderPhoneSetup();
+          return;
+        }
         if (location.protocol === "file:") {
           offlineStatus.textContent = "Offline saving activates after publish";
           return;
@@ -20492,6 +20665,25 @@
       }
 
       async function enablePushNotifications() {
+        if (window.MPI_NATIVE?.isNative) {
+          enablePushBtn.disabled = true;
+          enablePushBtn.textContent = "Enabling notifications…";
+          try {
+            const result = await window.MPI_NATIVE.enablePushNotifications();
+            revealPushToken(result.token);
+            setPushState("Enabled on this iPhone", "enabled");
+            enablePushBtn.textContent = "Notifications enabled ✓";
+            pushSetupHelp.textContent = "MPI messages and field alarms are enabled for this installed app.";
+            setFieldAlarmReady(true);
+            showToast("MPI notifications are enabled");
+          } catch (error) {
+            setPushState("Blocked in iPhone settings", "blocked");
+            pushSetupHelp.textContent = error?.message || "Allow notifications in iPhone Settings and try again.";
+            enablePushBtn.disabled = false;
+            enablePushBtn.textContent = "Try enabling again";
+          }
+          return;
+        }
         if (isIosDevice() && !isStandaloneApp()) {
           setPushState("Add to Home Screen", "blocked");
           pushSetupHelp.textContent = "In Safari, tap Share, choose Add to Home Screen, then open MPI Field Tools from its MPI icon and tap Enable again.";
@@ -20537,9 +20729,23 @@
         }
       }
 
-      function initializePushStatus() {
+      async function initializePushStatus() {
         let savedToken = "";
         try { savedToken = localStorage.getItem(PUSH_TOKEN_STORAGE_KEY) || ""; } catch (_) {}
+        if (window.MPI_NATIVE?.isNative) {
+          let permission = { receive: "prompt" };
+          try { permission = await window.MPI_NATIVE.pushPermission(); } catch (_) {}
+          if (savedToken && permission.receive === "granted") {
+            revealPushToken(savedToken);
+            setPushState("Enabled on this iPhone", "enabled");
+            enablePushBtn.textContent = "Notifications enabled ✓";
+          } else if (permission.receive === "denied") {
+            setPushState("Blocked in iPhone settings", "blocked");
+          } else {
+            setPushState("Tap to enable on this iPhone");
+          }
+          return;
+        }
         if (savedToken && window.Notification?.permission === "granted") {
           revealPushToken(savedToken);
           setPushState("Enabled on this phone", "enabled");
@@ -21511,9 +21717,9 @@
         syncFieldAlarmGroup(alarmGroup, [{
           id: "well-test-complete",
           at: new Date(startedAt + targetMinutes * 60000).toISOString(),
-          title: "100-MINUTE WELL TEST COMPLETE",
+          title: `${targetMinutes}-MINUTE WELL TEST COMPLETE`,
           body: "The required well-test duration has been reached. Stop the test equipment and return to MPI Field Tools."
-        }]).then(result => {
+        }], { url: "./#job-companion" }).then(result => {
           if (result?.scheduled) appendWorkflowEvent("Phone backup alarms scheduled", { alarmType: "Well test", targetMinutes }, job);
           renderWorkflowNotificationReadiness();
         });
@@ -21854,12 +22060,22 @@
         const sample = moldSampleInfo(record, sampleKey);
         if (sample.startedAt && !sample.stoppedAt) return;
         const startedAt = Date.now();
+        const alarmGroup = `mold-sample-${sampleKey}-${startedAt}`;
         record.startedAt = record.startedAt || startedAt;
         record.currentStep = targetStep;
-        record.samples[sampleKey] = { startedAt, targetAt: startedAt + 300000, targetReachedAt: 0, stoppedAt: 0, flowRateLpm: 15, targetSeconds: 300, totalLiters: 75 };
+        record.samples[sampleKey] = { startedAt, targetAt: startedAt + 300000, targetReachedAt: 0, stoppedAt: 0, flowRateLpm: 15, targetSeconds: 300, totalLiters: 75, phoneAlarmGroup: alarmGroup };
         saveGuidedRecord(MOLD_SAMPLING_STORAGE_KEY, record);
         appendWorkflowEvent("Mold air sample started", { sample: sampleKey, startedAt: new Date(startedAt).toISOString(), flowRateLpm: 15, targetSeconds: 300, totalLiters: 75 }, loadActiveJob());
         prepareTimedAlerts();
+        syncFieldAlarmGroup(alarmGroup, [{
+          id: "mold-sample-complete",
+          at: new Date(startedAt + 300000).toISOString(),
+          title: "MOLD AIR SAMPLE COMPLETE",
+          body: "The five-minute sample is complete. Stop the pump and return to MPI Field Tools."
+        }], { url: "./#sop-guide" }).then(result => {
+          if (result?.scheduled) appendWorkflowEvent("Phone backup alarm scheduled", { alarmType: "Mold air sample", sample: sampleKey, targetSeconds: 300 }, loadActiveJob());
+          renderWorkflowNotificationReadiness();
+        });
         if (moldSamplingTimerInterval) window.clearInterval(moldSamplingTimerInterval);
         moldSamplingTimerInterval = window.setInterval(updateMoldSamplingTimer, 1000);
         renderMoldSamplingStep();
@@ -22540,6 +22756,21 @@
         const button = event.target.closest("[data-team-member]");
         if (button) openTeamProfile(button.dataset.teamMember);
       });
+      fieldInboxList?.addEventListener("click", event => {
+        const update = event.target.closest("[data-inbox-update]");
+        if (update) {
+          window.location.hash = "#office-updates";
+          return;
+        }
+        const message = event.target.closest("[data-inbox-team]");
+        if (!message) return;
+        openTeamProfile(message.dataset.inboxTeam);
+        window.location.hash = "#team-messages";
+      });
+      window.addEventListener("mpi-inbox-updates", event => {
+        fieldInboxUpdates = Array.isArray(event.detail?.updates) ? event.detail.updates : [];
+        renderFieldInbox();
+      });
       teamProfileBack?.addEventListener("click", closeTeamProfile);
       teamPrivateForm?.addEventListener("submit", sendTeamPrivateMessage);
       teamPrivateText?.addEventListener("input", () => saveTeamMessageDraft(teamPrivateText.value));
@@ -22780,6 +23011,10 @@
       });
 
       setCommentType("defect");
+      window.addEventListener("mpi-native-notification", event => {
+        const notification = event.detail?.notification || event.detail || {};
+        showToast(notification.title || "New MPI notification");
+      });
       registerAppDiagnosticErrorCapture();
       populateReportItems();
       initializeFieldForms();

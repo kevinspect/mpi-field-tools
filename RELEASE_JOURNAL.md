@@ -1,5 +1,12 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 169 — Unified Field and Office Inboxes
+
+- Added one inspector Inbox that combines office updates, assignments, attachments, and private team conversations with an unread badge.
+- Changed the Office Console Sent Updates area into an Inbox with received messages first and sent-update delivery history below.
+- Made general field-message read state follow each authorized admin account independently, while private chats remain visible only to their two participants.
+- Preserved existing message history, attachments, office updates, safety acknowledgements, and operational records.
+
 ## Build 168 — Stable Live Map and Route History
 
 - Fixed the Office Console map distortion at its source by correcting the blocked Leaflet stylesheet and moving the base map to the no-key OpenFreeMap service.

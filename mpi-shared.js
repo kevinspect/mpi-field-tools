@@ -210,6 +210,27 @@
 
   async function signIn() {
     await authPersistenceReady;
+    if (window.MPI_NATIVE?.isNative) {
+      const nativeResult = await window.MPI_NATIVE.signInWithGoogle([
+        "email",
+        "profile",
+        "https://www.googleapis.com/auth/calendar.events",
+        "https://www.googleapis.com/auth/calendar.calendarlist.readonly"
+      ]);
+      const nativeCredential = nativeResult?.credential || {};
+      const idToken = String(nativeCredential.idToken || "").trim();
+      const accessToken = String(nativeCredential.accessToken || "").trim();
+      if (!idToken && !accessToken) throw new Error("Google sign-in completed without a usable credential.");
+      if (accessToken) {
+        try {
+          localStorage.setItem("mpiCalendarAccessTokenV1", accessToken);
+          localStorage.setItem("mpiCalendarAccessTokenExpiryV1", String(Date.now() + 50 * 60 * 1000));
+          localStorage.setItem("mpiCalendarAuthorizedV1", "yes");
+        } catch (_) {}
+      }
+      const providerCredential = window.firebase.auth.GoogleAuthProvider.credential(idToken || null, accessToken || null);
+      return auth.signInWithCredential(providerCredential);
+    }
     const provider = new window.firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
     try {
@@ -228,13 +249,14 @@
 
   async function completeRedirectSignIn() {
     await authPersistenceReady;
+    if (window.MPI_NATIVE?.isNative) return null;
     const result = await auth.getRedirectResult();
     if (result?.user) await ensureProfile(result.user);
     return result;
   }
 
-  function signOut() {
-    return auth.signOut();
+  async function signOut() {
+    await Promise.allSettled([auth.signOut(), window.MPI_NATIVE?.signOut?.()]);
   }
 
   function safeAccessId(value) {
@@ -547,6 +569,7 @@
       test: Boolean(options.test),
       targetRole: "office",
       attachments: [],
+      readBy: [user.uid],
       active: selected.length === 0,
       createdAt: serverTimestamp(),
       createdAtClient: new Date().toISOString()
@@ -584,7 +607,7 @@
         audience: "office",
         title: String(options.title || `Message from ${senderName}`).slice(0, 120),
         body: text || `${attachments.length} field photo${attachments.length === 1 ? "" : "s"} attached.`,
-        link: "./admin.html",
+        link: "./admin.html?view=inbox",
         tag: `mpi-field-message-${messageRef.id}`
       }).catch(() => false);
     }
@@ -681,6 +704,16 @@
       unread.slice(start, start + 400).forEach(doc => batch.set(doc.ref, { readBy: arrayUnion(user.uid), readAt: serverTimestamp() }, { merge: true }));
       await batch.commit();
     }
+    return true;
+  }
+
+  async function markFieldMessageRead(user, messageId) {
+    const messageKey = String(messageId || "").trim();
+    if (!user || !messageKey) return false;
+    await db.collection("fieldMessages").doc(messageKey).set({
+      readBy: arrayUnion(user.uid),
+      readAt: serverTimestamp()
+    }, { merge: true });
     return true;
   }
 
@@ -1002,6 +1035,7 @@
     sendDirectMessage,
     watchDirectMessages,
     markDirectConversationRead,
+    markFieldMessageRead,
     sendSafetyAlert,
     sendPushNotification,
     loadOfficeAttachment,

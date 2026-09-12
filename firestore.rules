@@ -289,11 +289,16 @@ service cloud.firestore {
         && request.resource.data.senderUid == request.auth.uid
         && request.resource.data.senderEmail == email()
         && request.resource.data.targetRole == "office";
-      allow update: if activeFieldUser()
+      allow update: if (
+        activeFieldUser()
         && resource.data.senderUid == request.auth.uid
         && request.resource.data.senderUid == resource.data.senderUid
         && request.resource.data.senderEmail == resource.data.senderEmail
-        && request.resource.data.targetRole == "office";
+        && request.resource.data.targetRole == "office"
+      ) || (
+        isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["readBy", "readAt"])
+      );
       allow delete: if false;
 
       match /attachments/{attachmentId} {

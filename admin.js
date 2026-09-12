@@ -68,6 +68,8 @@
   const officeAlertButtons = [...document.querySelectorAll("[data-enable-office-alerts]")];
   const replyInbox = document.getElementById("adminReplyInbox");
   const replyCount = document.getElementById("adminReplyCount");
+  const unifiedInboxList = document.getElementById("adminUnifiedInboxList");
+  const unifiedInboxSummary = document.getElementById("adminInboxSummary");
   const tabButtons = [...document.querySelectorAll("[data-admin-view]")];
   const panels = [...document.querySelectorAll("[data-admin-panel]")];
   const stats = {
@@ -155,6 +157,7 @@
   const ADMIN_ONBOARDING_EMAILS = new Set(["adrienne@michiganpropertyinspections.com"]);
   let adminOnboardingStep = 0;
   let teamDeepLinkApplied = false;
+  let initialAdminViewApplied = false;
   let liveLocationMap = null;
   let liveLocationLayer = null;
   let liveLocationRouteLayer = null;
@@ -270,7 +273,7 @@
     } catch (_) {}
   }
 
-  async function showOfficeAlert(title, body, tag = "mpi-office-alert", url = "./admin.html") {
+  async function showOfficeAlert(title, body, tag = "mpi-office-alert", url = "./admin.html?view=inbox") {
     playOfficeAlertTone();
     try { navigator.vibrate?.([250, 100, 250, 100, 450]); } catch (_) {}
     if (!("Notification" in window) || Notification.permission !== "granted") return;
@@ -384,6 +387,7 @@
     const savedKeys = [...readReplyKeys].slice(-200);
     currentProfile.officeReplyReadKeys = savedKeys;
     renderReplyInbox();
+    renderAdminUnifiedInbox();
     renderSafetyAlerts();
     renderOperationsStats();
     shared.db.collection("users").doc(currentUser.uid).set({
@@ -424,8 +428,77 @@
   }
 
   function updateOperationsNotificationBadge() {
-    const total = unreadReplyCount + unreadSafetyCount;
+    const total = adminInboxItems().filter(item => item.unread).length;
     if (replyCount) replyCount.textContent = total ? String(total) : "";
+  }
+
+  function adminInboxItems() {
+    const currentUid = currentUser?.uid || "";
+    const fieldItems = fieldMessages.map(message => {
+      const safety = message.kind === "safety-alert";
+      const coc = message.kind === "lab-coc";
+      return {
+        key: `field:${message.id}`,
+        kind: "field",
+        messageId: message.id,
+        personId: message.senderUid || "",
+        name: message.senderName || message.senderEmail || "MPI Field User",
+        type: safety ? "Safety alert" : coc ? "Chain of Custody" : message.replyToUpdateId ? "Reply to office update" : "Message to office",
+        body: message.message || (message.attachments?.length ? `${message.attachments.length} attachment${message.attachments.length === 1 ? "" : "s"}` : "Field message"),
+        timestamp: message.createdAt || message.createdAtClient,
+        unread: !readReplyKeys.has(`field:${message.id}`) && !(Array.isArray(message.readBy) && message.readBy.includes(currentUid)),
+        safety,
+        attachments: message.attachments || []
+      };
+    });
+    const directByPerson = new Map();
+    directMessages.forEach(message => {
+      const otherUid = message.senderUid === currentUid ? message.targetUid : message.senderUid;
+      if (!otherUid) return;
+      const timestamp = asDate(message.createdAt || message.createdAtClient)?.getTime() || 0;
+      const unread = message.senderUid !== currentUid && !(Array.isArray(message.readBy) && message.readBy.includes(currentUid));
+      const existing = directByPerson.get(otherUid);
+      if (!existing || timestamp > existing.sortTime) {
+        directByPerson.set(otherUid, {
+          key: `direct:${otherUid}`,
+          kind: "direct",
+          personId: otherUid,
+          name: message.senderUid === currentUid ? message.targetName : message.senderName,
+          type: "Private conversation",
+          body: message.message || (message.attachments?.length ? `${message.attachments.length} attachment${message.attachments.length === 1 ? "" : "s"}` : "Private message"),
+          timestamp: message.createdAt || message.createdAtClient,
+          sortTime: timestamp,
+          unread,
+          attachments: message.attachments || []
+        });
+      } else if (unread) existing.unread = true;
+    });
+    const mirrored = new Set(fieldMessages.filter(item => item.replyToUpdateId).map(item => `${item.replyToUpdateId}:${item.senderUid}`));
+    const receiptItems = inspectorReplies.filter(reply => !mirrored.has(`${reply.updateId}:${reply.userId}`)).map(reply => ({
+      key: replyKey(reply),
+      kind: "receipt",
+      personId: reply.userId || "",
+      name: reply.userName || reply.userEmail || "MPI Field User",
+      type: "Reply to office update",
+      body: reply.replyText || "Inspector replied",
+      timestamp: reply.repliedAt || reply.updatedAt,
+      unread: !readReplyKeys.has(replyKey(reply)),
+      attachments: reply.attachments || []
+    }));
+    return [...fieldItems, ...directByPerson.values(), ...receiptItems]
+      .sort((left, right) => (asDate(right.timestamp)?.getTime() || 0) - (asDate(left.timestamp)?.getTime() || 0));
+  }
+
+  function renderAdminUnifiedInbox() {
+    if (!unifiedInboxList) return;
+    const items = adminInboxItems();
+    const unread = items.filter(item => item.unread).length;
+    if (unifiedInboxSummary) unifiedInboxSummary.textContent = unread ? `${unread} unread` : "All caught up";
+    if (replyCount) replyCount.textContent = unread ? String(unread) : "";
+    unifiedInboxList.innerHTML = items.length ? items.map(item => {
+      const files = item.attachments?.length ? ` · ${item.attachments.length} attachment${item.attachments.length === 1 ? "" : "s"}` : "";
+      return `<button class="office-reply-card${item.unread ? " unread" : ""}${item.safety ? " safety" : ""}" type="button" data-admin-inbox-kind="${escapeHtml(item.kind)}" data-admin-inbox-key="${escapeHtml(item.key)}" data-admin-inbox-message="${escapeHtml(item.messageId || "")}" data-admin-inbox-person="${escapeHtml(item.personId || "")}"><div><strong>${escapeHtml(item.name || "MPI Team Member")}</strong><span class="admin-inbox-type">${escapeHtml(item.type)}</span>${item.unread ? '<span class="office-reply-new">Unread</span>' : ""}</div><div><span>${escapeHtml(item.body)}</span><small>${escapeHtml(files.replace(/^ · /, ""))}</small></div><time>${escapeHtml(formatDateTime(item.timestamp))}</time></button>`;
+    }).join("") : '<div class="empty">No received messages yet. Inspector messages and private team conversations will appear here automatically.</div>';
   }
 
   function renderSafetyAlerts() {
@@ -498,6 +571,7 @@
     fieldMessageListenerReady = true;
     renderSafetyAlerts();
     renderReplyInbox();
+    renderAdminUnifiedInbox();
     renderOperationsStats();
     const selected = overviewEntry(selectedInspectorId);
     const history = document.getElementById("adminMessageHistory");
@@ -523,6 +597,7 @@
     knownReplyKeys = nextKeys;
     replyListenerReady = true;
     renderReplyInbox();
+    renderAdminUnifiedInbox();
     values.forEach(reply => { if (reply.updateId) messageReceiptCache.set(reply.updateId, reply); });
     const selected = people.find(item => item.id === selectedInspectorId);
     if (selected) hydrateMessageReceipts(selected);
@@ -2510,6 +2585,7 @@
     unsubscribeFieldMessages = shared.db.collection("fieldMessages").orderBy("createdAt", "desc").limit(200).onSnapshot(processFieldMessages, () => {
       fieldMessages = [];
       renderReplyInbox();
+      renderAdminUnifiedInbox();
     });
     directMessageListenerReady = false;
     unsubscribeDirectMessages = shared.watchDirectMessages(currentUser, (values, error) => {
@@ -2527,6 +2603,7 @@
         );
       }
       directMessageListenerReady = true;
+      renderAdminUnifiedInbox();
       renderOperations();
     });
     if (!replyRefreshTimer) {
@@ -2606,7 +2683,7 @@
         targetTokens: notificationTokensForUpdate(audience === "all" ? "all" : "inspector", targetEmail, targetUid),
         title: notificationTitle || "New message from MPI Office",
         body: notificationBody || "Open MPI Field Tools to review the new information.",
-        link: "./#team-messages",
+        link: "./#inbox",
         tag: `mpi-office-${updateRef.id}`
       }).catch(() => false);
       publishStatus.textContent = pushRequested
@@ -2995,6 +3072,37 @@
     inspectorSelector.value = selectedInspectorId;
     renderOperations();
   });
+  unifiedInboxList?.addEventListener("click", event => {
+    const button = event.target.closest("[data-admin-inbox-kind]");
+    if (!button) return;
+    const kind = button.dataset.adminInboxKind;
+    const personId = button.dataset.adminInboxPerson || "";
+    if (kind === "field") {
+      const message = fieldMessages.find(item => item.id === button.dataset.adminInboxMessage);
+      if (message?.kind !== "safety-alert") {
+        message.readBy = [...new Set([...(Array.isArray(message.readBy) ? message.readBy : []), currentUser.uid])];
+        markReplyRead(`field:${message.id}`);
+        shared.markFieldMessageRead?.(currentUser, message.id).catch(() => false);
+      }
+    } else if (kind === "direct") {
+      directMessages.forEach(message => {
+        if (message.senderUid === personId && message.targetUid === currentUser.uid) {
+          message.readBy = [...new Set([...(Array.isArray(message.readBy) ? message.readBy : []), currentUser.uid])];
+        }
+      });
+      shared.markDirectConversationRead?.(currentUser, personId).catch(() => false);
+      renderAdminUnifiedInbox();
+    } else if (kind === "receipt") {
+      markReplyRead(button.dataset.adminInboxKey || "");
+    }
+    if (personId && overviewEntry(personId)) {
+      selectedInspectorId = personId;
+      selectedOperationDate = "";
+      inspectorSelector.value = personId;
+    }
+    showView("operations");
+    renderOperations();
+  });
   safetyAlertCenter?.addEventListener("click", event => {
     const button = event.target.closest("[data-acknowledge-safety]");
     if (!button) return;
@@ -3214,6 +3322,7 @@
     accountName.textContent = "Kevin Cave";
     accountEmail.textContent = currentUser.email;
     renderPeople();
+    renderAdminUnifiedInbox();
     showView("operations");
     return;
   }
@@ -3260,6 +3369,10 @@
     accountEmail.textContent = user.email || "";
     accountInitial.textContent = (profile.name || user.displayName || "K").trim().charAt(0).toUpperCase();
     startAdminData();
+    if (!initialAdminViewApplied) {
+      showView(new URL(window.location.href).searchParams.get("view") === "inbox" ? "updates" : "operations");
+      initialAdminViewApplied = true;
+    }
     maybeStartAdminOnboarding();
     if (window.Notification?.permission === "granted") enableOfficeAlerts(null, false);
   });

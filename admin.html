@@ -367,6 +367,13 @@
     .office-reply-card span { overflow:hidden; color:#33436b; font-size:11px; line-height:1.4; text-overflow:ellipsis; white-space:nowrap; }
     .office-reply-card small { margin-top:3px; color:var(--muted); font-size:9px; }
     .office-reply-card time { color:var(--blue); font-size:9px; font-weight:850; white-space:nowrap; }
+    .admin-inbox-block { display:grid; gap:10px; }
+    .admin-inbox-block + .admin-inbox-block { margin-top:24px; padding-top:22px; border-top:1px solid var(--line); }
+    .admin-inbox-title { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .admin-inbox-title h3 { margin:0; color:var(--navy); font-size:17px; }
+    .admin-inbox-title span { color:var(--muted); font-size:10px; font-weight:850; }
+    .admin-inbox-type { display:inline-flex !important; width:max-content; margin-top:5px; padding:3px 7px; color:var(--blue) !important; background:#edf5fb; border-radius:999px; font-size:8px !important; font-weight:950; letter-spacing:.05em; text-transform:uppercase; }
+    .office-reply-card.safety { border-left-color:var(--red); background:#fff7f6; }
     .safety-alert-center { display:grid; gap:11px; margin-top:16px; padding:16px; background:linear-gradient(145deg,#fff2f0,#fff); border:2px solid #b43b35; border-radius:15px; box-shadow:0 10px 25px rgba(155,56,56,.14); }
     .safety-alert-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .safety-alert-head h3 { display:flex; align-items:center; gap:9px; margin:0; color:#8e2d2a; font-size:18px; }
@@ -613,11 +620,11 @@
 
       <nav class="panel tabbar" aria-label="Office Console sections">
         <div class="nav-heading">Workspace</div>
-        <button class="active" type="button" data-admin-view="operations"><svg class="app-icon"><use href="#icon-grid"></use></svg><span>Operations</span><span class="nav-count" id="adminReplyCount"></span></button>
+        <button class="active" type="button" data-admin-view="operations"><svg class="app-icon"><use href="#icon-grid"></use></svg><span>Operations</span></button>
         <button type="button" data-admin-view="requests"><svg class="app-icon"><use href="#icon-clipboard"></use></svg><span>Requests</span><span class="nav-count" id="adminRequestCount"></span></button>
         <button type="button" data-admin-view="diagnostics"><svg class="app-icon"><use href="#icon-alert"></use></svg><span>App issues</span><span class="nav-count" id="adminDiagnosticCount"></span></button>
         <button type="button" data-admin-view="publish"><svg class="app-icon"><use href="#icon-send"></use></svg><span>Send to field</span></button>
-        <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Sent updates</span></button>
+        <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Inbox</span><span class="nav-count" id="adminReplyCount"></span></button>
         <button type="button" data-admin-view="people"><svg class="app-icon"><use href="#icon-users"></use></svg><span>Team</span></button>
       </nav>
 
@@ -692,7 +699,7 @@
       </section>
 
       <section class="console-view" data-admin-panel="updates">
-        <div class="panel content-panel"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Sent Updates</h2><p>Review delivery, acknowledgements and inspector replies.</p></div></div></div><div class="update-list" id="adminUpdatesList"><div class="empty">No office updates have been published.</div></div></div>
+        <div class="panel content-panel"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Inbox</h2><p>Inspector messages, private conversations, safety alerts, and office-update replies for this admin account.</p></div></div></div><div class="admin-inbox-block"><div class="admin-inbox-title"><h3>Received</h3><span id="adminInboxSummary">Connecting…</span></div><div class="office-reply-list" id="adminUnifiedInboxList"><div class="empty">Connecting to the MPI inbox…</div></div></div><div class="admin-inbox-block"><div class="admin-inbox-title"><h3>Sent updates</h3><span>Delivery and acknowledgements</span></div><div class="update-list" id="adminUpdatesList"><div class="empty">No office updates have been published.</div></div></div></div>
       </section>
 
       <section class="console-view" data-admin-panel="people">
@@ -717,7 +724,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
-  <script src="./mpi-shared.js?build=168"></script>
-  <script src="./admin.js?build=168"></script>
+  <script src="./mpi-shared.js?build=169"></script>
+  <script src="./admin.js?build=169"></script>
 </body>
 </html>
