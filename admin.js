@@ -29,6 +29,7 @@
   const publishStatus = document.getElementById("adminPublishStatus");
   const updatesList = document.getElementById("adminUpdatesList");
   const peopleList = document.getElementById("adminPeopleList");
+  const trainingList = document.getElementById("adminTrainingList");
   const inspectorSelector = document.getElementById("adminInspectorSelector");
   const rangePicker = document.getElementById("adminRangePicker");
   const teamOverview = document.getElementById("adminTeamOverview");
@@ -44,9 +45,11 @@
   const liveLocationStatus = document.getElementById("adminLiveLocationStatus");
   const liveLocationRefresh = document.getElementById("adminLiveLocationRefresh");
   const liveLocationHistory = document.getElementById("adminLiveLocationHistory");
+  const liveLocationPlan = document.getElementById("adminLiveLocationPlan");
   const liveLocationShowAll = document.getElementById("adminLiveLocationShowAll");
   const liveRouteDate = document.getElementById("adminLiveRouteDate");
   const liveLocationRouteStatus = document.getElementById("adminLiveLocationRouteStatus");
+  const spectoraScheduleStatus = document.getElementById("adminSpectoraScheduleStatus");
   const commentUsageUsed = document.getElementById("commentUsageUsed");
   const commentUsagePanel = document.getElementById("commentUsagePanel");
   const commentUsageRemaining = document.getElementById("commentUsageRemaining");
@@ -72,6 +75,12 @@
   const unifiedInboxSummary = document.getElementById("adminInboxSummary");
   const sentMessagesList = document.getElementById("adminSentMessagesList");
   const sentMessagesSummary = document.getElementById("adminSentSummary");
+  const inboxComposeForm = document.getElementById("adminInboxComposeForm");
+  const inboxComposeRecipient = document.getElementById("adminInboxComposeRecipient");
+  const inboxComposeText = document.getElementById("adminInboxComposeText");
+  const inboxComposeFiles = document.getElementById("adminInboxComposeFiles");
+  const inboxComposeSend = document.getElementById("adminInboxComposeSend");
+  const inboxComposeStatus = document.getElementById("adminInboxComposeStatus");
   const tabButtons = [...document.querySelectorAll("[data-admin-view]")];
   const panels = [...document.querySelectorAll("[data-admin-panel]")];
   const stats = {
@@ -168,6 +177,7 @@
   let liveLocationAgeTimer = 0;
   let selectedLiveLocationPersonId = "";
   let liveLocationMapMode = "all";
+  let liveLocationPlanVisible = false;
   let liveLocationRouteVisible = false;
   let liveLocationRouteLoading = false;
 
@@ -1120,18 +1130,26 @@
 
   function updateLiveLocationControls() {
     const person = liveLocationPeople().find(item => item.id === selectedLiveLocationPersonId);
+    if (liveLocationPlan) {
+      liveLocationPlan.disabled = !person || liveLocationRouteLoading;
+      liveLocationPlan.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationPlanVisible ? "HIDE JOB PLAN" : "SHOW JOB PLAN";
+    }
     if (liveLocationHistory) {
       liveLocationHistory.disabled = !person || liveLocationRouteLoading;
-      liveLocationHistory.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationRouteVisible ? "HIDE ROUTE" : "SHOW ROUTE";
+      liveLocationHistory.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationRouteVisible && !liveLocationPlanVisible ? "HIDE ACTUAL ROUTE" : "SHOW ACTUAL ROUTE";
     }
     if (!liveLocationRouteStatus) return;
     if (!person) liveLocationRouteStatus.textContent = "Select an operative to inspect their position or route.";
-    else if (!liveLocationRouteVisible && !liveLocationRouteLoading) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> selected. Choose a date and press Show Route.`;
+    else if (!liveLocationRouteVisible && !liveLocationRouteLoading) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> selected. Choose a date, then show the Spectora job plan or actual route.`;
   }
 
   function renderLiveLocationMap() {
     if (!liveLocationPanel || !liveLocationList) return;
     const values = liveLocationValues();
+    const spectoraDays = liveLocationPeople().reduce((total, person) => total + (Array.isArray(person?.spectoraScheduleDays) ? person.spectoraScheduleDays.length : 0), 0);
+    if (spectoraScheduleStatus) spectoraScheduleStatus.innerHTML = spectoraDays
+      ? `<strong>SPECTORA · READ ONLY</strong><span>${escapeHtml(spectoraDays)} synchronized inspector-day record${spectoraDays === 1 ? "" : "s"}. Route planning can display these appointments; no app action can alter Spectora.</span>`
+      : '<strong>SPECTORA · READ ONLY</strong><span>Protected Spectora schedule feed is not connected yet. The route planner may temporarily use an inspector\'s synchronized phone/calendar schedule and will label that fallback clearly.</span>';
     const current = values.filter(item => item.location && item.age.tone === "current");
     const delayed = values.filter(item => item.location && item.age.tone !== "current");
     liveLocationList.innerHTML = values.length ? values.map(item => {
@@ -1181,6 +1199,7 @@
 
   function hideHistoricalRoute({ keepSelection = true } = {}) {
     liveLocationRouteVisible = false;
+    liveLocationPlanVisible = false;
     liveLocationRouteLoading = false;
     liveLocationRouteLayer?.clearLayers();
     if (!keepSelection) selectedLiveLocationPersonId = "";
@@ -1195,6 +1214,7 @@
     selectedLiveLocationPersonId = personId;
     liveLocationMapMode = "focus";
     liveLocationRouteVisible = false;
+    liveLocationPlanVisible = false;
     liveLocationRouteLayer?.clearLayers();
     renderLiveLocationMap();
     const marker = liveLocationMarkers.get(personId);
@@ -1215,9 +1235,14 @@
 
   async function loadHistoricalRoute() {
     if (liveLocationRouteLoading) return;
-    if (liveLocationRouteVisible) {
+    if (liveLocationRouteVisible && !liveLocationPlanVisible) {
       hideHistoricalRoute({ keepSelection: true });
       return;
+    }
+    if (liveLocationPlanVisible) {
+      liveLocationRouteVisible = false;
+      liveLocationPlanVisible = false;
+      liveLocationRouteLayer?.clearLayers();
     }
     const person = liveLocationPeople().find(item => item.id === selectedLiveLocationPersonId);
     if (!person || !liveLocationMap || !liveLocationRouteLayer) return;
@@ -1236,6 +1261,7 @@
       }
       liveLocationRouteLayer.clearLayers();
       liveLocationRouteVisible = true;
+      liveLocationPlanVisible = false;
       if (!points.length) {
         if (liveLocationRouteStatus) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> has no recorded route points for ${escapeHtml(new Date(`${selectedDate}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }))}. Route recording begins with Build 168.`;
         return;
@@ -1259,9 +1285,122 @@
     }
   }
 
+  function scheduleDayFor(person, selectedDate) {
+    const spectoraDay = (Array.isArray(person?.spectoraScheduleDays) ? person.spectoraScheduleDays : []).find(day => day?.date === selectedDate);
+    if (spectoraDay) return {
+      date: selectedDate,
+      source: "Spectora · read only",
+      jobs: (Array.isArray(spectoraDay.jobs) ? spectoraDay.jobs : []).filter(job => !/cancel|delete/i.test(String(job?.status || ""))).map(job => ({
+        id: String(job?.id || job?.spectoraJobId || ""),
+        spectoraJobId: String(job?.spectoraJobId || job?.id || ""),
+        property: String(job?.property || job?.propertyAddress || job?.address || ""),
+        propertyAddress: String(job?.propertyAddress || job?.address || job?.property || ""),
+        scheduledStart: job?.scheduledStart || "",
+        scheduledEnd: job?.scheduledEnd || "",
+        inspectorId: String(job?.inspectorId || ""),
+        inspectorName: String(job?.inspectorName || person?.name || ""),
+        clientName: String(job?.clientName || ""),
+        clientPhone: String(job?.clientPhone || ""),
+        notes: String(job?.notes || ""),
+        services: Array.isArray(job?.services) ? job.services.map(String) : String(job?.services || "").split(",").map(value => value.trim()).filter(Boolean)
+      }))
+    };
+    const syncedDay = operationDays(person).find(day => day?.date === selectedDate);
+    return syncedDay ? { ...syncedDay, source: String(syncedDay.scheduleSource || "Inspector schedule sync") } : null;
+  }
+
+  function scheduleAddress(job) {
+    return String(job?.propertyAddress || job?.address || job?.property || "").trim();
+  }
+
+  function scheduleServices(job) {
+    const source = Array.isArray(job?.services) ? job.services : Array.isArray(job?.serviceNames) ? job.serviceNames : String(job?.services || job?.serviceNames || "").split(",");
+    return source.map(value => String(value || "").trim()).filter(Boolean);
+  }
+
+  async function geocodeScheduleAddress(address) {
+    const key = `mpiAdminGeocode:${address.toLowerCase()}`;
+    try {
+      const saved = JSON.parse(localStorage.getItem(key) || "null");
+      if (saved && Number.isFinite(saved.latitude) && Number.isFinite(saved.longitude)) return saved;
+    } catch (_) {}
+    const endpoint = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(address)}&benchmark=Public_AR_Current&format=json`;
+    const response = await fetch(endpoint, { cache: "force-cache" });
+    if (!response.ok) throw new Error(`Address lookup failed (${response.status}).`);
+    const data = await response.json();
+    const match = data?.result?.addressMatches?.[0];
+    const longitude = Number(match?.coordinates?.x);
+    const latitude = Number(match?.coordinates?.y);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+    const result = { latitude, longitude };
+    try { localStorage.setItem(key, JSON.stringify(result)); } catch (_) {}
+    return result;
+  }
+
+  function plannedDriveLink(person, jobs) {
+    const addresses = jobs.map(scheduleAddress).filter(Boolean);
+    if (!addresses.length) return "";
+    const current = liveLocationRecord(person);
+    const origin = current ? `${current.latitude},${current.longitude}` : String(person?.approvedEndAddress || addresses[0]);
+    const destination = addresses.at(-1);
+    const waypoints = addresses.length > 1 ? addresses.slice(0, -1).join("|") : "";
+    return `https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}${waypoints ? `&waypoints=${encodeURIComponent(waypoints)}` : ""}`;
+  }
+
+  async function loadPlannedScheduleRoute() {
+    if (liveLocationRouteLoading) return;
+    if (liveLocationPlanVisible) {
+      hideHistoricalRoute({ keepSelection: true });
+      return;
+    }
+    if (liveLocationRouteVisible) {
+      liveLocationRouteVisible = false;
+      liveLocationRouteLayer?.clearLayers();
+    }
+    const person = liveLocationPeople().find(item => item.id === selectedLiveLocationPersonId);
+    if (!person || !liveLocationMap || !liveLocationRouteLayer) return;
+    const selectedDate = liveRouteDate?.value || dateKey();
+    const day = scheduleDayFor(person, selectedDate);
+    const jobs = (Array.isArray(day?.jobs) ? day.jobs : []).filter(job => scheduleAddress(job)).sort((left, right) => (asDate(left.scheduledStart)?.getTime() || 0) - (asDate(right.scheduledStart)?.getTime() || 0));
+    if (!jobs.length) {
+      liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> has no synchronized Spectora appointments for ${escapeHtml(formatDate(selectedDate))}. The Spectora connector must supply that date before a planned route can be shown.`;
+      return;
+    }
+    liveLocationRouteLoading = true;
+    updateLiveLocationControls();
+    liveLocationRouteStatus.textContent = `Mapping ${jobs.length} scheduled job${jobs.length === 1 ? "" : "s"}…`;
+    try {
+      const located = (await Promise.all(jobs.map(async (job, index) => ({ job, index, coordinates: await geocodeScheduleAddress(scheduleAddress(job)).catch(() => null) })))).filter(item => item.coordinates);
+      liveLocationRouteLayer.clearLayers();
+      if (!located.length) throw new Error("The scheduled addresses could not be placed on the map.");
+      const latLngs = located.map(item => [item.coordinates.latitude, item.coordinates.longitude]);
+      if (latLngs.length > 1) liveLocationRouteLayer.addLayer(window.L.polyline(latLngs, { color: "#11186a", weight: 4, opacity: .72, dashArray: "8 8", lineJoin: "round" }));
+      located.forEach(item => {
+        const number = item.index + 1;
+        const icon = window.L.divIcon({ className: "", html: `<span class="mpi-plan-marker">${number}</span>`, iconSize: [34, 34], iconAnchor: [17, 17] });
+        liveLocationRouteLayer.addLayer(window.L.marker([item.coordinates.latitude, item.coordinates.longitude], { icon }).bindPopup(`<strong>${number}. ${escapeHtml(scheduleAddress(item.job))}</strong><br>${escapeHtml(formatTime(item.job.scheduledStart))}<br>${escapeHtml(scheduleServices(item.job).join(" · ") || "Inspection")}`));
+      });
+      liveLocationPlanVisible = true;
+      liveLocationRouteVisible = true;
+      liveLocationMapMode = "plan";
+      if (latLngs.length === 1) liveLocationMap.setView(latLngs[0], 13);
+      else liveLocationMap.fitBounds(latLngs, { padding: [42, 42], maxZoom: 12 });
+      const directions = plannedDriveLink(person, jobs);
+      liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> · ${escapeHtml(day?.source || "Spectora")} · ${jobs.length} appointment${jobs.length === 1 ? "" : "s"} in scheduled-time order.${directions ? `<a class="route-plan-link" href="${escapeHtml(directions)}" target="_blank" rel="noopener">OPEN DRIVING ROUTE</a>` : ""}`;
+    } catch (error) {
+      liveLocationRouteVisible = false;
+      liveLocationPlanVisible = false;
+      liveLocationRouteStatus.textContent = error?.message || "The planned route could not be loaded.";
+    } finally {
+      liveLocationRouteLoading = false;
+      updateLiveLocationControls();
+    }
+  }
+
   function showAllLiveLocations() {
     liveLocationRouteLayer?.clearLayers();
     liveLocationRouteVisible = false;
+    liveLocationPlanVisible = false;
     selectedLiveLocationPersonId = "";
     liveLocationMapSignature = "";
     const map = ensureLiveLocationMap();
@@ -1590,9 +1729,25 @@
     return ({ owner: "Owner", admin: "Office admin", inspector: "Inspector", subcontractor: "Subcontractor" })[String(roleValue || "inspector").toLowerCase()] || "Team member";
   }
 
+  function renderTrainingProfiles() {
+    if (!trainingList) return;
+    const records = people.filter(person => person.active !== false);
+    trainingList.innerHTML = records.length ? records.map(person => {
+      const recordUrl = /^https:\/\//i.test(String(person.nachiTranscriptUrl || "")) ? person.nachiTranscriptUrl : "";
+      const memberNumber = String(person.inspectorId || "").trim();
+      return `<article class="training-admin-card"><div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(canonicalTeamName(person))}</strong><span>${escapeHtml(teamRoleLabel(person.role))}</span></div></div><div><small>InterNACHI / inspector number</small><strong>${escapeHtml(memberNumber || "Not supplied")}</strong></div><div><small>Official education record</small><strong>${recordUrl ? "Connected by team member" : "Awaiting profile connection"}</strong><span>MPI stores the link only — never their InterNACHI password.</span></div>${recordUrl ? `<a href="${escapeHtml(recordUrl)}" target="_blank" rel="noopener">OPEN OFFICIAL RECORD</a>` : '<small>Team member can add this from My Profile.</small>'}</article>`;
+    }).join("") : '<div class="empty">No active team profiles are available.</div>';
+  }
+
   function renderPeople() {
     renderTargetOptions();
     renderInspectorSelector();
+    if (inboxComposeRecipient) {
+      const selectedRecipient = inboxComposeRecipient.value;
+      const recipients = people.filter(person => person.active !== false && person.id !== currentUser?.uid);
+      inboxComposeRecipient.innerHTML = '<option value="">Choose team member</option>' + recipients.map(person => `<option value="${escapeHtml(person.id)}">${escapeHtml(canonicalTeamName(person))} · ${escapeHtml(teamRoleLabel(person.role))}</option>`).join("");
+      if (recipients.some(person => person.id === selectedRecipient)) inboxComposeRecipient.value = selectedRecipient;
+    }
     const accountPeople = [...people.filter(person => person.role !== "subcontractor"), ...preferredSubcontractors()];
     peopleList.innerHTML = accountPeople.length ? accountPeople.map(person => `
       <article class="person-card" data-person-id="${escapeHtml(person.id)}">
@@ -1609,8 +1764,10 @@
           </select>
           <label class="check" style="padding:8px"><input data-person-active type="checkbox" ${person.active !== false ? "checked" : ""} ${person.role === "owner" ? "disabled" : ""}><span>Active</span></label>
         </div>
-        ${person.role === "subcontractor" ? `<div class="subcontractor-access-actions"><button class="secondary" type="button" data-copy-subcontractor-link="${escapeHtml(person.id)}">COPY PRIVATE PHONE LINK</button><button class="danger" type="button" data-revoke-subcontractor="${escapeHtml(person.id)}">REVOKE SUBCONTRACTOR ACCESS</button><span class="status" data-subcontractor-access-status></span></div>` : ""}
+        <details class="person-profile-details"><summary>Contact, emergency &amp; professional profile</summary><div class="person-controls"><input data-person-job-title aria-label="Job title for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.jobTitle || "")}" maxlength="80" placeholder="Job title" ${person.role === "owner" ? "disabled" : ""}><input data-person-personal-address aria-label="Personal address for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.personalAddress || "")}" maxlength="180" placeholder="Personal address" ${person.role === "owner" ? "disabled" : ""}><input data-person-emergency-name aria-label="Emergency contact for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.emergencyContactName || "")}" maxlength="80" placeholder="Emergency contact" ${person.role === "owner" ? "disabled" : ""}><input data-person-emergency-phone aria-label="Emergency phone for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.emergencyContactPhone || "")}" maxlength="30" placeholder="Emergency phone" ${person.role === "owner" ? "disabled" : ""}><input data-person-transcript-url aria-label="InterNACHI record link for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.nachiTranscriptUrl || "")}" maxlength="500" placeholder="InterNACHI transcript / education URL" ${person.role === "owner" ? "disabled" : ""}>${person.nachiTranscriptUrl ? `<a class="secondary" href="${escapeHtml(person.nachiTranscriptUrl)}" target="_blank" rel="noopener">OPEN TRAINING RECORD</a>` : ""}</div></details>
+        ${person.role === "subcontractor" ? `<div class="subcontractor-access-actions"><button class="secondary" type="button" data-copy-subcontractor-link="${escapeHtml(person.id)}">COPY APP ACTIVATION LINK</button><button class="danger" type="button" data-revoke-subcontractor="${escapeHtml(person.id)}">REVOKE SUBCONTRACTOR ACCESS</button><span class="status" data-subcontractor-access-status></span></div>` : ""}
       </article>`).join("") : '<div class="empty">No company accounts have signed in yet.</div>';
+    renderTrainingProfiles();
     renderOperations();
     renderSubcontractors();
     renderRequestTodos();
@@ -1737,7 +1894,7 @@
       <div class="subcontractor-admin-events">${events.length ? events.map(item => `<div><strong>${escapeHtml(item.type || "Status updated")}</strong><span>${escapeHtml(formatTime(item.timestamp))}${item.lab ? ` · ${escapeHtml(item.lab)}` : ""}</span></div>`).join("") : '<div><strong>No actions yet</strong><span>Waiting for phone</span></div>'}</div>
       <h3 style="margin-top:16px">Conversation</h3><div class="message-history" id="adminMessageHistory">${messageHistoryHtml(person)}${messages.length ? messages.map(item => `<article><strong>${escapeHtml(formatDateTime(item.createdAt))} · ${escapeHtml(item.senderName || title)} → Office</strong><p>${escapeHtml(item.message || "")}</p></article>`).join("") : ""}</div>
       <form class="subcontractor-admin-message" data-subcontractor-message-form data-person-id="${escapeHtml(person.id)}"><label class="field">Message ${escapeHtml(title)}<textarea data-message-text maxlength="1000" required placeholder="Write a message for ${escapeHtml(title)}"></textarea></label>${chatAttachmentHtml()}<button class="primary" type="submit">MESSAGE ${escapeHtml(String(title).split(/\s+/)[0].toUpperCase())}</button><span class="status" data-message-status></span></form>
-      ${!isTest ? `<div class="subcontractor-access-actions"><button class="secondary" type="button" data-copy-subcontractor-link="${escapeHtml(person.id)}">COPY PRIVATE PHONE LINK</button><button class="danger" type="button" data-revoke-subcontractor="${escapeHtml(person.id)}">REVOKE SUBCONTRACTOR ACCESS</button><span class="status" data-subcontractor-access-status></span></div>` : ""}
+      ${!isTest ? `<div class="subcontractor-access-actions"><button class="secondary" type="button" data-copy-subcontractor-link="${escapeHtml(person.id)}">COPY APP ACTIVATION LINK</button><button class="danger" type="button" data-revoke-subcontractor="${escapeHtml(person.id)}">REVOKE SUBCONTRACTOR ACCESS</button><span class="status" data-subcontractor-access-status></span></div>` : ""}
       ${isTest ? '<button class="danger" type="button" data-reset-admin-test-subcontractor>RESET TEST DAY</button>' : ""}
     </article>`;
   }
@@ -2109,7 +2266,7 @@
         })()
       : job.arrivalPerformance || "Arrival not recorded";
     return `<details class="job-line" ${index === 0 ? "open" : ""}>
-      <summary class="job-line-summary"><time>${escapeHtml(formatTime(job.scheduledStart))}</time><div><strong>${escapeHtml(job.property || "Inspection appointment")}</strong><small>${escapeHtml((job.services || []).join(" + ") || "Inspection")} · ${escapeHtml(arrivalPerformance)}${adjusted ? " · Management adjusted" : ""}</small></div><span class="status-badge ${job.status === "completed" ? "neutral" : ""}">${escapeHtml(status)}</span><span class="job-line-chevron">›</span></summary>
+      <summary class="job-line-summary"><time>${escapeHtml(formatTime(job.scheduledStart))}</time><div><strong>${escapeHtml(job.property || "Inspection appointment")}</strong><small>${escapeHtml(scheduleServices(job).join(" + ") || "Inspection")} · ${escapeHtml(arrivalPerformance)}${adjusted ? " · Management adjusted" : ""}</small></div><span class="status-badge ${job.status === "completed" ? "neutral" : ""}">${escapeHtml(status)}</span><span class="job-line-chevron">›</span></summary>
       <div class="job-time-panel">
         <div class="job-time-item"><span>Scheduled</span><strong>${escapeHtml(formatTime(job.scheduledStart))}</strong></div>
         <div class="job-time-item"><span>On My Way</span><strong>${escapeHtml(formatTime(values["On My Way selected"]))}</strong>${jobTimeEditButton("On My Way selected", job, values["On My Way selected"])}</div>
@@ -2808,6 +2965,30 @@
     }
   }
 
+  async function sendAdminInboxMessage(event) {
+    event.preventDefault();
+    const person = people.find(item => item.id === inboxComposeRecipient?.value);
+    if (!person || !currentUser || !currentProfile) {
+      inboxComposeStatus.textContent = "Choose one MPI team member.";
+      inboxComposeStatus.className = "status error";
+      return;
+    }
+    inboxComposeSend.disabled = true;
+    inboxComposeStatus.textContent = `Sending only to ${canonicalTeamName(person)}…`;
+    inboxComposeStatus.className = "status";
+    try {
+      await shared.sendDirectMessage(currentUser, currentProfile, person, inboxComposeText.value, [...(inboxComposeFiles.files || [])]);
+      inboxComposeForm.reset();
+      inboxComposeStatus.textContent = `Private message sent only to ${canonicalTeamName(person)}.`;
+      inboxComposeStatus.className = "status success";
+    } catch (error) {
+      inboxComposeStatus.textContent = error?.message || "The private message could not be sent.";
+      inboxComposeStatus.className = "status error";
+    } finally {
+      inboxComposeSend.disabled = false;
+    }
+  }
+
   async function resetAdminTestSubcontractor(button) {
     const card = button.closest("[data-subcontractor-person]");
     const person = people.find(item => item.id === card?.dataset.subcontractorPerson);
@@ -2841,7 +3022,7 @@
 
   function subcontractorProductionLink(person, accessId) {
     const base = window.location.pathname.replace(/admin\.html.*$/i, "");
-    return `${window.location.origin}${base}?subcontractor=${encodeURIComponent(subcontractorKey(person))}&access=${encodeURIComponent(accessId)}#subcontractor-home`;
+    return `${window.location.origin}${base}?subcontractor=${encodeURIComponent(subcontractorKey(person))}&access=${encodeURIComponent(accessId)}&handoff=app#subcontractor-home`;
   }
 
   async function activeSubcontractorAccess(person) {
@@ -2887,7 +3068,7 @@
       const access = await activeSubcontractorAccess(person);
       link = subcontractorProductionLink(person, access.id);
       await navigator.clipboard.writeText(link);
-      if (status) status.textContent = `Private phone-activation link copied for ${person.name || "subcontractor"}. No Google account is required.`;
+      if (status) status.textContent = `Private app-activation link copied for ${person.name || "subcontractor"}. Send it after MPI Field Tools is installed; it can activate one phone only.`;
     } catch (error) {
       if (status) status.textContent = link ? `Copy this private activation link: ${link}` : error?.message || "The private activation link could not be created.";
     } finally {
@@ -2914,7 +3095,7 @@
         }, { merge: true }));
       if (accessId) batch.set(shared.db.collection("subcontractorAccess").doc(accessId), { active: false, revokedAt: shared.serverTimestamp(), revokedBy: currentUser.uid }, { merge: true });
       await batch.commit();
-      if (status) status.textContent = "Access revoked. This does not affect any other team member.";
+      if (status) status.textContent = "Old-phone access revoked. Copy a new app-activation link when the replacement phone is ready.";
     } catch (error) {
       button.disabled = false;
       if (status) status.textContent = error.message || "Access could not be revoked.";
@@ -2985,8 +3166,14 @@
     const inspectorId = card.querySelector("[data-person-inspector-id]").value.trim().slice(0, 40);
     const phone = card.querySelector("[data-person-phone]").value.trim().slice(0, 30);
     const approvedEndAddress = card.querySelector("[data-person-end-address]").value.trim().slice(0, 180);
+    const jobTitle = card.querySelector("[data-person-job-title]")?.value.trim().slice(0, 80) || "";
+    const personalAddress = card.querySelector("[data-person-personal-address]")?.value.trim().slice(0, 180) || "";
+    const emergencyContactName = card.querySelector("[data-person-emergency-name]")?.value.trim().slice(0, 80) || "";
+    const emergencyContactPhone = card.querySelector("[data-person-emergency-phone]")?.value.trim().slice(0, 30) || "";
+    const rawTranscriptUrl = card.querySelector("[data-person-transcript-url]")?.value.trim() || "";
+    const nachiTranscriptUrl = /^https:\/\//i.test(rawTranscriptUrl) ? rawTranscriptUrl.slice(0, 500) : "";
     try {
-      await shared.db.collection("users").doc(person.id).set({ role, active, inspectorId, phone, approvedEndAddress, updatedAt: shared.serverTimestamp(), updatedBy: currentUser.uid }, { merge: true });
+      await shared.db.collection("users").doc(person.id).set({ role, active, inspectorId, phone, approvedEndAddress, jobTitle, personalAddress, emergencyContactName, emergencyContactPhone, nachiTranscriptUrl, updatedAt: shared.serverTimestamp(), updatedBy: currentUser.uid }, { merge: true });
     } catch (error) {
       authStatus.textContent = error.message || "The account change could not be saved.";
     }
@@ -3079,6 +3266,7 @@
     renderSelectedFiles();
   });
   form.addEventListener("submit", publishUpdate);
+  inboxComposeForm?.addEventListener("submit", sendAdminInboxMessage);
   updatesList.addEventListener("click", event => {
     const button = event.target.closest("[data-open-admin-attachment]");
     if (button) openAdminAttachment(button);
@@ -3194,17 +3382,25 @@
   });
   if (liveRouteDate) {
     liveRouteDate.value = dateKey();
-    liveRouteDate.max = dateKey();
+    const routeDateMinimum = new Date();
+    routeDateMinimum.setDate(routeDateMinimum.getDate() - 90);
+    const routeDateMaximum = new Date();
+    routeDateMaximum.setDate(routeDateMaximum.getDate() + 45);
+    liveRouteDate.min = dateKey(routeDateMinimum);
+    liveRouteDate.max = dateKey(routeDateMaximum);
     liveRouteDate.addEventListener("change", () => {
       if (liveLocationRouteVisible) {
+        const showingPlan = liveLocationPlanVisible;
         liveLocationRouteVisible = false;
+        liveLocationPlanVisible = false;
         liveLocationRouteLayer?.clearLayers();
-        loadHistoricalRoute().catch(() => false);
+        (showingPlan ? loadPlannedScheduleRoute() : loadHistoricalRoute()).catch(() => false);
       }
     });
   }
   liveLocationRefresh?.addEventListener("click", requestLiveLocationRefresh);
   liveLocationHistory?.addEventListener("click", () => loadHistoricalRoute().catch(() => false));
+  liveLocationPlan?.addEventListener("click", () => loadPlannedScheduleRoute().catch(() => false));
   liveLocationShowAll?.addEventListener("click", showAllLiveLocations);
   liveLocationList?.addEventListener("click", event => {
     const person = event.target.closest("[data-live-location-person]");

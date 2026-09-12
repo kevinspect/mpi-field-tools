@@ -38,6 +38,8 @@
   const accessKey = String(accessParameters.get("subcontractor") || "").trim().toLowerCase();
   const deviceActivationId = String(accessParameters.get("access") || "").trim();
   const productionAccessRequested = Boolean(accessKey);
+  const installedAppExperience = Boolean(window.MPI_NATIVE?.isNative || window.navigator.standalone || window.matchMedia?.("(display-mode: standalone)")?.matches);
+  const handoffToInstalledApp = accessParameters.get("handoff") === "app" && !installedAppExperience;
   const LOCAL_PREVIEW = ["127.0.0.1", "localhost"].includes(window.location.hostname) && new URLSearchParams(window.location.search).get("preview") === "subcontractor";
   const TEST_SUBCONTRACTOR = { name: "Jason Chamarro" };
   const LABS = {
@@ -121,11 +123,18 @@
   }
 
   function setProductionAccessState(mode, detail = "") {
-    document.body.classList.toggle("mpi-subcontractor-access-pending", mode === "pending" || mode === "activating");
+    document.body.classList.toggle("mpi-subcontractor-access-pending", mode === "pending" || mode === "activating" || mode === "handoff");
     document.body.classList.toggle("mpi-subcontractor-access-denied", mode === "denied");
     if (!accessGate) return;
     accessGate.hidden = mode === "authorized" || mode === "test";
-    if (mode === "activating") {
+    if (mode === "handoff") {
+      accessTitle.textContent = "Open MPI Field Tools to activate";
+      accessMessage.textContent = "This private invitation must be activated inside the installed MPI app. If the app does not open, copy this page's link, open MPI Field Tools, choose Subcontractor Invitation, and paste it there.";
+      if (accessButton) {
+        accessButton.hidden = false;
+        accessButton.textContent = "OPEN MPI FIELD TOOLS";
+      }
+    } else if (mode === "activating") {
       accessTitle.textContent = "Activating Jason's company phone";
       accessMessage.textContent = "Please keep this page open for a moment. No Google account or password is required.";
       if (accessButton) accessButton.hidden = true;
@@ -147,6 +156,21 @@
         accessButton.textContent = "TRY ACTIVATION AGAIN";
       }
     }
+  }
+
+  function installedAppActivationLink() {
+    const link = new URL("mpifieldtools://activate");
+    link.searchParams.set("subcontractor", accessKey);
+    link.searchParams.set("access", deviceActivationId);
+    return link.toString();
+  }
+
+  function openInstalledApp() {
+    if (!handoffToInstalledApp || !deviceActivationId) return;
+    window.location.href = installedAppActivationLink();
+    window.setTimeout(() => {
+      if (accessMessage) accessMessage.textContent = "If MPI Field Tools did not open, install it first. Then copy this page's link and paste it into Subcontractor Invitation inside the app.";
+    }, 1300);
   }
 
   function removeActivationSecretFromAddress() {
@@ -549,7 +573,7 @@
     document.body.classList.toggle("mpi-subcontractor-mode", subcontractorMode);
     if (testCard) testCard.hidden = !isAdmin || testMode;
     if (productionAccessRequested && !nextSession) {
-      setProductionAccessState("pending");
+      setProductionAccessState(handoffToInstalledApp ? "handoff" : "pending");
       window.location.hash = "#subcontractor-home";
       return;
     }
@@ -581,7 +605,7 @@
   labArrivedButton?.addEventListener("click", arriveAtLab);
   labCompleteButton?.addEventListener("click", completeLab);
   messageForm?.addEventListener("submit", sendOfficeMessage);
-  accessButton?.addEventListener("click", activateCompanyPhone);
+  accessButton?.addEventListener("click", () => handoffToInstalledApp ? openInstalledApp() : activateCompanyPhone());
   startTestButton?.addEventListener("click", enterTestMode);
   exitTestButton?.addEventListener("click", exitTestMode);
   resetButtons.forEach(button => button.addEventListener("click", resetTestDay));
@@ -589,7 +613,7 @@
   window.addEventListener("mpi-company-session-ready", event => applySession(event.detail));
   if (window.MPI_COMPANY_SESSION) applySession(window.MPI_COMPANY_SESSION);
   else if (productionAccessRequested) applySession(null);
-  if (!LOCAL_PREVIEW && productionAccessRequested && deviceActivationId) activateCompanyPhone();
+  if (!LOCAL_PREVIEW && !handoffToInstalledApp && productionAccessRequested && deviceActivationId) activateCompanyPhone();
   if (LOCAL_PREVIEW) {
     applySession({ userId: "local-subcontractor-preview", role: "owner", inspectorName: "Kevin Cave", inspectorEmail: "kev@michiganpropertyinspections.com" });
     enterTestMode();

@@ -84,6 +84,25 @@
     .attachment-item small { margin-top:3px; color:var(--muted); font-size:9px; }
     .attachment-remove { min-height:36px; padding:0 10px; color:var(--red); background:#fff2f1; border:1px solid #efcac6; border-radius:9px; font-size:9px; font-weight:900; }
     .admin-attachments { display:grid; gap:7px; margin-top:12px; }
+    .admin-inbox-compose { display:grid; gap:14px; margin:0 0 16px; padding:18px; background:linear-gradient(135deg,#11186a,#293792); border-radius:15px; }
+    .admin-inbox-compose h3,.admin-inbox-compose p { margin:0; color:#fff; }
+    .admin-inbox-compose h3 { font-size:18px; }
+    .admin-inbox-compose p { margin-top:5px; color:#dce4ff; font-size:10px; line-height:1.45; }
+    .admin-inbox-compose .field label { color:#fff; }
+    .admin-inbox-compose textarea { min-height:74px; }
+    .admin-inbox-compose .primary { color:#11186a; background:#fff; }
+    .training-admin-list { display:grid; gap:12px; }
+    .training-admin-card { display:grid; grid-template-columns:minmax(210px,1.2fr) minmax(140px,.7fr) minmax(180px,1fr) auto; gap:14px; align-items:center; padding:15px; background:#fff; border:1px solid var(--line); border-radius:14px; }
+    .training-admin-card strong,.training-admin-card span,.training-admin-card small { display:block; }
+    .training-admin-card strong { color:var(--navy); font-size:12px; }
+    .training-admin-card span { margin-top:3px; color:var(--muted); font-size:9px; }
+    .training-admin-card small { color:#5c6683; font-size:9px; line-height:1.4; }
+    .training-admin-card a { display:inline-flex; min-height:36px; align-items:center; justify-content:center; padding:0 11px; color:var(--blue); background:#edf5fb; border:1px solid #cbdff0; border-radius:9px; font-size:9px; font-weight:900; text-decoration:none; }
+    .mpi-plan-marker { display:grid; width:34px; height:34px; place-items:center; color:#fff; background:#11186a; border:3px solid #f0c94f; border-radius:50%; box-shadow:0 5px 14px rgba(17,24,106,.28); font-size:12px; font-weight:950; }
+    .route-plan-link { display:inline-flex; min-height:34px; align-items:center; margin-left:8px; padding:0 10px; color:#fff; background:#2775b9; border-radius:8px; font-size:9px; font-weight:900; text-decoration:none; }
+    .person-profile-details { grid-column:1/-1; margin-top:10px; border-top:1px solid var(--line); }
+    .person-profile-details summary { padding:12px 0 4px; color:var(--blue); font-size:10px; font-weight:900; cursor:pointer; }
+    .person-profile-details .person-controls { margin-top:8px; }
     .admin-attachments > strong { color:var(--navy); font-size:10px; }
     .admin-attachment-open { display:flex; width:100%; min-height:43px; align-items:center; justify-content:space-between; gap:10px; padding:8px 11px; color:var(--navy); background:#edf5fb; border:1px solid #cbdff0; border-radius:10px; text-align:left; font-size:9.5px; font-weight:850; }
     .admin-attachment-open span:last-child { color:var(--blue); white-space:nowrap; }
@@ -239,6 +258,8 @@
     .live-location-person b { color:var(--navy); font-size:8px; text-transform:uppercase; }
     .live-location-route-note { min-height:18px; margin:9px 0 0; color:var(--muted); font-size:9px; line-height:1.4; }
     .live-location-route-note strong { color:var(--navy); }
+    .spectora-readonly-note { display:flex; align-items:flex-start; gap:8px; margin:10px 0 0; padding:9px 11px; color:#42506f; background:#eef6fc; border:1px solid #c9dff0; border-radius:10px; font-size:9px; line-height:1.45; }
+    .spectora-readonly-note strong { flex:0 0 auto; color:var(--navy); }
     .mpi-live-marker { display:grid; width:34px; height:34px; place-items:center; color:#fff; background:var(--navy); border:3px solid #e0b94e; border-radius:50%; box-shadow:0 4px 12px rgba(17,24,106,.35); font-size:10px; font-weight:950; }
     .leaflet-popup-content { color:var(--ink); font:11px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
     .leaflet-popup-content strong { color:var(--navy); }
@@ -515,6 +536,7 @@
       .person-controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .person-controls [data-person-end-address] { grid-column:1/-1; }
       .job-time-panel { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .training-admin-card { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
 
     @media (max-width:760px) {
@@ -550,6 +572,7 @@
       .inspector-row { grid-template-columns:1fr 1fr; }
       .person-controls { grid-template-columns:1fr; }
       .person-controls [data-person-end-address] { grid-column:auto; }
+      .training-admin-card { grid-template-columns:1fr; }
       .job-line-summary { grid-template-columns:58px minmax(0,1fr) 16px; }
       .job-line-summary .status-badge { grid-column:1/-1; width:max-content; }
       .job-time-panel,.lab-time-row { grid-template-columns:1fr; }
@@ -571,6 +594,157 @@
       .admin-onboarding-body { padding:22px 18px 15px; }
       .admin-onboarding-body h2 { font-size:23px; }
       .admin-onboarding-actions { grid-template-columns:1fr 1.5fr; padding:15px 18px 20px; }
+    }
+
+    /* Build 172 — unified professional office-console design system */
+    :root {
+      --mpi-navy-950:#080d3e;
+      --mpi-navy-900:#10175f;
+      --mpi-navy-800:#192678;
+      --mpi-blue-600:#2f75b5;
+      --mpi-blue-100:#eaf3fb;
+      --mpi-gold-500:#d3aa3f;
+      --mpi-canvas:#f3f5f9;
+      --mpi-surface:#fff;
+      --mpi-text:#18203f;
+      --mpi-muted:#68728c;
+      --mpi-border:#dfe4ed;
+      --mpi-shadow:0 10px 30px rgba(16,23,95,.07);
+    }
+    html { background:var(--mpi-canvas); }
+    body {
+      color:var(--mpi-text);
+      background:var(--mpi-canvas);
+      font-family:Inter,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Arial,sans-serif;
+    }
+    .topbar {
+      min-height:66px;
+      padding:8px clamp(16px,3vw,32px);
+      background:rgba(10,16,72,.97);
+      border-bottom:2px solid var(--mpi-gold-500);
+      box-shadow:0 7px 22px rgba(8,13,62,.18);
+      -webkit-backdrop-filter:blur(18px);
+      backdrop-filter:blur(18px);
+    }
+    .brand { gap:11px; }
+    .brand img { width:44px; height:44px; }
+    .brand strong { font-size:14px; letter-spacing:-.01em; }
+    .brand span { margin-top:2px; color:#b9c2e2; font-size:9px; font-weight:800; letter-spacing:.075em; text-transform:uppercase; }
+    .top-actions { gap:7px; }
+    .top-actions a,.top-actions button {
+      min-height:42px;
+      padding:0 13px;
+      border-radius:11px;
+      font-size:11px;
+      font-weight:850;
+    }
+    .top-actions .new-update-action { box-shadow:inset 0 -3px 0 var(--mpi-gold-500); }
+    .shell { width:min(1500px,calc(100% - 34px)); padding:24px 0 70px; }
+    .hero {
+      align-items:center;
+      gap:18px;
+      margin:0 0 18px;
+      padding:0 2px;
+      color:var(--mpi-text);
+    }
+    .hero .eyebrow { margin-bottom:5px; color:#9a7215; font-size:9px; }
+    .hero h1 { color:var(--mpi-navy-900); font-size:clamp(30px,4vw,44px); line-height:1.02; letter-spacing:-.04em; }
+    .hero p:last-child { max-width:780px; margin-top:8px; color:var(--mpi-muted); font-size:13px; }
+    .account-pill { padding:9px 12px; border:1px solid var(--mpi-border); border-radius:14px; box-shadow:var(--mpi-shadow); }
+    .account-avatar { flex-basis:36px; height:36px; background:linear-gradient(145deg,var(--mpi-navy-900),var(--mpi-blue-600)); border:2px solid var(--mpi-gold-500); }
+    .panel { border-color:var(--mpi-border); border-radius:18px; box-shadow:var(--mpi-shadow); }
+    .dashboard { grid-template-columns:224px minmax(0,1fr); gap:14px 18px; }
+    .tabbar {
+      top:84px;
+      gap:5px;
+      padding:12px;
+      background:linear-gradient(180deg,var(--mpi-navy-900),#17256e);
+      border:1px solid #29387f;
+      border-radius:18px;
+      box-shadow:0 12px 30px rgba(8,13,62,.16);
+    }
+    .tabbar button { min-height:48px; padding:0 12px; color:#c8cfea; border-radius:11px; font-size:13px; font-weight:800; }
+    .tabbar button .app-icon { color:#d9b64f; }
+    .tabbar button.active { color:#fff; background:rgba(255,255,255,.13); box-shadow:inset 3px 0 var(--mpi-gold-500); }
+    .tabbar button.active .app-icon { color:#fff; }
+    .stat-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:11px; }
+    .stat { min-height:100px; padding:15px 16px; }
+    .stat-title > span:last-child { color:var(--mpi-muted); font-size:10px; letter-spacing:.07em; }
+    .stat-icon { width:32px; height:32px; color:var(--mpi-blue-600); background:var(--mpi-blue-100); border-radius:10px; }
+    .stat strong { margin-top:8px; color:var(--mpi-navy-900); font-size:26px; letter-spacing:-.025em; }
+    .comment-usage-panel { padding:17px; }
+    .content-panel { padding:20px; }
+    .section-head { margin-bottom:17px; }
+    .section-icon { color:var(--mpi-blue-600); background:var(--mpi-blue-100); border-color:#d4e4f1; border-radius:12px; }
+    .section-head h2 { color:var(--mpi-navy-900); font-size:23px; letter-spacing:-.025em; }
+    .section-head p { color:var(--mpi-muted); font-size:12px; }
+    .operations-toolbar { padding:12px; background:#f7f9fc; border-color:var(--mpi-border); border-radius:13px; }
+    .range-picker button { min-height:40px; padding:0 14px; border-radius:11px; font-size:11px; }
+    .range-picker button.active { background:var(--mpi-navy-900); }
+    .inspector-row {
+      min-height:82px;
+      padding:13px 14px;
+      border-color:var(--mpi-border);
+      border-left-width:4px;
+      border-radius:14px;
+      box-shadow:none;
+    }
+    .inspector-row:hover { transform:translateY(-1px); border-color:#b7cbe0; box-shadow:0 9px 22px rgba(16,23,95,.07); }
+    .inspector-row strong { font-size:14px; }
+    .status-badge { min-height:27px; padding:4px 9px; }
+    .live-location-layout { grid-template-columns:minmax(0,1.8fr) minmax(250px,.62fr); gap:13px; }
+    .live-location-map { height:420px; background:#e8edf4; border-radius:14px; }
+    .live-location-person { min-height:62px; border-radius:12px; }
+    .cory-hours-card { border-width:1px; box-shadow:none; }
+    .ops-grid { gap:12px; }
+    .ops-card { padding:18px; border-radius:15px; box-shadow:none; }
+    .job-line, .lab-visit-card, .message-history article, .correction-history article { border-radius:12px; }
+    .admin-inbox-block { border-radius:15px; }
+    .admin-inbox-compose { padding:18px; background:linear-gradient(132deg,var(--mpi-navy-950),var(--mpi-navy-800)); border:1px solid rgba(211,170,63,.38); border-radius:17px; }
+    .attachment-drop { background:#f5f9fd; border-color:#8db5d7; border-radius:14px; }
+    .field input,.field select,.field textarea { min-height:48px; border-color:#ccd4e1; border-radius:12px; }
+    .primary,.secondary,.danger { min-height:48px; border-radius:12px; }
+    .primary { background:var(--mpi-navy-900); box-shadow:inset 0 -4px 0 var(--mpi-gold-500); }
+    .secondary { color:var(--mpi-blue-600); background:var(--mpi-blue-100); border-color:#c9dced; }
+    .auth-card { margin:34px auto; padding:38px; }
+
+    @media (max-width:1050px) {
+      .dashboard { grid-template-columns:190px minmax(0,1fr); }
+      .stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .inspector-row { grid-template-columns:minmax(155px,1.1fr) minmax(110px,.7fr) repeat(2,minmax(80px,.5fr)) 28px; }
+      .inspector-row > :nth-child(5),.inspector-row > :nth-child(6) { display:none; }
+    }
+    @media (max-width:760px) {
+      .topbar { min-height:60px; padding:7px 10px; }
+      .brand img { width:39px; height:39px; }
+      .brand strong { max-width:156px; font-size:11px; }
+      .top-actions a { min-height:39px; padding:0 9px; font-size:9px; }
+      .shell { width:min(100% - 18px,1500px); padding:15px 0 94px; }
+      .hero { gap:10px; margin-bottom:13px; }
+      .hero h1 { font-size:30px; }
+      .hero p:last-child { font-size:12px; }
+      .dashboard { grid-template-columns:1fr; gap:11px; }
+      .stat-grid,.comment-usage-panel,.console-view { grid-column:1; }
+      .stat { min-height:84px; }
+      .stat strong { font-size:23px; }
+      .tabbar {
+        inset:auto 7px max(7px,env(safe-area-inset-bottom));
+        grid-template-columns:repeat(6,minmax(0,1fr));
+        gap:2px;
+        padding:5px;
+        border-radius:17px;
+        box-shadow:0 15px 36px rgba(8,13,62,.3);
+      }
+      .tabbar button { min-height:57px; gap:3px; padding:4px 1px; border-radius:11px; font-size:8px; }
+      .tabbar button .app-icon { width:18px; height:18px; }
+      .tabbar button.active { color:var(--mpi-navy-900); background:#fff; box-shadow:none; }
+      .tabbar button.active .app-icon { color:var(--mpi-blue-600); }
+      .content-panel { padding:15px; }
+      .section-head { gap:9px; }
+      .section-head h2 { font-size:21px; }
+      .live-location-map { height:330px; }
+      .inspector-row { grid-template-columns:1fr 1fr; }
+      .inspector-row > :nth-child(5),.inspector-row > :nth-child(6) { display:block; }
     }
   </style>
 </head>
@@ -652,7 +826,8 @@
           </section>
           <section class="office-reply-inbox" id="adminReplyInbox" aria-live="polite"><div class="office-reply-head"><h3>Inspector Replies</h3><span>0</span></div><div class="office-reply-list"><div class="empty">No inspector replies yet.</div></div></section>
           <section class="live-location-panel" id="adminLiveLocationPanel" aria-labelledby="adminLiveLocationTitle">
-            <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Live Inspector Map</h3><p>The map frames the active field team. Tap a name to zoom in, or select a date and show that operative's recorded route.</p></div><div class="live-location-actions"><span class="live-location-status" id="adminLiveLocationStatus">Waiting for active field devices.</span><input id="adminLiveRouteDate" type="date" aria-label="Historical route date"><button class="secondary" id="adminLiveLocationHistory" type="button" disabled>SHOW ROUTE</button><button class="secondary" id="adminLiveLocationShowAll" type="button">SHOW ALL</button><button class="secondary" id="adminLiveLocationRefresh" type="button">UPDATE NOW</button></div></div>
+            <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Live Inspector &amp; Schedule Map</h3><p>The map frames the active team. Select an operative and date to view their recorded route or their Spectora-sourced appointment plan.</p></div><div class="live-location-actions"><span class="live-location-status" id="adminLiveLocationStatus">Waiting for active field devices.</span><input id="adminLiveRouteDate" type="date" aria-label="Map date"><button class="secondary" id="adminLiveLocationPlan" type="button" disabled>SHOW JOB PLAN</button><button class="secondary" id="adminLiveLocationHistory" type="button" disabled>SHOW ACTUAL ROUTE</button><button class="secondary" id="adminLiveLocationShowAll" type="button">SHOW ALL</button><button class="secondary" id="adminLiveLocationRefresh" type="button">UPDATE NOW</button></div></div>
+            <p class="spectora-readonly-note" id="adminSpectoraScheduleStatus"><strong>SPECTORA · READ ONLY</strong><span>The planner may display synchronized appointment data but cannot change anything in Spectora.</span></p>
             <div class="live-location-layout"><div><div class="live-location-map" id="adminLiveLocationMap" aria-label="Map of current inspector locations"></div><p class="live-location-route-note" id="adminLiveLocationRouteStatus">Select an operative to inspect their position or route.</p></div><div class="live-location-list" id="adminLiveLocationList"><div class="empty">Waiting for inspector locations.</div></div></div>
           </section>
           <div class="team-overview" id="adminTeamOverview"><div class="empty">No inspector activity has synced yet.</div></div>
@@ -709,11 +884,11 @@
       </section>
 
       <section class="console-view" data-admin-panel="updates">
-        <div class="panel content-panel"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Inbox</h2><p>Inspector messages, private conversations, safety alerts, and office-update replies for this admin account.</p></div></div></div><details class="admin-inbox-block" open><summary><div class="admin-inbox-title"><h3>Inbox</h3><span id="adminInboxSummary">Connecting…</span></div></summary><div class="office-reply-list" id="adminUnifiedInboxList"><div class="empty">Connecting to the MPI inbox…</div></div></details><details class="admin-inbox-block"><summary><div class="admin-inbox-title"><h3>Sent Messages &amp; Updates</h3><span id="adminSentSummary">Delivery and read status</span></div></summary><div class="admin-sent-direct-list" id="adminSentMessagesList"><div class="empty">No private messages have been sent.</div></div><div class="update-list" id="adminUpdatesList"><div class="empty">No office updates have been published.</div></div></details></div>
+        <div class="panel content-panel"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Inbox</h2><p>Inspector messages, private conversations, safety alerts, and office-update replies for this admin account.</p></div></div></div><form class="admin-inbox-compose" id="adminInboxComposeForm"><div><h3>Compose private message</h3><p>Choose one recipient. This creates a private two-way conversation, not a company broadcast.</p></div><div class="form-grid"><div class="field"><label for="adminInboxComposeRecipient">To</label><select id="adminInboxComposeRecipient" required><option value="">Choose team member</option></select></div><div class="field"><label for="adminInboxComposeText">Message</label><textarea id="adminInboxComposeText" maxlength="1200" required placeholder="Write a private MPI message"></textarea></div><div class="field wide"><label for="adminInboxComposeFiles">Photos or PDF (optional)</label><input id="adminInboxComposeFiles" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple></div></div><div class="form-actions"><button class="primary" id="adminInboxComposeSend" type="submit"><svg class="app-icon"><use href="#icon-send"></use></svg><span>SEND PRIVATE MESSAGE</span></button><span class="status" id="adminInboxComposeStatus"></span></div></form><details class="admin-inbox-block" open><summary><div class="admin-inbox-title"><h3>Inbox</h3><span id="adminInboxSummary">Connecting…</span></div></summary><div class="office-reply-list" id="adminUnifiedInboxList"><div class="empty">Connecting to the MPI inbox…</div></div></details><details class="admin-inbox-block"><summary><div class="admin-inbox-title"><h3>Sent Messages &amp; Updates</h3><span id="adminSentSummary">Delivery and read status</span></div></summary><div class="admin-sent-direct-list" id="adminSentMessagesList"><div class="empty">No private messages have been sent.</div></div><div class="update-list" id="adminUpdatesList"><div class="empty">No office updates have been published.</div></div></details></div>
       </section>
 
       <section class="console-view" data-admin-panel="people">
-        <div class="panel content-panel"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><div><h2>Team Accounts</h2><p>Manage inspector identity, access and account status.</p></div></div></div><div class="notice">For security, every person signs in with their own Michigan Property Inspections Google account. The app stays signed in on an approved company phone until that person signs out.</div><div class="people-list" id="adminPeopleList" style="margin-top:14px"><div class="empty">No company accounts have signed in yet.</div></div></div>
+        <div class="panel content-panel"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><div><h2>Team Accounts</h2><p>Manage company identity, contact details, access, and official training records.</p></div></div></div><div class="notice">For security, every person signs in with their own Michigan Property Inspections Google account. The app stays signed in on an approved company phone until that person signs out.</div><h3 style="margin:20px 0 10px;color:var(--navy)">Training &amp; Qualifications</h3><p class="ops-sub">Official InterNACHI education records are connected by each user from My Profile. MPI never stores an InterNACHI password.</p><div class="training-admin-list" id="adminTrainingList"><div class="empty">Waiting for team profiles.</div></div><h3 style="margin:22px 0 10px;color:var(--navy)">Account &amp; Profile Management</h3><div class="people-list" id="adminPeopleList"><div class="empty">No company accounts have signed in yet.</div></div></div>
       </section>
     </section>
   </main>
@@ -734,7 +909,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
-  <script src="./mpi-shared.js?build=170"></script>
-  <script src="./admin.js?build=170"></script>
+  <script src="./mpi-shared.js?build=173"></script>
+  <script src="./admin.js?build=173"></script>
 </body>
 </html>

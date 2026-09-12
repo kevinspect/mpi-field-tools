@@ -15,6 +15,7 @@
   const accountName = document.getElementById("mpiAccountName");
   const accountRole = document.getElementById("mpiAccountRole");
   const profileCard = document.getElementById("mpiProfileCard");
+  const profileMount = document.getElementById("mpiProfileMount");
   const profileForm = document.getElementById("mpiProfileForm");
   const profileStatus = document.getElementById("mpiProfileStatus");
   const profileAvatar = document.getElementById("mpiProfileAvatar");
@@ -26,11 +27,25 @@
   const profilePhone = document.getElementById("mpiProfilePhone");
   const profileInspectorId = document.getElementById("mpiProfileInspectorId");
   const profileVehicle = document.getElementById("mpiProfileVehicle");
+  const profilePersonalAddress = document.getElementById("mpiProfilePersonalAddress");
+  const profileEmergencyName = document.getElementById("mpiProfileEmergencyName");
+  const profileEmergencyPhone = document.getElementById("mpiProfileEmergencyPhone");
+  const profileTranscriptUrl = document.getElementById("mpiProfileTranscriptUrl");
   const profileRole = document.getElementById("mpiProfileRole");
   const profileEmail = document.getElementById("mpiProfileEmail");
   const profileSave = document.getElementById("mpiProfileSave");
+  const trainingMemberNumber = document.getElementById("trainingMemberNumber");
+  const trainingTranscriptLink = document.getElementById("trainingTranscriptLink");
   const signInButtons = [...document.querySelectorAll("[data-mpi-sign-in]")];
   const signOutButtons = [...document.querySelectorAll("[data-mpi-sign-out]")];
+  const accessChoice = document.getElementById("mpiAccessChoice");
+  const accessRoleOptions = document.getElementById("mpiAccessRoleOptions");
+  const accessInvitationForm = document.getElementById("mpiAccessInvitationForm");
+  const accessInvitationInput = document.getElementById("mpiAccessInvitationInput");
+  const accessChoiceStatus = document.getElementById("mpiAccessChoiceStatus");
+  const employeeAccessChoice = document.getElementById("mpiEmployeeAccessChoice");
+  const subcontractorAccessChoice = document.getElementById("mpiSubcontractorAccessChoice");
+  const accessChoiceBack = document.getElementById("mpiAccessChoiceBack");
   const updatesGate = document.getElementById("mpiUpdatesGate");
   const updatesContent = document.getElementById("mpiUpdatesContent");
   const updatesList = document.getElementById("mpiUpdatesList");
@@ -52,7 +67,10 @@
   let registeredPushToken = "";
   let pendingProfilePhoto = null;
   let lastPublishedSessionSignature = "";
+  let lastPublishedSpectoraSignature = "";
   let liveLocationInterval = 0;
+
+  if (profileMount && profileCard) profileMount.appendChild(profileCard);
   let liveLocationWatchId = null;
   let liveLocationInFlight = false;
   let lastLiveLocationAttemptAt = 0;
@@ -63,7 +81,104 @@
   let nativeLocationContextSignature = "";
   let nativeLocationSyncInFlight = false;
   const NOTIFIED_UPDATE_STORAGE_KEY = "mpiNotifiedOfficeUpdatesV2";
+  const ACCESS_PATH_STORAGE_KEY = "mpiSecureAccessPathV1";
   const LIVE_LOCATION_INTERVAL_MS = 3 * 60 * 1000;
+
+  function installedAppExperience() {
+    return Boolean(window.MPI_NATIVE?.isNative
+      || window.navigator.standalone
+      || window.matchMedia?.("(display-mode: standalone)")?.matches);
+  }
+
+  function requestedSubcontractorAccess() {
+    const parameters = new URLSearchParams(window.location.search);
+    return Boolean(String(parameters.get("subcontractor") || "").trim());
+  }
+
+  function savedAccessPath() {
+    try { return String(localStorage.getItem(ACCESS_PATH_STORAGE_KEY) || ""); }
+    catch (_) { return ""; }
+  }
+
+  function saveAccessPath(value) {
+    try { localStorage.setItem(ACCESS_PATH_STORAGE_KEY, value); }
+    catch (_) {}
+  }
+
+  function setAccessChoiceVisible(visible) {
+    if (!accessChoice) return;
+    accessChoice.hidden = !visible;
+    document.body.classList.toggle("mpi-access-choice-open", visible);
+  }
+
+  function showAccessRoleOptions() {
+    if (accessRoleOptions) accessRoleOptions.hidden = false;
+    if (accessInvitationForm) accessInvitationForm.hidden = true;
+    if (accessChoiceStatus) accessChoiceStatus.textContent = "";
+  }
+
+  function synchronizeAccessChoice(user, profile) {
+    if (!accessChoice) return;
+    if (user && profile) {
+      saveAccessPath(String(profile.role || "").toLowerCase() === "subcontractor" || profile.subcontractorOnly === true ? "subcontractor" : "employee");
+      setAccessChoiceVisible(false);
+      return;
+    }
+    if (requestedSubcontractorAccess()) {
+      setAccessChoiceVisible(false);
+      return;
+    }
+    const shouldChoose = installedAppExperience() && savedAccessPath() !== "employee";
+    showAccessRoleOptions();
+    setAccessChoiceVisible(shouldChoose);
+  }
+
+  function subcontractorInvitation(value) {
+    const supplied = String(value || "").trim();
+    if (!supplied) throw new Error("Paste the complete private link supplied by MPI Office.");
+    let invitation;
+    try { invitation = new URL(supplied); }
+    catch (_) { throw new Error("That is not a complete MPI activation link."); }
+    const trustedWebLink = invitation.protocol === "https:"
+      && (invitation.hostname === "kevinspect.github.io" || invitation.origin === window.location.origin)
+      && /\/mpi-field-tools\/?$/i.test(invitation.pathname);
+    const trustedAppLink = invitation.protocol === "mpifieldtools:" && invitation.hostname === "activate";
+    if (!trustedWebLink && !trustedAppLink) throw new Error("Use only the private activation link supplied by MPI Office.");
+    const subcontractor = String(invitation.searchParams.get("subcontractor") || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+    const access = String(invitation.searchParams.get("access") || "").trim();
+    if (!subcontractor || !/^[A-Za-z0-9_-]{32,120}$/.test(access)) throw new Error("That invitation is incomplete. Ask MPI Office for a replacement link.");
+    return { subcontractor, access };
+  }
+
+  function activatePastedSubcontractorInvitation(event) {
+    event.preventDefault();
+    try {
+      const invitation = subcontractorInvitation(accessInvitationInput?.value);
+      if (accessChoiceStatus) accessChoiceStatus.textContent = "Opening secure activation…";
+      const destination = new URL(window.location.href);
+      destination.search = "";
+      destination.searchParams.set("subcontractor", invitation.subcontractor);
+      destination.searchParams.set("access", invitation.access);
+      destination.hash = "#subcontractor-home";
+      window.location.replace(destination.toString());
+    } catch (error) {
+      if (accessChoiceStatus) accessChoiceStatus.textContent = error?.message || "That activation link could not be opened.";
+    }
+  }
+
+  function chooseEmployeeAccess() {
+    saveAccessPath("employee");
+    setAccessChoiceVisible(false);
+    window.location.hash = "#settings";
+    signIn(employeeAccessChoice);
+  }
+
+  function chooseSubcontractorAccess() {
+    if (accessRoleOptions) accessRoleOptions.hidden = true;
+    if (accessInvitationForm) accessInvitationForm.hidden = false;
+    if (accessChoiceStatus) accessChoiceStatus.textContent = "";
+    window.setTimeout(() => accessInvitationInput?.focus(), 50);
+  }
 
   function notifiedUpdateIds() {
     try {
@@ -516,6 +631,33 @@
     window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail }));
   }
 
+  function publishSpectoraSchedule(profile = currentProfile) {
+    const days = (Array.isArray(profile?.spectoraScheduleDays) ? profile.spectoraScheduleDays : []).map(day => ({
+      date: String(day?.date || ""),
+      jobs: (Array.isArray(day?.jobs) ? day.jobs : []).map(job => ({
+        id: String(job?.id || job?.spectoraJobId || ""),
+        spectoraJobId: String(job?.spectoraJobId || job?.id || ""),
+        propertyAddress: String(job?.propertyAddress || job?.address || job?.property || ""),
+        scheduledStart: String(job?.scheduledStart || ""),
+        scheduledEnd: String(job?.scheduledEnd || ""),
+        inspectorId: String(job?.inspectorId || ""),
+        inspectorName: String(job?.inspectorName || ""),
+        clientName: String(job?.clientName || ""),
+        clientPhone: String(job?.clientPhone || ""),
+        agentName: String(job?.agentName || ""),
+        agentPhone: String(job?.agentPhone || ""),
+        notes: String(job?.notes || ""),
+        status: String(job?.status || "scheduled"),
+        services: Array.isArray(job?.services) ? job.services.map(String) : String(job?.services || "").split(",").map(value => value.trim()).filter(Boolean)
+      }))
+    })).filter(day => day.date);
+    const signature = JSON.stringify(days);
+    window.MPI_SPECTORA_SCHEDULE_DAYS = days;
+    if (signature === lastPublishedSpectoraSignature) return;
+    lastPublishedSpectoraSignature = signature;
+    window.dispatchEvent(new CustomEvent("mpi-spectora-schedule-ready", { detail: { days, readOnly: true, source: "Spectora" } }));
+  }
+
   function renderProfile(user, profile) {
     if (!profileCard || !profileForm) return;
     profileCard.hidden = !(user && profile);
@@ -526,10 +668,16 @@
     profilePhone.value = profile.phone || "";
     profileInspectorId.value = profile.inspectorId || "";
     profileVehicle.value = profile.assignedVehicle || "";
+    profilePersonalAddress.value = profile.personalAddress || "";
+    profileEmergencyName.value = profile.emergencyContactName || "";
+    profileEmergencyPhone.value = profile.emergencyContactPhone || "";
+    profileTranscriptUrl.value = profile.nachiTranscriptUrl || "";
     profileRole.value = roleLabel(profile);
     profileEmail.value = user.email || profile.email || "";
     profileStatus.textContent = "Saved to your MPI account";
     showProfilePhoto(profilePhotoSource(profile, user), profileName.value);
+    if (trainingMemberNumber) trainingMemberNumber.textContent = profile.inspectorId ? `MEMBER ${profile.inspectorId}` : "MEMBER NUMBER NOT SAVED";
+    if (trainingTranscriptLink) trainingTranscriptLink.href = /^https:\/\//i.test(String(profile.nachiTranscriptUrl || "")) ? profile.nachiTranscriptUrl : "https://www.nachi.org/my/education/transcript";
   }
 
   function loadImage(source) {
@@ -611,6 +759,10 @@
       phone: profilePhone.value.trim().slice(0, 30),
       inspectorId: profileInspectorId.value.trim().slice(0, 40),
       assignedVehicle: profileVehicle.value.trim().slice(0, 80),
+      personalAddress: profilePersonalAddress.value.trim().slice(0, 180),
+      emergencyContactName: profileEmergencyName.value.trim().slice(0, 80),
+      emergencyContactPhone: profileEmergencyPhone.value.trim().slice(0, 30),
+      nachiTranscriptUrl: /^https:\/\//i.test(profileTranscriptUrl.value.trim()) ? profileTranscriptUrl.value.trim().slice(0, 500) : "",
       profileUpdatedAt: shared.serverTimestamp()
     };
     if (pendingProfilePhoto !== null) updates.profilePhoto = pendingProfilePhoto;
@@ -626,7 +778,10 @@
       accountName.textContent = name;
       showProfilePhoto(profilePhotoSource(currentProfile, currentUser), name);
       profileStatus.textContent = "Profile saved";
+      if (trainingMemberNumber) trainingMemberNumber.textContent = updates.inspectorId ? `MEMBER ${updates.inspectorId}` : "MEMBER NUMBER NOT SAVED";
+      if (trainingTranscriptLink) trainingTranscriptLink.href = updates.nachiTranscriptUrl || "https://www.nachi.org/my/education/transcript";
       publishCompanySession();
+      publishSpectoraSchedule();
     } catch (error) {
       profileStatus.textContent = /permission/i.test(error?.message || "")
         ? "Profile permission needs updating. Please try again shortly."
@@ -729,6 +884,7 @@
   function renderSession(user, profile, error) {
     currentUser = user;
     currentProfile = profile;
+    synchronizeAccessChoice(user, profile);
     accountCard.hidden = false;
     if (!user || !profile) {
       stopLiveLocationSharing();
@@ -769,6 +925,7 @@
     updatesContent.hidden = false;
     registerPushDevice(user, profile).catch(() => {});
     publishCompanySession(user, profile);
+    publishSpectoraSchedule(profile);
     startLiveLocationSharing();
     if (profileWatchUserId !== user.uid) {
       unsubscribeProfile?.();
@@ -782,6 +939,7 @@
           return;
         }
         publishCompanySession(currentUser, currentProfile);
+        publishSpectoraSchedule(currentProfile);
         syncLiveLocationSharing();
         handleLiveLocationRequest(currentProfile);
         if (activeLiveLocationState(currentProfile) && Date.now() - lastLiveLocationAttemptAt >= LIVE_LOCATION_INTERVAL_MS) {
@@ -891,9 +1049,15 @@
     }
   }
 
+  employeeAccessChoice?.addEventListener("click", chooseEmployeeAccess);
+  subcontractorAccessChoice?.addEventListener("click", chooseSubcontractorAccess);
+  accessInvitationForm?.addEventListener("submit", activatePastedSubcontractorInvitation);
+  accessChoiceBack?.addEventListener("click", showAccessRoleOptions);
+
   if (!shared?.available) {
     renderSession(null, null, new Error("Reconnect to load the secure company connection."));
     signInButtons.forEach(button => { button.disabled = true; });
+    if (employeeAccessChoice) employeeAccessChoice.disabled = true;
     return;
   }
 

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="170">
+  <meta name="app-build" content="173">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4758,9 +4758,34 @@
     .message-delivery-state { display:inline-flex !important; width:max-content; align-items:center; margin-top:5px; padding:3px 7px; color:#59617d !important; background:#e9edf3; border-radius:999px; font-size:8px !important; font-weight:950; letter-spacing:.04em; text-transform:uppercase; }
     .message-delivery-state.delivered { color:#176249 !important; background:#dff1e9; }
     .message-delivery-state.read { color:#fff !important; background:var(--bright-blue); }
-    .comment-photo-field { padding:13px; background:#f5f8fc; border:1px solid #dce3ee; border-radius:12px; }
-    .comment-photo-field input { width:100%; margin-top:8px; color:var(--ink-2); font-size:10px; }
-    .comment-photo-field small { display:block; margin-top:7px; color:var(--ink-2); font-size:9px; line-height:1.45; }
+    .comment-photo-field { display:grid; gap:10px; padding:14px; background:#f5f8fc; border:1px solid #dce3ee; border-radius:12px; }
+    .comment-photo-field > strong { color:var(--forest); font-size:11px; }
+    .comment-photo-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+    .comment-photo-action { display:flex; min-height:52px; align-items:center; justify-content:center; gap:9px; padding:9px 11px; color:var(--bright-blue); background:#fff; border:1px solid #bcd5e9; border-radius:11px; font-size:10px; font-weight:950; text-align:center; cursor:pointer; }
+    .comment-photo-action svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+    .comment-photo-action input { position:absolute; width:1px; height:1px; overflow:hidden; opacity:0; pointer-events:none; }
+    .comment-photo-selected { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 10px; color:#1e654f; background:#e4f3ec; border-radius:9px; font-size:9px; font-weight:850; }
+    .comment-photo-selected button { min-height:32px; padding:0 9px; color:#8b3430; background:#fff; border:1px solid #edc7c4; border-radius:8px; font:inherit; font-size:8px; font-weight:950; }
+    .comment-photo-field small { display:block; color:var(--ink-2); font-size:9px; line-height:1.45; }
+    .field-compose-card { display:grid; gap:12px; margin-bottom:12px; padding:15px; background:linear-gradient(145deg,#11186a,#28368e); border-radius:14px; box-shadow:0 12px 28px rgba(17,24,106,.15); }
+    .field-compose-card h3,.field-compose-card p { margin:0; color:#fff; }
+    .field-compose-card h3 { font-size:16px; }
+    .field-compose-card p { color:#dce4ff; font-size:9.5px; line-height:1.45; }
+    .field-compose-grid { display:grid; grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr); gap:9px; }
+    .field-compose-card label { display:grid; gap:6px; color:#fff; font-size:9px; font-weight:900; }
+    .field-compose-card select,.field-compose-card textarea { width:100%; min-height:47px; padding:10px 11px; color:var(--forest); background:#fff; border:1px solid rgba(255,255,255,.55); border-radius:10px; font:inherit; font-size:11px; }
+    .field-compose-card textarea { min-height:82px; resize:vertical; }
+    .field-compose-card .compose-attachment { grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 11px; color:#182263; background:#eef4ff; border-radius:10px; cursor:pointer; }
+    .field-compose-card .compose-attachment input { max-width:58%; font-size:8px; }
+    .field-compose-card .decode-btn { min-height:48px; background:#fff; color:#11186a; border-bottom-color:var(--orange); }
+    .profile-screen-intro { margin-bottom:14px; }
+    .training-record-card { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(240px,.65fr); gap:18px; align-items:center; margin-bottom:15px; padding:20px; overflow:hidden; background:linear-gradient(135deg,#10186b,#24358f); }
+    .training-record-card h3,.training-record-card p { margin:0; color:#fff; }
+    .training-record-card h3 { font-size:20px; }
+    .training-record-card p { margin-top:7px; color:#dce4ff; font-size:10.5px; line-height:1.5; }
+    .training-record-actions { display:grid; gap:8px; }
+    .training-record-actions a { display:grid; min-height:46px; place-items:center; padding:8px 10px; color:#11186a; background:#fff; border-radius:10px; font-size:9.5px; font-weight:950; text-align:center; text-decoration:none; }
+    .training-member-number { display:inline-flex; margin-top:12px; padding:6px 9px; color:#11186a; background:#f3d26d; border-radius:999px; font-size:8.5px; font-weight:950; letter-spacing:.04em; }
     .timed-alert-dialog { width: min(92vw, 460px); padding: 0; overflow: hidden; border: 0; border-radius: 20px; box-shadow: 0 28px 80px rgba(7,12,56,.34); }
     .timed-alert-dialog::backdrop { background: rgba(7,12,56,.72); }
     .timed-alert-inner { padding: 26px 22px; color: #fff; background: linear-gradient(145deg, #11186a, #222a83); text-align: center; }
@@ -4769,6 +4794,7 @@
     .timed-alert-inner p { margin: 10px 0 18px; color: rgba(255,255,255,.84); font-size: 13px; line-height: 1.55; white-space: pre-line; }
 
     @media (max-width: 560px) {
+      .comment-photo-actions,.field-compose-grid,.training-record-card { grid-template-columns:1fr; }
       .workflow-shell { gap: 13px; }
       .workflow-card { padding: 18px 14px; border-radius: 16px; }
       .workflow-form-grid,
@@ -5098,14 +5124,429 @@
       .app-diagnostics-actions { grid-template-columns: 1fr; }
     }
 
+    /* Build 172 — unified professional field-app design system */
+    :root {
+      --mpi-navy-950: #080d3e;
+      --mpi-navy-900: #10175f;
+      --mpi-navy-800: #192678;
+      --mpi-blue-600: #2f75b5;
+      --mpi-blue-100: #eaf3fb;
+      --mpi-gold-500: #d3aa3f;
+      --mpi-canvas: #f3f5f9;
+      --mpi-surface: #ffffff;
+      --mpi-text: #18203f;
+      --mpi-muted: #68728c;
+      --mpi-border: #dfe4ed;
+      --mpi-radius-sm: 12px;
+      --mpi-radius-md: 18px;
+      --mpi-radius-lg: 24px;
+      --mpi-shadow: 0 10px 30px rgba(16, 23, 95, .07);
+    }
+
+    html { background: var(--mpi-canvas); }
+    body {
+      color: var(--mpi-text);
+      background: var(--mpi-canvas);
+      background-image: none;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 80;
+      min-height: 64px;
+      padding-block: 8px;
+      background: rgba(10, 16, 72, .97);
+      border-bottom: 2px solid var(--mpi-gold-500);
+      box-shadow: 0 7px 22px rgba(8, 13, 62, .18);
+      -webkit-backdrop-filter: blur(18px);
+      backdrop-filter: blur(18px);
+    }
+    .brand { gap: 11px; }
+    .brand-mark { width: 42px; height: 42px; flex: 0 0 42px; border-radius: 11px; }
+    .brand-name { text-transform: none; }
+    .brand-name strong { font-size: 13px; letter-spacing: -.01em; }
+    .brand-name small { margin-top: 3px; color: #b9c2e2; font-size: 9px; letter-spacing: .075em; text-transform: uppercase; }
+    .topbar-actions { gap: 9px; }
+    .admin-return {
+      min-height: 42px;
+      padding-inline: 14px;
+      color: var(--mpi-navy-900);
+      background: #fff;
+      border: 0;
+      border-radius: 11px;
+      box-shadow: inset 0 -3px 0 var(--mpi-gold-500);
+      letter-spacing: 0;
+    }
+    .offline-badge { color: #c7cee8; font-size: 10px; letter-spacing: 0; }
+
+    .screen-nav {
+      position: sticky;
+      z-index: 60;
+      top: 64px;
+      display: grid;
+      grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+      min-height: 52px;
+      padding-block: 7px;
+      background: rgba(255, 255, 255, .96);
+      border-bottom: 1px solid var(--mpi-border);
+      box-shadow: 0 5px 18px rgba(16, 23, 95, .05);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+    }
+    .screen-back { position:static; width:auto; min-height:40px; color:var(--mpi-blue-600); font-size:11px; }
+    .screen-nav .screen-back:last-child { justify-self:end; }
+    .screen-nav .screen-back:last-child::before { content:none; }
+    .screen-title { position:static; left:auto; max-width:52vw; color:var(--mpi-text); font-size:11px; font-weight:850; letter-spacing:0; text-align:center; text-transform:none; transform:none; }
+    .app-screen-view { scroll-margin-top: 116px; }
+    #home { scroll-margin-top: 64px; }
+
+    .app-home {
+      min-height: calc(100vh - 64px);
+      padding: 24px max(18px, calc((100vw - 1120px) / 2)) 108px;
+      color: var(--mpi-text);
+      background: var(--mpi-canvas);
+    }
+    .home-intro {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr);
+      align-items: center;
+      gap: 20px;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: clamp(24px, 4vw, 42px);
+      color: #fff;
+      background: linear-gradient(132deg, var(--mpi-navy-950), var(--mpi-navy-800) 68%, #275b99);
+      border: 1px solid rgba(211, 170, 63, .42);
+      border-radius: var(--mpi-radius-lg);
+      box-shadow: 0 18px 42px rgba(8, 13, 62, .18);
+      text-align: left;
+    }
+    .home-logo { width: 76px; border: 2px solid rgba(211, 170, 63, .72); box-shadow: 0 10px 26px rgba(0, 0, 0, .24); }
+    .home-kicker { margin: 0 0 8px; color: #efd274; font-size: 10px; letter-spacing: .13em; }
+    .home-title { color: #fff; font-size: clamp(31px, 5vw, 48px); letter-spacing: -.045em; }
+    .home-tagline { max-width: 640px; margin: 10px 0 0; color: #d5dcef; font-size: 14px; line-height: 1.5; }
+    .home-active-job, .mpi-home-updates { max-width: 1120px; margin: 16px auto 0; border-radius: var(--mpi-radius-md); }
+    .home-active-job { padding: 18px 20px; background: var(--mpi-surface); color: var(--mpi-text); border: 1px solid #c9daeb; border-left: 5px solid var(--mpi-blue-600); box-shadow: var(--mpi-shadow); }
+    .home-active-job span { color: var(--mpi-blue-600); }
+    .home-active-job strong { color: var(--mpi-navy-900); }
+    .home-active-job small { color: var(--mpi-muted); }
+    .home-active-job-actions a { color: #fff; background: var(--mpi-navy-900); border-radius: 11px; }
+    .home-active-job-actions a:first-child { color: var(--mpi-navy-950); background: #ecd071; }
+    .mpi-home-updates { box-shadow: var(--mpi-shadow); }
+    .home-section-label {
+      max-width: 1120px;
+      margin: 28px auto 12px;
+      color: var(--mpi-navy-900);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-align: left;
+      text-transform: uppercase;
+    }
+    .home-tools {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      overflow: visible;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .home-tool-card,
+    .home-tool-card:not(.phase-two) {
+      grid-template-columns: 48px minmax(0, 1fr) 22px;
+      gap: 14px;
+      min-height: 96px;
+      padding: 16px;
+      color: var(--mpi-text);
+      background: var(--mpi-surface);
+      border: 1px solid var(--mpi-border);
+      border-radius: var(--mpi-radius-md);
+      box-shadow: 0 5px 18px rgba(16, 23, 95, .045);
+      transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+    .home-tool-card:last-child { border-bottom: 1px solid var(--mpi-border); }
+    .home-tool-card:not(.phase-two) .home-tool-arrow { display: block; }
+    .home-tool-card:hover, .home-tool-card:focus-visible {
+      color: var(--mpi-text);
+      background: #fff;
+      border-color: #a9c7e1;
+      box-shadow: 0 12px 28px rgba(16, 23, 95, .09);
+      transform: translateY(-1px);
+    }
+    .home-tool-icon { width:48px; height:48px; border-radius:14px; }
+    .home-tool-icon.icon-job,
+    .home-tool-icon.icon-tool-guides,
+    .home-tool-icon.icon-training,
+    .home-tool-icon.icon-messages,
+    .home-tool-icon.icon-profile,
+    .home-tool-icon.icon-team,
+    .home-tool-icon.icon-office {
+      position: relative;
+      display: grid;
+      width: 48px;
+      height: 48px;
+      place-items: center;
+      background-color: var(--mpi-blue-100);
+      background-image: none;
+      border: 0;
+      border-radius: 14px;
+      box-shadow: none;
+    }
+    .home-tool-icon.icon-job::before,
+    .home-tool-icon.icon-tool-guides::before,
+    .home-tool-icon.icon-training::before,
+    .home-tool-icon.icon-messages::before,
+    .home-tool-icon.icon-profile::before,
+    .home-tool-icon.icon-team::before,
+    .home-tool-icon.icon-office::before {
+      content: "" !important;
+      display: block !important;
+      width: 23px !important;
+      height: 23px !important;
+      background: var(--mpi-blue-600) !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      -webkit-mask: var(--mpi-home-icon) center / contain no-repeat;
+      mask: var(--mpi-home-icon) center / contain no-repeat;
+    }
+    .home-tool-icon.icon-job { --mpi-home-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M16 3v4M8 3v4M3 10h18M8 15l2 2 5-5'/%3E%3C/svg%3E"); }
+    .home-tool-icon.icon-tool-guides { --mpi-home-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.7 6.3a4 4 0 0 0-5-5l2.1 2.1-2.4 2.4-2.1-2.1a4 4 0 0 0 5 5l7.4 7.4a2.4 2.4 0 1 1-3.4 3.4l-7.4-7.4a4 4 0 0 0-5 5l2.1-2.1 2.4 2.4-2.1 2.1a4 4 0 0 0 5-5'/%3E%3C/svg%3E"); }
+    .home-tool-icon.icon-training { --mpi-home-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 10 10-5 10 5-10 5zM6 12v5c3 2 9 2 12 0v-5M22 10v6'/%3E%3C/svg%3E"); }
+    .home-tool-icon.icon-messages { --mpi-home-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a4 4 0 0 1-4 4H8l-5 3 1.6-4A7 7 0 0 1 3 13V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z'/%3E%3Cpath d='M8 9h8M8 13h5'/%3E%3C/svg%3E"); }
+    .home-tool-icon.icon-profile { --mpi-home-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0'/%3E%3C/svg%3E"); }
+    .home-tool-icon.icon-team { --mpi-home-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3'/%3E%3Ccircle cx='17' cy='10' r='2.5'/%3E%3Cpath d='M3 20a6 6 0 0 1 12 0M14 16a5 5 0 0 1 7 4'/%3E%3C/svg%3E"); }
+    .home-tool-icon.icon-office { --mpi-home-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 21h18M5 21V5l7-3 7 3v16M9 8h.01M15 8h.01M9 12h.01M15 12h.01M9 16h6'/%3E%3C/svg%3E"); }
+    .home-tool-copy strong { color: var(--mpi-navy-900); font-size: 15px; letter-spacing: -.01em; }
+    .home-tool-copy small { margin-top: 5px; color: var(--mpi-muted); font-size: 11px; line-height: 1.42; }
+    .home-tool-arrow { color: #9ba4b8; font-size: 22px; }
+    .home-version-row { max-width: 1120px; margin: 20px auto 0; color: var(--mpi-muted); border-color: var(--mpi-border); }
+    .home-version-row a { color: var(--mpi-blue-600); font-weight: 850; text-decoration: none; }
+    .home-version-row button { color: var(--mpi-blue-600); background: var(--mpi-blue-100); border: 1px solid #c7dced; box-shadow: none; }
+    .hub-screen .home-search label { color:var(--mpi-navy-900); text-align:left; }
+    .hub-screen .home-search-input { border-color:#c9dced; box-shadow:0 8px 22px rgba(16,23,95,.07); }
+
+    .panel, .workflow-card, .settings-card, .mpi-account-card, .mpi-profile-card,
+    .today-jobs-panel, .comment-panel, .damage-form, .damage-info-panel,
+    .training-module, .sop-browser, .sop-detail-panel, .subcontractor-panel {
+      border-color: var(--mpi-border);
+      border-radius: var(--mpi-radius-md);
+      box-shadow: var(--mpi-shadow);
+    }
+    .workflow-shell { gap: 14px; }
+    .workflow-card { padding: clamp(19px, 4vw, 30px); }
+    .workflow-card-header { margin-bottom: 18px; }
+    .workflow-card-header h3 { color: var(--mpi-navy-900); font-size: clamp(24px, 5vw, 34px); letter-spacing: -.025em; }
+    .workflow-card-header p { color: var(--mpi-muted); }
+    .workflow-button, .workflow-action, .workflow-secondary {
+      min-height: 54px;
+      border-radius: 13px;
+      font-size: 12px;
+      letter-spacing: .01em;
+    }
+    .workflow-button, .workflow-action.primary { color: #fff; background: var(--mpi-navy-900); box-shadow: inset 0 -4px 0 var(--mpi-gold-500); }
+    .workflow-action.secondary, .workflow-secondary { color: var(--mpi-blue-600); background: var(--mpi-blue-100); border-color: #c9dced; }
+    .workflow-check, .workflow-readiness-summary, .workflow-training-status,
+    .settings-status, .mpi-account-details, .app-diagnostics-result { border-radius: 13px; }
+    .damage-field input, .damage-field select, .damage-field textarea,
+    .field input, .field select, .field textarea, .mpi-profile-field input,
+    .subcontractor-message-form textarea {
+      min-height: 48px;
+      border-color: #ccd4e1;
+      border-radius: 12px;
+      box-shadow: none;
+    }
+    textarea { line-height: 1.5; }
+
+    .app-bottom-nav {
+      right: 10px;
+      bottom: max(8px, env(safe-area-inset-bottom));
+      left: 10px;
+      min-height: 70px;
+      padding: 6px;
+      background: rgba(255, 255, 255, .96);
+      border: 1px solid rgba(204, 212, 225, .92);
+      border-radius: 18px;
+      box-shadow: 0 14px 36px rgba(8, 13, 62, .18);
+      -webkit-backdrop-filter: blur(18px);
+      backdrop-filter: blur(18px);
+    }
+    .app-bottom-nav a {
+      gap: 4px;
+      min-height: 56px;
+      color: #717b93;
+      border-radius: 13px;
+      font-size: 9px;
+      font-weight: 800;
+    }
+    .app-bottom-nav a::before { display: none; }
+    .app-bottom-nav a svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+    .app-bottom-nav a[aria-current="page"] { color: #fff; background: var(--mpi-navy-900); box-shadow: 0 5px 13px rgba(16, 23, 95, .22); }
+    .bottom-inbox-badge { top: 2px; right: calc(50% - 21px); color: var(--mpi-navy-950); background: #f0d274; }
+
+    @media (min-width: 900px) {
+      .app-bottom-nav { left: 50%; width: 620px; transform: translateX(-50%); }
+    }
+
+    @media (max-width: 680px) {
+      .topbar { min-height: 60px; padding: 7px 12px; }
+      .brand-mark { width: 39px; height: 39px; flex-basis: 39px; }
+      .brand-name strong { font-size: 11.5px; }
+      .brand-name small { font-size: 8px; }
+      .offline-badge { width: 9px; overflow: hidden; color: transparent; }
+      .offline-badge::before { flex: 0 0 8px; }
+      .admin-return { min-height: 38px; padding-inline: 10px; font-size: 9px; }
+      .screen-nav { top:60px; padding-inline:13px; }
+      .screen-back { position:static; left:auto; width:auto; min-height:40px; justify-content:flex-start; font-size:10px; }
+      .screen-back::before { font-size:18px; }
+      .screen-title { width:auto; max-width:48vw; font-size:10px; }
+      .app-screen-view { scroll-margin-top: 112px; }
+      #home { scroll-margin-top: 60px; }
+      .app-home { padding: 14px 12px 98px; }
+      .home-intro { grid-template-columns: 58px minmax(0, 1fr); gap: 14px; padding: 20px; border-radius: 20px; text-align: left; }
+      .home-logo { width: 58px; }
+      .home-kicker { margin-bottom: 5px; font-size: 8px; }
+      .home-title { font-size: 28px; }
+      .home-tagline { margin-top: 7px; font-size: 11px; }
+      .home-active-job, .mpi-home-updates { margin: 12px 0 0; }
+      .home-section-label { margin: 22px 3px 10px; font-size: 11px; }
+      .home-tools { grid-template-columns: 1fr; gap: 9px; padding: 0; border-radius: 0; }
+      .home-tool-card, .home-tool-card:not(.phase-two) { grid-template-columns: 44px minmax(0, 1fr) 18px; gap: 12px; min-height: 78px; padding: 13px; border-radius: 15px; }
+      .home-tool-icon { width:44px; height:44px; border-radius:12px; }
+      .home-tool-icon.icon-job, .home-tool-icon.icon-tool-guides,
+      .home-tool-icon.icon-training, .home-tool-icon.icon-messages, .home-tool-icon.icon-profile,
+      .home-tool-icon.icon-team, .home-tool-icon.icon-office { width: 44px; height: 44px; border-radius: 12px; }
+      .home-tool-icon.icon-job::before, .home-tool-icon.icon-tool-guides::before,
+      .home-tool-icon.icon-training::before, .home-tool-icon.icon-messages::before,
+      .home-tool-icon.icon-profile::before, .home-tool-icon.icon-team::before,
+      .home-tool-icon.icon-office::before { width: 21px !important; height: 21px !important; }
+      .home-tool-copy strong { font-size: 14px; }
+      .home-tool-copy small { display: block; font-size: 9.5px; line-height: 1.35; }
+      .home-version-row { gap: 9px; margin-top: 16px; }
+      .app-bottom-nav { right: 8px; bottom: max(6px, env(safe-area-inset-bottom)); left: 8px; min-height: 66px; border-radius: 17px; }
+      .app-bottom-nav a { min-height: 52px; font-size: 8.5px; }
+      .app-bottom-nav a svg { width: 20px; height: 20px; }
+      .workflow-card { border-radius: 16px; }
+      .workflow-card-header h3 { font-size: 25px; }
+    }
+
     :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
       outline: 3px solid #fff !important;
       outline-offset: 2px;
       box-shadow: 0 0 0 6px var(--bright-blue) !important;
     }
+
+    /* Build 173 — secure first-launch access choice */
+    body.mpi-access-choice-open { overflow: hidden; }
+    .mpi-access-choice {
+      position: fixed;
+      z-index: 10000;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: max(22px, env(safe-area-inset-top)) 18px max(22px, env(safe-area-inset-bottom));
+      overflow-y: auto;
+      background:
+        radial-gradient(circle at 8% 0%, rgba(58, 118, 180, .35), transparent 32%),
+        linear-gradient(150deg, #090e4d 0%, #11186a 55%, #182a77 100%);
+    }
+    .mpi-access-choice[hidden] { display: none !important; }
+    .mpi-access-choice-card {
+      width: min(100%, 520px);
+      padding: clamp(24px, 6vw, 38px);
+      color: #10175f;
+      background: #fff;
+      border: 1px solid rgba(255, 255, 255, .72);
+      border-radius: 25px;
+      box-shadow: 0 26px 70px rgba(2, 5, 39, .38);
+    }
+    .mpi-access-choice-brand { display: flex; align-items: center; gap: 15px; margin-bottom: 28px; }
+    .mpi-access-choice-brand img { width: 58px; height: 58px; object-fit: contain; border-radius: 50%; }
+    .mpi-access-choice-brand strong { display: block; font-size: 15px; line-height: 1.25; }
+    .mpi-access-choice-brand span { display: block; margin-top: 3px; color: #68738e; font-size: 10px; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+    .mpi-access-choice-card h1 { margin: 0; color: #10175f; font-size: clamp(29px, 8vw, 40px); line-height: 1.04; letter-spacing: -.035em; }
+    .mpi-access-choice-card > p { margin: 13px 0 24px; color: #65708a; font-size: 14px; line-height: 1.55; }
+    .mpi-access-choice-actions { display: grid; gap: 11px; }
+    .mpi-access-choice-action {
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr) 18px;
+      align-items: center;
+      gap: 13px;
+      width: 100%;
+      min-height: 78px;
+      padding: 13px;
+      color: #10175f;
+      text-align: left;
+      background: #f5f8fc;
+      border: 1px solid #d7dfeb;
+      border-radius: 16px;
+      box-shadow: none;
+    }
+    .mpi-access-choice-action:hover { background: #edf5fb; border-color: #aac9e3; transform: none; }
+    .mpi-access-choice-action > span:first-child { display: grid; place-items: center; width: 46px; height: 46px; color: #2775b4; background: #e6f2fa; border-radius: 13px; font-size: 22px; }
+    .mpi-access-choice-action strong { display: block; font-size: 14px; }
+    .mpi-access-choice-action small { display: block; margin-top: 4px; color: #6b7590; font-size: 10px; line-height: 1.35; }
+    .mpi-access-choice-action > b { color: #bc8d16; font-size: 20px; }
+    .mpi-access-choice-security { margin: 18px 0 0; padding-top: 17px; color: #6b7590; border-top: 1px solid #e2e7ef; font-size: 10px; line-height: 1.5; }
+    .mpi-access-invitation[hidden], .mpi-access-role-options[hidden] { display: none !important; }
+    .mpi-access-invitation label { display: block; margin-bottom: 8px; color: #10175f; font-size: 11px; font-weight: 900; }
+    .mpi-access-invitation input {
+      width: 100%;
+      min-height: 52px;
+      padding: 12px 14px;
+      color: #10175f;
+      background: #fff;
+      border: 1px solid #bdc8d9;
+      border-radius: 12px;
+      font: inherit;
+    }
+    .mpi-access-invitation button[type="submit"] {
+      width: 100%;
+      min-height: 54px;
+      margin-top: 12px;
+      color: #fff;
+      background: #10175f;
+      border: 0;
+      border-radius: 13px;
+      box-shadow: inset 0 -4px 0 #bc8d16;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .mpi-access-choice-back { margin-top: 10px; padding: 10px; color: #2775b4; background: transparent; border: 0; box-shadow: none; font-size: 11px; font-weight: 900; }
+    .mpi-access-choice-status { min-height: 18px; margin: 10px 0 0; color: #b43d38; font-size: 11px; font-weight: 800; }
   </style>
 </head>
 <body>
+  <section class="mpi-access-choice" id="mpiAccessChoice" role="dialog" aria-modal="true" aria-labelledby="mpiAccessChoiceTitle" hidden>
+    <div class="mpi-access-choice-card">
+      <div class="mpi-access-choice-brand"><img src="./mpi-logo.png" alt=""><div><strong>Michigan Property Inspections</strong><span>Secure app setup</span></div></div>
+      <div class="mpi-access-role-options" id="mpiAccessRoleOptions">
+        <h1 id="mpiAccessChoiceTitle">How will you use MPI Field Tools?</h1>
+        <p>Choose the access route supplied by Michigan Property Inspections. Your role and permissions are controlled by the office.</p>
+        <div class="mpi-access-choice-actions">
+          <button class="mpi-access-choice-action" id="mpiEmployeeAccessChoice" type="button"><span aria-hidden="true">&#128100;</span><span><strong>MPI EMPLOYEE / INSPECTOR</strong><small>Sign in with your approved Michigan Property Inspections Google account.</small></span><b aria-hidden="true">&#8594;</b></button>
+          <button class="mpi-access-choice-action" id="mpiSubcontractorAccessChoice" type="button"><span aria-hidden="true">&#128274;</span><span><strong>SUBCONTRACTOR INVITATION</strong><small>Use the private one-phone invitation issued by MPI Office. No Google account is required.</small></span><b aria-hidden="true">&#8594;</b></button>
+        </div>
+        <p class="mpi-access-choice-security">Selecting an option cannot grant or change a role. Employee access requires an approved company account; subcontractor access requires a valid office-issued invitation.</p>
+      </div>
+      <form class="mpi-access-invitation" id="mpiAccessInvitationForm" hidden>
+        <h1>Activate subcontractor access</h1>
+        <p>Paste the complete private activation link sent by MPI Office. Each invitation can activate one phone only.</p>
+        <label for="mpiAccessInvitationInput">PRIVATE ACTIVATION LINK</label>
+        <input id="mpiAccessInvitationInput" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Paste the MPI Office link">
+        <button type="submit">ACTIVATE THIS PHONE</button>
+        <button class="mpi-access-choice-back" id="mpiAccessChoiceBack" type="button">&#8592; BACK</button>
+        <p class="mpi-access-choice-status" id="mpiAccessChoiceStatus" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
   <header class="topbar">
     <div class="brand">
       <span class="brand-mark" aria-hidden="true"></span>
@@ -5128,6 +5569,7 @@
   <nav class="screen-nav" id="screenNav" aria-label="Current field tool" hidden>
     <a class="screen-back" id="screenBack" href="#home">Back</a>
     <span class="screen-title" id="screenTitle"></span>
+    <a class="screen-back" href="#profile" aria-label="Open my profile">Profile</a>
   </nav>
 
   <aside class="active-job-context" id="activeJobContext" aria-live="polite" hidden>
@@ -5159,7 +5601,7 @@
       <div><span id="mpiHomeUpdatesCount">New office update</span><strong id="mpiHomeUpdatesTitle">Information from MPI</strong><small id="mpiHomeUpdatesDetail"></small></div>
       <a href="#office-updates">Open updates</a>
     </aside>
-    <p class="home-section-label">Choose where you need to go</p>
+    <p class="home-section-label">Your workspace</p>
     <nav class="home-tools" aria-label="MPI app sections">
       <a class="home-tool-card" href="#job-companion">
         <span class="home-tool-icon icon-job" aria-hidden="true"></span>
@@ -5181,23 +5623,28 @@
         <span class="home-tool-copy"><strong>Inbox</strong><small>Office updates, assignments, attachments, and private team messages in one place.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
+      <a class="home-tool-card" href="#profile">
+        <span class="home-tool-icon icon-profile" aria-hidden="true"></span>
+        <span class="home-tool-copy"><strong>My Profile</strong><small>Contact details, profile picture, inspector identity, and InterNACHI record connection.</small></span>
+        <span class="home-tool-arrow" aria-hidden="true">→</span>
+      </a>
       <a class="home-tool-card" href="#contact-mpi">
         <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>Contact MPI</strong><small>Company messages, field questions, safety notices, requests, time off, and feedback.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
       <a class="home-tool-card" href="#job-companion" data-team-status-shortcut>
-        <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
+        <span class="home-tool-icon icon-team" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>Team Status</strong><small>See who is on route, onsite, at a lab, heading home, or clocked out.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
       <a class="home-tool-card" id="officeConsoleCard" href="./admin.html" hidden>
-        <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
+        <span class="home-tool-icon icon-office" aria-hidden="true"></span>
         <span class="home-tool-copy"><strong>Office Console</strong><small>Publish company information, training assignments, job notes, and instructions from this phone or a desktop.</small></span>
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">170</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">173</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -5252,6 +5699,7 @@
       <a class="subcontractor-tool" href="#age-finder"><strong>EQUIPMENT AGE FINDER</strong><small>Decode supported equipment serial numbers.</small></a>
       <a class="subcontractor-tool" href="#damage-report"><strong>DAMAGE ITEM NOTICE</strong><small>Record inspection-related damage.</small></a>
       <a class="subcontractor-tool" href="#office-updates"><strong>OFFICE REPLIES</strong><small>Read messages sent from MPI Office.</small><span class="subcontractor-tool-count" id="subcontractorOfficeUpdateCount">OPEN</span></a>
+      <a class="subcontractor-tool" href="#profile"><strong>MY PROFILE</strong><small>Keep your phone, address, photo, and professional details current.</small></a>
     </nav>
 
     <section class="subcontractor-panel" aria-labelledby="subcontractor-message-title">
@@ -5966,7 +6414,15 @@
             <p class="rule-hint">Choose the component only. Room-by-room duplicates have been removed, or leave Auto-detect selected.</p>
           </div>
 
-          <label class="comment-photo-field" for="commentPhoto"><strong>Supporting photo (optional)</strong><input id="commentPhoto" type="file" accept="image/*,.heic,.heif" capture="environment"><small>Use one clear photo to support your written observation. It is reduced and converted to JPEG on the phone, sent only for this request, and is not stored by MPI Field Tools. It counts as one Comment Builder request but uses more provider processing than text alone.</small></label>
+          <div class="comment-photo-field">
+            <strong>Supporting photo (optional)</strong>
+            <div class="comment-photo-actions">
+              <label class="comment-photo-action" for="commentCameraPhoto"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h3l2-3h6l2 3h3v13H4Z"/><circle cx="12" cy="13" r="4"/></svg><span>Take Photo</span><input id="commentCameraPhoto" type="file" accept="image/*" capture="environment"></label>
+              <label class="comment-photo-action" for="commentGalleryPhoto"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="2"/><path d="m4 18 5-5 3 3 3-4 5 6"/></svg><span>Upload From Gallery</span><input id="commentGalleryPhoto" type="file" accept="image/*,.heic,.heif"></label>
+            </div>
+            <div class="comment-photo-selected" id="commentPhotoSelected" hidden><span id="commentPhotoName">Photo selected</span><button id="removeCommentPhoto" type="button">REMOVE</button></div>
+            <small>Use one clear photo to support the written observation. It is reduced on the phone, used only for this request, and is not stored by MPI Field Tools.</small>
+          </div>
 
           <div class="field">
             <label for="defectInput" id="comment-note-label">What did you observe?</label>
@@ -6821,6 +7277,11 @@
         <p>Open assigned InterNACHI training, track InterNACHI-issued credentials, and use or share direct links to short MPI lessons that turn the handbook into repeatable field habits.</p>
       </div>
 
+      <section class="panel training-record-card" aria-labelledby="internachi-record-title">
+        <div><p class="eyebrow">Official training record</p><h3 id="internachi-record-title">InterNACHI qualifications &amp; certificates</h3><p>Open the official Education Transcript or certificate record. InterNACHI controls these records and updates the transcript as courses are completed; MPI does not store your InterNACHI password.</p><span class="training-member-number" id="trainingMemberNumber">MEMBER NUMBER NOT SAVED</span></div>
+        <div class="training-record-actions"><a id="trainingTranscriptLink" href="https://www.nachi.org/my/education/transcript" target="_blank" rel="noopener">OPEN EDUCATION TRANSCRIPT</a><a href="https://www.nachi.org/my/" target="_blank" rel="noopener">OPEN MEMBER RECORDS</a><a href="#profile">UPDATE TRAINING PROFILE</a></div>
+      </section>
+
       <section class="panel training-assignment-card" aria-labelledby="assigned-training-title">
         <div class="training-assignment-head">
           <span>Assigned by MPI</span>
@@ -7367,10 +7828,27 @@
         <div><p class="eyebrow">MPI communications</p><h2 id="field-inbox-title">Inbox</h2></div>
         <p>Office updates, assignments, attachments, and private team conversations appear here automatically.</p>
       </div>
+      <section class="field-compose-card" aria-labelledby="field-compose-title">
+        <div><h3 id="field-compose-title">Compose message</h3><p>Send a private message to one MPI team member. Replies stay in the same conversation.</p></div>
+        <form id="fieldInboxComposeForm">
+          <div class="field-compose-grid">
+            <label>To<select id="fieldInboxComposeRecipient" required><option value="">Choose team member</option></select></label>
+            <label>Message<textarea id="fieldInboxComposeText" maxlength="1200" required placeholder="Write a private company message"></textarea></label>
+            <label class="compose-attachment">Attach photos or PDF<input id="fieldInboxComposeFiles" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple></label>
+          </div>
+          <button class="decode-btn" id="fieldInboxComposeSend" type="submit">SEND PRIVATE MESSAGE</button>
+          <p class="damage-submit-status" id="fieldInboxComposeStatus" role="status" aria-live="polite"></p>
+        </form>
+      </section>
       <section class="panel field-inbox-panel" aria-live="polite">
         <details class="field-inbox-section" open><summary><div class="field-inbox-summary"><strong>Inbox</strong><span class="field-inbox-count" id="fieldInboxCount"></span></div></summary><div class="field-inbox-list" id="fieldInboxList"><div class="workflow-team-empty">Connecting to the MPI inbox…</div></div></details>
         <details class="field-inbox-section"><summary><div class="field-inbox-summary"><strong>Sent Messages</strong><span class="field-inbox-count" id="fieldSentCount"></span></div></summary><div class="field-inbox-list" id="fieldSentList"><div class="workflow-team-empty">No messages sent yet.</div></div></details>
       </section>
+    </section>
+
+    <section class="hub-screen app-screen-view" id="profile" data-app-screen="profile" aria-labelledby="profile-title">
+      <header class="hub-heading profile-screen-intro"><p class="eyebrow">MPI company identity</p><h1 id="profile-title">My Profile</h1><p>Keep your contact information, company identity, profile picture, and professional record current in one secure place.</p></header>
+      <div id="mpiProfileMount"></div>
     </section>
 
     <section class="field-app-section app-screen-view" id="team-messages" data-app-screen="team-messages" aria-labelledby="team-messages-title">
@@ -7752,9 +8230,13 @@
               <label class="mpi-profile-field">Phone number<input id="mpiProfilePhone" name="phone" type="tel" maxlength="30" autocomplete="tel" inputmode="tel" placeholder="Company or work phone"></label>
               <label class="mpi-profile-field">Inspector number<input id="mpiProfileInspectorId" name="inspectorId" type="text" maxlength="40" placeholder="NACHI number if applicable"></label>
               <label class="mpi-profile-field">Assigned vehicle<input id="mpiProfileVehicle" name="assignedVehicle" type="text" maxlength="80" placeholder="Vehicle or unit number"></label>
+              <label class="mpi-profile-field full">Home address<input id="mpiProfilePersonalAddress" name="personalAddress" type="text" maxlength="180" autocomplete="street-address" placeholder="Personal address visible only to you and authorized office staff"></label>
+              <label class="mpi-profile-field">Emergency contact<input id="mpiProfileEmergencyName" name="emergencyContactName" type="text" maxlength="80" placeholder="Full name"></label>
+              <label class="mpi-profile-field">Emergency phone<input id="mpiProfileEmergencyPhone" name="emergencyContactPhone" type="tel" maxlength="30" inputmode="tel" placeholder="Emergency contact number"></label>
+              <label class="mpi-profile-field full">InterNACHI transcript or education URL<input id="mpiProfileTranscriptUrl" name="nachiTranscriptUrl" type="url" maxlength="500" placeholder="Optional official InterNACHI transcript / education link"></label>
               <label class="mpi-profile-field">Access level<input id="mpiProfileRole" type="text" readonly></label>
               <label class="mpi-profile-field full">Company email<input id="mpiProfileEmail" type="email" readonly></label>
-              <p class="mpi-profile-note">Your company email and access level are protected. Management controls account permissions.</p>
+              <p class="mpi-profile-note">Personal and emergency details are visible only to you and authorized office staff. Your company email, access level, and approved clock-out geofence remain management-controlled.</p>
               <button class="mpi-profile-save" id="mpiProfileSave" type="submit">SAVE MY PROFILE</button>
             </form>
           </div>
@@ -7770,7 +8252,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 170</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 173</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -7893,11 +8375,11 @@
   </main>
 
   <nav class="app-bottom-nav" id="appBottomNav" aria-label="Main app navigation">
-    <a href="#home" data-bottom-screen="home">Home</a>
-    <a href="#job-companion" data-bottom-screen="job-companion">My Day</a>
-    <a href="#inbox" data-bottom-screen="inbox">Inbox<span class="bottom-inbox-badge" id="fieldBottomInboxCount" hidden></span></a>
-    <a href="#field-tools" data-bottom-screen="field-tools">Tools</a>
-    <a href="#training-center" data-bottom-screen="training-center">Training</a>
+    <a href="#home" data-bottom-screen="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg><span>Home</span></a>
+    <a href="#job-companion" data-bottom-screen="job-companion"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 15l2 2 5-5"/></svg><span>My Day</span></a>
+    <a href="#inbox" data-bottom-screen="inbox"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16l2 10v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5Z"/><path d="M2 14h5l2 3h6l2-3h5"/></svg><span>Inbox</span><span class="bottom-inbox-badge" id="fieldBottomInboxCount" hidden></span></a>
+    <a href="#field-tools" data-bottom-screen="field-tools"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5-5l2.1 2.1-2.4 2.4-2.1-2.1a4 4 0 0 0 5 5l7.4 7.4a2.4 2.4 0 1 1-3.4 3.4l-7.4-7.4a4 4 0 0 0-5 5l2.1-2.1 2.4 2.4-2.1 2.1a4 4 0 0 0 5-5"/></svg><span>Tools</span></a>
+    <a href="#training-center" data-bottom-screen="training-center"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m2 10 10-5 10 5-10 5zM6 12v5c3 2 9 2 12 0v-5M22 10v6"/></svg><span>Training</span></a>
   </nav>
 
   <div class="toast" id="toast" role="status">Copied</div>
@@ -7910,11 +8392,11 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=170"></script>
-  <script src="./mpi-shared.js?build=170"></script>
-  <script src="./mpi-field-sync.js?build=170"></script>
-  <script src="./mpi-subcontractor.js?build=170"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=170"></script>
+  <script src="./mpi-native-bridge.js?build=173"></script>
+  <script src="./mpi-shared.js?build=173"></script>
+  <script src="./mpi-field-sync.js?build=173"></script>
+  <script src="./mpi-subcontractor.js?build=173"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=173"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -7938,6 +8420,7 @@
         "tool-guides": "Company Tool Guides",
         "sop-guide": "Field Procedures",
         "training-center": "Training Center",
+        "profile": "My Profile",
         "office-updates": "Office Updates",
         "team-messages": "Team Messages",
         "safety-notice": "Safety & Near-Miss Notice",
@@ -7954,13 +8437,13 @@
       const bottomNavLinks = [...document.querySelectorAll("[data-bottom-screen]")];
       const toolScreens = new Set(["field-tools", "age-finder", "comment-builder", "damage-report", "equipment-record", "tool-guides", "sop-guide"]);
       const contactScreens = new Set(["contact-mpi", "office-updates", "team-messages", "safety-notice", "requests-feedback"]);
-      const subcontractorScreens = new Set(["subcontractor-home", "comment-builder", "age-finder", "damage-report", "office-updates"]);
+      const subcontractorScreens = new Set(["subcontractor-home", "comment-builder", "age-finder", "damage-report", "office-updates", "profile"]);
 
       function updateJobContextBanner(activeScreen, job) {
         if (job === undefined) {
           try { job = loadActiveJob(); } catch (_) { job = null; }
         }
-        const shouldShow = Boolean(job?.property) && !["home", "job-companion", "settings"].includes(activeScreen);
+        const shouldShow = Boolean(job?.property) && !["home", "job-companion", "profile", "settings"].includes(activeScreen);
         activeJobContext.hidden = !shouldShow;
         if (!shouldShow) return;
         let inspectorName = job.inspector || "";
@@ -8776,7 +9259,11 @@
       const clearBtn = document.getElementById("clearBtn");
       const commentForm = document.getElementById("commentForm");
       const commentArea = document.getElementById("commentArea");
-      const commentPhoto = document.getElementById("commentPhoto");
+      const commentCameraPhoto = document.getElementById("commentCameraPhoto");
+      const commentGalleryPhoto = document.getElementById("commentGalleryPhoto");
+      const commentPhotoSelected = document.getElementById("commentPhotoSelected");
+      const commentPhotoName = document.getElementById("commentPhotoName");
+      const removeCommentPhoto = document.getElementById("removeCommentPhoto");
       const defectInput = document.getElementById("defectInput");
       const commentOutput = document.getElementById("commentOutput");
       const defectModeBtn = document.getElementById("defectModeBtn");
@@ -8967,6 +9454,12 @@
       const fieldSentList = document.getElementById("fieldSentList");
       const fieldSentCount = document.getElementById("fieldSentCount");
       const fieldBottomInboxCount = document.getElementById("fieldBottomInboxCount");
+      const fieldInboxComposeForm = document.getElementById("fieldInboxComposeForm");
+      const fieldInboxComposeRecipient = document.getElementById("fieldInboxComposeRecipient");
+      const fieldInboxComposeText = document.getElementById("fieldInboxComposeText");
+      const fieldInboxComposeFiles = document.getElementById("fieldInboxComposeFiles");
+      const fieldInboxComposeSend = document.getElementById("fieldInboxComposeSend");
+      const fieldInboxComposeStatus = document.getElementById("fieldInboxComposeStatus");
       const teamDirectoryView = document.getElementById("teamDirectoryView");
       const teamDirectoryList = document.getElementById("teamDirectoryList");
       const teamPrivateProfile = document.getElementById("teamPrivateProfile");
@@ -9090,6 +9583,7 @@
       let teamDirectMessages = [];
       let fieldSentMessages = [];
       let fieldInboxUpdates = [];
+      let selectedCommentPhoto = null;
       let selectedTeamMemberId = "";
       let unsubscribeTeamDirectory = null;
       let unsubscribeTeamPresence = null;
@@ -13710,10 +14204,13 @@
           return false;
         }
         const existing = loadActiveJob();
-        const sameJob = Boolean(existing?.property) && (job.id
+        const sameSpectoraJob = Boolean(existing?.spectoraJobId && job?.spectoraJobId)
+          && String(existing.spectoraJobId) === String(job.spectoraJobId);
+        const sameJob = Boolean(existing?.property) && (sameSpectoraJob || (job.id
           ? existing.calendarEventId === job.id
-          : existing.property.toLowerCase() === job.location.toLowerCase());
+          : existing.property.toLowerCase() === job.location.toLowerCase()));
         if (sameJob) {
+          existing.calendarEventId = String(job.id || existing.calendarEventId || "");
           existing.property = String(job.location || existing.property);
           existing.calendarSummary = String(job.summary || existing.calendarSummary || "Inspection appointment");
           existing.scheduledStart = String(job.start?.dateTime || job.start?.date || existing.scheduledStart || "");
@@ -13858,6 +14355,7 @@
       function refreshScheduleForCurrentDate({ force = false } = {}) {
         const dateChanged = resetScheduleForCurrentDate();
         if (!dateChanged && !force) return;
+        if (applySpectoraSchedule(window.MPI_SPECTORA_SCHEDULE_DAYS || [], { announce: false })) return;
         const restored = renderSavedTodayJobs();
         const token = savedCalendarToken();
         if (token && navigator.onLine) {
@@ -13908,6 +14406,71 @@
 
       function workflowJobNotesFor(job) {
         return calendarJobNoteLines(Array.isArray(job?.jobNotes) && job.jobNotes.length ? job.jobNotes : job?.description);
+      }
+
+      function spectoraScheduleJobsForDate(days, requestedDate = localDateKey()) {
+        const day = (Array.isArray(days) ? days : []).find(item => String(item?.date || "") === requestedDate);
+        let priorJobs = [];
+        try {
+          const prior = JSON.parse(localStorage.getItem(CALENDAR_CACHE_KEY) || "null");
+          if (prior?.date === requestedDate && Array.isArray(prior.jobs)) priorJobs = prior.jobs;
+        } catch (_) {}
+        return (Array.isArray(day?.jobs) ? day.jobs : []).filter(job => !/cancel|delete/i.test(String(job?.status || ""))).map(job => {
+          const spectoraJobId = String(job?.spectoraJobId || job?.id || "").trim();
+          const previous = priorJobs.find(item => spectoraJobId && String(item?.spectoraJobId || "") === spectoraJobId);
+          const services = Array.isArray(job?.services) ? job.services.map(String).filter(Boolean) : String(job?.services || "").split(",").map(value => value.trim()).filter(Boolean);
+          const summary = services.join(" + ") || "Inspection appointment";
+          const serviceDetails = inferServiceDetails(summary, services.join(" "));
+          return {
+            id: String(previous?.id || `spectora:${spectoraJobId}`),
+            summary,
+            location: String(job?.propertyAddress || job?.address || job?.property || "").trim(),
+            start: { dateTime: String(job?.scheduledStart || "") },
+            end: { dateTime: String(job?.scheduledEnd || "") },
+            htmlLink: "",
+            propertyAddress: String(job?.propertyAddress || job?.address || job?.property || "").trim(),
+            jobNotes: calendarJobNoteLines(job?.notes || ""),
+            clientName: String(job?.clientName || ""),
+            clientPhone: normalizePhone(job?.clientPhone || ""),
+            agentName: String(job?.agentName || ""),
+            agentPhone: normalizePhone(job?.agentPhone || ""),
+            serviceNames: services.length ? services : serviceDetails.names,
+            serviceCodes: serviceDetails.codes,
+            spectoraJobId,
+            spectoraLink: "",
+            scheduleSource: "spectora-read-only",
+            estimatedDriveMinutes: Math.max(0, Number(job?.estimatedDriveMinutes) || 0)
+          };
+        }).filter(job => job.spectoraJobId && job.location && scheduleJobTimestamp(job, "start"));
+      }
+
+      function applySpectoraSchedule(days, { announce = false } = {}) {
+        const requestedDate = localDateKey();
+        const hasAuthoritativeDay = (Array.isArray(days) ? days : []).some(day => String(day?.date || "") === requestedDate);
+        if (!hasAuthoritativeDay) return false;
+        const jobs = spectoraScheduleJobsForDate(days);
+        const calendarName = "Spectora · read only";
+        reopenWorkflowDayForAddedJobs(jobs);
+        autoSelectCurrentScheduleJob(jobs);
+        renderTodayJobs(jobs, calendarName);
+        try {
+          localStorage.setItem(CALENDAR_CACHE_KEY, JSON.stringify({ date: localDateKey(), calendarName, source: "spectora-read-only", jobs }));
+        } catch (_) {}
+        const loadedTime = new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+        todayJobsStatus.textContent = `${jobs.length} ${jobs.length === 1 ? "job" : "jobs"} from Spectora · read only · Updated ${loadedTime}`;
+        calendarConnectBtn.textContent = "Spectora · read only ✓";
+        calendarConnectBtn.disabled = true;
+        calendarRefreshBtn.hidden = false;
+        calendarRefreshBtn.textContent = "Check for schedule updates";
+        if (announce) showToast("Spectora schedule refreshed — no Spectora data was changed");
+        return true;
+      }
+
+      window.addEventListener("mpi-spectora-schedule-ready", event => {
+        applySpectoraSchedule(event.detail?.days || [], { announce: false });
+      });
+      if (Array.isArray(window.MPI_SPECTORA_SCHEDULE_DAYS)) {
+        queueMicrotask(() => applySpectoraSchedule(window.MPI_SPECTORA_SCHEDULE_DAYS, { announce: false }));
       }
 
       function normalizePhone(value) {
@@ -13993,6 +14556,7 @@
       }
 
       async function fetchTodaySchedule(calendar, token = savedCalendarToken()) {
+        if (applySpectoraSchedule(window.MPI_SPECTORA_SCHEDULE_DAYS || [], { announce: false })) return;
         if (!calendar) return;
         const start = new Date();
         start.setHours(0, 0, 0, 0);
@@ -14038,6 +14602,7 @@
       }
 
       async function connectCompanyCalendar() {
+        if (applySpectoraSchedule(window.MPI_SPECTORA_SCHEDULE_DAYS || [], { announce: true })) return;
         if (!navigator.onLine) {
           renderSavedTodayJobs();
           showToast("Reconnect to load the company calendar");
@@ -14061,6 +14626,7 @@
       }
 
       async function refreshCompanyCalendar() {
+        if (applySpectoraSchedule(window.MPI_SPECTORA_SCHEDULE_DAYS || [], { announce: true })) return;
         const token = savedCalendarToken();
         if (!token) {
           await connectCompanyCalendar();
@@ -14094,12 +14660,13 @@
         let savedName = "";
         try { savedName = localStorage.getItem(CALENDAR_NAME_KEY) || ""; } catch (_) {}
         if (savedName) todayCalendarName.textContent = savedName;
-        renderSavedTodayJobs();
-        if (savedCalendarToken()) {
+        const spectoraLoaded = applySpectoraSchedule(window.MPI_SPECTORA_SCHEDULE_DAYS || [], { announce: false });
+        if (!spectoraLoaded) renderSavedTodayJobs();
+        if (!spectoraLoaded && savedCalendarToken()) {
           calendarConnectBtn.textContent = "Connected ✓";
           calendarRefreshBtn.hidden = false;
           if (navigator.onLine) loadScheduleCalendars().catch(() => renderSavedTodayJobs());
-        } else {
+        } else if (!spectoraLoaded) {
           let previouslyAuthorized = false;
           try { previouslyAuthorized = localStorage.getItem(CALENDAR_AUTHORIZED_KEY) === "yes"; } catch (_) {}
           if (previouslyAuthorized) calendarConnectBtn.textContent = "Refresh schedule";
@@ -16777,6 +17344,9 @@
           .sort((left, right) => scheduleJobTimestamp(left, "start") - scheduleJobTimestamp(right, "start"));
         if (!workflowJobsList || !workflowNextJob) return;
         const profile = loadWorkflowProfile();
+        const spectoraDayAvailable = (Array.isArray(window.MPI_SPECTORA_SCHEDULE_DAYS) ? window.MPI_SPECTORA_SCHEDULE_DAYS : [])
+          .some(day => String(day?.date || "") === localDateKey());
+        const scheduleConnected = spectoraDayAvailable || Boolean(savedCalendarToken());
         const completed = workflowCompletedEventIds();
         const remainingJobs = workflowCurrentJobs.filter(job => !completed.has(job.id));
         const completedJobs = workflowCurrentJobs.filter(job => completed.has(job.id));
@@ -16784,11 +17354,12 @@
         workflowTodayInspector.textContent = profile?.name || "Inspector";
         workflowScheduleStatus.textContent = workflowCurrentJobs.length
           ? `${remainingJobs.length} ${remainingJobs.length === 1 ? "job" : "jobs"} remaining · ${calendarName || "Company schedule"}${cached ? " · saved on this phone" : ""}`
-          : savedCalendarToken()
-            ? "No inspection jobs were found for today. Refresh if the schedule changes."
+          : scheduleConnected
+            ? `No inspection jobs were found for today${spectoraDayAvailable ? " in the read-only Spectora schedule" : ""}. Refresh if the schedule changes.`
             : "Connect the MPI schedule once on this company phone.";
-        workflowConnectSchedule.textContent = savedCalendarToken() ? "Connected ✓" : "Connect schedule";
-        workflowRefreshSchedule.hidden = !savedCalendarToken() && !workflowCurrentJobs.length;
+        workflowConnectSchedule.textContent = spectoraDayAvailable ? "Spectora · read only ✓" : savedCalendarToken() ? "Connected ✓" : "Connect schedule";
+        workflowConnectSchedule.disabled = spectoraDayAvailable;
+        workflowRefreshSchedule.hidden = !scheduleConnected && !workflowCurrentJobs.length;
         workflowOptionalLabBtn.hidden = Boolean(loadActiveJob()) || Boolean(workflowDayCompleteRecord());
         workflowOptionalLabBtn.textContent = completedJobs.length
           ? remainingJobs.length
@@ -18890,6 +19461,12 @@
           return roleOrder(left) - roleOrder(right) || teamDisplayName(left.name).localeCompare(teamDisplayName(right.name));
         });
         teamDirectoryStatus.textContent = ordered.length ? `${ordered.length} members` : "Connecting";
+        if (fieldInboxComposeRecipient) {
+          const selectedRecipient = fieldInboxComposeRecipient.value;
+          const recipients = ordered.filter(member => member.id !== currentUid && member.userId !== currentUid);
+          fieldInboxComposeRecipient.innerHTML = '<option value="">Choose team member</option>' + recipients.map(member => `<option value="${escapeHtml(member.id)}">${escapeHtml(teamDisplayName(member.name))} · ${escapeHtml(teamRoleLabel(member))}</option>`).join("");
+          if (recipients.some(member => member.id === selectedRecipient)) fieldInboxComposeRecipient.value = selectedRecipient;
+        }
         const personRow = member => {
           const isYou = member.id === currentUid || member.userId === currentUid;
           const unread = teamMessagesWith(member.id).filter(message => message.senderUid !== currentUid && !(Array.isArray(message.readBy) && message.readBy.includes(currentUid))).length;
@@ -18961,6 +19538,31 @@
           teamPrivateSendStatus.textContent = error?.message || "The private message could not be sent.";
         } finally {
           teamPrivateSend.disabled = false;
+        }
+      }
+
+      async function sendFieldInboxMessage(event) {
+        event.preventDefault();
+        const member = teamMemberRecord(fieldInboxComposeRecipient?.value || "");
+        const user = window.MPI_SHARED?.auth?.currentUser;
+        const session = window.MPI_COMPANY_SESSION;
+        if (!member || !user || !session?.userId) {
+          fieldInboxComposeStatus.textContent = "Choose one MPI team member.";
+          return;
+        }
+        fieldInboxComposeSend.disabled = true;
+        fieldInboxComposeStatus.className = "damage-submit-status";
+        fieldInboxComposeStatus.textContent = `Sending only to ${teamDisplayName(member.name)}…`;
+        try {
+          await window.MPI_SHARED.sendDirectMessage(user, { name: session.inspectorName, role: session.role }, member, fieldInboxComposeText.value, [...(fieldInboxComposeFiles.files || [])]);
+          fieldInboxComposeForm.reset();
+          fieldInboxComposeStatus.className = "damage-submit-status success";
+          fieldInboxComposeStatus.textContent = `Private message sent only to ${teamDisplayName(member.name)}.`;
+        } catch (error) {
+          fieldInboxComposeStatus.className = "damage-submit-status error";
+          fieldInboxComposeStatus.textContent = error?.message || "The private message could not be sent.";
+        } finally {
+          fieldInboxComposeSend.disabled = false;
         }
       }
 
@@ -20903,6 +21505,7 @@
           { title: "Company Tool Guides", detail: "Operating, safety, care, and readiness instructions", route: "#tool-guides", aliases: "manual equipment purchased tool how to use" },
           { title: "Field Procedures", detail: "Short step-by-step prompts from the MPI handbook", route: "#sop-guide", aliases: "sop procedure test steps well septic water hvac" },
           { title: "Training Center", detail: "MPI refreshers, field pathway, and assigned training", route: "#training-center", aliases: "course internachi progress onboarding lesson" },
+          { title: "My Profile", detail: "Phone, address, profile photo, inspector identity, and professional record", route: "#profile", aliases: "account contact emergency vehicle internachi transcript" },
           { title: "Safety & Near-Miss Notice", detail: "Safety event, equipment failure, or close call", route: "#safety-notice", aliases: "hazard injury unsafe stop work" },
           { title: "Team Messages", detail: "Company updates, acknowledgements, and field questions", route: "#team-messages", aliases: "ask management notification update help" },
           { title: "Requests & Feedback", detail: "Tools, uniforms, supplies, training, and suggestions", route: "#requests-feedback", aliases: "order request uniform equipment feedback" },
@@ -22633,10 +23236,24 @@
         commentForm.requestSubmit();
       });
 
+      function setSelectedCommentPhoto(file = null) {
+        selectedCommentPhoto = file || null;
+        if (commentCameraPhoto) commentCameraPhoto.value = "";
+        if (commentGalleryPhoto) commentGalleryPhoto.value = "";
+        if (commentPhotoSelected) commentPhotoSelected.hidden = !selectedCommentPhoto;
+        if (commentPhotoName) commentPhotoName.textContent = selectedCommentPhoto ? selectedCommentPhoto.name || "Photo selected" : "Photo selected";
+      }
+
+      [commentCameraPhoto, commentGalleryPhoto].forEach(input => input?.addEventListener("change", () => {
+        const file = input.files?.[0] || null;
+        if (file) setSelectedCommentPhoto(file);
+      }));
+      removeCommentPhoto?.addEventListener("click", () => setSelectedCommentPhoto(null));
+
       clearCommentBtn.addEventListener("click", () => {
         commentArea.value = "auto";
         defectInput.value = "";
-        commentPhoto.value = "";
+        setSelectedCommentPhoto(null);
         commentOutput.value = "";
         commentOutput.scrollTop = 0;
         commentOutput.scrollLeft = 0;
@@ -22696,7 +23313,7 @@
         commentFailureActions.hidden = true;
         try {
           if (!window.MPI_COMMENT_AI?.generate) throw new Error("The secure MPI Comment Builder is still loading. Wait a moment and try again.");
-          const photo = commentPhoto.files?.[0] || null;
+          const photo = selectedCommentPhoto;
           const requestSignature = JSON.stringify([note, commentArea.value, commentType, photo ? `${photo.name}:${photo.size}:${photo.lastModified}` : ""]);
           if (!activeCommentRequestId || activeCommentRequestSignature !== requestSignature) {
             activeCommentRequestId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
@@ -22853,6 +23470,7 @@
       });
       teamProfileBack?.addEventListener("click", closeTeamProfile);
       teamPrivateForm?.addEventListener("submit", sendTeamPrivateMessage);
+      fieldInboxComposeForm?.addEventListener("submit", sendFieldInboxMessage);
       teamPrivateText?.addEventListener("input", () => saveTeamMessageDraft(teamPrivateText.value));
       teamPrivateThread?.addEventListener("click", event => {
         const button = event.target.closest("[data-team-file]");

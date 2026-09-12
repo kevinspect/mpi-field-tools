@@ -1,5 +1,42 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 173 — Secure Employee and Subcontractor App Entry
+
+- Added a polished first-launch choice to the installed iPhone app for **MPI Employee / Inspector** or **Subcontractor Invitation**.
+- Kept access office-controlled: selecting a path cannot create or change a role, employees still require an approved MPI Google account, and subcontractors still require a private office-issued invitation.
+- Added an in-app invitation handoff so Jason can open the same MPI Field Tools app without receiving a Google account. The private invitation remains limited to one phone at a time.
+- Prevented a private app invitation from silently binding itself to ordinary Safari. The invitation page now opens the installed app, with a copy-and-paste fallback inside the secure first-launch screen.
+- Added a native `mpifieldtools://activate` route for one-tap invitation handoff and retained immediate office revocation. Replacing a phone requires revoking the old phone and issuing a new private activation link.
+- Updated Office controls and guidance to make the one-phone activation and replacement process explicit.
+
+### Validation record
+
+- Verified employee and subcontractor first-launch routing, invitation validation, role non-escalation, browser-to-app handoff, one-device activation enforcement, native deep-link registration, JavaScript parsing, native web synchronization, and the iPhone project compile.
+
+## Build 172 — Unified Professional App Experience
+
+- Reworked the inspector home screen into a focused app workspace with a compact branded header, clear current-job and office-update surfaces, consistent section cards, and purpose-built vector icons.
+- Replaced the legacy symbol navigation with a polished five-tab app bar for Home, My Day, Inbox, Tools, and Training.
+- Standardized field cards, controls, text hierarchy, spacing, borders, and primary/secondary actions without changing workflow rules, timestamps, calculations, messages, or stored records.
+- Refined the Office Console into the same visual system with a quieter operations canvas, compact account header, consistent sidebar, cleaner status cards, improved live-map proportions, and more readable inspector and job panels.
+- Preserved every Build 171 feature and the strict Spectora read-only integration boundary; this release contains no Spectora write actions and no appointment-data mutations.
+
+### Validation record
+
+- Verified the existing field and Office JavaScript parses unchanged, native web assets synchronize, Build 172 cache/version markers agree, navigation targets remain intact, and the native iOS project compiles after the presentation overhaul.
+
+## Build 171 — Professional Communications, Profiles, Training Records, and Route Planning
+
+- Replaced the Comment Builder's ambiguous single upload control with separate **Take Photo** and **Upload From Gallery** actions, using clear camera and gallery icons and one removable selected-photo state.
+- Added a private-message composer directly to both the field Inbox and Office Inbox. Each composer requires one named recipient, accepts photos/PDFs, clears after sending, and uses the existing delivered/read conversation system.
+- Added a dedicated **My Profile** app screen for profile photo, phone, address, job/inspector details, emergency contact, vehicle, and an optional official InterNACHI education-record link. Sensitive personal fields remain out of peer Team profiles.
+- Added an InterNACHI qualifications card that opens the official Education Transcript and member records without storing InterNACHI passwords. MPI's existing assigned-training panel remains intact.
+- Expanded the Office Team account view with a collapsible authorized profile section for contact, emergency, and professional record information.
+- Upgraded the Office map controls with separate **Show Job Plan** and **Show Actual Route** modes. The job plan plots scheduled stops in appointment-time order, labels every stop, and provides a driving-route handoff. It accepts the secure `spectoraScheduleDays` feed and clearly identifies temporary inspector-sync fallback data.
+- Kept the planned-route integration secure: Spectora API credentials are never embedded in the public app. Full future-date Spectora planning requires MPI's early-access Spectora API key to be installed in the protected backend.
+- Added and enforced a written Spectora read-only contract: MPI can copy only allowlisted operational schedule fields and must never create, edit, move, cancel, confirm, publish, upload to, or delete anything in Spectora. Prices and payment data are excluded.
+- Verified app JavaScript, native iOS synchronization, Capacitor packages, background-location plugin, Firebase initialization, notification wiring, alarm bundle, and iOS project configuration.
+
 ## Build 170 — Message Receipts and Photo-Assisted Comments
 
 - Split both Field and Office messaging into collapsible Inbox and Sent sections.
