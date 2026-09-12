@@ -705,7 +705,7 @@
     currentUpdates = updates;
     window.dispatchEvent(new CustomEvent("mpi-inbox-updates", { detail: { updates } }));
     alertForNewUpdates(updates);
-    const unread = updates.filter(item => !item.receipt).length;
+    const unread = updates.filter(item => !item.receipt || item.receipt.status === "delivered").length;
     homeCard.hidden = !updates.length;
     if (updates.length) {
       homeCount.textContent = unread ? `${unread} new` : `${updates.length} current`;

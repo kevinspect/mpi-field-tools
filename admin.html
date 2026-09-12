@@ -367,12 +367,22 @@
     .office-reply-card span { overflow:hidden; color:#33436b; font-size:11px; line-height:1.4; text-overflow:ellipsis; white-space:nowrap; }
     .office-reply-card small { margin-top:3px; color:var(--muted); font-size:9px; }
     .office-reply-card time { color:var(--blue); font-size:9px; font-weight:850; white-space:nowrap; }
-    .admin-inbox-block { display:grid; gap:10px; }
-    .admin-inbox-block + .admin-inbox-block { margin-top:24px; padding-top:22px; border-top:1px solid var(--line); }
-    .admin-inbox-title { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .admin-inbox-block { display:grid; gap:10px; overflow:hidden; background:#fff; border:1px solid var(--line); border-radius:14px; }
+    .admin-inbox-block + .admin-inbox-block { margin-top:14px; }
+    .admin-inbox-block > summary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:12px 15px; cursor:pointer; list-style:none; }
+    .admin-inbox-block > summary::-webkit-details-marker { display:none; }
+    .admin-inbox-block > summary::after { content:"+"; color:var(--gold); font-size:22px; font-weight:950; }
+    .admin-inbox-block[open] > summary::after { content:"−"; }
+    .admin-inbox-block > .office-reply-list,.admin-inbox-block > .update-list,.admin-inbox-block > .admin-sent-direct-list { margin:0 14px 14px; }
+    .admin-inbox-title { display:flex; flex:1; align-items:center; justify-content:space-between; gap:12px; }
     .admin-inbox-title h3 { margin:0; color:var(--navy); font-size:17px; }
     .admin-inbox-title span { color:var(--muted); font-size:10px; font-weight:850; }
     .admin-inbox-type { display:inline-flex !important; width:max-content; margin-top:5px; padding:3px 7px; color:var(--blue) !important; background:#edf5fb; border-radius:999px; font-size:8px !important; font-weight:950; letter-spacing:.05em; text-transform:uppercase; }
+    .admin-sent-direct-list { display:grid; gap:8px; }
+    .delivery-state { display:inline-flex !important; width:max-content; align-items:center; margin-top:6px; padding:3px 7px; color:#59617d !important; background:#edf1f6; border-radius:999px; font-size:8px !important; font-weight:950; letter-spacing:.04em; text-transform:uppercase; }
+    .delivery-state.delivered { color:#176249 !important; background:#e0f2eb; }
+    .delivery-state.read { color:#fff !important; background:var(--blue); }
+    .message-history .delivery-state { margin-top:8px; }
     .office-reply-card.safety { border-left-color:var(--red); background:#fff7f6; }
     .safety-alert-center { display:grid; gap:11px; margin-top:16px; padding:16px; background:linear-gradient(145deg,#fff2f0,#fff); border:2px solid #b43b35; border-radius:15px; box-shadow:0 10px 25px rgba(155,56,56,.14); }
     .safety-alert-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
@@ -699,7 +709,7 @@
       </section>
 
       <section class="console-view" data-admin-panel="updates">
-        <div class="panel content-panel"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Inbox</h2><p>Inspector messages, private conversations, safety alerts, and office-update replies for this admin account.</p></div></div></div><div class="admin-inbox-block"><div class="admin-inbox-title"><h3>Received</h3><span id="adminInboxSummary">Connecting…</span></div><div class="office-reply-list" id="adminUnifiedInboxList"><div class="empty">Connecting to the MPI inbox…</div></div></div><div class="admin-inbox-block"><div class="admin-inbox-title"><h3>Sent updates</h3><span>Delivery and acknowledgements</span></div><div class="update-list" id="adminUpdatesList"><div class="empty">No office updates have been published.</div></div></div></div>
+        <div class="panel content-panel"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Inbox</h2><p>Inspector messages, private conversations, safety alerts, and office-update replies for this admin account.</p></div></div></div><details class="admin-inbox-block" open><summary><div class="admin-inbox-title"><h3>Inbox</h3><span id="adminInboxSummary">Connecting…</span></div></summary><div class="office-reply-list" id="adminUnifiedInboxList"><div class="empty">Connecting to the MPI inbox…</div></div></details><details class="admin-inbox-block"><summary><div class="admin-inbox-title"><h3>Sent Messages &amp; Updates</h3><span id="adminSentSummary">Delivery and read status</span></div></summary><div class="admin-sent-direct-list" id="adminSentMessagesList"><div class="empty">No private messages have been sent.</div></div><div class="update-list" id="adminUpdatesList"><div class="empty">No office updates have been published.</div></div></details></div>
       </section>
 
       <section class="console-view" data-admin-panel="people">
@@ -724,7 +734,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
-  <script src="./mpi-shared.js?build=169"></script>
-  <script src="./admin.js?build=169"></script>
+  <script src="./mpi-shared.js?build=170"></script>
+  <script src="./admin.js?build=170"></script>
 </body>
 </html>

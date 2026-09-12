@@ -31,6 +31,7 @@ NON-NEGOTIABLE ACCURACY RULES:
 - Never turn an absent or denied fact into a positive finding. For example, "no moisture" must never become staining, seepage, dampness, or efflorescence.
 - Do not diagnose a concealed cause. Explain only a reasonable consequence of the stated condition.
 - The observation must preserve the inspector's actual facts. You may correct spelling and grammar, but may not add facts.
+- A supplied photo is supporting visual context only. Never infer concealed causes, measurements, materials, code compliance, or conditions that the inspector did not state. If the image and written note differ, rely on the written note.
 - Make the implication specific to the stated component and condition. Avoid generic filler that could describe any defect.
 - Make the recommendation proportionate and specific. Recommend an appropriate qualified contractor or specialist only when warranted.
 - Do not mention AI, ChatGPT, this prompt, or a language model.
@@ -219,12 +220,79 @@ function withTimeout(promise, milliseconds = COMMENT_TIMEOUT_MS) {
   return Promise.race([promise, expired]).finally(() => window.clearTimeout(timeout));
 }
 
+function blobAsBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || "").split(",").pop() || "");
+    reader.onerror = () => reject(new Error("The supporting photo could not be read."));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function prepareCommentPhoto(file) {
+  if (!file) return null;
+  if (!/^image\//i.test(file.type || "") && !/\.(jpe?g|png|heic|heif)$/i.test(file.name || "")) {
+    throw new Error("Choose a photo for the Comment Builder.");
+  }
+  if (Number(file.size) > 12 * 1024 * 1024) throw new Error("Choose a photo smaller than 12 MB.");
+  let source;
+  let revoke = "";
+  try {
+    if (typeof createImageBitmap === "function") {
+      try { source = await createImageBitmap(file); } catch (_) {}
+    }
+    if (!source) {
+      revoke = URL.createObjectURL(file);
+      source = await new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("The supporting photo could not be opened."));
+        image.src = revoke;
+      });
+    }
+    const width = source.width || source.naturalWidth || 1;
+    const height = source.height || source.naturalHeight || 1;
+    const scale = Math.min(1, 1280 / Math.max(width, height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(width * scale));
+    canvas.height = Math.max(1, Math.round(height * scale));
+    const context = canvas.getContext("2d");
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(source, 0, 0, canvas.width, canvas.height);
+    let blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.72));
+    if (!blob) throw new Error("The supporting photo could not be reduced for upload.");
+    if (blob.size > 900 * 1024) {
+      const smaller = document.createElement("canvas");
+      const smallerScale = Math.min(1, 960 / Math.max(canvas.width, canvas.height));
+      smaller.width = Math.max(1, Math.round(canvas.width * smallerScale));
+      smaller.height = Math.max(1, Math.round(canvas.height * smallerScale));
+      const smallerContext = smaller.getContext("2d");
+      smallerContext.fillStyle = "#fff";
+      smallerContext.fillRect(0, 0, smaller.width, smaller.height);
+      smallerContext.drawImage(canvas, 0, 0, smaller.width, smaller.height);
+      blob = await new Promise(resolve => smaller.toBlob(resolve, "image/jpeg", 0.56));
+    }
+    if (!blob || blob.size > 1200 * 1024) throw new Error("This photo remains too large after reduction. Take a closer JPEG photo and try again.");
+    return {
+      inlineData: {
+        data: await blobAsBase64(blob),
+        mimeType: "image/jpeg"
+      },
+      byteSize: blob.size
+    };
+  } finally {
+    source?.close?.();
+    if (revoke) URL.revokeObjectURL(revoke);
+  }
+}
+
 function friendlyCommentError(error) {
   if (error?.mpiStatus) return error;
   const message = String(error?.message || "");
   const code = String(error?.code || "");
   const combined = `${code} ${message}`.toLowerCase();
-  if (/sign in|limit|internet|incomplete|enter what you observed/.test(message)) return error;
+  if (/sign in|limit|internet|incomplete|enter what you observed|supporting photo|photo remains too large|choose a photo/i.test(message)) return error;
   if (!navigator.onLine || /network-request-failed|failed to fetch|networkerror|load failed/.test(combined)) {
     return commentError("The phone is not reaching the MPI Comment Builder. Check that Wi-Fi or cellular data is working, then try again.", "Offline");
   }
@@ -260,7 +328,10 @@ function reportSelection(component) {
 
 function reportTitlePrefix(component) {
   const { section, item } = reportSelection(component);
-  if (!item) return "";
+  if (!item) {
+    const selectedComponent = String(component || "").trim();
+    return selectedComponent && selectedComponent !== "auto" ? selectedComponent : "";
+  }
   if (["General", "General/Overview"].includes(item)) return section;
   return item.replace(/^OPTIONAL\s*-\s*/i, "");
 }
@@ -295,7 +366,7 @@ function parseResponse(text, note, mode, component) {
   return `${title}\n\n${labels[0]}: ${observation}\n\n${labels[1]}: ${implication}\n\n${labels[2]}: ${recommendation}`;
 }
 
-async function generate({ note, component = "auto", mode = "defect", id = requestId() }) {
+async function generate({ note, component = "auto", mode = "defect", photo = null, id = requestId() }) {
   if (!navigator.onLine) {
     const error = commentError("The MPI Comment Builder requires internet access. Your original field note remains saved; reconnect and tap TRY AGAIN.", "Offline");
     error.requestId = id;
@@ -311,11 +382,21 @@ async function generate({ note, component = "auto", mode = "defect", id = reques
   const componentInstruction = selection.item
     ? `Selected MPI report section: ${selection.section || "Not specified"}\nSelected MPI report item: ${selection.item}\nThe title must begin exactly with "${prefix}" followed by " - " and a short condition description.`
     : component && component !== "auto"
-      ? `Selected report item/component: ${component}`
+      ? `Selected MPI component: ${component}\nThe title must begin exactly with "${prefix}" followed by " - " and a short condition description. Do not add a room name to the title.`
       : "Selected report item/component: Auto-detect only from the inspector note.";
   const prompt = `Comment type: ${mode === "limit" ? "LIMITATION" : "DEFECT"}\n${componentInstruction}\nInspector note: ${cleanNote}`;
   const prior = cachedResult(id);
   if (prior) return prior;
+  let preparedPhoto;
+  try {
+    preparedPhoto = await prepareCommentPhoto(photo);
+  } catch (error) {
+    error.requestId = id;
+    throw error;
+  }
+  const requestContent = preparedPhoto
+    ? [`${prompt}\nUse the attached photo only as supporting context for the inspector's written observation.\nRequest ID: ${id}`, { inlineData: preparedPhoto.inlineData }]
+    : `${prompt}\nRequest ID: ${id}`;
   let lastError;
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     const modelName = attempt === 1 ? PRIMARY_MODEL : FALLBACK_MODEL;
@@ -324,7 +405,7 @@ async function generate({ note, component = "auto", mode = "defect", id = reques
     try {
       const model = await getModel(modelName);
       stage = "model-request";
-      const result = await withTimeout(model.generateContent(`${prompt}\nRequest ID: ${id}`));
+      const result = await withTimeout(model.generateContent(requestContent));
       stage = "response-validation";
       const output = parseResponse(result.response.text(), cleanNote, mode, component);
       cacheResult(id, output);
@@ -340,6 +421,8 @@ async function generate({ note, component = "auto", mode = "defect", id = reques
         model: modelName,
         stage,
         durationMs: Date.now() - startedAt,
+        supportingPhoto: Boolean(preparedPhoto),
+        supportingPhotoBytes: preparedPhoto?.byteSize || 0,
         inspector: session.inspectorEmail || session.inspectorName || "signed-in"
       });
       return output;
@@ -360,6 +443,8 @@ async function generate({ note, component = "auto", mode = "defect", id = reques
         model: modelName,
         stage,
         durationMs: Date.now() - startedAt,
+        supportingPhoto: Boolean(preparedPhoto),
+        supportingPhotoBytes: preparedPhoto?.byteSize || 0,
         retryPlanned: attempt < 2 && retryable,
         inspector: session.inspectorEmail || session.inspectorName || "signed-in",
         code: String(error?.code || "").slice(0, 100),

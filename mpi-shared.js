@@ -411,7 +411,17 @@
         const unsubscribe = db.collection("officeUpdates").doc(updateId).collection("receipts").doc(user.uid)
           .onSnapshot(snapshot => {
             if (snapshot.exists) receipts.set(updateId, { id: snapshot.id, ...snapshot.data() });
-            else receipts.delete(updateId);
+            else {
+              receipts.delete(updateId);
+              db.collection("officeUpdates").doc(updateId).collection("receipts").doc(user.uid).set({
+                userId: user.uid,
+                userEmail: normalizeEmail(user.email),
+                userName: profile?.name || user.displayName || "MPI Team Member",
+                status: "delivered",
+                deliveredAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              }, { merge: true }).catch(() => false);
+            }
             notify();
           }, () => notify());
         receiptUnsubscribers.set(updateId, unsubscribe);
@@ -570,6 +580,7 @@
       targetRole: "office",
       attachments: [],
       readBy: [user.uid],
+      deliveredBy: [],
       active: selected.length === 0,
       createdAt: serverTimestamp(),
       createdAtClient: new Date().toISOString()
@@ -643,6 +654,7 @@
       message: text,
       attachments: [],
       readBy: [user.uid],
+      deliveredTo: [],
       active: selected.length === 0,
       createdAt: serverTimestamp(),
       createdAtClient: new Date().toISOString()
@@ -691,7 +703,26 @@
         .filter(item => item.active !== false)
         .sort((left, right) => timestampMilliseconds(right.createdAt || right.createdAtClient) - timestampMilliseconds(left.createdAt || left.createdAtClient));
       callback(records, null);
+      markDirectMessagesDelivered(user, records).catch(() => false);
     }, error => callback([], error));
+  }
+
+  async function markDirectMessagesDelivered(user, records = []) {
+    if (!user) return false;
+    const pending = records.filter(message =>
+      message?.id
+      && message.targetUid === user.uid
+      && !(Array.isArray(message.deliveredTo) && message.deliveredTo.includes(user.uid))
+    );
+    for (let start = 0; start < pending.length; start += 400) {
+      const batch = db.batch();
+      pending.slice(start, start + 400).forEach(message => batch.set(db.collection("teamMessages").doc(message.id), {
+        deliveredTo: arrayUnion(user.uid),
+        deliveredAt: serverTimestamp()
+      }, { merge: true }));
+      await batch.commit();
+    }
+    return true;
   }
 
   async function markDirectConversationRead(user, otherUid) {
@@ -714,6 +745,34 @@
       readBy: arrayUnion(user.uid),
       readAt: serverTimestamp()
     }, { merge: true });
+    return true;
+  }
+
+  function watchSentFieldMessages(user, callback) {
+    if (!user || typeof callback !== "function") return () => {};
+    return db.collection("fieldMessages").where("senderUid", "==", user.uid).onSnapshot(snapshot => {
+      const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(item => item.active !== false)
+        .sort((left, right) => timestampMilliseconds(right.createdAt || right.createdAtClient) - timestampMilliseconds(left.createdAt || left.createdAtClient));
+      callback(records, null);
+    }, error => callback([], error));
+  }
+
+  async function markFieldMessagesDelivered(user, records = []) {
+    if (!user) return false;
+    const pending = records.filter(message =>
+      message?.id
+      && message.senderUid !== user.uid
+      && !(Array.isArray(message.deliveredBy) && message.deliveredBy.includes(user.uid))
+    );
+    for (let start = 0; start < pending.length; start += 400) {
+      const batch = db.batch();
+      pending.slice(start, start + 400).forEach(message => batch.set(db.collection("fieldMessages").doc(message.id), {
+        deliveredBy: arrayUnion(user.uid),
+        deliveredAt: serverTimestamp()
+      }, { merge: true }));
+      await batch.commit();
+    }
     return true;
   }
 
@@ -1034,8 +1093,11 @@
     sendFieldMessage,
     sendDirectMessage,
     watchDirectMessages,
+    markDirectMessagesDelivered,
     markDirectConversationRead,
     markFieldMessageRead,
+    watchSentFieldMessages,
+    markFieldMessagesDelivered,
     sendSafetyAlert,
     sendPushNotification,
     loadOfficeAttachment,

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="169">
+  <meta name="app-build" content="170">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4731,10 +4731,18 @@
     .team-private-message.mine { justify-self:end; color:#fff; background:var(--forest); border-color:var(--forest); }
     .team-private-message strong,.team-private-message small { display:block; font-size:8px; }
     .team-private-message p { margin:5px 0 0; font-size:10px; line-height:1.45; white-space:pre-wrap; }
+    .team-private-message .message-delivery-state { margin-top:7px; }
     .team-private-form { display:grid; gap:9px; }
     .team-private-form textarea { width:100%; min-height:90px; padding:12px; border:1px solid #cfd7e4; border-radius:11px; font:inherit; }
     .field-inbox-panel { max-width:820px; margin:0 auto 18px; padding:20px; }
-    .field-inbox-summary { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:13px; }
+    .field-inbox-section { overflow:hidden; background:#fff; border:1px solid #dce3ee; border-radius:14px; }
+    .field-inbox-section + .field-inbox-section { margin-top:12px; }
+    .field-inbox-section > summary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:12px 14px; cursor:pointer; list-style:none; }
+    .field-inbox-section > summary::-webkit-details-marker { display:none; }
+    .field-inbox-section > summary::after { content:"+"; color:var(--orange-dark); font-size:22px; font-weight:950; }
+    .field-inbox-section[open] > summary::after { content:"−"; }
+    .field-inbox-section > .field-inbox-list { margin:0 12px 12px; }
+    .field-inbox-summary { display:flex; flex:1; align-items:center; justify-content:space-between; gap:12px; }
     .field-inbox-summary strong { color:var(--forest); font-size:16px; }
     .field-inbox-count { display:grid; min-width:34px; min-height:28px; place-items:center; padding:4px 9px; color:#fff; background:var(--bright-blue); border-radius:999px; font-size:9px; font-weight:950; }
     .field-inbox-count:empty { display:none; }
@@ -4747,6 +4755,12 @@
     .field-inbox-copy span { margin-top:3px; overflow:hidden; color:var(--ink-2); font-size:9.5px; line-height:1.4; text-overflow:ellipsis; white-space:nowrap; }
     .field-inbox-copy small { margin-top:4px; color:var(--bright-blue); font-size:8px; font-weight:850; }
     .field-inbox-arrow { color:var(--orange-dark); font-size:18px; }
+    .message-delivery-state { display:inline-flex !important; width:max-content; align-items:center; margin-top:5px; padding:3px 7px; color:#59617d !important; background:#e9edf3; border-radius:999px; font-size:8px !important; font-weight:950; letter-spacing:.04em; text-transform:uppercase; }
+    .message-delivery-state.delivered { color:#176249 !important; background:#dff1e9; }
+    .message-delivery-state.read { color:#fff !important; background:var(--bright-blue); }
+    .comment-photo-field { padding:13px; background:#f5f8fc; border:1px solid #dce3ee; border-radius:12px; }
+    .comment-photo-field input { width:100%; margin-top:8px; color:var(--ink-2); font-size:10px; }
+    .comment-photo-field small { display:block; margin-top:7px; color:var(--ink-2); font-size:9px; line-height:1.45; }
     .timed-alert-dialog { width: min(92vw, 460px); padding: 0; overflow: hidden; border: 0; border-radius: 20px; box-shadow: 0 28px 80px rgba(7,12,56,.34); }
     .timed-alert-dialog::backdrop { background: rgba(7,12,56,.72); }
     .timed-alert-inner { padding: 26px 22px; color: #fff; background: linear-gradient(145deg, #11186a, #222a83); text-align: center; }
@@ -5183,7 +5197,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">168</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">170</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -5949,8 +5963,10 @@
                 <option value="auto">Auto-detect from the note</option>
               </select>
             </div>
-            <p class="rule-hint">Choose the exact report section and item. The generated title will use that report item name, or leave Auto-detect selected.</p>
+            <p class="rule-hint">Choose the component only. Room-by-room duplicates have been removed, or leave Auto-detect selected.</p>
           </div>
+
+          <label class="comment-photo-field" for="commentPhoto"><strong>Supporting photo (optional)</strong><input id="commentPhoto" type="file" accept="image/*,.heic,.heif" capture="environment"><small>Use one clear photo to support your written observation. It is reduced and converted to JPEG on the phone, sent only for this request, and is not stored by MPI Field Tools. It counts as one Comment Builder request but uses more provider processing than text alone.</small></label>
 
           <div class="field">
             <label for="defectInput" id="comment-note-label">What did you observe?</label>
@@ -7352,8 +7368,8 @@
         <p>Office updates, assignments, attachments, and private team conversations appear here automatically.</p>
       </div>
       <section class="panel field-inbox-panel" aria-live="polite">
-        <div class="field-inbox-summary"><strong>Messages &amp; updates</strong><span class="field-inbox-count" id="fieldInboxCount"></span></div>
-        <div class="field-inbox-list" id="fieldInboxList"><div class="workflow-team-empty">Connecting to the MPI inbox…</div></div>
+        <details class="field-inbox-section" open><summary><div class="field-inbox-summary"><strong>Inbox</strong><span class="field-inbox-count" id="fieldInboxCount"></span></div></summary><div class="field-inbox-list" id="fieldInboxList"><div class="workflow-team-empty">Connecting to the MPI inbox…</div></div></details>
+        <details class="field-inbox-section"><summary><div class="field-inbox-summary"><strong>Sent Messages</strong><span class="field-inbox-count" id="fieldSentCount"></span></div></summary><div class="field-inbox-list" id="fieldSentList"><div class="workflow-team-empty">No messages sent yet.</div></div></details>
       </section>
     </section>
 
@@ -7754,7 +7770,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 169</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 170</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -7894,11 +7910,11 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=169"></script>
-  <script src="./mpi-shared.js?build=169"></script>
-  <script src="./mpi-field-sync.js?build=169"></script>
-  <script src="./mpi-subcontractor.js?build=169"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=169"></script>
+  <script src="./mpi-native-bridge.js?build=170"></script>
+  <script src="./mpi-shared.js?build=170"></script>
+  <script src="./mpi-field-sync.js?build=170"></script>
+  <script src="./mpi-subcontractor.js?build=170"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=170"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -8760,6 +8776,7 @@
       const clearBtn = document.getElementById("clearBtn");
       const commentForm = document.getElementById("commentForm");
       const commentArea = document.getElementById("commentArea");
+      const commentPhoto = document.getElementById("commentPhoto");
       const defectInput = document.getElementById("defectInput");
       const commentOutput = document.getElementById("commentOutput");
       const defectModeBtn = document.getElementById("defectModeBtn");
@@ -8947,6 +8964,8 @@
       const teamDirectoryStatus = document.getElementById("teamDirectoryStatus");
       const fieldInboxList = document.getElementById("fieldInboxList");
       const fieldInboxCount = document.getElementById("fieldInboxCount");
+      const fieldSentList = document.getElementById("fieldSentList");
+      const fieldSentCount = document.getElementById("fieldSentCount");
       const fieldBottomInboxCount = document.getElementById("fieldBottomInboxCount");
       const teamDirectoryView = document.getElementById("teamDirectoryView");
       const teamDirectoryList = document.getElementById("teamDirectoryList");
@@ -9069,11 +9088,13 @@
       let teamDirectoryRecords = [];
       let teamPresenceRecords = [];
       let teamDirectMessages = [];
+      let fieldSentMessages = [];
       let fieldInboxUpdates = [];
       let selectedTeamMemberId = "";
       let unsubscribeTeamDirectory = null;
       let unsubscribeTeamPresence = null;
       let unsubscribeTeamDirectMessages = null;
+      let unsubscribeFieldSentMessages = null;
       let teamDirectListenerReady = false;
 
       const TOOL_GUIDES = [
@@ -10983,14 +11004,19 @@
       }
 
       function populateReportItems() {
-        REPORT_TAXONOMY.forEach(({ section, items }) => {
-          const reportItems = items.filter(item => item !== "Additional photos");
-          if (!reportItems.length) return;
+        const componentGroups = [
+          { section: "Common Components", items: ["Windows", "Doors", "Floors", "Walls / Ceilings", "Lighting / Switches / Receptacles", "HVAC Registers", "Thermostat Controls", "Stairs / Guards / Handrails"] },
+          { section: "Exterior and Roof", items: ["Roof Coverings", "Flashing / Roof Penetrations", "Gutters / Downspouts", "Chimney / Fireplace", "Siding / Exterior Trim", "Foundation", "Deck / Porch / Balcony", "Walkways / Driveways", "Site Drainage / Grading"] },
+          { section: "Structure and Interior", items: ["Basement", "Crawlspace", "Attic Structure", "Attic Insulation / Ventilation", "Garage / Garage Door", "Garage Fire Separation", "Cabinets / Countertops"] },
+          { section: "Building Systems", items: ["Plumbing", "Water Heater", "Well System", "Septic System", "Sump Pump", "Electrical", "Heating Equipment", "Cooling System", "Combustion Venting / Carbon Monoxide"] },
+          { section: "Fixtures and Appliances", items: ["Kitchen Sink", "Bathroom Fixtures", "Bathroom Exhaust Fan", "Range / Oven / Cooktop", "Dishwasher", "Refrigerator", "Microwave", "Laundry Equipment", "Smoke / Carbon Monoxide Alarms", "Other Component"] }
+        ];
+        componentGroups.forEach(({ section, items }) => {
           const group = document.createElement("optgroup");
           group.label = section;
-          reportItems.forEach(item => {
+          items.forEach(item => {
             const option = document.createElement("option");
-            option.value = `report:${encodeURIComponent(section)}::${encodeURIComponent(item)}`;
+            option.value = item;
             option.textContent = item;
             group.appendChild(option);
           });
@@ -10999,6 +11025,7 @@
       }
 
       function componentFromReportSelection(note, selected) {
+        if (selected && selected !== "auto" && !selected.startsWith("item:") && !selected.startsWith("report:")) return selected;
         const { item } = parseReportSelection(selected);
         const lower = defectMatchText(note);
         const itemKey = item.toLowerCase()
@@ -12252,7 +12279,10 @@
       }
 
       function selectedReportItem(selectedArea) {
-        return parseReportSelection(selectedArea).item;
+        const selected = String(selectedArea || "");
+        const reportItem = parseReportSelection(selected).item;
+        if (reportItem) return reportItem;
+        return selected && selected !== "auto" ? selected : "";
       }
 
       function deniedObservationConcepts(note) {
@@ -18707,6 +18737,24 @@
         return Number.isNaN(date.getTime()) ? new Date(0) : date;
       }
 
+      function fieldMessageDeliveryState(message, currentUid) {
+        if (message.senderUid !== currentUid) return "";
+        if (message.targetUid) {
+          if (Array.isArray(message.readBy) && message.readBy.includes(message.targetUid)) return "read";
+          if (Array.isArray(message.deliveredTo) && message.deliveredTo.includes(message.targetUid)) return "delivered";
+        } else {
+          if (Array.isArray(message.readBy) && message.readBy.some(userId => userId !== currentUid)) return "read";
+          if (Array.isArray(message.deliveredBy) && message.deliveredBy.length) return "delivered";
+        }
+        return "sent";
+      }
+
+      function fieldDeliveryStateHtml(state) {
+        const value = ["read", "delivered"].includes(state) ? state : "sent";
+        const label = value === "read" ? "✓✓ Read" : value === "delivered" ? "✓✓ Delivered" : "✓ Sent";
+        return `<small class="message-delivery-state ${value}">${label}</small>`;
+      }
+
       function renderFieldInbox() {
         if (!fieldInboxList) return;
         const currentUid = window.MPI_COMPANY_SESSION?.userId || "";
@@ -18717,23 +18765,24 @@
           body: update.message || "Open this office update.",
           meta: `${update.createdByName || "MPI Office"} · ${inboxDate(update.createdAt || update.createdAtClient).toLocaleString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}`,
           timestamp: inboxDate(update.createdAt || update.createdAtClient).getTime(),
-          unread: !update.receipt,
+          unread: !update.receipt || update.receipt.status === "delivered",
           icon: update.attachments?.length ? "▣" : "!"
         }));
         const conversations = new Map();
         teamDirectMessages.forEach(message => {
-          const otherUid = message.senderUid === currentUid ? message.targetUid : message.senderUid;
+          if (message.senderUid === currentUid) return;
+          const otherUid = message.senderUid;
           if (!otherUid) return;
           const timestamp = inboxDate(message.createdAt || message.createdAtClient).getTime();
           const existing = conversations.get(otherUid);
-          const unread = message.senderUid !== currentUid && !(Array.isArray(message.readBy) && message.readBy.includes(currentUid));
+          const unread = !(Array.isArray(message.readBy) && message.readBy.includes(currentUid));
           if (!existing || timestamp > existing.timestamp) {
             const member = teamMemberRecord(otherUid);
             conversations.set(otherUid, {
               kind: "message",
               id: message.id,
               otherUid,
-              title: teamDisplayName(member?.name || (message.senderUid === currentUid ? message.targetName : message.senderName)),
+              title: teamDisplayName(member?.name || message.senderName),
               body: message.message || `${message.attachments?.length || 1} attachment${message.attachments?.length === 1 ? "" : "s"}`,
               meta: `Private message · ${inboxDate(message.createdAt || message.createdAtClient).toLocaleString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}`,
               timestamp,
@@ -18750,6 +18799,27 @@
           fieldBottomInboxCount.textContent = unread > 99 ? "99+" : String(unread);
         }
         fieldInboxList.innerHTML = items.length ? items.map(item => `<button class="field-inbox-item${item.unread ? " unread" : ""}" type="button" ${item.kind === "update" ? `data-inbox-update="${escapeHtml(item.id)}"` : `data-inbox-team="${escapeHtml(item.otherUid)}"`}><span class="field-inbox-icon" aria-hidden="true">${escapeHtml(item.icon)}</span><span class="field-inbox-copy"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.body)}</span><small>${escapeHtml(item.meta)}</small></span><span class="field-inbox-arrow" aria-hidden="true">›</span></button>`).join("") : '<div class="workflow-team-empty"><strong>Your inbox is clear.</strong><br>New office updates and private messages will appear here automatically.</div>';
+        const directSent = teamDirectMessages.filter(message => message.senderUid === currentUid).map(message => ({
+          ...message,
+          inboxKind: "direct",
+          timestamp: inboxDate(message.createdAt || message.createdAtClient).getTime()
+        }));
+        const officeSent = fieldSentMessages.map(message => ({
+          ...message,
+          inboxKind: "office",
+          timestamp: inboxDate(message.createdAt || message.createdAtClient).getTime()
+        }));
+        const sentItems = [...directSent, ...officeSent].sort((left, right) => right.timestamp - left.timestamp).slice(0, 50);
+        if (fieldSentCount) fieldSentCount.textContent = sentItems.length ? String(sentItems.length) : "";
+        if (fieldSentList) fieldSentList.innerHTML = sentItems.length ? sentItems.map(message => {
+          const direct = message.inboxKind === "direct";
+          const recipient = direct ? teamDisplayName(message.targetName || "MPI Team Member") : "MPI Office";
+          const kind = message.replyToUpdateId ? "Reply to office update" : message.kind === "safety-alert" ? "Safety alert" : message.kind === "lab-coc" ? "Chain of Custody" : "Message";
+          const files = message.attachments?.length ? ` · ${message.attachments.length} attachment${message.attachments.length === 1 ? "" : "s"}` : "";
+          const status = fieldMessageDeliveryState(message, currentUid);
+          const content = `<span class="field-inbox-icon" aria-hidden="true">✓</span><span class="field-inbox-copy"><strong>To ${escapeHtml(recipient)}</strong><span>${escapeHtml(message.message || "Attachment sent")}</span><small>${escapeHtml(`${kind}${files} · ${inboxDate(message.createdAt || message.createdAtClient).toLocaleString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}`)}</small>${fieldDeliveryStateHtml(status)}</span>${direct ? '<span class="field-inbox-arrow" aria-hidden="true">›</span>' : ""}`;
+          return direct ? `<button class="field-inbox-item" type="button" data-inbox-team="${escapeHtml(message.targetUid || "")}">${content}</button>` : `<article class="field-inbox-item">${content}</article>`;
+        }).join("") : '<div class="workflow-team-empty">No messages have been sent from this account.</div>';
       }
 
       function teamMemberRecord(userId) {
@@ -18844,7 +18914,8 @@
         teamPrivateThread.innerHTML = messages.length ? messages.map(message => {
           const mine = message.senderUid === currentUid;
           const files = (message.attachments || []).map(file => `<button type="button" class="team-profile-back" data-team-file="${escapeHtml(file.id)}" data-team-message="${escapeHtml(message.id)}">${escapeHtml(file.name || "Attachment")}</button>`).join("");
-          return `<article class="team-private-message${mine ? " mine" : ""}"><strong>${escapeHtml(mine ? "YOU" : teamDisplayName(message.senderName))}</strong><small>${escapeHtml(new Date(message.createdAtClient || message.createdAt?.toDate?.() || Date.now()).toLocaleString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" }))}</small><p>${escapeHtml(message.message || "Attachment sent")}</p>${files}</article>`;
+          const delivery = mine ? fieldDeliveryStateHtml(fieldMessageDeliveryState(message, currentUid)) : "";
+          return `<article class="team-private-message${mine ? " mine" : ""}"><strong>${escapeHtml(mine ? "YOU" : teamDisplayName(message.senderName))}</strong><small>${escapeHtml(new Date(message.createdAtClient || message.createdAt?.toDate?.() || Date.now()).toLocaleString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" }))}</small><p>${escapeHtml(message.message || "Attachment sent")}</p>${delivery}${files}</article>`;
         }).join("") : '<div class="workflow-team-empty">No messages in this private conversation yet.</div>';
         teamPrivateThread.scrollTop = teamPrivateThread.scrollHeight;
       }
@@ -18918,6 +18989,7 @@
         unsubscribeTeamDirectory?.();
         unsubscribeTeamPresence?.();
         unsubscribeTeamDirectMessages?.();
+        unsubscribeFieldSentMessages?.();
         teamDirectListenerReady = false;
         unsubscribeTeamDirectory = window.MPI_SHARED.watchTeamDirectory((records, error) => {
           if (!error) teamDirectoryRecords = records.map(item => ({
@@ -18948,6 +19020,11 @@
           renderFieldInbox();
           if (selectedTeamMemberId) renderTeamPrivateThread();
         });
+        unsubscribeFieldSentMessages = window.MPI_SHARED.watchSentFieldMessages?.(window.MPI_SHARED.auth.currentUser, (records, error) => {
+          if (error) return;
+          fieldSentMessages = records;
+          renderFieldInbox();
+        }) || null;
       }
 
       function loadActiveJob() {
@@ -22559,6 +22636,7 @@
       clearCommentBtn.addEventListener("click", () => {
         commentArea.value = "auto";
         defectInput.value = "";
+        commentPhoto.value = "";
         commentOutput.value = "";
         commentOutput.scrollTop = 0;
         commentOutput.scrollLeft = 0;
@@ -22618,7 +22696,8 @@
         commentFailureActions.hidden = true;
         try {
           if (!window.MPI_COMMENT_AI?.generate) throw new Error("The secure MPI Comment Builder is still loading. Wait a moment and try again.");
-          const requestSignature = JSON.stringify([note, commentArea.value, commentType]);
+          const photo = commentPhoto.files?.[0] || null;
+          const requestSignature = JSON.stringify([note, commentArea.value, commentType, photo ? `${photo.name}:${photo.size}:${photo.lastModified}` : ""]);
           if (!activeCommentRequestId || activeCommentRequestSignature !== requestSignature) {
             activeCommentRequestId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
             activeCommentRequestSignature = requestSignature;
@@ -22627,6 +22706,7 @@
             note,
             component: commentArea.value,
             mode: commentType,
+            photo,
             id: activeCommentRequestId
           });
           copyCommentBtn.disabled = false;

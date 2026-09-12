@@ -70,6 +70,8 @@
   const replyCount = document.getElementById("adminReplyCount");
   const unifiedInboxList = document.getElementById("adminUnifiedInboxList");
   const unifiedInboxSummary = document.getElementById("adminInboxSummary");
+  const sentMessagesList = document.getElementById("adminSentMessagesList");
+  const sentMessagesSummary = document.getElementById("adminSentSummary");
   const tabButtons = [...document.querySelectorAll("[data-admin-view]")];
   const panels = [...document.querySelectorAll("[data-admin-panel]")];
   const stats = {
@@ -453,17 +455,18 @@
     });
     const directByPerson = new Map();
     directMessages.forEach(message => {
-      const otherUid = message.senderUid === currentUid ? message.targetUid : message.senderUid;
+      if (message.senderUid === currentUid) return;
+      const otherUid = message.senderUid;
       if (!otherUid) return;
       const timestamp = asDate(message.createdAt || message.createdAtClient)?.getTime() || 0;
-      const unread = message.senderUid !== currentUid && !(Array.isArray(message.readBy) && message.readBy.includes(currentUid));
+      const unread = !(Array.isArray(message.readBy) && message.readBy.includes(currentUid));
       const existing = directByPerson.get(otherUid);
       if (!existing || timestamp > existing.sortTime) {
         directByPerson.set(otherUid, {
           key: `direct:${otherUid}`,
           kind: "direct",
           personId: otherUid,
-          name: message.senderUid === currentUid ? message.targetName : message.senderName,
+          name: message.senderName,
           type: "Private conversation",
           body: message.message || (message.attachments?.length ? `${message.attachments.length} attachment${message.attachments.length === 1 ? "" : "s"}` : "Private message"),
           timestamp: message.createdAt || message.createdAtClient,
@@ -499,6 +502,37 @@
       const files = item.attachments?.length ? ` · ${item.attachments.length} attachment${item.attachments.length === 1 ? "" : "s"}` : "";
       return `<button class="office-reply-card${item.unread ? " unread" : ""}${item.safety ? " safety" : ""}" type="button" data-admin-inbox-kind="${escapeHtml(item.kind)}" data-admin-inbox-key="${escapeHtml(item.key)}" data-admin-inbox-message="${escapeHtml(item.messageId || "")}" data-admin-inbox-person="${escapeHtml(item.personId || "")}"><div><strong>${escapeHtml(item.name || "MPI Team Member")}</strong><span class="admin-inbox-type">${escapeHtml(item.type)}</span>${item.unread ? '<span class="office-reply-new">Unread</span>' : ""}</div><div><span>${escapeHtml(item.body)}</span><small>${escapeHtml(files.replace(/^ · /, ""))}</small></div><time>${escapeHtml(formatDateTime(item.timestamp))}</time></button>`;
     }).join("") : '<div class="empty">No received messages yet. Inspector messages and private team conversations will appear here automatically.</div>';
+    renderAdminSentMessages();
+  }
+
+  function directDeliveryState(message) {
+    const targetUid = String(message?.targetUid || "");
+    if (targetUid && Array.isArray(message?.readBy) && message.readBy.includes(targetUid)) return "read";
+    if (targetUid && Array.isArray(message?.deliveredTo) && message.deliveredTo.includes(targetUid)) return "delivered";
+    return "sent";
+  }
+
+  function deliveryStateHtml(state) {
+    const value = ["read", "delivered"].includes(state) ? state : "sent";
+    const label = value === "read" ? "✓✓ Read" : value === "delivered" ? "✓✓ Delivered" : "✓ Sent";
+    return `<span class="delivery-state ${value}">${label}</span>`;
+  }
+
+  function renderAdminSentMessages() {
+    if (!sentMessagesList) return;
+    const sent = directMessages
+      .filter(message => message.senderUid === currentUser?.uid)
+      .sort((left, right) => (asDate(right.createdAt || right.createdAtClient)?.getTime() || 0) - (asDate(left.createdAt || left.createdAtClient)?.getTime() || 0))
+      .slice(0, 50);
+    if (sentMessagesSummary) {
+      const total = sent.length + updates.length;
+      sentMessagesSummary.textContent = total ? `${total} sent item${total === 1 ? "" : "s"}` : "Nothing sent yet";
+    }
+    sentMessagesList.innerHTML = sent.length ? sent.map(message => {
+      const files = message.attachments?.length ? `${message.attachments.length} attachment${message.attachments.length === 1 ? "" : "s"}` : "";
+      const state = directDeliveryState(message);
+      return `<button class="office-reply-card" type="button" data-admin-sent-person="${escapeHtml(message.targetUid || "")}"><div><strong>To ${escapeHtml(message.targetName || message.targetEmail || "MPI Team Member")}</strong><span class="admin-inbox-type">Private message</span>${deliveryStateHtml(state)}</div><div><span>${escapeHtml(message.message || "Attachment sent")}</span><small>${escapeHtml(files)}</small></div><time>${escapeHtml(formatDateTime(message.createdAt || message.createdAtClient))}</time></button>`;
+    }).join("") : '<div class="empty">No private messages have been sent from this account.</div>';
   }
 
   function renderSafetyAlerts() {
@@ -567,6 +601,7 @@
       }
     }
     fieldMessages = values;
+    shared.markFieldMessagesDelivered?.(currentUser, values).catch(() => false);
     knownFieldMessageIds = ids;
     fieldMessageListenerReady = true;
     renderSafetyAlerts();
@@ -2148,7 +2183,10 @@
     const messages = [...privateMessages, ...legacyOffice, ...legacyField].sort((left, right) => (asDate(right.timestamp)?.getTime() || 0) - (asDate(left.timestamp)?.getTime() || 0));
     return messages.length ? messages.slice(0, 30).map(item => {
       const message = item.message;
-      if (item.direct) return `<article class="${item.direction}"><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || "MPI Team Member")}</strong><p>${escapeHtml(message.message || "Attachment sent")}</p>${directAttachmentsHtml(message)}${item.direction === "field" ? `<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}" data-direct-message="true">CREATE TO-DO</button>` : ""}</article>`;
+      if (item.direct) {
+        const delivery = item.direction === "office" ? deliveryStateHtml(directDeliveryState(message)) : "";
+        return `<article class="${item.direction}"><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || "MPI Team Member")}</strong><p>${escapeHtml(message.message || "Attachment sent")}</p>${delivery}${directAttachmentsHtml(message)}${item.direction === "field" ? `<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}" data-direct-message="true">CREATE TO-DO</button>` : ""}</article>`;
+      }
       if (item.direction === "field") return `<article><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || person.name || "MPI Field User")} → Office</strong><p>${escapeHtml(message.message || "Photos sent to MPI Office")}</p>${fieldAttachmentsHtml(message)}<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}">CREATE TO-DO</button></article>`;
       const receipt = messageReceiptCache.get(message.id);
       const state = receipt?.status ? receipt.status.replace(/-/g, " ") : "Sent to app";
@@ -2442,9 +2480,15 @@
     try {
       const snapshot = await shared.db.collection("officeUpdates").doc(updateId).collection("receipts").get();
       const values = snapshot.docs.map(doc => ({ userId: doc.id, ...doc.data() }));
-      return { total: values.length, acknowledged: values.filter(item => ["acknowledged", "completed", "read", "replied"].includes(item.status)).length, completed: values.filter(item => item.status === "completed").length, replies: values.filter(item => item.replyText) };
+      return {
+        total: values.length,
+        delivered: values.filter(item => ["delivered", "acknowledged", "completed", "read", "replied"].includes(item.status)).length,
+        acknowledged: values.filter(item => ["acknowledged", "completed", "read", "replied"].includes(item.status)).length,
+        completed: values.filter(item => item.status === "completed").length,
+        replies: values.filter(item => item.replyText)
+      };
     } catch (_) {
-      return { total: 0, acknowledged: 0, completed: 0, replies: [] };
+      return { total: 0, delivered: 0, acknowledged: 0, completed: 0, replies: [] };
     }
   }
 
@@ -2465,8 +2509,10 @@
       const summary = summaries[index];
       const recipient = update.audience === "all" ? "All inspectors" : update.targetName || update.targetEmail || "One inspector";
       const replies = summary.replies.length ? `<div class="admin-update-replies"><strong>Inspector replies</strong>${summary.replies.map(reply => `<p><b>${escapeHtml(reply.userName || reply.userEmail || "Inspector")}:</b> ${escapeHtml(reply.replyText)}</p>`).join("")}</div>` : "";
-      return `<article class="update-card"><div class="update-top"><div><span class="type-badge">${escapeHtml(String(update.type || "update").replace("-", " "))}</span>${update.priority !== "normal" ? `<span class="priority-badge">${escapeHtml(update.priority)}</span>` : ""}<h3>${escapeHtml(update.title)}</h3></div><span class="role-badge">${escapeHtml(recipient)}</span></div><p>${escapeHtml(update.message)}</p>${adminAttachmentsHtml(update)}<div class="update-meta"><span>Published ${escapeHtml(formatDateTime(update.createdAt))}</span><span>Due ${escapeHtml(formatDate(update.dueDate))}</span><span>${summary.total} response${summary.total === 1 ? "" : "s"}</span><span>${summary.acknowledged} read / acknowledged</span></div>${replies}</article>`;
+      const readState = summary.acknowledged > 0 ? "read" : summary.delivered > 0 ? "delivered" : "sent";
+      return `<article class="update-card"><div class="update-top"><div><span class="type-badge">${escapeHtml(String(update.type || "update").replace("-", " "))}</span>${update.priority !== "normal" ? `<span class="priority-badge">${escapeHtml(update.priority)}</span>` : ""}<h3>${escapeHtml(update.title)}</h3></div><span class="role-badge">${escapeHtml(recipient)}</span></div><p>${escapeHtml(update.message)}</p>${adminAttachmentsHtml(update)}<div class="update-meta"><span>Sent by ${escapeHtml(update.createdByName || update.createdByEmail || "MPI Office")}</span><span>Published ${escapeHtml(formatDateTime(update.createdAt))}</span>${update.dueDate ? `<span>Due ${escapeHtml(formatDate(update.dueDate))}</span>` : ""}${deliveryStateHtml(readState)}<span>${summary.delivered} delivered</span><span>${summary.acknowledged} read / acknowledged</span></div>${replies}</article>`;
     }).join("") : '<div class="empty">No office updates have been published.</div>';
+    renderAdminSentMessages();
     if (selectedInspectorId !== "all") renderOperations();
   }
 
@@ -2604,6 +2650,7 @@
       }
       directMessageListenerReady = true;
       renderAdminUnifiedInbox();
+      renderAdminSentMessages();
       renderOperations();
     });
     if (!replyRefreshTimer) {
@@ -3100,6 +3147,16 @@
       selectedOperationDate = "";
       inspectorSelector.value = personId;
     }
+    showView("operations");
+    renderOperations();
+  });
+  sentMessagesList?.addEventListener("click", event => {
+    const button = event.target.closest("[data-admin-sent-person]");
+    const personId = button?.dataset.adminSentPerson || "";
+    if (!personId || !overviewEntry(personId)) return;
+    selectedInspectorId = personId;
+    selectedOperationDate = "";
+    inspectorSelector.value = personId;
     showView("operations");
     renderOperations();
   });

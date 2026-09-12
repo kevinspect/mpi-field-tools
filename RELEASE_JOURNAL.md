@@ -1,5 +1,17 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 170 — Message Receipts and Photo-Assisted Comments
+
+- Split both Field and Office messaging into collapsible Inbox and Sent sections.
+- Added auditable Sent, Delivered and Read states. Delivery is recorded when the recipient's app synchronizes the message; Read is recorded only when the recipient opens it.
+- Replaced room-by-room Comment Builder choices with a concise house-wide component list so titles use components such as Windows, Doors, Floors and Walls / Ceilings.
+- Added an optional, compressed supporting photo for Comment Builder requests. The written field observation remains required and authoritative; the app does not retain the image.
+- Preserved existing messages, attachments, receipts, defect notes and Comment Builder usage controls.
+
+### Validation record
+
+- Verified JavaScript parsing, native web synchronization, component-title enforcement, photo type/size controls, recipient-specific message delivery/read rules, and matching Build 170 cache/version markers.
+
 ## Build 169 — Unified Field and Office Inboxes
 
 - Added one inspector Inbox that combines office updates, assignments, attachments, and private team conversations with an unread badge.
