@@ -1,5 +1,15 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 174 — Reliable Home-Screen Update Recovery
+
+- Repaired installed home-screen copies that could remain on Build 170 after the update button was pressed.
+- The update action now removes only obsolete MPI-generated app-shell caches and service-worker registrations before reopening from the live network. It does not remove the signed-in account, messages, hours, jobs, photos, drafts, or workflow history.
+- Versioned service-worker registration prevents iOS from reusing an older worker script on future releases.
+
+### Validation record
+
+- Verified JavaScript parsing, offline asset resolution, native web synchronization, and the iPhone project compile before publication.
+
 ## Build 173 — Secure Employee and Subcontractor App Entry
 
 - Added a polished first-launch choice to the installed iPhone app for **MPI Employee / Inspector** or **Subcontractor Invitation**.

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="173">
+  <meta name="app-build" content="174">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5644,7 +5644,7 @@
         <span class="home-tool-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">173</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">174</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -8252,7 +8252,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 173</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 174</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8392,11 +8392,11 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=173"></script>
-  <script src="./mpi-shared.js?build=173"></script>
-  <script src="./mpi-field-sync.js?build=173"></script>
-  <script src="./mpi-subcontractor.js?build=173"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=173"></script>
+  <script src="./mpi-native-bridge.js?build=174"></script>
+  <script src="./mpi-shared.js?build=174"></script>
+  <script src="./mpi-field-sync.js?build=174"></script>
+  <script src="./mpi-subcontractor.js?build=174"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=174"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -21242,15 +21242,26 @@
         loadAppUpdateBtn.textContent = "Installing…";
         appUpdateMessage.textContent = `Installing Build ${targetBuild}. The app will reopen automatically.`;
         try {
-          const registration = await navigator.serviceWorker?.getRegistration();
-          if (registration) {
-            await registration.update();
-            if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
-            await Promise.race([
-              new Promise(resolve => navigator.serviceWorker.addEventListener("controllerchange", resolve, { once: true })),
-              new Promise(resolve => setTimeout(resolve, 1800))
-            ]);
+          const registrations = navigator.serviceWorker?.getRegistrations
+            ? await navigator.serviceWorker.getRegistrations()
+            : [await navigator.serviceWorker?.getRegistration()].filter(Boolean);
+          for (const registration of registrations) {
+            await registration.update().catch(() => false);
+            registration.waiting?.postMessage("SKIP_WAITING");
           }
+          await Promise.race([
+            new Promise(resolve => navigator.serviceWorker?.addEventListener("controllerchange", resolve, { once: true })),
+            new Promise(resolve => setTimeout(resolve, 1600))
+          ]);
+          // A few older iPhone home-screen installs retained a cache-first app
+          // shell after the replacement worker activated. Remove only MPI's
+          // generated shell caches and registrations; local workflow records,
+          // Firebase data, messages, drafts and the signed-in account remain.
+          if (window.caches?.keys) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.filter(name => name.startsWith("mpi-field-tools-shell-")).map(name => caches.delete(name)));
+          }
+          await Promise.all(registrations.map(registration => registration.unregister().catch(() => false)));
         } catch (_) {}
         const url = new URL(location.href);
         url.searchParams.delete("build");
@@ -21285,7 +21296,7 @@
         }
         try {
           const wasAlreadySaved = Boolean(navigator.serviceWorker.controller);
-          const registration = await navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" });
+          const registration = await navigator.serviceWorker.register(`./sw.js?build=${CURRENT_APP_BUILD}`, { updateViaCache: "none" });
           await registration.update();
           await navigator.serviceWorker.ready;
           offlineStatus.textContent = "Saved for offline use";
