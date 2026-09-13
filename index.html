@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="174">
+  <meta name="app-build" content="175">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5521,6 +5521,225 @@
     }
     .mpi-access-choice-back { margin-top: 10px; padding: 10px; color: #2775b4; background: transparent; border: 0; box-shadow: none; font-size: 11px; font-weight: 900; }
     .mpi-access-choice-status { min-height: 18px; margin: 10px 0 0; color: #b43d38; font-size: 11px; font-weight: 800; }
+
+    /* Build 175 — quieter native-app hierarchy */
+    .app-home {
+      padding: 18px max(16px, calc((100vw - 820px) / 2)) 104px;
+      background: #f4f6fa;
+    }
+    .home-intro {
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 15px;
+      max-width: 820px;
+      padding: 17px 18px;
+      color: var(--mpi-text);
+      background: #fff;
+      border: 1px solid var(--mpi-border);
+      border-radius: 17px;
+      box-shadow: 0 4px 14px rgba(16, 23, 95, .045);
+    }
+    .home-logo { width: 54px; border-width: 1px; box-shadow: none; }
+    .home-kicker { margin: 0 0 4px; color: var(--mpi-blue-600); font-size: 8.5px; letter-spacing: .12em; }
+    .home-title { color: var(--mpi-navy-900); font-size: clamp(25px, 4vw, 34px); letter-spacing: -.035em; }
+    .home-tagline { margin: 5px 0 0; color: var(--mpi-muted); font-size: 11.5px; line-height: 1.42; }
+    .home-active-job {
+      max-width: 820px;
+      margin-top: 13px;
+      padding: 17px 18px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--mpi-navy-950), var(--mpi-navy-800));
+      border: 0;
+      border-left: 4px solid var(--mpi-gold-500);
+      border-radius: 16px;
+      box-shadow: 0 9px 24px rgba(8, 13, 62, .15);
+    }
+    .home-active-job span { color: #efd274; }
+    .home-active-job strong { color: #fff; font-size: 17px; }
+    .home-active-job small { color: rgba(255,255,255,.72); }
+    .home-active-job-actions a { color: var(--mpi-navy-900); background: #fff; }
+    .home-active-job-actions a:first-child { color: var(--mpi-navy-950); background: #ecd071; }
+    .home-active-job.is-workday-launch .home-active-job-actions { grid-template-columns: 1fr; }
+    .mpi-home-updates {
+      max-width: 820px;
+      margin: 12px auto 0;
+      padding: 14px 16px;
+      color: var(--mpi-text);
+      background: #fff;
+      border: 1px solid #c9dced;
+      border-left: 4px solid var(--mpi-blue-600);
+      border-radius: 15px;
+      box-shadow: 0 4px 14px rgba(16, 23, 95, .045);
+    }
+    .mpi-home-updates span { color: var(--mpi-blue-600); }
+    .mpi-home-updates strong { color: var(--mpi-navy-900); font-size: 14px; }
+    .mpi-home-updates small { color: var(--mpi-muted); }
+    .mpi-home-updates a { color: #fff; background: var(--mpi-navy-900); }
+    .home-more {
+      overflow: hidden;
+      max-width: 820px;
+      margin: 13px auto 0;
+      background: #fff;
+      border: 1px solid var(--mpi-border);
+      border-radius: 15px;
+      box-shadow: 0 4px 14px rgba(16, 23, 95, .04);
+    }
+    .home-more > summary {
+      display: flex;
+      min-height: 58px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 16px;
+      list-style: none;
+      cursor: pointer;
+    }
+    .home-more > summary::-webkit-details-marker { display: none; }
+    .home-more > summary strong { display: block; color: var(--mpi-navy-900); font-size: 13px; }
+    .home-more > summary small { display: block; margin-top: 3px; color: var(--mpi-muted); font-size: 9.5px; }
+    .home-more > summary b { display: grid; width: 30px; height: 30px; place-items: center; color: var(--mpi-blue-600); background: var(--mpi-blue-100); border-radius: 9px; font-size: 19px; }
+    .home-more[open] > summary b { transform: rotate(45deg); }
+    .home-more .home-tools {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1px;
+      max-width: none;
+      padding: 1px 0 0;
+      background: var(--mpi-border);
+    }
+    .home-more .home-tool-card,
+    .home-more .home-tool-card:not(.phase-two) {
+      grid-template-columns: 40px minmax(0, 1fr) 16px;
+      gap: 11px;
+      min-height: 70px;
+      padding: 12px 14px;
+      background: #fff;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      transform: none;
+    }
+    .home-more .home-tool-icon,
+    .home-more .home-tool-icon.icon-messages,
+    .home-more .home-tool-icon.icon-profile,
+    .home-more .home-tool-icon.icon-team,
+    .home-more .home-tool-icon.icon-office { width: 40px; height: 40px; border-radius: 11px; }
+    .home-more .home-tool-icon.icon-messages::before,
+    .home-more .home-tool-icon.icon-profile::before,
+    .home-more .home-tool-icon.icon-team::before,
+    .home-more .home-tool-icon.icon-office::before { width: 19px !important; height: 19px !important; }
+    .home-more .home-tool-copy strong { font-size: 12.5px; }
+    .home-more .home-tool-copy small { margin-top: 3px; font-size: 9px; }
+    .home-more .home-tool-arrow { font-size: 17px; }
+    .home-version-row { max-width: 820px; margin-top: 14px; padding: 0 3px; border: 0; font-size: 9px; }
+    .home-version-row button { min-height: 34px; padding: 7px 9px; font-size: 9px; }
+    .mpi-native-app .home-version-row button { display: none; }
+
+    .hub-screen,
+    .field-app-section { padding-top: 22px; }
+    .hub-heading,
+    .comment-heading,
+    .damage-heading,
+    .field-section-heading,
+    .sop-heading {
+      display: block;
+      max-width: 820px;
+      margin: 0 auto 15px;
+      padding: 4px 3px 14px;
+      color: var(--mpi-text);
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid var(--mpi-border);
+      border-radius: 0;
+      box-shadow: none;
+      text-align: left;
+    }
+    .hub-heading .eyebrow,
+    .comment-heading .eyebrow,
+    .damage-heading .eyebrow,
+    .field-section-heading .eyebrow,
+    .sop-heading .eyebrow {
+      justify-content: flex-start;
+      margin-bottom: 6px;
+      color: var(--mpi-blue-600);
+    }
+    .hub-heading h1,
+    .comment-heading h2,
+    .damage-heading h2,
+    .field-section-heading h2,
+    .sop-heading h2 {
+      margin: 0;
+      color: var(--mpi-navy-900);
+      font-size: clamp(25px, 5vw, 32px);
+      line-height: 1.08;
+      letter-spacing: -.03em;
+      text-align: left;
+    }
+    .hub-heading p:last-child,
+    .comment-heading > p,
+    .damage-heading > p,
+    .field-section-heading > p,
+    .sop-heading-copy {
+      max-width: 650px;
+      margin: 7px 0 0;
+      color: var(--mpi-muted);
+      font-size: 10.5px;
+      line-height: 1.45;
+      text-align: left;
+    }
+    .hub-list { box-shadow: 0 4px 16px rgba(16, 23, 95, .045); }
+    .workflow-card { padding: clamp(17px, 4vw, 24px); border-radius: 16px; box-shadow: 0 4px 16px rgba(16, 23, 95, .05); }
+    .workflow-card-header { margin-bottom: 14px; text-align: left; }
+    .workflow-card-header .eyebrow { justify-content: flex-start; }
+    .workflow-card-header h3 { font-size: clamp(22px, 5vw, 28px); }
+    .workflow-card-header p { font-size: 10.5px; line-height: 1.45; }
+
+    @media (max-width: 680px) {
+      .topbar-actions .sop-jump { display: none; }
+      .app-home { padding: 12px 11px 94px; }
+      .home-intro { grid-template-columns: 46px minmax(0, 1fr); gap: 12px; padding: 14px; border-radius: 15px; }
+      .home-logo { width: 46px; }
+      .home-kicker { font-size: 7.5px; }
+      .home-title { font-size: 23px; }
+      .home-tagline { margin-top: 4px; font-size: 10px; }
+      .home-active-job { grid-template-columns: 1fr; gap: 13px; padding: 15px; }
+      .home-active-job-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .mpi-home-updates { grid-template-columns: minmax(0,1fr) auto; margin-inline: 0; padding: 13px 14px; }
+      .mpi-home-updates small { white-space: normal; }
+      .mpi-home-updates a { min-height: 40px; padding-inline: 11px; }
+      .home-more .home-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; padding: 1px 0 0; }
+      .home-more .home-tool-card,
+      .home-more .home-tool-card:not(.phase-two) { grid-template-columns: 36px minmax(0,1fr); gap: 9px; min-height: 65px; padding: 10px; border-radius: 0; }
+      .home-more .home-tool-icon,
+      .home-more .home-tool-icon.icon-messages,
+      .home-more .home-tool-icon.icon-profile,
+      .home-more .home-tool-icon.icon-team,
+      .home-more .home-tool-icon.icon-office { width: 36px; height: 36px; }
+      .home-more .home-tool-copy strong { font-size: 11.5px; }
+      .home-more .home-tool-copy small,
+      .home-more .home-tool-arrow { display: none; }
+      .home-version-row { flex-wrap: wrap; gap: 7px; }
+      .hub-screen { padding: 17px 12px 88px; }
+      .field-app-section { padding-top: 17px; }
+      .hub-heading,
+      .comment-heading,
+      .damage-heading,
+      .field-section-heading,
+      .sop-heading { padding: 2px 2px 12px; border-radius: 0; }
+      .hub-heading h1,
+      .comment-heading h2,
+      .damage-heading h2,
+      .field-section-heading h2,
+      .sop-heading h2 { font-size: 25px; }
+      .hub-heading p:last-child,
+      .comment-heading > p,
+      .damage-heading > p,
+      .field-section-heading > p,
+      .sop-heading-copy { font-size: 10px; }
+      .workflow-card-header h3 { font-size: 23px; }
+    }
+
+    .app-bottom-nav { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .app-bottom-nav a { min-width: 0; overflow: hidden; }
+    .app-bottom-nav a span { overflow: hidden; max-width: 100%; text-overflow: ellipsis; white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -5582,18 +5801,18 @@
       <div class="home-logo" role="img" aria-label="Michigan Property Inspections logo"></div>
       <div>
         <p class="home-kicker">Inspector field app</p>
-        <h1 class="home-title" id="home-title">MPI Field Tools</h1>
-        <p class="home-tagline">Field tools. Company standards. Team support. One MPI app.</p>
+        <h1 class="home-title" id="home-title">Ready for today.</h1>
+        <p class="home-tagline">Your next action, messages, and field support in one place.</p>
       </div>
     </div>
     <aside class="home-active-job" id="homeActiveJob" aria-live="polite" hidden>
       <div>
-        <span>Current inspection</span>
+        <span id="homeActiveJobLabel">Current inspection</span>
         <strong id="homeActiveJobProperty"></strong>
         <small id="homeActiveJobProgress"></small>
       </div>
       <div class="home-active-job-actions">
-        <a href="#job-companion">Resume job</a>
+        <a id="homeActiveJobOpen" href="#job-companion">Open My Day</a>
         <a id="homeActiveJobMap" href="https://maps.apple.com/" target="_blank" rel="noopener">Directions</a>
       </div>
     </aside>
@@ -5601,50 +5820,32 @@
       <div><span id="mpiHomeUpdatesCount">New office update</span><strong id="mpiHomeUpdatesTitle">Information from MPI</strong><small id="mpiHomeUpdatesDetail"></small></div>
       <a href="#office-updates">Open updates</a>
     </aside>
-    <p class="home-section-label">Your workspace</p>
-    <nav class="home-tools" aria-label="MPI app sections">
-      <a class="home-tool-card" href="#job-companion">
-        <span class="home-tool-icon icon-job" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>My Day</strong><small>Today’s jobs, client contact, timing, closeout, and the next required action.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#field-tools">
-        <span class="home-tool-icon icon-tool-guides" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Field Tools</strong><small>Equipment age, timers, procedures, records, and company tool guides.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#training-center">
-        <span class="home-tool-icon icon-training" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Training</strong><small>Assigned courses, due dates, MPI refreshers, and InterNACHI progress.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#inbox">
-        <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Inbox</strong><small>Office updates, assignments, attachments, and private team messages in one place.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#profile">
-        <span class="home-tool-icon icon-profile" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>My Profile</strong><small>Contact details, profile picture, inspector identity, and InterNACHI record connection.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#contact-mpi">
-        <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Contact MPI</strong><small>Company messages, field questions, safety notices, requests, time off, and feedback.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" href="#job-companion" data-team-status-shortcut>
-        <span class="home-tool-icon icon-team" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Team Status</strong><small>See who is on route, onsite, at a lab, heading home, or clocked out.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-      <a class="home-tool-card" id="officeConsoleCard" href="./admin.html" hidden>
-        <span class="home-tool-icon icon-office" aria-hidden="true"></span>
-        <span class="home-tool-copy"><strong>Office Console</strong><small>Publish company information, training assignments, job notes, and instructions from this phone or a desktop.</small></span>
-        <span class="home-tool-arrow" aria-hidden="true">→</span>
-      </a>
-    </nav>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">174</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <details class="home-more">
+      <summary><span><strong>More</strong><small>Team, profile, office, and requests</small></span><b aria-hidden="true">+</b></summary>
+      <nav class="home-tools" aria-label="More MPI app sections">
+        <a class="home-tool-card home-utility-card" href="#profile">
+          <span class="home-tool-icon icon-profile" aria-hidden="true"></span>
+          <span class="home-tool-copy"><strong>My Profile</strong><small>Personal and company details</small></span>
+          <span class="home-tool-arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="home-tool-card home-utility-card" href="#contact-mpi">
+          <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
+          <span class="home-tool-copy"><strong>Contact MPI</strong><small>Safety, requests, and support</small></span>
+          <span class="home-tool-arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="home-tool-card home-utility-card" href="#job-companion" data-team-status-shortcut>
+          <span class="home-tool-icon icon-team" aria-hidden="true"></span>
+          <span class="home-tool-copy"><strong>Team Status</strong><small>See the working team</small></span>
+          <span class="home-tool-arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="home-tool-card home-utility-card" id="officeConsoleCard" href="./admin.html" hidden>
+          <span class="home-tool-icon icon-office" aria-hidden="true"></span>
+          <span class="home-tool-copy"><strong>Office Console</strong><small>Open management workspace</small></span>
+          <span class="home-tool-arrow" aria-hidden="true">→</span>
+        </a>
+      </nav>
+    </details>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">175</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -8252,7 +8453,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 174</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 175</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8392,11 +8593,11 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=174"></script>
-  <script src="./mpi-shared.js?build=174"></script>
-  <script src="./mpi-field-sync.js?build=174"></script>
-  <script src="./mpi-subcontractor.js?build=174"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=174"></script>
+  <script src="./mpi-native-bridge.js?build=175"></script>
+  <script src="./mpi-shared.js?build=175"></script>
+  <script src="./mpi-field-sync.js?build=175"></script>
+  <script src="./mpi-subcontractor.js?build=175"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=175"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -9033,6 +9234,8 @@
       const homeActiveJob = document.getElementById("homeActiveJob");
       const homeActiveJobProperty = document.getElementById("homeActiveJobProperty");
       const homeActiveJobProgress = document.getElementById("homeActiveJobProgress");
+      const homeActiveJobLabel = document.getElementById("homeActiveJobLabel");
+      const homeActiveJobOpen = document.getElementById("homeActiveJobOpen");
       const homeActiveJobMap = document.getElementById("homeActiveJobMap");
       const homeSearchInput = document.getElementById("homeSearchInput");
       const homeSearchClear = document.getElementById("homeSearchClear");
@@ -17807,8 +18010,12 @@
         workflowSpectoraNote.hidden = true;
         renderWorkflowDeparturePlan(job);
         homeActiveJob.hidden = false;
+        homeActiveJob.classList.remove("is-workday-launch");
+        homeActiveJobLabel.textContent = "Current inspection";
         homeActiveJobProperty.textContent = job.property;
         homeActiveJobProgress.textContent = WORKFLOW_STAGE_LABELS[status];
+        homeActiveJobOpen.textContent = "Resume inspection";
+        homeActiveJobMap.hidden = false;
         homeActiveJobMap.href = workflowDirectionsBtn.href;
       }
 
@@ -20069,9 +20276,13 @@
         const detail = activeJobStatus.querySelector("span");
         if (restoreLastJobBtn) restoreLastJobBtn.hidden = Boolean(job?.property) || !loadLastClearedJob();
         if (!job?.property) {
-          homeActiveJob.hidden = true;
-          homeActiveJobProperty.textContent = "";
-          homeActiveJobProgress.textContent = "";
+          homeActiveJob.hidden = false;
+          homeActiveJob.classList.add("is-workday-launch");
+          homeActiveJobLabel.textContent = "Today’s workflow";
+          homeActiveJobProperty.textContent = "Open today’s workflow";
+          homeActiveJobProgress.textContent = "See your schedule and the next required action.";
+          homeActiveJobOpen.textContent = "Open My Day";
+          homeActiveJobMap.hidden = true;
           activeJobInspector.value = loadRememberedInspector();
           activeJobProperty.value = "";
           title.textContent = "No active job on this phone";
@@ -20102,7 +20313,11 @@
         }
         const completedSteps = new Set(job.steps || []).size;
         homeActiveJob.hidden = false;
+        homeActiveJob.classList.remove("is-workday-launch");
+        homeActiveJobLabel.textContent = "Current inspection";
         homeActiveJobProperty.textContent = job.property;
+        homeActiveJobOpen.textContent = "Resume inspection";
+        homeActiveJobMap.hidden = false;
         homeActiveJobMap.href = `https://maps.apple.com/?q=${encodeURIComponent(job.property)}`;
         updateJobProgress(job);
         const workflowStatusLabel = {

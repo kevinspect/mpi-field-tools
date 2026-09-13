@@ -1,5 +1,16 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 175 — Simplified Native App Presentation
+
+- Removed the large Home-screen links that duplicated My Day, Inbox, Field Tools, and Training in the bottom navigation.
+- Reworked Home around one clear current-workflow card, an office-update card only when needed, and one collapsed More drawer for profile, team, requests, and authorized Office access.
+- Replaced oversized promotional headers across the field app with compact, left-aligned app titles and quieter spacing.
+- Reduced decorative weight and card depth while preserving the large field controls, bottom navigation, workflow states, jobs, messages, timers, timestamps, and stored records.
+
+### Validation record
+
+- Verified JavaScript parsing, native web synchronization, iPhone compilation, and the current workflow render before installation and publication.
+
 ## Build 174 — Reliable Home-Screen Update Recovery
 
 - Repaired installed home-screen copies that could remain on Build 170 after the update button was pressed.
