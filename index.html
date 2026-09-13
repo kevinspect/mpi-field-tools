@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="180">
+  <meta name="app-build" content="181">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5920,7 +5920,7 @@
       <a href="#comment-builder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4Z"/><path d="M8 8h8M8 12h5"/></svg><span><strong>Comment Creator</strong><small>Build a defect comment</small></span></a>
     </nav>
     <a class="home-office-link" id="officeConsoleCard" href="./admin.html" hidden>Open Office Console</a>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">180</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">181</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -8531,7 +8531,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 180</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 181</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8671,11 +8671,11 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=180"></script>
-  <script src="./mpi-shared.js?build=180"></script>
-  <script src="./mpi-field-sync.js?build=180"></script>
-  <script src="./mpi-subcontractor.js?build=180"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=180"></script>
+  <script src="./mpi-native-bridge.js?build=181"></script>
+  <script src="./mpi-shared.js?build=181"></script>
+  <script src="./mpi-field-sync.js?build=181"></script>
+  <script src="./mpi-subcontractor.js?build=181"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=181"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -14412,11 +14412,13 @@
           const card = document.createElement("article");
           card.className = "today-job-card";
           card.dataset.calendarJobId = job.id || "";
+          const isCompleted = workflowJobIsComplete(job);
           const isCurrent = Boolean(activeJob?.property) && (
             (job.id && activeJob.calendarEventId === job.id)
             || (!activeJob.calendarEventId && job.location && activeJob.property.toLowerCase() === job.location.toLowerCase())
           );
           card.classList.toggle("is-current", isCurrent);
+          card.classList.toggle("is-complete", isCompleted);
           const time = document.createElement("div");
           time.className = "today-job-time";
           const timeParts = eventTimeLabel(job);
@@ -14441,10 +14443,16 @@
             const useJob = document.createElement("button");
             useJob.className = "today-job-use";
             useJob.type = "button";
-            useJob.dataset.useCalendarJob = job.id || "";
-            useJob.setAttribute("aria-pressed", String(isCurrent));
-            useJob.textContent = isCurrent ? "Current job ✓" : "Use this job";
-            useJob.setAttribute("aria-label", `${isCurrent ? "Current job" : "Use job"} at ${job.location}`);
+            if (isCompleted) {
+              useJob.disabled = true;
+              useJob.textContent = "Job complete ✓";
+              useJob.setAttribute("aria-label", `Completed job at ${job.location}`);
+            } else {
+              useJob.dataset.useCalendarJob = job.id || "";
+              useJob.setAttribute("aria-pressed", String(isCurrent));
+              useJob.textContent = isCurrent ? "Current job ✓" : "Use this job";
+              useJob.setAttribute("aria-label", `${isCurrent ? "Current job" : "Use job"} at ${job.location}`);
+            }
             actions.appendChild(useJob);
             const directions = document.createElement("a");
             directions.className = "today-job-map";
@@ -14470,8 +14478,7 @@
         const withAddress = jobs.filter(job => job.location);
         if (!withAddress.length) return null;
         const cleared = loadLastClearedJob()?.job;
-        const completed = workflowCompletedEventIds();
-        const available = withAddress.filter(job => !completed.has(job.id)
+        const available = withAddress.filter(job => !workflowJobIsComplete(job)
           && (!cleared?.calendarEventId || job.id !== cleared.calendarEventId));
         if (!available.length) return null;
         const now = Date.now();
@@ -14485,6 +14492,14 @@
       function activateScheduleJob(job, { automatic = false } = {}) {
         if (!job?.location) {
           showToast("This calendar job does not include an address");
+          return false;
+        }
+        if (workflowJobIsComplete(job)) {
+          showToast("This job is complete and cannot be restarted");
+          return false;
+        }
+        if (workflowDayCompleteRecord()?.completedAt) {
+          showToast("Today is clocked off. Refresh the schedule if a new appointment was added.");
           return false;
         }
         const existing = loadActiveJob();
@@ -16834,6 +16849,31 @@
         return new Set([...historyIds, ...expandIdentifiers(receiptIds), ...expandIdentifiers(archivedIds)].filter(Boolean));
       }
 
+      function workflowJobIdentifiers(job) {
+        return [...new Set([job?.id, job?.calendarEventId, job?.spectoraJobId]
+          .flatMap(value => {
+            const id = String(value || "").trim();
+            if (!id) return [];
+            return id.startsWith("spectora:") ? [id, id.slice(9)] : [id, `spectora:${id}`];
+          }))];
+      }
+
+      function workflowJobIsComplete(job) {
+        if (!job) return false;
+        if (String(job.workflowStatus || "").toLowerCase() === "completed") return true;
+        const completed = workflowCompletedEventIds();
+        if (workflowJobIdentifiers(job).some(id => completed.has(id))) return true;
+        const property = String(job.property || job.location || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+        const scheduledStart = String(job.scheduledStart || job.start?.dateTime || job.start?.date || "");
+        if (!property || !scheduledStart) return false;
+        return loadWorkflowHistory().some(item => {
+          if (item?.date !== localDateKey() || !item?.job) return false;
+          const historyProperty = String(item.job.property || item.job.location || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+          const historyStart = String(item.job.scheduledStart || item.job.start?.dateTime || item.job.start?.date || "");
+          return historyProperty === property && historyStart === scheduledStart;
+        });
+      }
+
       function workflowDayCompleteRecord() {
         try {
           const record = JSON.parse(localStorage.getItem(WORKFLOW_DAY_COMPLETE_STORAGE_KEY) || "null");
@@ -16870,7 +16910,10 @@
         const record = workflowDayCompleteRecord();
         if (!record || !["sent", "console-synced"].includes(record.emailStatus) || record.date !== localDateKey()) return false;
         const previouslyCompleted = new Set(Array.isArray(record.completedJobIds) ? record.completedJobIds : []);
-        const addedJobs = (Array.isArray(jobs) ? jobs : []).filter(job => job?.id && !previouslyCompleted.has(job.id));
+        const addedJobs = (Array.isArray(jobs) ? jobs : []).filter(job => {
+          const identifiers = workflowJobIdentifiers(job);
+          return identifiers.length && identifiers.every(id => !previouslyCompleted.has(id));
+        });
         if (!addedJobs.length) return false;
         archiveWorkflowCloseout(record);
         try { localStorage.removeItem(WORKFLOW_DAY_COMPLETE_STORAGE_KEY); } catch (_) {}
@@ -17609,15 +17652,10 @@
         }
       }
 
-      function workflowJobIsComplete(job) {
-        return Boolean(job?.id && workflowCompletedEventIds().has(job.id));
-      }
-
       function workflowNextScheduledJob(jobs = workflowScheduleJobs()) {
-        const completed = workflowCompletedEventIds();
         const active = loadActiveJob();
         const remaining = jobs
-          .filter(job => !completed.has(job.id))
+          .filter(job => !workflowJobIsComplete(job))
           .slice()
           .sort((left, right) => scheduleJobTimestamp(left, "start") - scheduleJobTimestamp(right, "start"));
         if (!remaining.length) return null;
@@ -17644,9 +17682,8 @@
         const spectoraDayAvailable = (Array.isArray(window.MPI_SPECTORA_SCHEDULE_DAYS) ? window.MPI_SPECTORA_SCHEDULE_DAYS : [])
           .some(day => String(day?.date || "") === localDateKey());
         const scheduleConnected = spectoraDayAvailable || Boolean(savedCalendarToken());
-        const completed = workflowCompletedEventIds();
-        const remainingJobs = workflowCurrentJobs.filter(job => !completed.has(job.id));
-        const completedJobs = workflowCurrentJobs.filter(job => completed.has(job.id));
+        const remainingJobs = workflowCurrentJobs.filter(job => !workflowJobIsComplete(job));
+        const completedJobs = workflowCurrentJobs.filter(job => workflowJobIsComplete(job));
         const next = workflowNextScheduledJob(workflowCurrentJobs);
         workflowTodayInspector.textContent = profile?.name || "Inspector";
         workflowScheduleStatus.textContent = workflowCurrentJobs.length
@@ -17739,6 +17776,11 @@
       function openWorkflowScheduleJob(job) {
         if (!job?.location) {
           showToast("This scheduled job does not include a property address");
+          return;
+        }
+        if (workflowJobIsComplete(job)) {
+          showToast("This job is already complete and cannot be restarted");
+          renderWorkflowTodayJobs();
           return;
         }
         if (!activateScheduleJob(job)) {
@@ -19995,18 +20037,7 @@
               ? { ...saved.propertyCoordinates }
               : null
           };
-          const completedIds = workflowCompletedEventIds();
-          const activeIds = [active.id, active.calendarEventId, active.spectoraJobId, active.spectoraJobId ? `spectora:${active.spectoraJobId}` : ""].filter(Boolean);
-          const normalizedProperty = active.property.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-          const completedHistoryMatch = loadWorkflowHistory().some(item => {
-            if (item?.date !== localDateKey() || !item?.job) return false;
-            const historyIds = [item.job.id, item.job.calendarEventId, item.job.spectoraJobId, item.job.spectoraJobId ? `spectora:${item.job.spectoraJobId}` : ""].filter(Boolean).map(String);
-            if (activeIds.some(id => historyIds.includes(String(id)))) return true;
-            const historyProperty = String(item.job.property || item.job.location || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-            const sameScheduledStart = Boolean(active.scheduledStart && item.job.scheduledStart && String(active.scheduledStart) === String(item.job.scheduledStart));
-            return Boolean(normalizedProperty && historyProperty === normalizedProperty && sameScheduledStart);
-          });
-          if (active.workflowStatus === "completed" || activeIds.some(id => completedIds.has(id)) || completedHistoryMatch) {
+          if (workflowJobIsComplete(active)) {
             try {
               localStorage.setItem(LAST_CLEARED_JOB_STORAGE_KEY, JSON.stringify({ job: active, clearedAt: new Date().toISOString(), reason: "completed-job-reconciliation" }));
               localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY);
@@ -20399,7 +20430,11 @@
       function renderActiveJob(job = loadActiveJob()) {
         const title = activeJobStatus.querySelector("strong");
         const detail = activeJobStatus.querySelector("span");
-        if (restoreLastJobBtn) restoreLastJobBtn.hidden = Boolean(job?.property) || !loadLastClearedJob();
+        const clearedJob = loadLastClearedJob()?.job;
+        if (restoreLastJobBtn) restoreLastJobBtn.hidden = Boolean(job?.property)
+          || !clearedJob
+          || workflowJobIsComplete(clearedJob)
+          || Boolean(workflowDayCompleteRecord()?.completedAt);
         if (!job?.property) {
           const completedDay = workflowDayCompleteRecord();
           const scheduledJobs = workflowScheduleJobs();
@@ -20596,6 +20631,11 @@
         if (!saved?.job?.property) {
           renderActiveJob(null);
           showToast("No cleared job is available");
+          return;
+        }
+        if (workflowJobIsComplete(saved.job) || workflowDayCompleteRecord()?.completedAt) {
+          renderActiveJob(null);
+          showToast("Completed jobs cannot be restored or restarted");
           return;
         }
         storeActiveJob(saved.job);

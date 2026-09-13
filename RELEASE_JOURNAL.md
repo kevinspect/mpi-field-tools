@@ -1,5 +1,16 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 181 — Completed Job Restart Lock
+
+- Prevents a completed inspection from being reopened through the Home schedule, Today’s Jobs, automatic job selection, or the cleared-job recovery control.
+- Displays completed schedule entries as **Job complete** with no active workflow button.
+- Enforces the completed/clocked-off lock in the shared job activation function, including Spectora/calendar ID variants, so stale phone caches cannot bypass it.
+- Preserves the existing automatic reopen behavior only when a genuinely new appointment is added after closeout.
+
+### Validation record
+
+- Verified completed jobs remain visible as history but cannot become active again, while a newly added job can still reopen the workday without altering the earlier completed record.
+
 ## Build 180 — Firestore Quota Reliability
 
 - Replaced the Office Console's 12-second message-receipt polling loop with one real-time receipt stream, eliminating a path that could consume tens of thousands of Firestore reads per hour.
