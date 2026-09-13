@@ -1,5 +1,19 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 179 — All-Inspector Future Map + Completed-Day Home State
+
+- Makes **All inspectors** a real selectable Office Console view and removes office-only users from the inspector filter.
+- Maps every inspector's synchronized read-only Spectora jobs for the chosen day; when that day is empty, advances to the next synchronized future appointment date.
+- Resolves synchronized property coordinates in the protected backend, eliminating the browser cross-origin failure that prevented real future appointments from appearing on the map. Manual planning pins use a browser-safe address lookup and remain temporary.
+- Keeps individual job-plan and actual-route controls disabled until one inspector is selected, preventing ambiguous route results.
+- Reconciles completed Spectora/calendar identities, property, and appointment time so a finished inspection cannot remain pinned as the current job—even when an older phone cache used a different ID format.
+- Replaces a stale completed-job home card with **Day complete**, **Today's inspections are complete**, or the next future schedule summary as appropriate.
+
+### Validation record
+
+- Passed JavaScript and inline-script validation, native asset synchronization, Capacitor/native project checks, and iPhone device compilation.
+- Passed clean-browser regression tests for All Inspectors (three future appointments across two inspectors), an individual inspector plan, button/state recovery, and a temporary possible-job planning pin. All planning remained read-only to Spectora.
+
 ## Build 178 — Read-only Spectora Schedule Sync
 
 - Added a protected, one-way Spectora schedule connector. It uses only the documented inspection retrieval endpoint and contains no Spectora create, edit, cancel, reschedule, upload, calendar-write, or publish operation.

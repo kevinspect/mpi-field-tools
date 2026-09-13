@@ -708,6 +708,9 @@
         agentPhone: String(job?.agentPhone || ""),
         notes: String(job?.notes || ""),
         status: String(job?.status || "scheduled"),
+        latitude: job?.latitude === null || job?.latitude === "" || !Number.isFinite(Number(job?.latitude)) ? null : Number(job.latitude),
+        longitude: job?.longitude === null || job?.longitude === "" || !Number.isFinite(Number(job?.longitude)) ? null : Number(job.longitude),
+        matchedAddress: String(job?.matchedAddress || ""),
         services: Array.isArray(job?.services) ? job.services.map(String) : String(job?.services || "").split(",").map(value => value.trim()).filter(Boolean)
       }))
     })).filter(day => day.date);

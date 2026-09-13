@@ -1137,21 +1137,25 @@
   function updateLiveLocationControls() {
     const person = liveLocationPeople().find(item => item.id === selectedLiveLocationPersonId);
     const hasPeople = liveLocationPeople().length > 0;
+    const selectedDate = liveRouteDate?.value || dateKey();
+    const hasSchedule = allSchedulePlansForDate(selectedDate).length > 0 || Boolean(nextScheduleDateOnOrAfter(selectedDate));
+    const allPlansShowing = liveLocationAllPlansVisible || (liveLocationMapMode === "all-plans" && liveLocationPlannedStops.length > 0);
+    if (allPlansShowing) liveLocationAllPlansVisible = true;
     if (liveLocationAllPlans) {
-      liveLocationAllPlans.disabled = !hasPeople || liveLocationRouteLoading;
-      liveLocationAllPlans.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationAllPlansVisible ? "HIDE ALL FUTURE JOBS" : "SHOW ALL FUTURE JOBS";
+      liveLocationAllPlans.disabled = !hasPeople || !hasSchedule || liveLocationRouteLoading;
+      liveLocationAllPlans.textContent = liveLocationRouteLoading ? "LOADING…" : allPlansShowing ? "HIDE ALL INSPECTORS' JOBS" : "SHOW ALL INSPECTORS' JOBS";
     }
     if (liveLocationPlan) {
-      liveLocationPlan.disabled = !hasPeople || liveLocationRouteLoading;
-      liveLocationPlan.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationPlanVisible && !liveLocationAllPlansVisible ? "HIDE PERSON'S JOBS" : "SHOW PERSON'S JOBS";
+      liveLocationPlan.disabled = !person || liveLocationRouteLoading;
+      liveLocationPlan.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationPlanVisible && !liveLocationAllPlansVisible ? "HIDE SELECTED INSPECTOR'S JOBS" : "SHOW SELECTED INSPECTOR'S JOBS";
     }
     if (liveLocationHistory) {
-      liveLocationHistory.disabled = !hasPeople || liveLocationRouteLoading;
+      liveLocationHistory.disabled = !person || liveLocationRouteLoading;
       liveLocationHistory.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationRouteVisible && !liveLocationPlanVisible && !liveLocationAllPlansVisible ? "HIDE ACTUAL ROUTE" : "SHOW ACTUAL ROUTE";
     }
     if (!liveLocationRouteStatus) return;
-    if (!person) liveLocationRouteStatus.textContent = "Choose Job Plan or Actual Route. The dashboard will select the relevant operative automatically, or tap a name first.";
-    else if (!liveLocationRouteVisible && !liveLocationRouteLoading) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> selected. Choose a date, then show the Spectora job plan or actual route.`;
+    if (!person && !liveLocationRouteStatus.dataset.result) liveLocationRouteStatus.textContent = "All inspectors selected. Choose a date, then show every inspector's jobs. Tap one inspector to see that person's plan or actual route.";
+    else if (person && !liveLocationRouteVisible && !liveLocationRouteLoading) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> selected. Choose a date, then show the Spectora job plan or actual route.`;
   }
 
   function routePerson({ preferSchedule = false } = {}) {
@@ -1235,6 +1239,7 @@
     liveLocationRouteLoading = false;
     liveLocationPlannedStops = [];
     liveLocationCandidate = null;
+    if (liveLocationRouteStatus) delete liveLocationRouteStatus.dataset.result;
     liveLocationRouteLayer?.clearLayers();
     if (!keepSelection) selectedLiveLocationPersonId = "";
     updateLiveLocationControls();
@@ -1374,6 +1379,9 @@
         clientName: String(job?.clientName || ""),
         clientPhone: String(job?.clientPhone || ""),
         notes: String(job?.notes || ""),
+        latitude: job?.latitude === null || job?.latitude === "" || !Number.isFinite(Number(job?.latitude)) ? null : Number(job.latitude),
+        longitude: job?.longitude === null || job?.longitude === "" || !Number.isFinite(Number(job?.longitude)) ? null : Number(job.longitude),
+        matchedAddress: String(job?.matchedAddress || ""),
         services: Array.isArray(job?.services) ? job.services.map(String) : String(job?.services || "").split(",").map(value => value.trim()).filter(Boolean)
       }))
     };
@@ -1390,21 +1398,60 @@
     return source.map(value => String(value || "").trim()).filter(Boolean);
   }
 
-  async function geocodeScheduleAddress(address) {
+  function censusGeocodeScheduleAddress(address) {
+    return new Promise((resolve, reject) => {
+      const callbackName = `mpiAdminGeocode_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const script = document.createElement("script");
+      let settled = false;
+      const cleanup = () => {
+        delete window[callbackName];
+        script.remove();
+      };
+      const finish = (error, result = null) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeout);
+        cleanup();
+        if (error) reject(error);
+        else resolve(result);
+      };
+      const timeout = window.setTimeout(() => finish(new Error("Address lookup timed out.")), 7000);
+      window[callbackName] = data => {
+        const match = data?.result?.addressMatches?.[0];
+        const latitude = Number(match?.coordinates?.y);
+        const longitude = Number(match?.coordinates?.x);
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+          finish(new Error("That address could not be located. Include the street, city, state and ZIP code."));
+          return;
+        }
+        finish(null, { latitude, longitude, matchedAddress: String(match?.matchedAddress || address), provider: "US Census" });
+      };
+      script.onerror = () => finish(new Error("Address lookup is temporarily unavailable."));
+      const endpoint = new URL("https://geocoding.geo.census.gov/geocoder/locations/onelineaddress");
+      endpoint.searchParams.set("address", String(address || "").slice(0, 300));
+      endpoint.searchParams.set("benchmark", "Public_AR_Current");
+      endpoint.searchParams.set("format", "jsonp");
+      endpoint.searchParams.set("callback", callbackName);
+      script.src = endpoint.toString();
+      document.head.appendChild(script);
+    });
+  }
+
+  async function geocodeScheduleAddress(addressOrJob) {
+    const job = addressOrJob && typeof addressOrJob === "object" ? addressOrJob : null;
+    const directLatitude = Number(job?.latitude);
+    const directLongitude = Number(job?.longitude);
+    if (job?.latitude !== null && job?.latitude !== "" && job?.longitude !== null && job?.longitude !== "" && Number.isFinite(directLatitude) && Number.isFinite(directLongitude)) {
+      return { latitude: directLatitude, longitude: directLongitude, matchedAddress: String(job?.matchedAddress || ""), provider: "Synchronized schedule" };
+    }
+    const address = String(job ? scheduleAddress(job) : addressOrJob || "").trim();
+    if (!address) return null;
     const key = `mpiAdminGeocode:${address.toLowerCase()}`;
     try {
       const saved = JSON.parse(localStorage.getItem(key) || "null");
       if (saved && Number.isFinite(saved.latitude) && Number.isFinite(saved.longitude)) return saved;
     } catch (_) {}
-    const endpoint = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(address)}&benchmark=Public_AR_Current&format=json`;
-    const response = await fetch(endpoint, { cache: "force-cache" });
-    if (!response.ok) throw new Error(`Address lookup failed (${response.status}).`);
-    const data = await response.json();
-    const match = data?.result?.addressMatches?.[0];
-    const longitude = Number(match?.coordinates?.x);
-    const latitude = Number(match?.coordinates?.y);
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
-    const result = { latitude, longitude };
+    const result = await censusGeocodeScheduleAddress(address);
     try { localStorage.setItem(key, JSON.stringify(result)); } catch (_) {}
     return result;
   }
@@ -1431,6 +1478,15 @@
     }).filter(plan => plan.jobs.length);
   }
 
+  function nextScheduleDateOnOrAfter(selectedDate = dateKey()) {
+    const minimum = String(selectedDate || dateKey());
+    return liveLocationPeople()
+      .flatMap(person => (Array.isArray(person?.spectoraScheduleDays) ? person.spectoraScheduleDays : [])
+        .filter(day => String(day?.date || "") >= minimum && (Array.isArray(day?.jobs) ? day.jobs : []).some(job => !/cancel|delete/i.test(String(job?.status || "")) && scheduleAddress(job)))
+        .map(day => String(day.date)))
+      .sort()[0] || "";
+  }
+
   function distanceMiles(left, right) {
     const radians = value => Number(value) * Math.PI / 180;
     const earthRadiusMiles = 3958.8;
@@ -1448,10 +1504,19 @@
       hideHistoricalRoute({ keepSelection: true });
       return false;
     }
-    const selectedDate = liveRouteDate?.value || dateKey();
-    const plans = allSchedulePlansForDate(selectedDate);
+    const requestedDate = liveRouteDate?.value || dateKey();
+    let selectedDate = requestedDate;
+    let plans = allSchedulePlansForDate(selectedDate);
     if (!plans.length) {
-      liveLocationRouteStatus.innerHTML = `<strong>No synchronized appointments</strong> are available for ${escapeHtml(formatDate(selectedDate))}. This view is read-only and can only show dates already supplied by the schedule sync.`;
+      const nextDate = nextScheduleDateOnOrAfter(selectedDate);
+      if (nextDate) {
+        selectedDate = nextDate;
+        if (liveRouteDate) liveRouteDate.value = nextDate;
+        plans = allSchedulePlansForDate(selectedDate);
+      }
+    }
+    if (!plans.length) {
+      liveLocationRouteStatus.innerHTML = `<strong>No synchronized future appointments</strong> are available on or after ${escapeHtml(formatDate(requestedDate))}. This view is read-only and can only show dates already supplied by the schedule sync.`;
       return false;
     }
     const map = ensureLiveLocationMap();
@@ -1463,13 +1528,14 @@
     liveLocationCandidate = null;
     updateLiveLocationControls();
     liveLocationRouteStatus.textContent = `Mapping ${plans.reduce((total, plan) => total + plan.jobs.length, 0)} synchronized appointments across the field team…`;
+    delete liveLocationRouteStatus.dataset.result;
     try {
       const locatedPlans = await Promise.all(plans.map(async plan => ({
         ...plan,
         located: (await Promise.all(plan.jobs.map(async (job, jobIndex) => ({
           job,
           jobIndex,
-          coordinates: await geocodeScheduleAddress(scheduleAddress(job)).catch(() => null)
+          coordinates: await geocodeScheduleAddress(job).catch(() => null)
         })))).filter(item => item.coordinates)
       })));
       liveLocationRouteLayer.clearLayers();
@@ -1493,8 +1559,10 @@
       liveLocationMapMode = "all-plans";
       if (latLngs.length === 1) map.setView(latLngs[0], 13);
       else map.fitBounds(latLngs, { padding: [42, 42], maxZoom: 11 });
-      const unmapped = plans.reduce((total, plan) => total + plan.jobs.length - plan.located.length, 0);
-      liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(formatDate(selectedDate))}</strong> · ${escapeHtml(liveLocationPlannedStops.length)} mapped appointment${liveLocationPlannedStops.length === 1 ? "" : "s"} for ${escapeHtml(locatedPlans.filter(plan => plan.located.length).length)} operative${locatedPlans.filter(plan => plan.located.length).length === 1 ? "" : "s"}.${unmapped ? ` ${escapeHtml(unmapped)} address${unmapped === 1 ? " was" : "es were"} not recognized.` : ""} Read-only planning view; Spectora data is unchanged.`;
+      const unmapped = locatedPlans.reduce((total, plan) => total + plan.jobs.length - plan.located.length, 0);
+      const advanced = selectedDate !== requestedDate ? ` No jobs were scheduled for ${escapeHtml(formatDate(requestedDate))}, so the next scheduled date is shown.` : "";
+      liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(formatDate(selectedDate))}</strong> · ${escapeHtml(liveLocationPlannedStops.length)} mapped appointment${liveLocationPlannedStops.length === 1 ? "" : "s"} for ${escapeHtml(locatedPlans.filter(plan => plan.located.length).length)} inspector${locatedPlans.filter(plan => plan.located.length).length === 1 ? "" : "s"}.${unmapped ? ` ${escapeHtml(unmapped)} address${unmapped === 1 ? " was" : "es were"} not recognized.` : ""}${advanced} Read-only planning view; Spectora data is unchanged.`;
+      liveLocationRouteStatus.dataset.result = "success";
       return true;
     } catch (error) {
       liveLocationRouteVisible = false;
@@ -1502,6 +1570,8 @@
       liveLocationAllPlansVisible = false;
       liveLocationPlannedStops = [];
       liveLocationRouteStatus.textContent = error?.message || "The field-team job plan could not be loaded.";
+      liveLocationRouteStatus.dataset.result = "error";
+      console.warn("MPI schedule map could not be rendered", error);
       return false;
     } finally {
       liveLocationRouteLoading = false;
@@ -1571,7 +1641,7 @@
     updateLiveLocationControls();
     liveLocationRouteStatus.textContent = `Mapping ${jobs.length} scheduled job${jobs.length === 1 ? "" : "s"}…`;
     try {
-      const located = (await Promise.all(jobs.map(async (job, index) => ({ job, index, coordinates: await geocodeScheduleAddress(scheduleAddress(job)).catch(() => null) })))).filter(item => item.coordinates);
+      const located = (await Promise.all(jobs.map(async (job, index) => ({ job, index, coordinates: await geocodeScheduleAddress(job).catch(() => null) })))).filter(item => item.coordinates);
       liveLocationRouteLayer.clearLayers();
       if (!located.length) throw new Error("The scheduled addresses could not be placed on the map.");
       const latLngs = located.map(item => [item.coordinates.latitude, item.coordinates.longitude]);
@@ -2004,8 +2074,8 @@
 
   function renderInspectorSelector() {
     const selected = selectedInspectorId;
-    const entries = teamOverviewEntries();
-    inspectorSelector.innerHTML = '<option value="all">All team members</option>' + entries.map(entry => `<option value="${escapeHtml(entry.id)}">${escapeHtml(entry.kind === "subcontractor" ? `${entry.test ? "TEST · " : ""}${entry.state?.subcontractorName || entry.person.name || entry.person.email} — Subcontractor` : entry.kind === "office" ? `${entry.person.name || entry.person.email} — Office` : entry.person.name || entry.person.email)}</option>`).join("");
+    const entries = teamOverviewEntries().filter(entry => entry.kind !== "office" && !entry.test);
+    inspectorSelector.innerHTML = '<option value="all">All inspectors</option>' + entries.map(entry => `<option value="${escapeHtml(entry.id)}">${escapeHtml(entry.kind === "subcontractor" ? `${entry.state?.subcontractorName || entry.person.name || entry.person.email} — Subcontractor` : entry.person.name || entry.person.email)}</option>`).join("");
     selectedInspectorId = entries.some(entry => entry.id === selected) ? selected : "all";
     inspectorSelector.value = selectedInspectorId;
   }
@@ -3661,6 +3731,13 @@
   inspectorSelector.addEventListener("change", () => {
     selectedInspectorId = inspectorSelector.value;
     selectedOperationDate = "";
+    if (selectedInspectorId === "all") {
+      selectedLiveLocationPersonId = "";
+      hideHistoricalRoute({ keepSelection: false });
+    } else {
+      const entry = overviewEntry(selectedInspectorId);
+      if (entry?.person?.id && liveLocationPeople().some(person => person.id === entry.person.id)) focusLiveLocationPerson(entry.person.id);
+    }
     renderOperations();
   });
   rangePicker.addEventListener("click", event => {
@@ -3675,7 +3752,7 @@
     const routeDateMinimum = new Date();
     routeDateMinimum.setDate(routeDateMinimum.getDate() - 90);
     const routeDateMaximum = new Date();
-    routeDateMaximum.setDate(routeDateMaximum.getDate() + 45);
+    routeDateMaximum.setDate(routeDateMaximum.getDate() + 120);
     liveRouteDate.min = dateKey(routeDateMinimum);
     liveRouteDate.max = dateKey(routeDateMaximum);
     liveRouteDate.addEventListener("change", () => {
@@ -3832,6 +3909,32 @@
   if (localPreview) {
     const now = new Date();
     const at = (hours, minutes) => new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes).toISOString();
+    const futureDate = offset => {
+      const value = new Date(now);
+      value.setDate(value.getDate() + offset);
+      return dateKey(value);
+    };
+    const futureAt = (offset, hours, minutes) => new Date(`${futureDate(offset)}T${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`).toISOString();
+    const previewCoordinates = [
+      { latitude: 42.28148, longitude: -83.74841 },
+      { latitude: 42.52948, longitude: -83.78022 },
+      { latitude: 42.30817, longitude: -83.48687 }
+    ];
+    const previewSchedule = (name, prefix, offset, addresses) => [{
+      date: futureDate(offset),
+      jobs: addresses.map((address, index) => ({
+        id: `${prefix}-future-${index + 1}`,
+        spectoraJobId: `${prefix}-future-${index + 1}`,
+        propertyAddress: address,
+        scheduledStart: futureAt(offset, 9 + index * 3, 0),
+        scheduledEnd: futureAt(offset, 11 + index * 3, 0),
+        inspectorName: name,
+        status: "confirmed",
+        latitude: previewCoordinates[index % previewCoordinates.length].latitude,
+        longitude: previewCoordinates[index % previewCoordinates.length].longitude,
+        services: ["Residential Inspection"]
+      }))
+    }];
     const makeDay = (name, id, status, offset = 0) => ({
       date: dateKey(), updatedAtClient: new Date().toISOString(), inspector: { name, id }, liveStatus: status,
       readiness: { completedAt: at(7, 3 + offset), items: ["vehicle-ready", "fuel-ready", "route-reviewed"], notificationPermission: "granted" },
@@ -3860,8 +3963,8 @@
       ]
     });
     people = [
-      { id: "preview-kevin", name: "Kevin Cave", email: "kev@michiganpropertyinspections.com", role: "owner", active: true, operationsCurrent: makeDay("Kevin Cave", "KC", "INSPECTION IN PROGRESS"), operationsUpdatedAt: new Date(), liveLocation: { latitude: 42.5295, longitude: -83.7802, accuracyFeet: 36, recordedAtClient: new Date().toISOString(), workStatus: "INSPECTION IN PROGRESS" }, liveLocationStatus: { status: "recorded" } },
-      { id: "preview-cory", name: "Cory Leese", email: "cory@michiganpropertyinspections.com", inspectorId: "NACHI26090138", approvedEndAddress: "38948 Koppernick Road, Westland, MI 48185", role: "inspector", active: true, operationsCurrent: makeDay("Cory Leese", "NACHI26090138", "DRIVING TO JOB", 6), operationsUpdatedAt: new Date(), liveLocation: { latitude: 42.3314, longitude: -83.0458, accuracyFeet: 52, recordedAtClient: new Date(Date.now() - 4 * 60000).toISOString(), workStatus: "DRIVING TO JOB" }, liveLocationStatus: { status: "recorded" } },
+      { id: "preview-kevin", name: "Kevin Cave", email: "kev@michiganpropertyinspections.com", role: "owner", active: true, operationsCurrent: makeDay("Kevin Cave", "KC", "INSPECTION IN PROGRESS"), operationsUpdatedAt: new Date(), spectoraScheduleDays: previewSchedule("Kevin Cave", "KC", 1, ["100 N Main St, Ann Arbor, MI 48104", "200 W Main St, Brighton, MI 48116"]), liveLocation: { latitude: 42.5295, longitude: -83.7802, accuracyFeet: 36, recordedAtClient: new Date().toISOString(), workStatus: "INSPECTION IN PROGRESS" }, liveLocationStatus: { status: "recorded" } },
+      { id: "preview-cory", name: "Cory Leese", email: "cory@michiganpropertyinspections.com", inspectorId: "NACHI26090138", approvedEndAddress: "38948 Koppernick Road, Westland, MI 48185", role: "inspector", active: true, operationsCurrent: makeDay("Cory Leese", "NACHI26090138", "DRIVING TO JOB", 6), operationsUpdatedAt: new Date(), spectoraScheduleDays: previewSchedule("Cory Leese", "CL", 1, ["2200 N Canton Center Rd, Canton, MI 48187"]), liveLocation: { latitude: 42.3314, longitude: -83.0458, accuracyFeet: 52, recordedAtClient: new Date(Date.now() - 4 * 60000).toISOString(), workStatus: "DRIVING TO JOB" }, liveLocationStatus: { status: "recorded" } },
       { id: "preview-adrienne", name: "Adrienne Cave", email: "adrienne@michiganpropertyinspections.com", role: "admin", active: true },
       { id: "preview-sub", name: "Jason Chamarro", email: "test-subcontractor@mpi.local", phone: "", role: "subcontractor", active: true, notificationDevice: { token: "preview" }, liveLocation: { latitude: 42.2808, longitude: -83.743, accuracyFeet: 70, recordedAtClient: new Date(Date.now() - 9 * 60000).toISOString(), workStatus: "AT JOB – JOB 2" }, liveLocationStatus: { status: "recorded" }, subcontractorCurrent: { date: dateKey(), test: false, subcontractorName: "Jason Chamarro", subcontractorPhone: "", currentJobNumber: 2, currentJob: { number: 2, status: "arrived", onWayAt: at(12, 48), arrivedAt: at(13, 14), completedAt: "" }, completedJobs: [{ number: 1, status: "completed", completedAt: at(11, 32) }], status: "AT JOB – JOB 2", events: [{ id: "sub-a", type: "ON WAY", timestamp: at(12, 48), jobNumber: 2 }, { id: "sub-b", type: "ARRIVED", timestamp: at(13, 14), jobNumber: 2 }], updatedAtClient: new Date().toISOString() } }
     ];

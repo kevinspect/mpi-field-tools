@@ -326,6 +326,7 @@ function syncSpectoraSchedule_(force) {
 
     var inspections = fetchSpectoraInspections_();
     var schedules = buildSpectoraSchedules_(inspections);
+    geocodeSpectoraSchedules_(schedules);
     var profiles = writeSpectoraSchedules_(schedules);
     var result = {
       cached: false,
@@ -424,6 +425,116 @@ function buildSpectoraSchedules_(records) {
     });
   });
   return schedules;
+}
+
+/**
+ * Resolves property coordinates server-side so the Office Console never depends
+ * on a browser-blocked cross-origin geocoder. This only reads public geocoding
+ * services and only enriches MPI's synchronized copy; Spectora is never changed.
+ */
+function geocodeSpectoraSchedules_(schedules) {
+  var cache = CacheService.getScriptCache();
+  var jobsByAddress = {};
+  Object.keys(schedules || {}).forEach(function (personKey) {
+    Object.keys(schedules[personKey] || {}).forEach(function (date) {
+      (schedules[personKey][date] || []).forEach(function (job) {
+        var address = safeText_(job.propertyAddress, 300);
+        if (!address) return;
+        var key = normalizedAddressKey_(address);
+        if (!jobsByAddress[key]) jobsByAddress[key] = { address: address, jobs: [] };
+        jobsByAddress[key].jobs.push(job);
+      });
+    });
+  });
+
+  var unresolved = [];
+  Object.keys(jobsByAddress).forEach(function (key) {
+    var entry = jobsByAddress[key];
+    var cacheKey = geocodeCacheKey_(entry.address);
+    var cached = cache.get(cacheKey);
+    if (cached) {
+      try {
+        applyScheduleCoordinates_(entry.jobs, JSON.parse(cached));
+        return;
+      } catch (_) {}
+    }
+    unresolved.push(entry);
+  });
+
+  if (!unresolved.length) return;
+  var censusResponses = UrlFetchApp.fetchAll(unresolved.map(function (entry) {
+    return {
+      url: "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=" + encodeURIComponent(entry.address) + "&benchmark=Public_AR_Current&format=json",
+      method: "get",
+      muteHttpExceptions: true
+    };
+  }));
+  var stillUnresolved = [];
+  unresolved.forEach(function (entry, index) {
+    var coordinates = parseCensusCoordinates_(censusResponses[index]);
+    if (coordinates) storeScheduleCoordinates_(cache, entry, coordinates);
+    else stillUnresolved.push(entry);
+  });
+
+  if (!stillUnresolved.length) return;
+  var arcgisResponses = UrlFetchApp.fetchAll(stillUnresolved.map(function (entry) {
+    return {
+      url: "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=" + encodeURIComponent(entry.address) + "&f=json&outFields=Match_addr&maxLocations=1",
+      method: "get",
+      muteHttpExceptions: true
+    };
+  }));
+  stillUnresolved.forEach(function (entry, index) {
+    var coordinates = parseArcgisCoordinates_(arcgisResponses[index]);
+    if (coordinates) storeScheduleCoordinates_(cache, entry, coordinates);
+  });
+}
+
+function normalizedAddressKey_(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function geocodeCacheKey_(address) {
+  var digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(address || ""), Utilities.Charset.UTF_8);
+  return "mpi-geocode-" + Utilities.base64EncodeWebSafe(digest).replace(/=+$/g, "");
+}
+
+function parseCensusCoordinates_(response) {
+  if (!response || response.getResponseCode() < 200 || response.getResponseCode() >= 300) return null;
+  try {
+    var match = JSON.parse(response.getContentText() || "{}").result.addressMatches[0];
+    var latitude = Number(match.coordinates.y);
+    var longitude = Number(match.coordinates.x);
+    return isFinite(latitude) && isFinite(longitude) ? { latitude: latitude, longitude: longitude, matchedAddress: safeText_(match.matchedAddress, 300), provider: "US Census" } : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function parseArcgisCoordinates_(response) {
+  if (!response || response.getResponseCode() < 200 || response.getResponseCode() >= 300) return null;
+  try {
+    var match = JSON.parse(response.getContentText() || "{}").candidates[0];
+    var latitude = Number(match.location.y);
+    var longitude = Number(match.location.x);
+    return isFinite(latitude) && isFinite(longitude) ? { latitude: latitude, longitude: longitude, matchedAddress: safeText_(match.address, 300), provider: "ArcGIS" } : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function storeScheduleCoordinates_(cache, entry, coordinates) {
+  cache.put(geocodeCacheKey_(entry.address), JSON.stringify(coordinates), 21600);
+  applyScheduleCoordinates_(entry.jobs, coordinates);
+}
+
+function applyScheduleCoordinates_(jobs, coordinates) {
+  (jobs || []).forEach(function (job) {
+    job.latitude = Number(coordinates.latitude);
+    job.longitude = Number(coordinates.longitude);
+    job.matchedAddress = safeText_(coordinates.matchedAddress, 300);
+    job.geocodeProvider = safeText_(coordinates.provider, 40);
+  });
 }
 
 function splitSpectoraList_(value) {
