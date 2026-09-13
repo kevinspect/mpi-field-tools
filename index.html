@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="182">
+  <meta name="app-build" content="183">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5920,7 +5920,7 @@
       <a href="#comment-builder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4Z"/><path d="M8 8h8M8 12h5"/></svg><span><strong>Comment Creator</strong><small>Build a defect comment</small></span></a>
     </nav>
     <a class="home-office-link" id="officeConsoleCard" href="./admin.html" hidden>Open Office Console</a>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">182</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">183</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -8531,7 +8531,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 182</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 183</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8671,11 +8671,11 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=182"></script>
-  <script src="./mpi-shared.js?build=182"></script>
-  <script src="./mpi-field-sync.js?build=182"></script>
-  <script src="./mpi-subcontractor.js?build=182"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=182"></script>
+  <script src="./mpi-native-bridge.js?build=183"></script>
+  <script src="./mpi-shared.js?build=183"></script>
+  <script src="./mpi-field-sync.js?build=183"></script>
+  <script src="./mpi-subcontractor.js?build=183"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=183"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -14737,6 +14737,7 @@
             serviceCodes: serviceDetails.codes,
             spectoraJobId,
             spectoraLink: "",
+            status: String(job?.status || ""),
             scheduleSource: "spectora-read-only",
             estimatedDriveMinutes: Math.max(0, Number(job?.estimatedDriveMinutes) || 0)
           };
@@ -14748,6 +14749,7 @@
         const hasAuthoritativeDay = (Array.isArray(days) ? days : []).some(day => String(day?.date || "") === requestedDate);
         if (!hasAuthoritativeDay) return false;
         const jobs = spectoraScheduleJobsForDate(days);
+        jobs.filter(job => workflowJobIsComplete(job)).forEach(job => rememberWorkflowCompletedJob(job));
         const calendarName = "Spectora · read only";
         reopenWorkflowDayForAddedJobs(jobs);
         autoSelectCurrentScheduleJob(jobs);
@@ -15178,6 +15180,8 @@
       const WORKFLOW_PROFILE_STORAGE_KEY = "mpiWorkflowProfileV1";
       const WORKFLOW_ACTIVITY_STORAGE_KEY = "mpiWorkflowActivityV1";
       const WORKFLOW_HISTORY_STORAGE_KEY = "mpiWorkflowJobHistoryV1";
+      const WORKFLOW_COMPLETED_JOBS_STORAGE_KEY = "mpiWorkflowCompletedJobsV1";
+      const WORKFLOW_COMPLETION_SYNC_STORAGE_KEY = "mpiWorkflowCompletionSyncV1";
       const WORKFLOW_DAY_COMPLETE_STORAGE_KEY = "mpiWorkflowDayCompleteV1";
       const WORKFLOW_CLOSEOUT_HISTORY_STORAGE_KEY = "mpiWorkflowCloseoutHistoryV1";
       const WORKFLOW_TIME_CLOCK_STORAGE_KEY = "mpiWorkflowTimeClockV1";
@@ -16827,6 +16831,116 @@
         const history = loadWorkflowHistory();
         history.push({ date: localDateKey(), completedAt: new Date().toISOString(), job: { ...job } });
         try { localStorage.setItem(WORKFLOW_HISTORY_STORAGE_KEY, JSON.stringify(history.slice(-1000))); } catch (_) {}
+        rememberWorkflowCompletedJob(job);
+      }
+
+      function workflowNormalizedJobProperty(job) {
+        return String(job?.property || job?.location || "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, " ")
+          .trim();
+      }
+
+      function workflowJobScheduledDate(job) {
+        const value = String(job?.scheduledStart || job?.start?.dateTime || job?.start?.date || "");
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? "" : localDateKey(date);
+      }
+
+      function workflowJobCompletionFingerprint(job) {
+        const property = workflowNormalizedJobProperty(job);
+        const scheduledDate = workflowJobScheduledDate(job);
+        const scheduledStart = String(job?.scheduledStart || job?.start?.dateTime || job?.start?.date || "");
+        return property && scheduledDate ? `${scheduledDate}|${property}|${scheduledStart}` : "";
+      }
+
+      function loadWorkflowCompletedJobsLedger() {
+        try {
+          const records = JSON.parse(localStorage.getItem(WORKFLOW_COMPLETED_JOBS_STORAGE_KEY) || "[]");
+          return Array.isArray(records) ? records.filter(record => record?.completedAt && (record?.ids?.length || record?.fingerprint)) : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function rememberWorkflowCompletedJob(job, completedAt = new Date().toISOString()) {
+        if (!job || job.isPractice) return;
+        const ids = workflowJobIdentifiers(job);
+        const fingerprint = workflowJobCompletionFingerprint(job);
+        if (!ids.length && !fingerprint) return;
+        const records = loadWorkflowCompletedJobsLedger().filter(record => {
+          const recordIds = new Set(Array.isArray(record.ids) ? record.ids.map(String) : []);
+          if (ids.some(id => recordIds.has(String(id)))) return false;
+          return !fingerprint || record.fingerprint !== fingerprint;
+        });
+        records.push({
+          date: localDateKey(),
+          completedAt: String(completedAt || new Date().toISOString()),
+          ids,
+          fingerprint,
+          property: String(job.property || job.location || ""),
+          scheduledStart: String(job.scheduledStart || job.start?.dateTime || job.start?.date || "")
+        });
+        try { localStorage.setItem(WORKFLOW_COMPLETED_JOBS_STORAGE_KEY, JSON.stringify(records.slice(-500))); } catch (_) {}
+      }
+
+      function workflowCompletedSnapshotJobs() {
+        const current = workflowDayCompleteRecord()?.operationsSnapshotBackup;
+        const archived = loadWorkflowCloseoutHistory().map(record => record?.operationsSnapshotBackup).filter(Boolean);
+        return [current, ...archived]
+          .filter(Boolean)
+          .flatMap(snapshot => Array.isArray(snapshot?.jobs) ? snapshot.jobs : [])
+          .filter(job => String(job?.status || "").toLowerCase() === "completed");
+      }
+
+      async function reconcileWorkflowCompletionsFromOffice() {
+        const session = window.MPI_COMPANY_SESSION;
+        if (!session?.userId || !window.MPI_SHARED?.loadOwnOperationsDay) return false;
+        const date = localDateKey();
+        let receipt = null;
+        try { receipt = JSON.parse(localStorage.getItem(WORKFLOW_COMPLETION_SYNC_STORAGE_KEY) || "null"); } catch (_) {}
+        if (receipt?.date === date && Number(receipt?.build) === CURRENT_APP_BUILD && receipt?.status === "complete") return true;
+        const lastAttempt = new Date(receipt?.attemptedAt || 0).getTime();
+        if (receipt?.date === date && Number.isFinite(lastAttempt) && Date.now() - lastAttempt < 15 * 60 * 1000) return false;
+        const attemptedAt = new Date().toISOString();
+        try {
+          localStorage.setItem(WORKFLOW_COMPLETION_SYNC_STORAGE_KEY, JSON.stringify({ date, build: CURRENT_APP_BUILD, attemptedAt, status: "checking" }));
+        } catch (_) {}
+        try {
+          const day = await window.MPI_SHARED.loadOwnOperationsDay(date);
+          const activeBefore = loadActiveJob();
+          const serverCompletedIds = new Set(Array.isArray(day?.dayComplete?.completedJobIds)
+            ? day.dayComplete.completedJobIds.flatMap(value => {
+              const id = String(value || "").trim();
+              return id.startsWith("spectora:") ? [id, id.slice(9)] : [id, `spectora:${id}`];
+            })
+            : []);
+          const completedJobs = (Array.isArray(day?.jobs) ? day.jobs : []).filter(job => {
+            if (String(job?.status || "").toLowerCase() === "completed") return true;
+            return workflowJobIdentifiers(job).some(id => serverCompletedIds.has(id));
+          });
+          completedJobs.forEach(job => rememberWorkflowCompletedJob(job, job.completedAt || day?.dayComplete?.completedAt || attemptedAt));
+          const activeAfter = loadActiveJob();
+          try {
+            localStorage.setItem(WORKFLOW_COMPLETION_SYNC_STORAGE_KEY, JSON.stringify({
+              date,
+              build: CURRENT_APP_BUILD,
+              attemptedAt,
+              completedAt: new Date().toISOString(),
+              completedJobs: completedJobs.length,
+              status: "complete"
+            }));
+          } catch (_) {}
+          if (activeBefore?.property && !activeAfter?.property) showToast("Completed job removed from today’s active workflow");
+          renderWorkflowTodayJobs();
+          renderWorkflowApp();
+          return true;
+        } catch (_) {
+          try {
+            localStorage.setItem(WORKFLOW_COMPLETION_SYNC_STORAGE_KEY, JSON.stringify({ date, build: CURRENT_APP_BUILD, attemptedAt, status: "retry" }));
+          } catch (_) {}
+          return false;
+        }
       }
 
       function workflowCompletedEventIds() {
@@ -16846,7 +16960,12 @@
         const archivedIds = loadWorkflowCloseoutHistory()
           .filter(item => item.date === localDateKey())
           .flatMap(item => Array.isArray(item.completedJobIds) ? item.completedJobIds : []);
-        return new Set([...historyIds, ...expandIdentifiers(receiptIds), ...expandIdentifiers(archivedIds)].filter(Boolean));
+        const ledgerIds = loadWorkflowCompletedJobsLedger()
+          .filter(item => item.date === localDateKey())
+          .flatMap(item => expandIdentifiers(Array.isArray(item.ids) ? item.ids : []));
+        const snapshotIds = workflowCompletedSnapshotJobs()
+          .flatMap(item => expandIdentifiers([item.id, item.calendarEventId, item.spectoraJobId]));
+        return new Set([...historyIds, ...expandIdentifiers(receiptIds), ...expandIdentifiers(archivedIds), ...ledgerIds, ...snapshotIds].filter(Boolean));
       }
 
       function workflowJobIdentifiers(job) {
@@ -16860,18 +16979,48 @@
 
       function workflowJobIsComplete(job) {
         if (!job) return false;
-        if (String(job.workflowStatus || "").toLowerCase() === "completed") return true;
+        const statuses = [job.workflowStatus, job.status, job.completionStatus]
+          .map(value => String(value || "").toLowerCase());
+        if (statuses.some(status => ["completed", "complete", "job complete"].includes(status))) return true;
         const completed = workflowCompletedEventIds();
-        if (workflowJobIdentifiers(job).some(id => completed.has(id))) return true;
-        const property = String(job.property || job.location || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+        const identifiers = workflowJobIdentifiers(job);
+        if (identifiers.some(id => completed.has(id))) return true;
+        const fingerprint = workflowJobCompletionFingerprint(job);
+        const ledgerMatch = loadWorkflowCompletedJobsLedger().some(record => {
+          const recordIds = new Set(Array.isArray(record.ids) ? record.ids.map(String) : []);
+          return identifiers.some(id => recordIds.has(String(id))) || Boolean(fingerprint && record.fingerprint === fingerprint);
+        });
+        if (ledgerMatch) return true;
+        const property = workflowNormalizedJobProperty(job);
         const scheduledStart = String(job.scheduledStart || job.start?.dateTime || job.start?.date || "");
         if (!property || !scheduledStart) return false;
-        return loadWorkflowHistory().some(item => {
+        const historicalMatch = loadWorkflowHistory().some(item => {
           if (item?.date !== localDateKey() || !item?.job) return false;
-          const historyProperty = String(item.job.property || item.job.location || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+          const historyProperty = workflowNormalizedJobProperty(item.job);
           const historyStart = String(item.job.scheduledStart || item.job.start?.dateTime || item.job.start?.date || "");
           return historyProperty === property && historyStart === scheduledStart;
         });
+        if (historicalMatch) return true;
+        return workflowCompletedSnapshotJobs().some(item => {
+          const snapshotProperty = workflowNormalizedJobProperty(item);
+          const snapshotStart = String(item.scheduledStart || item.start?.dateTime || item.start?.date || "");
+          return snapshotProperty === property && snapshotStart === scheduledStart;
+        });
+      }
+
+      function rejectLockedWorkflowJob(job) {
+        const completed = workflowJobIsComplete(job);
+        const dayClosed = Boolean(workflowDayCompleteRecord()?.completedAt);
+        if (!completed && !dayClosed) return false;
+        if (completed) rememberWorkflowCompletedJob(job, job?.workflowTimestamps?.completed || new Date().toISOString());
+        try { localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY); } catch (_) {}
+        renderActiveJob(null);
+        renderWorkflowTodayJobs();
+        renderWorkflowApp();
+        showToast(completed
+          ? "This job is already complete and cannot be restarted"
+          : "Today is clocked off. A completed workday cannot be restarted.");
+        return true;
       }
 
       function workflowDayCompleteRecord() {
@@ -17810,10 +17959,12 @@
 
       function updateWorkflowStage(job, status, action, data = {}) {
         if (!job?.property || !WORKFLOW_STAGES.includes(status)) return null;
+        if (status !== "completed" && rejectLockedWorkflowJob(job)) return null;
         const now = String(data?.originalTimestamp || new Date().toISOString());
         job.workflowStatus = status;
         job.workflowTimestamps = { ...(job.workflowTimestamps || {}), [status]: now };
         if (status === "in-progress") job.startedAt = now;
+        if (status === "completed") rememberWorkflowCompletedJob(job, now);
         storeActiveJob(job);
         appendWorkflowEvent(action, { ...data, status, timestamp: now }, job);
         renderWorkflowJob(job);
@@ -18170,7 +18321,9 @@
       function setWorkflowOnMyWay() {
         const job = loadActiveJob();
         if (!job?.property) return;
-        updateWorkflowStage(job, "on-my-way", "On My Way selected", { travelStartedAt: new Date().toISOString() });
+        if (rejectLockedWorkflowJob(job)) return;
+        const updated = updateWorkflowStage(job, "on-my-way", "On My Way selected", { travelStartedAt: new Date().toISOString() });
+        if (!updated) return;
         showToast("On My Way time recorded");
       }
 
@@ -18187,6 +18340,7 @@
       async function setWorkflowArrived() {
         const job = loadActiveJob();
         if (!job?.property) return;
+        if (rejectLockedWorkflowJob(job)) return;
         const arrivalTappedAt = new Date().toISOString();
         if (job.isPractice) {
           clearWorkflowArrivalError();
@@ -18277,6 +18431,7 @@
       function startWorkflowInspection() {
         let job = loadActiveJob();
         if (!job?.property) return;
+        if (rejectLockedWorkflowJob(job)) return;
         job = updateWorkflowStage(job, "in-progress", "Inspection started", {
           property: job.property,
           scheduledStart: job.scheduledStart || "",
@@ -18295,6 +18450,7 @@
       function selectWorkflowJobComplete() {
         const job = loadActiveJob();
         if (!job?.property) return;
+        if (rejectLockedWorkflowJob(job)) return;
         updateWorkflowStage(job, "equipment", "Job Complete selected");
         renderWorkflowEquipment(loadActiveJob());
       }
@@ -18330,6 +18486,7 @@
       function completeWorkflowEquipment() {
         const job = loadActiveJob();
         if (!job?.property) return;
+        if (rejectLockedWorkflowJob(job)) return;
         const confirmedAt = new Date().toISOString();
         const completed = updateWorkflowStage(job, "completed", "Used tools back on truck confirmed", { confirmedAt });
         if (!completed) return;
@@ -19499,6 +19656,7 @@
           syncWorkflowCompanyProfile(event);
           watchInspectorRequests(event.detail);
           startTeamConnection(event.detail);
+          reconcileWorkflowCompletionsFromOffice().catch(() => false);
           recoverWorkflowTimeClockFromCompanyAccount(event).finally(queueWorkflowOperationsSync);
           syncWorkflowCocPhotosToOffice().catch(() => false);
           sendWorkflowWeeklySummaryIfDue().catch(() => false);
@@ -19508,6 +19666,7 @@
             syncWorkflowCompanyProfile({ detail: window.MPI_COMPANY_SESSION });
             watchInspectorRequests(window.MPI_COMPANY_SESSION);
             startTeamConnection(window.MPI_COMPANY_SESSION);
+            reconcileWorkflowCompletionsFromOffice().catch(() => false);
             queueWorkflowOperationsSync();
             syncWorkflowCocPhotosToOffice().catch(() => false);
           }

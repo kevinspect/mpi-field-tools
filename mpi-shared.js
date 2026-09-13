@@ -1058,6 +1058,19 @@
     return true;
   }
 
+  async function loadOwnOperationsDay(date) {
+    const user = auth.currentUser;
+    const requestedDate = String(date || "").trim();
+    if (!user || !requestedDate) return null;
+    const snapshot = await db.collection("users").doc(user.uid).get();
+    const profile = snapshot.data() || {};
+    const candidates = (Array.isArray(profile.operationsDays) ? profile.operationsDays : [])
+      .filter(day => String(day?.date || "") === requestedDate);
+    if (String(profile.operationsCurrent?.date || "") === requestedDate) candidates.push(profile.operationsCurrent);
+    if (!candidates.length) return null;
+    return candidates.reduce((result, day) => mergeOperationsDay(result, day), {});
+  }
+
   function watchTeamPresence(callback) {
     if (typeof callback !== "function") return () => {};
     return db.collection("teamPresence").where("active", "==", true).onSnapshot(snapshot => {
@@ -1127,6 +1140,7 @@
     loadFieldAttachment,
     loadDirectAttachment,
     syncOperationsSnapshot,
+    loadOwnOperationsDay,
     watchTeamPresence,
     watchTeamDirectory,
     directConversationId

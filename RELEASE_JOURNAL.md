@@ -1,5 +1,14 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 183 — Completed Job Restart Lock
+
+- Added a durable device-side completion ledger that is not removed when successfully delivered daily logs are cleared from the phone.
+- Reconciles completed appointments from job history, closeout receipts, archived closeouts, and the preserved Office Console snapshot.
+- Preserves the read-only Spectora status and treats an appointment reported as complete as complete in the workflow.
+- Reconciles the signed-in inspector’s completed jobs from their existing Office record once per day/build, then caches the result to avoid repeated Firebase reads.
+- Blocks On My Way, Arrived, Start Inspection, and Job Complete if a stale card points to a completed job or a closed workday.
+- Clears a stale completed active-job card automatically and returns the inspector to the correct remaining-jobs or end-of-day state.
+
 ## Build 182 — Organized Operations and Messages
 
 - Removed Inspector Replies, private message composers, conversation history, and message unread indicators from the Operations workspace.
