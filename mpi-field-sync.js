@@ -86,6 +86,7 @@
   let nativeResumeListener = null;
   let nativeLocationContextSignature = "";
   let nativeLocationSyncInFlight = false;
+  let nativeLocationStopInFlight = false;
   const NOTIFIED_UPDATE_STORAGE_KEY = "mpiNotifiedOfficeUpdatesV2";
   const ACCESS_PATH_STORAGE_KEY = "mpiSecureAccessPathV1";
   const LIVE_LOCATION_INTERVAL_MS = 3 * 60 * 1000;
@@ -396,7 +397,8 @@
   }
 
   function liveLocationValue(position, state, reason, requestId) {
-    const recordedAtClient = new Date().toISOString();
+    const observedAt = Number(position?.timestamp);
+    const recordedAtClient = new Date(Number.isFinite(observedAt) && observedAt > 0 ? observedAt : Date.now()).toISOString();
     return {
       latitude: Number(position.coords.latitude.toFixed(7)),
       longitude: Number(position.coords.longitude.toFixed(7)),
@@ -521,6 +523,30 @@
     }
   }
 
+  async function waitForNativeLocationUpload() {
+    for (let attempt = 0; attempt < 10 && (nativeLocationSyncInFlight || liveLocationInFlight); attempt += 1) {
+      await new Promise(resolve => window.setTimeout(resolve, 150));
+    }
+  }
+
+  async function finalizeNativeLocationSharing() {
+    if (!window.MPI_NATIVE?.isNative || nativeLocationStopInFlight) return false;
+    nativeLocationStopInFlight = true;
+    try {
+      await waitForNativeLocationUpload();
+      const finalPosition = await window.MPI_NATIVE.currentWorkdayLocation?.().catch(() => null);
+      if (finalPosition && currentUser && navigator.onLine) {
+        await waitForNativeLocationUpload();
+        await publishLiveLocation("native-final", "", finalPosition).catch(() => false);
+      }
+      await flushNativeLocations().catch(() => false);
+      return true;
+    } finally {
+      await window.MPI_NATIVE.stopWorkdayLocation?.().catch(() => false);
+      nativeLocationStopInFlight = false;
+    }
+  }
+
   async function ensureNativeLocationSharing(state) {
     if (!window.MPI_NATIVE?.isNative || !currentUser || !state) return false;
     if (!nativeLocationListener) {
@@ -572,7 +598,7 @@
     }
     if (!state && nativeLocationContextSignature) {
       nativeLocationContextSignature = "";
-      window.MPI_NATIVE?.stopWorkdayLocation?.().catch(() => false);
+      finalizeNativeLocationSharing().catch(() => false);
     }
   }
 

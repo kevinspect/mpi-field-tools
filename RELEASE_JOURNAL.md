@@ -1,5 +1,17 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 184 — Complete Historical Routes
+
+- Combines native background GPS points with verified Arrived, lab, home, and Clock Off workflow locations instead of discarding those checkpoints when GPS data exists.
+- Refreshes an open Actual Route every three minutes and whenever Office selects Update Now, so a route no longer remains frozen at the time it was first opened.
+- Captures and uploads a final native iPhone location before workday route tracking stops.
+- Preserves the original timestamp of queued iPhone locations when syncing, preventing delayed uploads from appearing at the wrong time.
+- Keeps completed routes visible after Clock Off and labels the displayed span using its true first and final recorded points.
+
+### Validation record
+
+- Verified JavaScript syntax, route merge/refresh safeguards, native queued-location timestamp preservation, Capacitor synchronization, native plugin verification, and signed iPhone compilation.
+
 ## Build 183 — Completed Job Restart Lock
 
 - Added a durable device-side completion ledger that is not removed when successfully delivered daily logs are cleared from the phone.

@@ -186,8 +186,10 @@
   let liveLocationAllPlansVisible = false;
   let liveLocationRouteVisible = false;
   let liveLocationRouteLoading = false;
+  let liveLocationRouteLastLoadedAt = 0;
   let liveLocationPlannedStops = [];
   let liveLocationCandidate = null;
+  const LIVE_LOCATION_ROUTE_REFRESH_MS = 3 * 60 * 1000;
 
   const adminOnboardingSteps = [
     () => ({
@@ -1205,6 +1207,7 @@
     liveLocationPlanVisible = false;
     liveLocationAllPlansVisible = false;
     liveLocationRouteLoading = false;
+    liveLocationRouteLastLoadedAt = 0;
     liveLocationPlannedStops = [];
     liveLocationCandidate = null;
     if (liveLocationRouteStatus) delete liveLocationRouteStatus.dataset.result;
@@ -1267,9 +1270,18 @@
     return [...deduped.values()];
   }
 
-  async function loadHistoricalRoute() {
+  function mergeHistoricalRoutePoints(...groups) {
+    const deduped = new Map();
+    groups.flat().filter(Boolean).sort((left, right) => left.recordedAt - right.recordedAt).forEach(point => {
+      const key = `${point.recordedAt.getTime()}:${point.latitude.toFixed(5)}:${point.longitude.toFixed(5)}`;
+      deduped.set(key, point);
+    });
+    return [...deduped.values()].sort((left, right) => left.recordedAt - right.recordedAt);
+  }
+
+  async function loadHistoricalRoute({ refresh = false } = {}) {
     if (liveLocationRouteLoading) return;
-    if (liveLocationRouteVisible && !liveLocationPlanVisible) {
+    if (liveLocationRouteVisible && !liveLocationPlanVisible && !refresh) {
       hideHistoricalRoute({ keepSelection: true });
       return;
     }
@@ -1288,23 +1300,22 @@
     updateLiveLocationControls();
     if (liveLocationRouteStatus) liveLocationRouteStatus.textContent = `Loading ${canonicalTeamName(person)}'s recorded route…`;
     try {
-      let points = [];
-      let fallbackStops = false;
+      let uploadedPoints = [];
       if (localPreview) {
         const origin = liveLocationRecord(person);
-        if (origin) points = [-0.035, -0.022, -0.01, 0].map((offset, index) => ({ latitude: origin.latitude + offset * .45, longitude: origin.longitude + offset, recordedAt: new Date(Date.now() - (3 - index) * 18 * 60000), accuracyFeet: origin.accuracyFeet, workStatus: origin.workStatus }));
+        if (origin) uploadedPoints = [-0.035, -0.022, -0.01, 0].map((offset, index) => ({ latitude: origin.latitude + offset * .45, longitude: origin.longitude + offset, recordedAt: new Date(Date.now() - (3 - index) * 18 * 60000), accuracyFeet: origin.accuracyFeet, workStatus: origin.workStatus }));
       } else {
         const snapshot = await shared.db.collection("users").doc(person.id).collection("locationRouteDays").doc(selectedDate).collection("points").orderBy("recordedAtClient", "asc").limit(500).get();
-        points = snapshot.docs.map(doc => routePointRecord(doc.data())).filter(Boolean);
+        uploadedPoints = snapshot.docs.map(doc => routePointRecord(doc.data())).filter(Boolean);
       }
-      if (!points.length) {
-        points = operationalRoutePoints(person, selectedDate);
-        fallbackStops = points.length > 0;
-      }
+      const verifiedPoints = operationalRoutePoints(person, selectedDate);
+      const points = mergeHistoricalRoutePoints(uploadedPoints, verifiedPoints);
+      const fallbackStops = !uploadedPoints.length && verifiedPoints.length > 0;
       liveLocationRouteLayer.clearLayers();
       liveLocationRouteVisible = true;
       liveLocationPlanVisible = false;
       liveLocationAllPlansVisible = false;
+      liveLocationRouteLastLoadedAt = Date.now();
       if (!points.length) {
         if (liveLocationRouteStatus) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> has no uploaded GPS route or verified workflow locations for ${escapeHtml(new Date(`${selectedDate}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }))}.`;
         return;
@@ -1320,7 +1331,7 @@
       else liveLocationMap.fitBounds(latLngs, { padding: [38, 38], maxZoom: 15 });
       if (liveLocationRouteStatus) liveLocationRouteStatus.innerHTML = fallbackStops
         ? `<strong>${escapeHtml(canonicalTeamName(person))}</strong> · ${escapeHtml(points.length)} verified workflow location${points.length === 1 ? "" : "s"} shown. A continuous GPS route was not uploaded for this date.`
-        : `<strong>${escapeHtml(canonicalTeamName(person))}</strong> · ${escapeHtml(points.length)} route point${points.length === 1 ? "" : "s"} · ${escapeHtml(formatTime(start.recordedAt))}–${escapeHtml(formatTime(end.recordedAt))}`;
+        : `<strong>${escapeHtml(canonicalTeamName(person))}</strong> · ${escapeHtml(points.length)} route point${points.length === 1 ? "" : "s"}, including verified workflow checkpoints · ${escapeHtml(formatTime(start.recordedAt))}–${escapeHtml(formatTime(end.recordedAt))}`;
     } catch (error) {
       liveLocationRouteVisible = false;
       if (liveLocationRouteStatus) liveLocationRouteStatus.textContent = error?.message || "The route could not be loaded.";
@@ -1670,13 +1681,18 @@
       await shared.requestSpectoraScheduleRefresh?.();
       if (!targets.length) {
         liveLocationStatus.textContent = "Schedule refresh requested. No inspectors currently have an active workday location.";
-        return;
+      } else {
+        const batch = shared.db.batch();
+        targets.forEach(person => batch.set(shared.db.collection("users").doc(person.id), { liveLocationRequest: request }, { merge: true }));
+        await batch.commit();
+        liveLocationStatus.textContent = `Update requested from ${targets.length} active field device${targets.length === 1 ? "" : "s"}. Open phones respond immediately.`;
       }
-      const batch = shared.db.batch();
-      targets.forEach(person => batch.set(shared.db.collection("users").doc(person.id), { liveLocationRequest: request }, { merge: true }));
-      await batch.commit();
-      liveLocationStatus.textContent = `Update requested from ${targets.length} active field device${targets.length === 1 ? "" : "s"}. Open phones respond immediately.`;
+      if (liveLocationRouteVisible && !liveLocationPlanVisible && !liveLocationAllPlansVisible) {
+        if (targets.length) await new Promise(resolve => window.setTimeout(resolve, 1200));
+        await loadHistoricalRoute({ refresh: true });
+      }
     } catch (error) {
+      liveLocationRouteLastLoadedAt = Date.now();
       liveLocationStatus.textContent = error?.message || "The location update request could not be sent.";
     } finally {
       liveLocationRefresh.disabled = false;
@@ -2957,7 +2973,7 @@
         ${(day?.commentFailures || []).length ? `<article class="ops-card full"><h3>Comment Builder Technical Log</h3><div class="timeline">${day.commentFailures.slice().reverse().map(item => `<div class="timeline-row"><time>${escapeHtml(formatTime(item.timestamp))}</time><span class="timeline-dot"></span><div><strong>${escapeHtml(item.category || "service-error")} · attempt ${escapeHtml(item.attempt || "—")}</strong><small>Request ${escapeHtml(item.requestId || "—")} · ${escapeHtml(item.connectivity || "unknown")} · ${escapeHtml(item.code || item.httpStatus || "no status")} · ${escapeHtml(item.message || "No technical message")}</small></div></div>`).join("")}</div></article>` : ""}
         <article class="ops-card"><h3>Morning Readiness</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${day?.readiness ? "Complete" : "Not recorded"}</strong></div><div class="fact"><span>Original time</span><strong>${formatTime(originalReadiness)}</strong></div>${readinessCorrection ? `<div class="fact"><span>Admin-adjusted time</span><strong>${formatTime(readinessCorrection.correctedValue)}</strong></div><div class="fact"><span>Effective activity start</span><strong>${formatTime(effectiveReadiness)}</strong></div><div class="fact"><span>Changed by</span><strong>${escapeHtml(readinessCorrection.correctedByName || readinessCorrection.correctedByEmail || "MPI Admin")}</strong></div><div class="fact"><span>Changed</span><strong>${escapeHtml(formatDateTime(readinessCorrection.correctedAt))}</strong></div><div class="fact"><span>Reason</span><strong>${escapeHtml(readinessCorrection.reason || "—")}</strong></div>` : `<div class="fact"><span>Effective activity start</span><strong>${formatTime(effectiveReadiness)}</strong></div>`}<div class="fact"><span>Important notifications</span><strong>${escapeHtml(day?.readiness?.notificationPermission === "granted" ? "Enabled" : day?.readiness?.notificationPermission || "Unknown")}</strong></div></div></article>
         <article class="ops-card span-6"><h3>Lab Activity &amp; Chain of Custody</h3>${labHtml(person, day)}</article>
-        <article class="ops-card"><h3>End-of-Day Status</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${escapeHtml(eodStatus)}</strong></div><div class="fact"><span>Clock out</span><strong>${formatTime(clockOut)}</strong></div><div class="fact"><span>Last recorded location</span><strong>${locationLink}</strong></div><div class="fact"><span>Equipment check</span><strong>${day?.dayComplete?.equipment?.length ? "Complete" : "Pending"}</strong></div></div><p class="ops-sub">Location is event-based, not continuous. Never treat a stale location as live.</p></article>
+        <article class="ops-card"><h3>End-of-Day Status</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${escapeHtml(eodStatus)}</strong></div><div class="fact"><span>Clock out</span><strong>${formatTime(clockOut)}</strong></div><div class="fact"><span>Last recorded location</span><strong>${locationLink}</strong></div><div class="fact"><span>Equipment check</span><strong>${day?.dayComplete?.equipment?.length ? "Complete" : "Pending"}</strong></div></div><p class="ops-sub">Installed company phones provide background workday route points. Verified workflow locations remain part of the saved historical route. Never treat a stale location as live.</p></article>
         <article class="ops-card span-6"><h3>Admin Corrections</h3><p class="ops-sub">Corrections are appended to the audit trail. Original records are never deleted or overwritten.</p><form class="compact-form" id="adminCorrectionForm" data-person-id="${escapeHtml(person.id)}"><div class="two-col"><div class="field"><label for="adminCorrectionAction">Missed / incorrect action</label><select id="adminCorrectionAction" required>${correctionActions.map(action => `<option value="${escapeHtml(action)}">${escapeHtml(action)}</option>`).join("")}</select></div><div class="field"><label for="adminCorrectionJob">Job</label><select id="adminCorrectionJob"><option value="">No specific job</option>${jobOptions}</select></div></div><div class="field"><label for="adminCorrectionValue">Correct date and time</label><input id="adminCorrectionValue" type="datetime-local" required></div><div class="field"><label for="adminCorrectionReason">Reason for correction</label><textarea id="adminCorrectionReason" maxlength="500" required placeholder="Explain why management is adding this correction."></textarea></div><button class="primary" type="submit">ADD AUDITABLE CORRECTION</button><span class="status" id="adminCorrectionStatus"></span></form><h3 style="margin-top:20px">Correction History</h3><div class="correction-history">${correctionHistoryHtml(person, day)}</div></article>
       </div>`;
     teamOverview.hidden = true;
@@ -3060,6 +3076,9 @@
     if (!liveLocationAgeTimer) liveLocationAgeTimer = window.setInterval(() => {
       renderLiveLocationMap();
       updateOperationalClocks();
+      if (liveLocationRouteVisible && !liveLocationPlanVisible && !liveLocationAllPlansVisible && !liveLocationRouteLoading && Date.now() - liveLocationRouteLastLoadedAt >= LIVE_LOCATION_ROUTE_REFRESH_MS) {
+        loadHistoricalRoute({ refresh: true }).catch(() => false);
+      }
     }, 60000);
     unsubscribePeople = shared.db.collection("users").orderBy("name").onSnapshot(snapshot => {
       people = snapshot.docs.map(doc => {

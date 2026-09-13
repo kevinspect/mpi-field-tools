@@ -74,6 +74,11 @@
     return backgroundLocation.stop();
   }
 
+  async function currentWorkdayLocation() {
+    if (!backgroundLocation?.requestCurrentLocation) return null;
+    return nativePosition(await backgroundLocation.requestCurrentLocation());
+  }
+
   async function pendingLocations() {
     if (!backgroundLocation?.getPendingLocations) return [];
     const result = await backgroundLocation.getPendingLocations();
@@ -273,6 +278,7 @@
     startWorkdayLocation,
     updateWorkdayLocationContext,
     stopWorkdayLocation,
+    currentWorkdayLocation,
     pendingLocations,
     acknowledgeLocations,
     notificationId,
