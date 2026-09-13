@@ -1,5 +1,16 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 176 — iPhone Navigation and Inbox Polish
+
+- Made the MPI logo in the persistent top bar a Home control on every screen and added the signed-in user's profile avatar at the top-right.
+- Replaced the collapsed More drawer with three always-visible Home shortcuts for Contact MPI, Team Status, and Comment Creator.
+- Reworked Inbox to use a familiar mailbox list and a compact compose icon; the full private-message form now opens only when requested and closes after sending.
+- Preserved the existing private-message delivery/read states, attachments, workflow records, bottom navigation, and role permissions.
+
+### Validation record
+
+- Verified responsive iPhone rendering, compose open/close behavior, JavaScript parsing, native synchronization, and iPhone compilation before installation and publication.
+
 ## Build 175 — Simplified Native App Presentation
 
 - Removed the large Home-screen links that duplicated My Day, Inbox, Field Tools, and Training in the bottom navigation.

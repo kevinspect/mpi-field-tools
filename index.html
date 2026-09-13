@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="175">
+  <meta name="app-build" content="176">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5740,6 +5740,95 @@
     .app-bottom-nav { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .app-bottom-nav a { min-width: 0; overflow: hidden; }
     .app-bottom-nav a span { overflow: hidden; max-width: 100%; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Build 176 — familiar app navigation and mailbox layout */
+    .brand { color: inherit; text-decoration: none; }
+    .brand:active { opacity: .8; }
+    .top-profile-link { display: grid; width: 42px; height: 42px; place-items: center; flex: 0 0 42px; border: 1px solid rgba(255,255,255,.42); border-radius: 50%; text-decoration: none; }
+    .top-profile-avatar { position: relative; display: grid; width: 36px; height: 36px; place-items: center; overflow: hidden; color: #fff; background: linear-gradient(145deg,#2d77b5,#10175f); border: 2px solid var(--mpi-gold-500); border-radius: 50%; font-size: 10px; font-weight: 950; }
+    .top-profile-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .top-profile-avatar b { position: relative; z-index: 0; }
+    .topbar-actions .sop-jump { display: none; }
+    .home-intro { display: block; }
+    .home-intro > div { min-width: 0; }
+    .home-quick-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      max-width: 820px;
+      margin: 13px auto 0;
+    }
+    .home-quick-actions a {
+      display: grid;
+      grid-template-columns: 40px minmax(0,1fr);
+      gap: 11px;
+      align-items: center;
+      min-height: 68px;
+      padding: 12px 13px;
+      color: var(--mpi-text);
+      background: #fff;
+      border: 1px solid var(--mpi-border);
+      border-radius: 15px;
+      box-shadow: 0 7px 20px rgba(16,23,95,.07);
+      text-decoration: none;
+    }
+    .home-quick-actions a:active { transform: scale(.98); }
+    .home-quick-actions svg { width: 40px; height: 40px; padding: 9px; color: #fff; background: linear-gradient(145deg,var(--mpi-blue-600),var(--mpi-navy-900)); border-radius: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .home-quick-actions span,
+    .home-quick-actions strong,
+    .home-quick-actions small { display: block; min-width: 0; }
+    .home-quick-actions strong { color: var(--mpi-navy-900); font-size: 11.5px; line-height: 1.2; }
+    .home-quick-actions small { margin-top: 3px; color: var(--mpi-muted); font-size: 8.5px; line-height: 1.3; }
+    .home-office-link { display: grid; max-width: 820px; min-height: 40px; place-items: center; margin: 10px auto 0; color: var(--mpi-blue-600); background: transparent; border: 1px solid #c9dced; border-radius: 12px; font-size: 9px; font-weight: 900; text-decoration: none; }
+    .home-office-link[hidden] { display: none; }
+
+    .field-inbox-header { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; max-width: 820px; align-items: center; margin: 0 auto 14px; }
+    .field-inbox-header .field-section-heading { width: auto; max-width: none; margin: 0; }
+    .field-compose-toggle { display: grid; width: 48px; height: 48px; place-items: center; color: #fff; background: var(--mpi-navy-900); border: 0; border-bottom: 3px solid var(--mpi-gold-500); border-radius: 14px; box-shadow: 0 7px 18px rgba(16,23,95,.2); }
+    .field-compose-toggle svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+    .field-compose-toggle[aria-expanded="true"] { color: var(--mpi-navy-900); background: var(--mpi-gold-500); }
+    .field-compose-card[hidden] { display: none !important; }
+    .field-compose-card { max-width: 820px; margin: 0 auto 13px; padding: 16px; background: #fff; border: 1px solid var(--mpi-border); border-radius: 15px; box-shadow: 0 9px 24px rgba(16,23,95,.08); }
+    .field-compose-card h3 { color: var(--mpi-navy-900); }
+    .field-compose-card p { color: var(--mpi-muted); }
+    .field-compose-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .field-compose-head > button { display: grid; width: 34px; height: 34px; place-items: center; color: var(--mpi-muted); background: #f1f4f8; border: 0; border-radius: 10px; font-size: 22px; line-height: 1; }
+    .field-compose-card label { color: var(--mpi-navy-900); }
+    .field-compose-card select,
+    .field-compose-card textarea { background: #f7f9fc; border-color: #cfd8e5; }
+    .field-compose-card .decode-btn { color: #fff; background: var(--mpi-navy-900); }
+    .field-inbox-panel { padding: 0; overflow: hidden; border-radius: 15px; box-shadow: 0 5px 18px rgba(16,23,95,.06); }
+    .field-inbox-section { border: 0; border-radius: 0; }
+    .field-inbox-section + .field-inbox-section { margin-top: 0; border-top: 1px solid var(--mpi-border); }
+    .field-inbox-section > summary { min-height: 52px; padding: 11px 15px; background: #f7f9fc; }
+    .field-inbox-section > summary::after { color: var(--mpi-blue-600); font-size: 18px; }
+    .field-inbox-summary strong { font-size: 13px; }
+    .field-inbox-count { min-width: 27px; min-height: 23px; padding: 3px 7px; }
+    .field-inbox-section > .field-inbox-list { gap: 0; margin: 0; }
+    .field-inbox-item { min-height: 68px; padding: 10px 14px; background: #fff; border: 0; border-top: 1px solid #e5e9f0; border-radius: 0; }
+    .field-inbox-item:first-child { border-top: 0; }
+    .field-inbox-item.unread { background: #f3f8fd; border-left: 4px solid var(--mpi-blue-600); }
+    .field-inbox-icon { width: 38px; height: 38px; border-radius: 50%; font-size: 14px; }
+    .field-inbox-copy strong { font-size: 11px; }
+    .field-inbox-copy span { font-size: 9px; }
+
+    @media (max-width: 680px) {
+      .topbar-actions { margin-left: auto; }
+      .topbar-actions .offline-badge { display: none; }
+      .top-profile-link { width: 40px; height: 40px; flex-basis: 40px; }
+      .top-profile-avatar { width: 34px; height: 34px; }
+      .home-intro { padding: 14px 15px; }
+      .home-quick-actions { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 7px; }
+      .home-quick-actions a { display: grid; grid-template-columns: 1fr; justify-items: center; gap: 7px; min-height: 83px; padding: 10px 5px; text-align: center; }
+      .home-quick-actions svg { width: 37px; height: 37px; padding: 8px; }
+      .home-quick-actions strong { font-size: 9.5px; }
+      .home-quick-actions small { display: none; }
+      .field-inbox-header { margin-bottom: 11px; }
+      .field-inbox-header .field-section-heading { padding-bottom: 10px; }
+      .field-compose-toggle { width: 44px; height: 44px; border-radius: 13px; }
+      .field-compose-card { padding: 14px; }
+      .field-inbox-panel { margin-inline: 0; }
+    }
   </style>
 </head>
 <body>
@@ -5767,16 +5856,19 @@
     </div>
   </section>
   <header class="topbar">
-    <div class="brand">
+    <a class="brand" href="#home" aria-label="Go to MPI Field Tools Home">
       <span class="brand-mark" aria-hidden="true"></span>
       <span class="brand-name"><strong>Michigan Property</strong><small>Inspections · Field Tools</small></span>
-    </div>
+    </a>
     <div class="topbar-actions">
       <a class="admin-return" id="mpiAdminReturn" href="./admin.html" hidden>OFFICE DASHBOARD</a>
       <a class="sop-jump" href="#home">All tools</a>
       <a class="sop-jump" href="#damage-report">Damage form</a>
       <a class="sop-jump" href="#sop-guide">SOP guide</a>
       <div class="offline-badge" id="offlineStatus">Works offline after first visit</div>
+      <a class="top-profile-link" id="topProfileLink" href="#profile" aria-label="Open My Profile">
+        <span class="top-profile-avatar" id="topProfileAvatar"><b id="topProfileInitials">MPI</b></span>
+      </a>
     </div>
   </header>
   <script>
@@ -5788,7 +5880,7 @@
   <nav class="screen-nav" id="screenNav" aria-label="Current field tool" hidden>
     <a class="screen-back" id="screenBack" href="#home">Back</a>
     <span class="screen-title" id="screenTitle"></span>
-    <a class="screen-back" href="#profile" aria-label="Open my profile">Profile</a>
+    <span aria-hidden="true"></span>
   </nav>
 
   <aside class="active-job-context" id="activeJobContext" aria-live="polite" hidden>
@@ -5798,7 +5890,6 @@
 
   <section class="app-home app-screen-view" id="home" data-app-screen="home" aria-labelledby="home-title">
     <div class="home-intro">
-      <div class="home-logo" role="img" aria-label="Michigan Property Inspections logo"></div>
       <div>
         <p class="home-kicker">Inspector field app</p>
         <h1 class="home-title" id="home-title">Ready for today.</h1>
@@ -5820,32 +5911,13 @@
       <div><span id="mpiHomeUpdatesCount">New office update</span><strong id="mpiHomeUpdatesTitle">Information from MPI</strong><small id="mpiHomeUpdatesDetail"></small></div>
       <a href="#office-updates">Open updates</a>
     </aside>
-    <details class="home-more">
-      <summary><span><strong>More</strong><small>Team, profile, office, and requests</small></span><b aria-hidden="true">+</b></summary>
-      <nav class="home-tools" aria-label="More MPI app sections">
-        <a class="home-tool-card home-utility-card" href="#profile">
-          <span class="home-tool-icon icon-profile" aria-hidden="true"></span>
-          <span class="home-tool-copy"><strong>My Profile</strong><small>Personal and company details</small></span>
-          <span class="home-tool-arrow" aria-hidden="true">→</span>
-        </a>
-        <a class="home-tool-card home-utility-card" href="#contact-mpi">
-          <span class="home-tool-icon icon-messages" aria-hidden="true"></span>
-          <span class="home-tool-copy"><strong>Contact MPI</strong><small>Safety, requests, and support</small></span>
-          <span class="home-tool-arrow" aria-hidden="true">→</span>
-        </a>
-        <a class="home-tool-card home-utility-card" href="#job-companion" data-team-status-shortcut>
-          <span class="home-tool-icon icon-team" aria-hidden="true"></span>
-          <span class="home-tool-copy"><strong>Team Status</strong><small>See the working team</small></span>
-          <span class="home-tool-arrow" aria-hidden="true">→</span>
-        </a>
-        <a class="home-tool-card home-utility-card" id="officeConsoleCard" href="./admin.html" hidden>
-          <span class="home-tool-icon icon-office" aria-hidden="true"></span>
-          <span class="home-tool-copy"><strong>Office Console</strong><small>Open management workspace</small></span>
-          <span class="home-tool-arrow" aria-hidden="true">→</span>
-        </a>
-      </nav>
-    </details>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">175</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <nav class="home-quick-actions" aria-label="Quick actions">
+      <a href="#contact-mpi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.5-4A7 7 0 0 1 3 13V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/><path d="M8 10h8M8 14h5"/></svg><span><strong>Contact MPI</strong><small>Requests &amp; support</small></span></a>
+      <a href="#team-messages"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 15a5 5 0 0 1 7 5"/></svg><span><strong>Team Status</strong><small>See &amp; message the team</small></span></a>
+      <a href="#comment-builder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4Z"/><path d="M8 8h8M8 12h5"/></svg><span><strong>Comment Creator</strong><small>Build a defect comment</small></span></a>
+    </nav>
+    <a class="home-office-link" id="officeConsoleCard" href="./admin.html" hidden>Open Office Console</a>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">176</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -8025,12 +8097,15 @@
     </section>
 
     <section class="field-app-section app-screen-view" id="inbox" data-app-screen="inbox" aria-labelledby="field-inbox-title">
-      <div class="field-section-heading">
-        <div><p class="eyebrow">MPI communications</p><h2 id="field-inbox-title">Inbox</h2></div>
-        <p>Office updates, assignments, attachments, and private team conversations appear here automatically.</p>
+      <div class="field-inbox-header">
+        <div class="field-section-heading">
+          <div><p class="eyebrow">MPI communications</p><h2 id="field-inbox-title">Inbox</h2></div>
+          <p>Messages, office updates, assignments, and attachments.</p>
+        </div>
+        <button class="field-compose-toggle" id="fieldInboxComposeToggle" type="button" aria-label="Compose a new message" aria-controls="fieldInboxComposeCard" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m17.5 3.5 3 3L11 16l-4 1 1-4Z"/></svg></button>
       </div>
-      <section class="field-compose-card" aria-labelledby="field-compose-title">
-        <div><h3 id="field-compose-title">Compose message</h3><p>Send a private message to one MPI team member. Replies stay in the same conversation.</p></div>
+      <section class="field-compose-card" id="fieldInboxComposeCard" aria-labelledby="field-compose-title" hidden>
+        <div class="field-compose-head"><div><h3 id="field-compose-title">New message</h3><p>Private message to one MPI team member.</p></div><button id="fieldInboxComposeClose" type="button" aria-label="Close message composer">×</button></div>
         <form id="fieldInboxComposeForm">
           <div class="field-compose-grid">
             <label>To<select id="fieldInboxComposeRecipient" required><option value="">Choose team member</option></select></label>
@@ -8453,7 +8528,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 175</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 176</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8593,11 +8668,11 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=175"></script>
-  <script src="./mpi-shared.js?build=175"></script>
-  <script src="./mpi-field-sync.js?build=175"></script>
-  <script src="./mpi-subcontractor.js?build=175"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=175"></script>
+  <script src="./mpi-native-bridge.js?build=176"></script>
+  <script src="./mpi-shared.js?build=176"></script>
+  <script src="./mpi-field-sync.js?build=176"></script>
+  <script src="./mpi-subcontractor.js?build=176"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=176"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -9658,6 +9733,9 @@
       const fieldSentCount = document.getElementById("fieldSentCount");
       const fieldBottomInboxCount = document.getElementById("fieldBottomInboxCount");
       const fieldInboxComposeForm = document.getElementById("fieldInboxComposeForm");
+      const fieldInboxComposeCard = document.getElementById("fieldInboxComposeCard");
+      const fieldInboxComposeToggle = document.getElementById("fieldInboxComposeToggle");
+      const fieldInboxComposeClose = document.getElementById("fieldInboxComposeClose");
       const fieldInboxComposeRecipient = document.getElementById("fieldInboxComposeRecipient");
       const fieldInboxComposeText = document.getElementById("fieldInboxComposeText");
       const fieldInboxComposeFiles = document.getElementById("fieldInboxComposeFiles");
@@ -19748,6 +19826,14 @@
         }
       }
 
+      function setFieldInboxComposerOpen(open) {
+        if (!fieldInboxComposeCard || !fieldInboxComposeToggle) return;
+        fieldInboxComposeCard.hidden = !open;
+        fieldInboxComposeToggle.setAttribute("aria-expanded", String(open));
+        fieldInboxComposeToggle.setAttribute("aria-label", open ? "Close message composer" : "Compose a new message");
+        if (open) window.setTimeout(() => (fieldInboxComposeRecipient?.value ? fieldInboxComposeText : fieldInboxComposeRecipient)?.focus(), 40);
+      }
+
       async function sendFieldInboxMessage(event) {
         event.preventDefault();
         const member = teamMemberRecord(fieldInboxComposeRecipient?.value || "");
@@ -19765,6 +19851,8 @@
           fieldInboxComposeForm.reset();
           fieldInboxComposeStatus.className = "damage-submit-status success";
           fieldInboxComposeStatus.textContent = `Private message sent only to ${teamDisplayName(member.name)}.`;
+          setFieldInboxComposerOpen(false);
+          showToast("Private message sent");
         } catch (error) {
           fieldInboxComposeStatus.className = "damage-submit-status error";
           fieldInboxComposeStatus.textContent = error?.message || "The private message could not be sent.";
@@ -23697,6 +23785,8 @@
       teamProfileBack?.addEventListener("click", closeTeamProfile);
       teamPrivateForm?.addEventListener("submit", sendTeamPrivateMessage);
       fieldInboxComposeForm?.addEventListener("submit", sendFieldInboxMessage);
+      fieldInboxComposeToggle?.addEventListener("click", () => setFieldInboxComposerOpen(fieldInboxComposeCard?.hidden !== false));
+      fieldInboxComposeClose?.addEventListener("click", () => setFieldInboxComposerOpen(false));
       teamPrivateText?.addEventListener("input", () => saveTeamMessageDraft(teamPrivateText.value));
       teamPrivateThread?.addEventListener("click", event => {
         const button = event.target.closest("[data-team-file]");

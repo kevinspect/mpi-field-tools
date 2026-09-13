@@ -20,6 +20,9 @@
   const profileStatus = document.getElementById("mpiProfileStatus");
   const profileAvatar = document.getElementById("mpiProfileAvatar");
   const profileInitials = document.getElementById("mpiProfileInitials");
+  const topProfileLink = document.getElementById("topProfileLink");
+  const topProfileAvatar = document.getElementById("topProfileAvatar");
+  const topProfileInitials = document.getElementById("topProfileInitials");
   const profilePhotoInput = document.getElementById("mpiProfilePhotoInput");
   const profilePhotoRemove = document.getElementById("mpiProfilePhotoRemove");
   const profileName = document.getElementById("mpiProfileName");
@@ -586,16 +589,18 @@
   }
 
   function showProfilePhoto(source, name) {
-    if (!profileAvatar || !profileInitials) return;
-    profileAvatar.querySelector("img")?.remove();
-    profileInitials.textContent = teamInitials(name);
-    if (!source) return;
-    const image = document.createElement("img");
-    image.alt = "";
-    image.referrerPolicy = "no-referrer";
-    image.addEventListener("error", () => image.remove(), { once: true });
-    image.src = source;
-    profileAvatar.prepend(image);
+    [[profileAvatar, profileInitials], [topProfileAvatar, topProfileInitials]].forEach(([avatar, initials]) => {
+      if (!avatar || !initials) return;
+      avatar.querySelector("img")?.remove();
+      initials.textContent = teamInitials(name);
+      if (!source) return;
+      const image = document.createElement("img");
+      image.alt = "";
+      image.referrerPolicy = "no-referrer";
+      image.addEventListener("error", () => image.remove(), { once: true });
+      image.src = source;
+      avatar.prepend(image);
+    });
   }
 
   function roleLabel(profile) {
@@ -661,7 +666,10 @@
   function renderProfile(user, profile) {
     if (!profileCard || !profileForm) return;
     profileCard.hidden = !(user && profile);
-    if (!user || !profile) return;
+    if (!user || !profile) {
+      showProfilePhoto("", "MPI");
+      return;
+    }
     pendingProfilePhoto = null;
     profileName.value = profile.name || user.displayName || "";
     profileJobTitle.value = profile.jobTitle || (profile.role === "inspector" ? "Inspector" : profile.role === "subcontractor" ? "Subcontractor" : "");
@@ -887,6 +895,7 @@
     synchronizeAccessChoice(user, profile);
     accountCard.hidden = false;
     if (!user || !profile) {
+      if (topProfileLink) topProfileLink.href = "#settings";
       stopLiveLocationSharing();
       lastPublishedSessionSignature = "";
       delete window.MPI_COMPANY_SESSION;
@@ -913,6 +922,7 @@
       return;
     }
     accountName.textContent = profile.name || user.displayName || "MPI Team Member";
+    if (topProfileLink) topProfileLink.href = "#profile";
     accountRole.textContent = shared.isAdminRole(profile) ? "Owner / office administrator" : roleLabel(profile);
     accountStatus.textContent = profile.subcontractorOnly ? "Secure company phone" : user.email || "Signed in";
     renderProfile(user, profile);
