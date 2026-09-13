@@ -5,6 +5,7 @@
 - Makes **All inspectors** a real selectable Office Console view and removes office-only users from the inspector filter.
 - Maps every inspector's synchronized read-only Spectora jobs for the chosen day; when that day is empty, advances to the next synchronized future appointment date.
 - Resolves synchronized property coordinates in the protected backend, eliminating the browser cross-origin failure that prevented real future appointments from appearing on the map. Manual planning pins use a browser-safe address lookup and remain temporary.
+- Retries short Google Firestore throttle/service interruptions with bounded backoff so a temporary 429/5xx response cannot silently leave the future schedule copy partially refreshed.
 - Keeps individual job-plan and actual-route controls disabled until one inspector is selected, preventing ambiguous route results.
 - Reconciles completed Spectora/calendar identities, property, and appointment time so a finished inspection cannot remain pinned as the current job—even when an older phone cache used a different ID format.
 - Replaces a stale completed-job home card with **Day complete**, **Today's inspections are complete**, or the next future schedule summary as appropriate.

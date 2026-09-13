@@ -580,12 +580,11 @@ function writeSpectoraSchedules_(schedules) {
 }
 
 function listFirestoreUserDocuments_() {
-  var response = UrlFetchApp.fetch("https://firestore.googleapis.com/v1/projects/" + MPI_SPECTORA.PROJECT_ID + "/databases/(default)/documents/users?pageSize=100", {
+  var response = firestoreFetchWithRetry_("https://firestore.googleapis.com/v1/projects/" + MPI_SPECTORA.PROJECT_ID + "/databases/(default)/documents/users?pageSize=100", {
     method: "get",
     headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
     muteHttpExceptions: true
-  });
-  if (response.getResponseCode() !== 200) throw new Error("User directory read failed with status " + response.getResponseCode());
+  }, "User directory read");
   return JSON.parse(response.getContentText() || "{}").documents || [];
 }
 
@@ -596,7 +595,7 @@ function patchFirestoreUserSchedule_(documentName, days) {
     + "?updateMask.fieldPaths=spectoraScheduleDays"
     + "&updateMask.fieldPaths=spectoraScheduleUpdatedAt"
     + "&updateMask.fieldPaths=spectoraScheduleSource";
-  var response = UrlFetchApp.fetch(url, {
+  firestoreFetchWithRetry_(url, {
     method: "patch",
     contentType: "application/json",
     headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
@@ -606,10 +605,20 @@ function patchFirestoreUserSchedule_(documentName, days) {
       spectoraScheduleSource: { stringValue: "Spectora read-only sync" }
     }}),
     muteHttpExceptions: true
-  });
-  if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) {
-    throw new Error("Schedule profile write failed with status " + response.getResponseCode());
+  }, "Schedule profile write");
+}
+
+function firestoreFetchWithRetry_(url, options, label) {
+  var response = null;
+  for (var attempt = 0; attempt < 4; attempt += 1) {
+    response = UrlFetchApp.fetch(url, options);
+    var code = response.getResponseCode();
+    if (code >= 200 && code < 300) return response;
+    var retryable = code === 429 || code === 500 || code === 502 || code === 503 || code === 504;
+    if (!retryable || attempt === 3) throw new Error((label || "Firestore request") + " failed with status " + code);
+    Utilities.sleep(500 * Math.pow(2, attempt));
   }
+  throw new Error((label || "Firestore request") + " failed");
 }
 
 function firestoreString_(fields, key) {
