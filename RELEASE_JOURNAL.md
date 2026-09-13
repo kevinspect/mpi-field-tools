@@ -1,5 +1,12 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 186 — Reliable Comment Builder
+
+- Corrected the Firebase AI Logic project protection setting that caused valid, online iPhones to receive HTTP 403 responses.
+- Preserved the inspector's original note and technical reference logging while distinguishing service configuration failures from connection failures.
+- Added the existing MPI rules-based generator as an authenticated on-device fallback after an online generation failure, so inspectors can still create and copy a complete comment without retyping the observation.
+- Kept photo-based interpretation on the protected online service; the on-device fallback relies only on the inspector's written note and selected report component.
+
 ## Build 185 — Completed-Day Appointment Lock
 
 - Prevented the field app and Office Console from showing an old appointment as the next job after the inspector has clocked off and completed the day.

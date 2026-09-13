@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="185">
+  <meta name="app-build" content="186">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5920,7 +5920,7 @@
       <a href="#comment-builder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4Z"/><path d="M8 8h8M8 12h5"/></svg><span><strong>Comment Creator</strong><small>Build a defect comment</small></span></a>
     </nav>
     <a class="home-office-link" id="officeConsoleCard" href="./admin.html" hidden>Open Office Console</a>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">185</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">186</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -8531,7 +8531,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 185</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 186</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8671,11 +8671,11 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=185"></script>
-  <script src="./mpi-shared.js?build=185"></script>
-  <script src="./mpi-field-sync.js?build=185"></script>
-  <script src="./mpi-subcontractor.js?build=185"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=185"></script>
+  <script src="./mpi-native-bridge.js?build=186"></script>
+  <script src="./mpi-shared.js?build=186"></script>
+  <script src="./mpi-field-sync.js?build=186"></script>
+  <script src="./mpi-subcontractor.js?build=186"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=186"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -23926,6 +23926,19 @@
           commentModeBadge.textContent = "Ready";
           showToast("MPI comment ready for review");
         } catch (error) {
+          if (error?.mpiFallbackAllowed) {
+            commentOutput.value = buildMpiComment(note, commentArea.value, commentType);
+            copyCommentBtn.disabled = false;
+            commentModeBadge.textContent = "On-device backup";
+            commentFailureActions.hidden = true;
+            window.MPI_COMMENT_AI?.recordLocalFallback?.({
+              id: error.requestId || activeCommentRequestId,
+              category: error.mpiCategory || "service-unavailable",
+              photo: Boolean(selectedCommentPhoto)
+            });
+            showToast("MPI comment created on this phone");
+            return;
+          }
           commentOutput.value = `COMMENT GENERATION FAILED\n\nYour original field note has been saved.\n\n${error?.message || "The secure MPI Comment Builder could not connect. Please try again."}${error?.requestId ? `\n\nReference: ${error.requestId}` : ""}`;
           commentModeBadge.textContent = error?.mpiStatus || (navigator.onLine ? "Service error" : "Offline");
           commentFailureActions.hidden = false;

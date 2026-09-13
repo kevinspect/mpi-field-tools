@@ -296,6 +296,9 @@ function friendlyCommentError(error) {
   if (!navigator.onLine || /network-request-failed|failed to fetch|networkerror|load failed/.test(combined)) {
     return commentError("The phone is not reaching the MPI Comment Builder. Check that Wi-Fi or cellular data is working, then try again.", "Offline");
   }
+  if (/firebase ai logic has been deactivated|marked as inactive/.test(combined)) {
+    return commentError("The online MPI Comment Builder service is temporarily unavailable. Your original note is still saved.", "Service unavailable");
+  }
   if (/app.?check|recaptcha|403|permission.?denied|unauthori[sz]ed|forbidden/.test(combined)) {
     return commentError("MPI secure access could not be verified on this phone. Close and reopen MPI Field Tools, then try again. If it repeats, contact management.", "Access check failed");
   }
@@ -462,8 +465,27 @@ async function generate({ note, component = "auto", mode = "defect", photo = nul
   }
   const friendly = friendlyCommentError(lastError);
   friendly.requestId = id;
+  friendly.mpiCategory = technicalCategory(lastError);
+  friendly.mpiFallbackAllowed = true;
   throw friendly;
 }
 
-window.MPI_COMMENT_AI = { generate, usageSnapshot, technicalLog: () => { try { return JSON.parse(localStorage.getItem(COMMENT_LOG_STORAGE_KEY) || "[]"); } catch (_) { return []; } }, dailyLimit: DAILY_LIMIT, monthlyLimit: MONTHLY_LIMIT, primaryModel: PRIMARY_MODEL, fallbackModel: FALLBACK_MODEL };
+function recordLocalFallback({ id = "", category = "unknown", photo = false } = {}) {
+  const session = window.MPI_COMPANY_SESSION || {};
+  writeTechnicalLog({
+    requestId: id,
+    attempt: "local-fallback",
+    result: "success",
+    category,
+    connectivity: navigator.onLine ? "online" : "offline",
+    authenticationStatus: session.inspectorEmail ? "company-session-valid" : "unknown",
+    backend: "on-device-fallback",
+    model: "mpi-rules-v1",
+    stage: "local-generation",
+    supportingPhoto: Boolean(photo),
+    inspector: session.inspectorEmail || session.inspectorName || "signed-in"
+  });
+}
+
+window.MPI_COMMENT_AI = { generate, usageSnapshot, recordLocalFallback, technicalLog: () => { try { return JSON.parse(localStorage.getItem(COMMENT_LOG_STORAGE_KEY) || "[]"); } catch (_) { return []; } }, dailyLimit: DAILY_LIMIT, monthlyLimit: MONTHLY_LIMIT, primaryModel: PRIMARY_MODEL, fallbackModel: FALLBACK_MODEL };
 window.dispatchEvent(new CustomEvent("mpi-comment-ai-ready"));
