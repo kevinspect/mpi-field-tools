@@ -10,7 +10,7 @@ All source preparation, validation and release documentation stays in this repos
 - Bundle identifier: `com.michiganpropertyinspections.fieldtools`
 - Minimum platform: iOS 15 through Capacitor 8
 - Native Firebase app ID: `1:574980684703:ios:019e78ea668087ce729baa`
-- Current native version: `0.1.0 (181)`
+- Current native version: `0.1.0 (182)`
 - Distribution plan: TestFlight pilot, followed by a private or unlisted production release
 
 ## Native responsibilities

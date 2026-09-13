@@ -403,8 +403,22 @@
     .admin-inbox-block[open] > summary::after { content:"−"; }
     .admin-inbox-block > .office-reply-list,.admin-inbox-block > .update-list,.admin-inbox-block > .admin-sent-direct-list { margin:0 14px 14px; }
     .admin-inbox-title { display:flex; flex:1; align-items:center; justify-content:space-between; gap:12px; }
-    .admin-inbox-title h3 { margin:0; color:var(--navy); font-size:17px; }
+    .admin-inbox-title h3 { display:flex; align-items:center; gap:8px; margin:0; color:var(--navy); font-size:17px; }
     .admin-inbox-title span { color:var(--muted); font-size:10px; font-weight:850; }
+    .admin-compose-block { margin-bottom:14px; border-color:#c9dced; background:#f7fbff; }
+    .admin-compose-block > .admin-inbox-compose { margin:0 14px 14px; }
+    .admin-inbox-conversation { overflow:hidden; border:1px solid var(--line); border-radius:17px; background:#fff; }
+    .admin-conversation-head { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:16px 18px; border-bottom:1px solid var(--line); background:linear-gradient(135deg,#f5f9fd,#fff); }
+    .admin-conversation-person { display:flex; min-width:0; align-items:center; gap:12px; }
+    .admin-conversation-person strong,.admin-conversation-person span { display:block; }
+    .admin-conversation-person strong { overflow:hidden; color:var(--navy); font-size:16px; text-overflow:ellipsis; white-space:nowrap; }
+    .admin-conversation-person span { margin-top:3px; color:var(--muted); font-size:10px; }
+    .admin-conversation-back { min-height:42px; padding:0 13px; color:var(--blue); background:#fff; border:1px solid #c9dced; border-radius:10px; font-size:10px; font-weight:900; cursor:pointer; }
+    .admin-conversation-body { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr); gap:16px; padding:18px; }
+    .admin-conversation-thread { min-height:360px; max-height:620px; overflow:auto; padding:2px; }
+    .admin-conversation-compose { align-self:start; padding:16px; border:1px solid #d7e3ef; border-radius:14px; background:#f7f9fc; }
+    .admin-conversation-compose h3 { margin:0 0 5px; color:var(--navy); font-size:15px; }
+    .admin-conversation-compose > p { margin:0 0 13px; color:var(--muted); font-size:10px; line-height:1.45; }
     .admin-inbox-type { display:inline-flex !important; width:max-content; margin-top:5px; padding:3px 7px; color:var(--blue) !important; background:#edf5fb; border-radius:999px; font-size:8px !important; font-weight:950; letter-spacing:.05em; text-transform:uppercase; }
     .admin-sent-direct-list { display:grid; gap:8px; }
     .delivery-state { display:inline-flex !important; width:max-content; align-items:center; margin-top:6px; padding:3px 7px; color:#59617d !important; background:#edf1f6; border-radius:999px; font-size:8px !important; font-weight:950; letter-spacing:.04em; text-transform:uppercase; }
@@ -474,6 +488,9 @@
       .ops-card,.ops-card.span-6,.ops-card.span-8 { grid-column:1/-1; }
       .office-reply-card { grid-template-columns:1fr auto; }
       .office-reply-card > div:nth-child(2) { grid-column:1/-1; grid-row:2; }
+      .admin-conversation-head { align-items:flex-start; }
+      .admin-conversation-body { grid-template-columns:1fr; padding:14px; }
+      .admin-conversation-thread { min-height:240px; max-height:none; }
       .subcontractor-admin-facts { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
 
@@ -795,7 +812,7 @@
     </section>
 
     <section class="dashboard" id="adminDashboard" hidden>
-      <div class="stat-grid">
+      <div class="stat-grid" id="adminOperationsSummary">
         <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><span>Inspectors working</span></div><strong id="statWorking">0</strong></article>
         <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-briefcase"></use></svg></span><span>Jobs completed</span></div><strong id="statJobs">0</strong></article>
         <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-clock"></use></svg></span><span id="statHoursLabel">Hours today</span></div><strong id="statHours">0:00</strong></article>
@@ -816,7 +833,7 @@
         <button type="button" data-admin-view="requests"><svg class="app-icon"><use href="#icon-clipboard"></use></svg><span>Requests</span><span class="nav-count" id="adminRequestCount"></span></button>
         <button type="button" data-admin-view="diagnostics"><svg class="app-icon"><use href="#icon-alert"></use></svg><span>App issues</span><span class="nav-count" id="adminDiagnosticCount"></span></button>
         <button type="button" data-admin-view="publish"><svg class="app-icon"><use href="#icon-send"></use></svg><span>Send to field</span></button>
-        <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Inbox</span><span class="nav-count" id="adminReplyCount"></span></button>
+        <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Messages</span><span class="nav-count" id="adminReplyCount"></span></button>
         <button type="button" data-admin-view="people"><svg class="app-icon"><use href="#icon-users"></use></svg><span>Team</span></button>
       </nav>
 
@@ -832,7 +849,6 @@
             <div class="safety-alert-head"><h3 id="adminSafetyAlertsTitle"><svg class="app-icon"><use href="#icon-alert"></use></svg> Safety Alerts</h3><span id="adminSafetyAlertCount">0</span></div>
             <div id="adminSafetyAlertList"></div>
           </section>
-          <section class="office-reply-inbox" id="adminReplyInbox" aria-live="polite"><div class="office-reply-head"><h3>Inspector Replies</h3><span>0</span></div><div class="office-reply-list"><div class="empty">No inspector replies yet.</div></div></section>
           <section class="live-location-panel" id="adminLiveLocationPanel" aria-labelledby="adminLiveLocationTitle">
             <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Live Inspector &amp; Schedule Map</h3><p>Choose a date to compare every inspector's read-only appointment plan, or select one inspector to open their planned or actual route.</p></div><div class="live-location-actions"><span class="live-location-status" id="adminLiveLocationStatus">Waiting for active field devices.</span><input id="adminLiveRouteDate" type="date" aria-label="Map date"><button class="secondary" id="adminLiveLocationAllPlans" type="button" disabled>SHOW ALL INSPECTORS' JOBS</button><button class="secondary" id="adminLiveLocationPlan" type="button" disabled>SHOW SELECTED INSPECTOR'S JOBS</button><button class="secondary" id="adminLiveLocationHistory" type="button" disabled>SHOW ACTUAL ROUTE</button><button class="secondary" id="adminLiveLocationShowAll" type="button">LIVE LOCATIONS</button><button class="secondary" id="adminLiveLocationRefresh" type="button">UPDATE NOW</button><div class="live-location-planner"><input id="adminLiveCandidateAddress" type="text" autocomplete="street-address" maxlength="180" aria-label="Possible new job address" placeholder="Possible new job address"><button class="primary" id="adminLiveCandidatePin" type="button">DROP PLANNING PIN</button></div></div></div>
             <p class="spectora-readonly-note" id="adminSpectoraScheduleStatus"><strong>SPECTORA · READ ONLY</strong><span>The planner may display synchronized appointment data but cannot change anything in Spectora.</span></p>
@@ -892,7 +908,18 @@
       </section>
 
       <section class="console-view" data-admin-panel="updates">
-        <div class="panel content-panel"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Inbox</h2><p>Inspector messages, private conversations, safety alerts, and office-update replies for this admin account.</p></div></div></div><form class="admin-inbox-compose" id="adminInboxComposeForm"><div><h3>Compose private message</h3><p>Choose one recipient. This creates a private two-way conversation, not a company broadcast.</p></div><div class="form-grid"><div class="field"><label for="adminInboxComposeRecipient">To</label><select id="adminInboxComposeRecipient" required><option value="">Choose team member</option></select></div><div class="field"><label for="adminInboxComposeText">Message</label><textarea id="adminInboxComposeText" maxlength="1200" required placeholder="Write a private MPI message"></textarea></div><div class="field wide"><label for="adminInboxComposeFiles">Photos or PDF (optional)</label><input id="adminInboxComposeFiles" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple></div></div><div class="form-actions"><button class="primary" id="adminInboxComposeSend" type="submit"><svg class="app-icon"><use href="#icon-send"></use></svg><span>SEND PRIVATE MESSAGE</span></button><span class="status" id="adminInboxComposeStatus"></span></div></form><details class="admin-inbox-block" open><summary><div class="admin-inbox-title"><h3>Inbox</h3><span id="adminInboxSummary">Connecting…</span></div></summary><div class="office-reply-list" id="adminUnifiedInboxList"><div class="empty">Connecting to the MPI inbox…</div></div></details><details class="admin-inbox-block"><summary><div class="admin-inbox-title"><h3>Sent Messages &amp; Updates</h3><span id="adminSentSummary">Delivery and read status</span></div></summary><div class="admin-sent-direct-list" id="adminSentMessagesList"><div class="empty">No private messages have been sent.</div></div><div class="update-list" id="adminUpdatesList"><div class="empty">No office updates have been published.</div></div></details></div>
+        <div class="panel content-panel">
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Messages</h2><p>All private conversations, inspector replies, attachments, delivery status, and sent updates are kept together here.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE MESSAGE ALERTS</span></button></div>
+          <div id="adminInboxMailbox">
+            <details class="admin-inbox-block admin-compose-block">
+              <summary><div class="admin-inbox-title"><h3><svg class="app-icon"><use href="#icon-send"></use></svg> Compose message</h3><span>New private conversation</span></div></summary>
+              <form class="admin-inbox-compose" id="adminInboxComposeForm"><div><h3>New private message</h3><p>Choose one recipient. This will not broadcast to the rest of the team.</p></div><div class="form-grid"><div class="field"><label for="adminInboxComposeRecipient">To</label><select id="adminInboxComposeRecipient" required><option value="">Choose team member</option></select></div><div class="field"><label for="adminInboxComposeText">Message</label><textarea id="adminInboxComposeText" maxlength="1200" required placeholder="Write a private MPI message"></textarea></div><div class="field wide"><label for="adminInboxComposeFiles">Photos or PDF (optional)</label><input id="adminInboxComposeFiles" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple></div></div><div class="form-actions"><button class="primary" id="adminInboxComposeSend" type="submit"><svg class="app-icon"><use href="#icon-send"></use></svg><span>SEND PRIVATE MESSAGE</span></button><span class="status" id="adminInboxComposeStatus"></span></div></form>
+            </details>
+            <details class="admin-inbox-block" open><summary><div class="admin-inbox-title"><h3>Inbox</h3><span id="adminInboxSummary">Connecting…</span></div></summary><div class="office-reply-list" id="adminUnifiedInboxList"><div class="empty">Connecting to the MPI inbox…</div></div></details>
+            <details class="admin-inbox-block"><summary><div class="admin-inbox-title"><h3>Sent Messages &amp; Updates</h3><span id="adminSentSummary">Delivery and read status</span></div></summary><div class="admin-sent-direct-list" id="adminSentMessagesList"><div class="empty">No private messages have been sent.</div></div><div class="update-list" id="adminUpdatesList"><div class="empty">No office updates have been published.</div></div></details>
+          </div>
+          <section class="admin-inbox-conversation" id="adminInboxConversation" aria-live="polite" hidden></section>
+        </div>
       </section>
 
       <section class="console-view" data-admin-panel="people">
@@ -917,7 +944,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
-  <script src="./mpi-shared.js?build=181"></script>
-  <script src="./admin.js?build=181"></script>
+  <script src="./mpi-shared.js?build=182"></script>
+  <script src="./admin.js?build=182"></script>
 </body>
 </html>

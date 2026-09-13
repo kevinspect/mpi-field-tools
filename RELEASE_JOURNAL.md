@@ -1,5 +1,16 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 182 — Organized Operations and Messages
+
+- Removed Inspector Replies, private message composers, conversation history, and message unread indicators from the Operations workspace.
+- Kept Operations focused on live field status, the map, jobs, hours, drive time, lab activity, exceptions, and auditable corrections.
+- Moved private conversations, field replies, Chain of Custody submissions, attachments, compose, sent items, and delivery/read status into one Messages workspace.
+- Added an app-style private conversation view with a fixed recipient, attachment support, Create To-Do for actionable field messages, and a clear return to Inbox.
+- Prevented live Operations/data refreshes from clearing a message while an admin is typing.
+- Kept safety events visible as operational exceptions while moving the follow-up conversation to Messages.
+- Hid Operations summary counters and Comment Builder allowance outside the Operations workspace to reduce clutter.
+- Preserved all existing messages, receipts, files, timestamps, and historical operations data.
+
 ## Build 181 — Completed Job Restart Lock
 
 - Prevents a completed inspection from being reopened through the Home schedule, Today’s Jobs, automatic job selection, or the cleared-job recovery control.

@@ -59,6 +59,7 @@
   const commentUsageStatus = document.getElementById("commentUsageStatus");
   const commentUsageProgress = document.getElementById("commentUsageProgress");
   const commentUsageNote = document.getElementById("commentUsageNote");
+  const operationsSummary = document.getElementById("adminOperationsSummary");
   const requestCount = document.getElementById("adminRequestCount");
   const requestList = document.getElementById("adminRequestList");
   const requestStatusFilter = document.getElementById("adminRequestStatusFilter");
@@ -72,7 +73,6 @@
   const diagnosticSummary = document.getElementById("adminDiagnosticSummary");
   const diagnosticStatusFilter = document.getElementById("adminDiagnosticStatusFilter");
   const officeAlertButtons = [...document.querySelectorAll("[data-enable-office-alerts]")];
-  const replyInbox = document.getElementById("adminReplyInbox");
   const replyCount = document.getElementById("adminReplyCount");
   const unifiedInboxList = document.getElementById("adminUnifiedInboxList");
   const unifiedInboxSummary = document.getElementById("adminInboxSummary");
@@ -84,6 +84,8 @@
   const inboxComposeFiles = document.getElementById("adminInboxComposeFiles");
   const inboxComposeSend = document.getElementById("adminInboxComposeSend");
   const inboxComposeStatus = document.getElementById("adminInboxComposeStatus");
+  const inboxMailbox = document.getElementById("adminInboxMailbox");
+  const inboxConversation = document.getElementById("adminInboxConversation");
   const tabButtons = [...document.querySelectorAll("[data-admin-view]")];
   const panels = [...document.querySelectorAll("[data-admin-panel]")];
   const stats = {
@@ -132,6 +134,7 @@
   let people = [];
   let updates = [];
   let currentRange = "today";
+  let currentAdminView = "operations";
   const COMMENT_MONTHLY_PLANNING_ALLOWANCE = 400;
   let selectedInspectorId = "all";
   let selectedOperationDate = "";
@@ -144,6 +147,7 @@
   let inspectorReplies = [];
   let fieldMessages = [];
   let directMessages = [];
+  let activeInboxPersonId = "";
   let directMessageListenerReady = false;
   let fieldMessageListenerReady = false;
   let knownFieldMessageIds = new Set();
@@ -151,7 +155,6 @@
   let knownOfficeUpdateIds = new Set();
   let knownReplyKeys = new Set();
   let readReplyKeys = new Set();
-  let unreadReplyCount = 0;
   let unreadSafetyCount = 0;
   let replyListenerReady = false;
   let officeMessaging = null;
@@ -403,7 +406,6 @@
     readReplyKeys.add(key);
     const savedKeys = [...readReplyKeys].slice(-200);
     currentProfile.officeReplyReadKeys = savedKeys;
-    renderReplyInbox();
     renderAdminUnifiedInbox();
     renderSafetyAlerts();
     renderOperationsStats();
@@ -561,42 +563,9 @@
       const informed = Array.isArray(details.peopleInformed) && details.peopleInformed.length
         ? details.peopleInformed.join(", ")
         : "Not recorded";
-      return `<article class="safety-alert-card" data-safety-alert-id="${escapeHtml(alert.id)}"><header><div><span class="safety-critical-badge">Immediate review required</span><h4>${escapeHtml(details.noticeType || alert.title || "Safety event")}</h4></div><time>${escapeHtml(formatDateTime(alert.createdAt || alert.createdAtClient))}</time></header><div class="safety-alert-meta"><span><strong>Inspector:</strong> ${escapeHtml(alert.senderName || alert.senderEmail || "MPI Inspector")}</span><span><strong>Location:</strong> ${escapeHtml(details.property || "Not supplied")}</span><span><strong>Occurred:</strong> ${escapeHtml(formatDateTime(details.occurredAt))}</span></div><div class="safety-alert-facts">${escapeHtml(details.facts || alert.message || "Safety notice submitted.")}</div>${details.immediateAction ? `<p class="safety-alert-detail"><strong>Immediate action:</strong> ${escapeHtml(details.immediateAction)}</p>` : ""}${details.decision ? `<p class="safety-alert-detail"><strong>Inspection decision:</strong> ${escapeHtml(details.decision)}</p>` : ""}<p class="safety-alert-detail"><strong>People informed:</strong> ${escapeHtml(informed)}</p>${details.followUp ? `<p class="safety-alert-detail"><strong>Follow-up requested:</strong> ${escapeHtml(details.followUp)}</p>` : ""}<form class="safety-alert-reply" data-safety-reply-form data-safety-alert-id="${escapeHtml(alert.id)}" data-person-id="${escapeHtml(alert.senderUid || "")}" data-target-email="${escapeHtml(alert.senderEmail || "")}" data-target-name="${escapeHtml(alert.senderName || "MPI Inspector")}"><label>Reply to ${escapeHtml(alert.senderName || "the inspector")}</label><textarea data-message-text maxlength="1000" required placeholder="Type the office safety follow-up or instructions"></textarea><button type="submit">SEND SAFETY REPLY</button><span class="status" data-message-status aria-live="polite"></span></form><p class="safety-alert-receipt-note">Replying does not acknowledge this alert. Your acknowledgement applies only to your admin account; every other admin must confirm receipt separately.</p><button class="primary" type="button" data-acknowledge-safety="${escapeHtml(alert.id)}">ACKNOWLEDGE SAFETY ALERT</button></article>`;
+      return `<article class="safety-alert-card" data-safety-alert-id="${escapeHtml(alert.id)}"><header><div><span class="safety-critical-badge">Immediate review required</span><h4>${escapeHtml(details.noticeType || alert.title || "Safety event")}</h4></div><time>${escapeHtml(formatDateTime(alert.createdAt || alert.createdAtClient))}</time></header><div class="safety-alert-meta"><span><strong>Inspector:</strong> ${escapeHtml(alert.senderName || alert.senderEmail || "MPI Inspector")}</span><span><strong>Location:</strong> ${escapeHtml(details.property || "Not supplied")}</span><span><strong>Occurred:</strong> ${escapeHtml(formatDateTime(details.occurredAt))}</span></div><div class="safety-alert-facts">${escapeHtml(details.facts || alert.message || "Safety notice submitted.")}</div>${details.immediateAction ? `<p class="safety-alert-detail"><strong>Immediate action:</strong> ${escapeHtml(details.immediateAction)}</p>` : ""}${details.decision ? `<p class="safety-alert-detail"><strong>Inspection decision:</strong> ${escapeHtml(details.decision)}</p>` : ""}<p class="safety-alert-detail"><strong>People informed:</strong> ${escapeHtml(informed)}</p>${details.followUp ? `<p class="safety-alert-detail"><strong>Follow-up requested:</strong> ${escapeHtml(details.followUp)}</p>` : ""}<p class="safety-alert-receipt-note">Acknowledge the safety record here. Any follow-up conversation stays in Messages.</p><button class="primary" type="button" data-acknowledge-safety="${escapeHtml(alert.id)}">ACKNOWLEDGE SAFETY ALERT</button></article>`;
     }).join("");
     updateOperationsNotificationBadge();
-  }
-
-  function renderReplyInbox() {
-    if (!replyInbox) return;
-    const fieldReplies = fieldMessages.filter(item => !["safety-alert", "lab-coc"].includes(item.kind)).map(item => ({
-      fieldMessageId: item.id,
-      userId: item.senderUid,
-      userEmail: item.senderEmail,
-      userName: item.senderName,
-      updateId: item.replyToUpdateId || "",
-      updateTitle: item.replyToUpdateId ? "Reply to office message" : "Message to MPI Office",
-      replyText: item.message || (item.attachments?.length ? `${item.attachments.length} photo${item.attachments.length === 1 ? "" : "s"} attached` : "Field message"),
-      repliedAt: item.createdAt || item.createdAtClient,
-      attachments: item.attachments || []
-    }));
-    const mirrored = new Set(fieldReplies.filter(item => item.updateId).map(item => `${item.updateId}:${item.userId}`));
-    const values = [...fieldReplies, ...inspectorReplies.filter(item => !mirrored.has(`${item.updateId}:${item.userId}`))]
-      .filter(item => item.replyText)
-      .sort((left, right) => (asDate(right.repliedAt)?.getTime() || 0) - (asDate(left.repliedAt)?.getTime() || 0))
-      .slice(0, 12);
-    const unread = values.filter(item => replyIsForCurrentAdmin(item) && !readReplyKeys.has(replyKey(item)));
-    unreadReplyCount = unread.length;
-    updateOperationsNotificationBadge();
-    const count = replyInbox.querySelector(".office-reply-head span");
-    if (count) count.textContent = unread.length ? `${unread.length} new` : "0 new";
-    const list = replyInbox.querySelector(".office-reply-list");
-    if (!list) return;
-    list.innerHTML = values.length ? values.map(reply => {
-      const update = updateForReply(reply);
-      const isUnread = replyIsForCurrentAdmin(reply) && !readReplyKeys.has(replyKey(reply));
-      const photos = reply.attachments?.length ? `<span class="office-reply-files">${reply.attachments.length} photo${reply.attachments.length === 1 ? "" : "s"}</span>` : "";
-      return `<button class="office-reply-card${isUnread ? " unread" : ""}" type="button" data-open-reply-inspector="${escapeHtml(reply.userId || "")}" data-reply-key="${escapeHtml(replyKey(reply))}"><div><strong>${escapeHtml(reply.userName || reply.userEmail || "MPI Field User")}</strong><small>${escapeHtml(reply.updateTitle || update?.title || "Message to MPI Office")}</small>${isUnread ? '<span class="office-reply-new">New message</span>' : ""}</div><div><span>${escapeHtml(reply.replyText)}</span>${photos}</div><time>${escapeHtml(formatDateTime(reply.repliedAt || reply.updatedAt))}</time></button>`;
-    }).join("") : '<div class="empty">No inspector replies yet. New replies will appear here automatically.</div>';
   }
 
   function processFieldMessages(snapshot) {
@@ -620,12 +589,9 @@
     knownFieldMessageIds = ids;
     fieldMessageListenerReady = true;
     renderSafetyAlerts();
-    renderReplyInbox();
     renderAdminUnifiedInbox();
     renderOperationsStats();
-    const selected = overviewEntry(selectedInspectorId);
-    const history = document.getElementById("adminMessageHistory");
-    if (selected?.person && history) history.innerHTML = messageHistoryHtml(selected.person);
+    refreshAdminInboxConversation();
   }
 
   function processReplySnapshot(snapshot) {
@@ -648,7 +614,6 @@
     inspectorReplies = replies;
     knownReplyKeys = nextKeys;
     replyListenerReady = true;
-    renderReplyInbox();
     renderAdminUnifiedInbox();
     messageReceiptCache.clear();
     values.forEach(receipt => {
@@ -2032,8 +1997,12 @@
   }
 
   function showView(name) {
+    currentAdminView = name;
     tabButtons.forEach(button => button.classList.toggle("active", button.dataset.adminView === name));
     panels.forEach(panel => panel.classList.toggle("active", panel.dataset.adminPanel === name));
+    if (operationsSummary) operationsSummary.hidden = name !== "operations";
+    if (commentUsagePanel) commentUsagePanel.hidden = name !== "operations" || !isPrimaryOwner();
+    if (name === "operations") renderCommentUsageAllowance();
     if (name === "requests") markNewRequestsReviewed();
   }
 
@@ -2047,22 +2016,6 @@
       || correctionForm.querySelector("#adminCorrectionJob")?.value
       || correctionForm.querySelector("#adminCorrectionAction")?.selectedIndex > 0
     );
-  }
-
-  function messageComposerIsActive(personId = "") {
-    const messageForm = inspectorDetail.querySelector("#adminMessageForm, [data-office-message-form], [data-subcontractor-message-form]");
-    if (!messageForm || (personId && String(messageForm.dataset.personId || "") !== String(personId))) return false;
-    const textarea = messageForm.querySelector("[data-message-text], #adminMessageText");
-    return Boolean(
-      messageForm.contains(document.activeElement)
-      || textarea?.value.trim()
-      || (Array.isArray(messageForm._mpiFiles) && messageForm._mpiFiles.length)
-    );
-  }
-
-  function refreshOpenConversation(person) {
-    const history = document.getElementById("adminMessageHistory");
-    if (history && person) history.innerHTML = messageHistoryHtml(person);
   }
 
   function renderTargetOptions() {
@@ -2235,8 +2188,6 @@
   function subcontractorStateCard(person, state, isTest = false) {
     const job = state?.currentJob || { number: 1, status: "ready" };
     const events = Array.isArray(state?.events) ? state.events.slice(-8).reverse() : [];
-    const messages = (Array.isArray(person.subcontractorMessages) ? person.subcontractorMessages : [])
-      .filter(item => Boolean(item.test) === Boolean(isTest)).slice(-5).reverse();
     const status = subcontractorDisplayStatus(state);
     const completedAt = job.completedAt || state?.completedJobs?.at?.(-1)?.completedAt || "";
     const title = isTest ? (state?.subcontractorName || "TEST SUBCONTRACTOR") : (person.name || person.email || "MPI Subcontractor");
@@ -2250,8 +2201,6 @@
         <div class="subcontractor-admin-fact"><span>Completed</span><strong>${escapeHtml(formatTime(completedAt))}</strong></div>
       </div>
       <div class="subcontractor-admin-events">${events.length ? events.map(item => `<div><strong>${escapeHtml(item.type || "Status updated")}</strong><span>${escapeHtml(formatTime(item.timestamp))}${item.lab ? ` · ${escapeHtml(item.lab)}` : ""}</span></div>`).join("") : '<div><strong>No actions yet</strong><span>Waiting for phone</span></div>'}</div>
-      <h3 style="margin-top:16px">Conversation</h3><div class="message-history" id="adminMessageHistory">${messageHistoryHtml(person)}${messages.length ? messages.map(item => `<article><strong>${escapeHtml(formatDateTime(item.createdAt))} · ${escapeHtml(item.senderName || title)} → Office</strong><p>${escapeHtml(item.message || "")}</p></article>`).join("") : ""}</div>
-      <form class="subcontractor-admin-message" data-subcontractor-message-form data-person-id="${escapeHtml(person.id)}"><label class="field">Message ${escapeHtml(title)}<textarea data-message-text maxlength="1000" required placeholder="Write a message for ${escapeHtml(title)}"></textarea></label>${chatAttachmentHtml()}<button class="primary" type="submit">MESSAGE ${escapeHtml(String(title).split(/\s+/)[0].toUpperCase())}</button><span class="status" data-message-status></span></form>
       ${!isTest ? `<div class="subcontractor-access-actions"><button class="secondary" type="button" data-copy-subcontractor-link="${escapeHtml(person.id)}">COPY APP ACTIVATION LINK</button><button class="danger" type="button" data-revoke-subcontractor="${escapeHtml(person.id)}">REVOKE SUBCONTRACTOR ACCESS</button><span class="status" data-subcontractor-access-status></span></div>` : ""}
       ${isTest ? '<button class="danger" type="button" data-reset-admin-test-subcontractor>RESET TEST DAY</button>' : ""}
     </article>`;
@@ -2485,15 +2434,14 @@
     const latestSync = latestSyncDate(person, day);
     const stale = !["NOT STARTED", "CLOCKED OUT"].includes(status) && latestSync && Date.now() - latestSync.getTime() > 20 * 60 * 1000;
     const punctuality = day?.currentJob?.arrivalPerformance || next?.arrivalPerformance || (alerts.some(item => /late/i.test(item)) ? "Needs review" : "On schedule");
-    const unread = unreadDirectFor(person);
-    return `<button class="inspector-row${alerts.length || unread ? " has-alert" : ""}" type="button" data-open-inspector="${escapeHtml(person.id)}">
+    return `<button class="inspector-row${alerts.length ? " has-alert" : ""}" type="button" data-open-inspector="${escapeHtml(person.id)}">
       <div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(person.name || person.email)}</strong><small>${escapeHtml(day?.currentJob?.property || (next ? `Next: ${next.property}` : "No current appointment"))}</small><small class="inspector-sync${stale ? " stale" : ""}">${escapeHtml(syncAgeLabel(person, day))}${stale ? " · confirm status" : ""}</small></div></div>
       <div><span class="status-badge ${statusClass(status, alerts)}${stale ? " stale" : ""}">${escapeHtml(status)}</span>${operationalContextHtml(person, day) || `<small>${alerts[0] ? escapeHtml(alerts[0]) : escapeHtml(punctuality)}</small>`}</div>
       <div class="row-metric"><span>Jobs</span><b>${counts.complete} / ${counts.total}</b></div>
       <div class="row-metric"><span>Hours worked</span><b>${formatMinutes(hours)}</b></div>
       <div class="row-metric"><span>Drive time</span><b>${formatMinutes(drive)}</b></div>
       <div class="row-metric"><span>Next appointment</span><b>${next ? formatTime(next.scheduledStart) : "—"}</b></div>
-      <span class="row-open">${unread ? `${unread} new · ` : ""}›</span>
+      <span class="row-open">›</span>
     </button>`;
   }
 
@@ -2505,15 +2453,14 @@
     const status = subcontractorDisplayStatus(state);
     const completed = Array.isArray(state?.completedJobs) ? state.completedJobs.length : 0;
     const lastEvent = Array.isArray(state?.events) ? state.events.at(-1) : null;
-    const unread = test ? 0 : unreadDirectFor(person);
-    return `<button class="inspector-row subcontractor-row${test ? " test" : ""}${unread ? " has-alert" : ""}" type="button" data-open-subcontractor="${escapeHtml(entry.id)}">
+    return `<button class="inspector-row subcontractor-row${test ? " test" : ""}" type="button" data-open-subcontractor="${escapeHtml(entry.id)}">
       <div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(title)}</strong><small>${escapeHtml(test ? "Test subcontractor · excluded from payroll" : "Subcontractor")}</small><small class="inspector-sync">${escapeHtml(state?.updatedAtClient ? `Updated ${formatDateTime(state.updatedAtClient)}` : "Waiting for phone sync")}</small></div></div>
       <div><span class="status-badge">${escapeHtml(status)}</span><small>${escapeHtml(lastEvent?.type || "No action recorded yet")}</small></div>
       <div class="row-metric"><span>Current job</span><b>${escapeHtml(job ? `Job ${job.number || 1}` : "—")}</b></div>
       <div class="row-metric"><span>Completed</span><b>${completed}</b></div>
       <div class="row-metric"><span>Arrived</span><b>${escapeHtml(formatTime(job?.arrivedAt))}</b></div>
       <div class="row-metric"><span>Last action</span><b>${escapeHtml(formatTime(lastEvent?.timestamp))}</b></div>
-      <span class="row-open">${unread ? `${unread} new · ` : ""}›</span>
+      <span class="row-open">›</span>
     </button>`;
   }
 
@@ -2544,7 +2491,7 @@
   }
 
   function renderCommentUsageAllowance() {
-    if (!commentUsageUsed || !isPrimaryOwner()) {
+    if (!commentUsageUsed || !isPrimaryOwner() || currentAdminView !== "operations") {
       if (commentUsagePanel) commentUsagePanel.hidden = true;
       return;
     }
@@ -2570,7 +2517,6 @@
   function renderTeamOverview() {
     const entries = teamOverviewEntries();
     const fieldEntries = entries.filter(entry => entry.kind !== "office");
-    const officeEntries = entries.filter(entry => entry.kind === "office");
     const cory = operativePeople().find(person => /^cory\b/i.test(String(person.name || "")) || shared.normalizeEmail(person.email) === "cory@michiganpropertyinspections.com");
     const coryMinutes = cory ? weeklyMinutes(cory) : 0;
     const coryOvertime = Math.max(0, coryMinutes - 40 * 60);
@@ -2581,9 +2527,9 @@
       : "";
     teamOverview.hidden = false;
     inspectorDetail.hidden = true;
-    teamOverview.innerHTML = entries.length
-      ? `${coryCounter}${fieldEntries.length ? `<div class="team-group-title">Field Team <span>${fieldEntries.length} member${fieldEntries.length === 1 ? "" : "s"}</span></div>${fieldEntries.map(entry => entry.kind === "subcontractor" ? subcontractorOverviewRow(entry) : overviewRow(entry.person)).join("")}` : ""}${officeEntries.length ? `<div class="team-group-title">Office Team <span>${officeEntries.length} member${officeEntries.length === 1 ? "" : "s"}</span></div>${officeEntries.map(officeOverviewRow).join("")}` : ""}`
-      : '<div class="empty">No team accounts have synchronized yet. Ask each user to sign in with their MPI account.</div>';
+    teamOverview.innerHTML = fieldEntries.length
+      ? `${coryCounter}<div class="team-group-title">Field Team <span>${fieldEntries.length} member${fieldEntries.length === 1 ? "" : "s"}</span></div>${fieldEntries.map(entry => entry.kind === "subcontractor" ? subcontractorOverviewRow(entry) : overviewRow(entry.person)).join("")}`
+      : '<div class="empty">No field operations have synchronized yet.</div>';
   }
 
   function renderSubcontractorDetail(entry) {
@@ -2591,15 +2537,6 @@
     inspectorDetail.innerHTML = `<div class="detail-hero"><div class="detail-person">${avatarHtml(person, "large")}<div><p class="ops-eyebrow">Subcontractor operations</p><h2>${escapeHtml(entry.test ? (entry.state?.subcontractorName || "Test Subcontractor") : (person.name || person.email || "MPI Subcontractor"))}</h2><p>Job and lab status · excluded from employee payroll and hours</p></div></div><button class="detail-back" type="button" data-back-overview>← All field users</button></div>${subcontractorStateCard(person, entry.state, entry.test)}`;
     teamOverview.hidden = true;
     inspectorDetail.hidden = false;
-    if (!entry.test) hydrateMessageReceipts(person);
-  }
-
-  function renderOfficeDetail(entry) {
-    const person = entry.person;
-    inspectorDetail.innerHTML = `<div class="detail-hero"><div class="detail-person">${avatarHtml(person, "large")}<div><p class="ops-eyebrow">Office team</p><h2>${escapeHtml(person.name || person.email || "MPI Office")}</h2><p>${escapeHtml(person.email || "")} · Internal company conversation</p></div></div><div><span class="status-badge neutral">OFFICE</span><button class="detail-back" type="button" data-back-overview>← All team members</button></div></div><div class="ops-grid"><article class="ops-card full"><h3>Message ${escapeHtml(person.name || "Office")}</h3><p class="ops-sub">Send a quick internal message. It remains a normal conversation unless an administrator deliberately converts a field message into a to-do.</p><form class="compact-form" data-office-message-form data-person-id="${escapeHtml(person.id)}"><div class="field"><label>Message</label><textarea data-message-text maxlength="1000" required placeholder="Write a message for ${escapeHtml(person.name || "the office")}"></textarea></div>${chatAttachmentHtml()}<button class="primary" type="submit">SEND MESSAGE</button><span class="status" data-message-status></span></form><h3 style="margin-top:20px">Conversation</h3><div class="message-history" id="adminMessageHistory">${messageHistoryHtml(person)}</div></article></div>`;
-    teamOverview.hidden = true;
-    inspectorDetail.hidden = false;
-    hydrateMessageReceipts(person);
   }
 
   function jobTimeEditButton(action, job, value) {
@@ -2694,19 +2631,83 @@
   function messageHistoryHtml(person) {
     const privateMessages = messagesFor(person).map(message => ({ direction: message.senderUid === currentUser?.uid ? "office" : "field", timestamp: message.createdAt || message.createdAtClient, message, direct: true }));
     const legacyOffice = updates.filter(update => update.type === "message" && update.createdBy === currentUser?.uid && (String(update.targetUid || "") === String(person.id || "") || (person.email && shared.normalizeEmail(update.targetEmail) === shared.normalizeEmail(person.email)))).map(message => ({ direction: "office", timestamp: message.createdAt, message }));
-    const legacyField = fieldMessages.filter(message => message.kind !== "lab-coc" && (message.senderUid === person.id || shared.normalizeEmail(message.senderEmail) === shared.normalizeEmail(person.email))).map(message => ({ direction: "field", timestamp: message.createdAt || message.createdAtClient, message }));
-    const messages = [...privateMessages, ...legacyOffice, ...legacyField].sort((left, right) => (asDate(right.timestamp)?.getTime() || 0) - (asDate(left.timestamp)?.getTime() || 0));
+    const legacyField = fieldMessages.filter(message => message.senderUid === person.id || shared.normalizeEmail(message.senderEmail) === shared.normalizeEmail(person.email)).map(message => ({ direction: "field", timestamp: message.createdAt || message.createdAtClient, message }));
+    const mirroredReceipts = new Set(fieldMessages.filter(message => message.replyToUpdateId).map(message => `${message.replyToUpdateId}:${message.senderUid || shared.normalizeEmail(message.senderEmail)}`));
+    const receiptReplies = inspectorReplies.filter(reply => {
+      const belongsToPerson = reply.userId === person.id || shared.normalizeEmail(reply.userEmail) === shared.normalizeEmail(person.email);
+      const mirrorKey = `${reply.updateId}:${reply.userId || shared.normalizeEmail(reply.userEmail)}`;
+      return belongsToPerson && !mirroredReceipts.has(mirrorKey);
+    }).map(reply => ({ direction: "field", receipt: true, timestamp: reply.repliedAt || reply.updatedAt, message: { ...reply, message: reply.replyText, senderName: reply.userName || person.name, attachments: reply.attachments || [] } }));
+    const messages = [...privateMessages, ...legacyOffice, ...legacyField, ...receiptReplies].sort((left, right) => (asDate(right.timestamp)?.getTime() || 0) - (asDate(left.timestamp)?.getTime() || 0));
     return messages.length ? messages.slice(0, 30).map(item => {
       const message = item.message;
       if (item.direct) {
         const delivery = item.direction === "office" ? deliveryStateHtml(directDeliveryState(message)) : "";
         return `<article class="${item.direction}"><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || "MPI Team Member")}</strong><p>${escapeHtml(message.message || "Attachment sent")}</p>${delivery}${directAttachmentsHtml(message)}${item.direction === "field" ? `<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}" data-direct-message="true">CREATE TO-DO</button>` : ""}</article>`;
       }
-      if (item.direction === "field") return `<article><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || person.name || "MPI Field User")} → Office</strong><p>${escapeHtml(message.message || "Photos sent to MPI Office")}</p>${fieldAttachmentsHtml(message)}<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}">CREATE TO-DO</button></article>`;
+      if (item.receipt) return `<article><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || person.name || "MPI Field User")} → Office</strong><p>${escapeHtml(message.message || "Inspector replied")}</p>${fieldAttachmentsHtml(message)}</article>`;
+      if (item.direction === "field") return `<article><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || person.name || "MPI Field User")} → Office</strong><p>${escapeHtml(message.message || "Photos sent to MPI Office")}</p>${fieldAttachmentsHtml(message)}${message.kind === "lab-coc" ? "" : `<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}">CREATE TO-DO</button>`}</article>`;
       const receipt = messageReceiptCache.get(`${message.id}:${person.id}`);
       const state = receipt?.status ? receipt.status.replace(/-/g, " ") : "Sent to app";
       return `<article><strong>${escapeHtml(formatDateTime(message.createdAt))} · MPI Office → ${escapeHtml(person.name || "field user")}</strong><p>${escapeHtml(message.message)}</p><p><b>Status:</b> ${escapeHtml(state)}</p>${adminAttachmentsHtml(message)}</article>`;
     }).join("") : '<div class="empty">No messages in this conversation yet.</div>';
+  }
+
+  function renderAdminInboxConversation(personId = activeInboxPersonId) {
+    if (!inboxMailbox || !inboxConversation) return;
+    const person = people.find(item => item.id === personId && item.active !== false);
+    if (!person) {
+      activeInboxPersonId = "";
+      inboxMailbox.hidden = false;
+      inboxConversation.hidden = true;
+      inboxConversation.innerHTML = "";
+      return;
+    }
+    activeInboxPersonId = person.id;
+    const canReply = person.id !== currentUser?.uid;
+    inboxMailbox.hidden = true;
+    inboxConversation.hidden = false;
+    inboxConversation.innerHTML = `
+      <header class="admin-conversation-head">
+        <div class="admin-conversation-person">${avatarHtml(person)}<div><strong>${escapeHtml(canonicalTeamName(person))}</strong><span>${canReply ? `${escapeHtml(teamRoleLabel(person.role))} · Private MPI conversation` : "Your field submissions to the office"}</span></div></div>
+        <button class="admin-conversation-back" type="button" data-close-admin-conversation>← BACK TO INBOX</button>
+      </header>
+      <div class="admin-conversation-body">
+        <div class="message-history admin-conversation-thread" id="adminInboxConversationHistory">${messageHistoryHtml(person)}</div>
+        ${canReply ? `<form class="compact-form admin-conversation-compose" data-admin-conversation-form data-person-id="${escapeHtml(person.id)}">
+          <h3>Message ${escapeHtml(canonicalTeamName(person))}</h3>
+          <p>The recipient is fixed. This message will only be delivered to this private conversation.</p>
+          <div class="field"><label>Message</label><textarea data-message-text maxlength="1200" required placeholder="Write a private message"></textarea></div>
+          ${chatAttachmentHtml()}
+          <button class="primary" type="submit"><svg class="app-icon"><use href="#icon-send"></use></svg><span>SEND MESSAGE</span></button>
+          <span class="status" data-message-status aria-live="polite"></span>
+        </form>` : '<aside class="admin-conversation-compose"><h3>Field submissions</h3><p>Attachments and activity sent from your inspector app are shown in this message history. Private messages to other team members can be started from Compose message.</p></aside>'}
+      </div>`;
+    hydrateMessageReceipts(person);
+  }
+
+  function refreshAdminInboxConversation() {
+    if (!activeInboxPersonId || !inboxConversation || inboxConversation.hidden) return;
+    const person = people.find(item => item.id === activeInboxPersonId);
+    const history = document.getElementById("adminInboxConversationHistory");
+    if (person && history) history.innerHTML = messageHistoryHtml(person);
+  }
+
+  function openAdminInboxConversation(personId) {
+    if (!personId || !people.some(person => person.id === personId && person.active !== false)) return;
+    showView("updates");
+    renderAdminInboxConversation(personId);
+    shared.markDirectConversationRead?.(currentUser, personId).catch(() => false);
+  }
+
+  function closeAdminInboxConversation() {
+    activeInboxPersonId = "";
+    if (inboxMailbox) inboxMailbox.hidden = false;
+    if (inboxConversation) {
+      inboxConversation.hidden = true;
+      inboxConversation.innerHTML = "";
+    }
+    renderAdminUnifiedInbox();
   }
 
   async function hydrateMessageReceipts(person) {
@@ -2715,10 +2716,7 @@
       && !(Array.isArray(message.readBy) && message.readBy.includes(currentUser.uid))
     );
     if (hasUnreadDirectMessage) shared.markDirectConversationRead?.(currentUser, person.id).catch(() => false);
-    if (selectedInspectorId === person.id && !inspectorDetail.hidden) {
-      const host = document.getElementById("adminMessageHistory");
-      if (host) host.innerHTML = messageHistoryHtml(person);
-    }
+    if (activeInboxPersonId === person.id) refreshAdminInboxConversation();
   }
 
   async function createTodoFromMessage(button) {
@@ -2960,13 +2958,11 @@
         <article class="ops-card"><h3>Morning Readiness</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${day?.readiness ? "Complete" : "Not recorded"}</strong></div><div class="fact"><span>Original time</span><strong>${formatTime(originalReadiness)}</strong></div>${readinessCorrection ? `<div class="fact"><span>Admin-adjusted time</span><strong>${formatTime(readinessCorrection.correctedValue)}</strong></div><div class="fact"><span>Effective activity start</span><strong>${formatTime(effectiveReadiness)}</strong></div><div class="fact"><span>Changed by</span><strong>${escapeHtml(readinessCorrection.correctedByName || readinessCorrection.correctedByEmail || "MPI Admin")}</strong></div><div class="fact"><span>Changed</span><strong>${escapeHtml(formatDateTime(readinessCorrection.correctedAt))}</strong></div><div class="fact"><span>Reason</span><strong>${escapeHtml(readinessCorrection.reason || "—")}</strong></div>` : `<div class="fact"><span>Effective activity start</span><strong>${formatTime(effectiveReadiness)}</strong></div>`}<div class="fact"><span>Important notifications</span><strong>${escapeHtml(day?.readiness?.notificationPermission === "granted" ? "Enabled" : day?.readiness?.notificationPermission || "Unknown")}</strong></div></div></article>
         <article class="ops-card span-6"><h3>Lab Activity &amp; Chain of Custody</h3>${labHtml(person, day)}</article>
         <article class="ops-card"><h3>End-of-Day Status</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${escapeHtml(eodStatus)}</strong></div><div class="fact"><span>Clock out</span><strong>${formatTime(clockOut)}</strong></div><div class="fact"><span>Last recorded location</span><strong>${locationLink}</strong></div><div class="fact"><span>Equipment check</span><strong>${day?.dayComplete?.equipment?.length ? "Complete" : "Pending"}</strong></div></div><p class="ops-sub">Location is event-based, not continuous. Never treat a stale location as live.</p></article>
-        <article class="ops-card span-6"><h3>Message Inspector</h3><div class="quick-messages" id="adminQuickMessages">${["CALL OFFICE", "PLEASE CHECK APP", "RUNNING LATE – UPDATE OFFICE", "REMEMBER LAB DROP", "PLEASE CONFIRM STATUS", "CONTACT CLIENT"].map(value => `<button type="button" data-quick-message="${escapeHtml(value)}">${escapeHtml(value)}</button>`).join("")}</div><form class="compact-form" id="adminMessageForm" data-person-id="${escapeHtml(person.id)}"><div class="field"><label for="adminMessageText">Review or write the message</label><textarea id="adminMessageText" maxlength="1000" required placeholder="Type a clear operational message for ${escapeHtml(person.name || "the inspector")}"></textarea></div>${chatAttachmentHtml()}<button class="primary" type="submit">SEND TO INSPECTOR APP</button><span class="status" id="adminMessageStatus"></span></form><h3 style="margin-top:20px">Conversation</h3><div class="message-history" id="adminMessageHistory">${messageHistoryHtml(person)}</div></article>
         <article class="ops-card span-6"><h3>Admin Corrections</h3><p class="ops-sub">Corrections are appended to the audit trail. Original records are never deleted or overwritten.</p><form class="compact-form" id="adminCorrectionForm" data-person-id="${escapeHtml(person.id)}"><div class="two-col"><div class="field"><label for="adminCorrectionAction">Missed / incorrect action</label><select id="adminCorrectionAction" required>${correctionActions.map(action => `<option value="${escapeHtml(action)}">${escapeHtml(action)}</option>`).join("")}</select></div><div class="field"><label for="adminCorrectionJob">Job</label><select id="adminCorrectionJob"><option value="">No specific job</option>${jobOptions}</select></div></div><div class="field"><label for="adminCorrectionValue">Correct date and time</label><input id="adminCorrectionValue" type="datetime-local" required></div><div class="field"><label for="adminCorrectionReason">Reason for correction</label><textarea id="adminCorrectionReason" maxlength="500" required placeholder="Explain why management is adding this correction."></textarea></div><button class="primary" type="submit">ADD AUDITABLE CORRECTION</button><span class="status" id="adminCorrectionStatus"></span></form><h3 style="margin-top:20px">Correction History</h3><div class="correction-history">${correctionHistoryHtml(person, day)}</div></article>
       </div>`;
     teamOverview.hidden = true;
     inspectorDetail.hidden = false;
     updateOperationalClocks();
-    hydrateMessageReceipts(person);
   }
 
   function renderOperations() {
@@ -2980,12 +2976,9 @@
     else {
       const entry = overviewEntry(selectedInspectorId);
       if (!entry) renderTeamOverview();
-      else if (messageComposerIsActive(entry.person?.id)) refreshOpenConversation(entry.person);
       else if (entry.kind === "subcontractor") renderSubcontractorDetail(entry);
-      else if (entry.kind === "office") renderOfficeDetail(entry);
       else if (!preserveCorrectionDraft) renderInspectorDetail(entry.person);
     }
-    renderReplyInbox();
     renderSafetyAlerts();
     renderLiveLocationMap();
     updateOperationalClocks();
@@ -3013,7 +3006,6 @@
       const merged = new Map(inspectorReplies.map(reply => [`${reply.updateId}:${reply.userId || reply.userEmail || "unknown"}`, reply]));
       summaryReplies.forEach(reply => merged.set(`${reply.updateId}:${reply.userId || reply.userEmail || "unknown"}`, reply));
       inspectorReplies = [...merged.values()].sort((a, b) => (asDate(b.repliedAt)?.getTime() || 0) - (asDate(a.repliedAt)?.getTime() || 0));
-      renderReplyInbox();
     }
     updatesList.innerHTML = updates.length ? updates.map((update, index) => {
       const summary = summaries[index];
@@ -3023,7 +3015,7 @@
       return `<article class="update-card"><div class="update-top"><div><span class="type-badge">${escapeHtml(String(update.type || "update").replace("-", " "))}</span>${update.priority !== "normal" ? `<span class="priority-badge">${escapeHtml(update.priority)}</span>` : ""}<h3>${escapeHtml(update.title)}</h3></div><span class="role-badge">${escapeHtml(recipient)}</span></div><p>${escapeHtml(update.message)}</p>${adminAttachmentsHtml(update)}<div class="update-meta"><span>Sent by ${escapeHtml(update.createdByName || update.createdByEmail || "MPI Office")}</span><span>Published ${escapeHtml(formatDateTime(update.createdAt))}</span>${update.dueDate ? `<span>Due ${escapeHtml(formatDate(update.dueDate))}</span>` : ""}${deliveryStateHtml(readState)}<span>${summary.delivered} delivered</span><span>${summary.acknowledged} read / acknowledged</span></div>${replies}</article>`;
     }).join("") : '<div class="empty">No office updates have been published.</div>';
     renderAdminSentMessages();
-    if (selectedInspectorId !== "all") renderOperations();
+    refreshAdminInboxConversation();
   }
 
   function canonicalTeamName(person) {
@@ -3114,9 +3106,9 @@
         const targetUid = new URL(window.location.href).searchParams.get("team") || "";
         const targetEntry = teamOverviewEntries().find(entry => entry.person?.id === targetUid);
         if (targetEntry) {
-          selectedInspectorId = targetEntry.id;
-          selectedOperationDate = "";
-          inspectorSelector.value = selectedInspectorId;
+          activeInboxPersonId = targetEntry.person.id;
+          showView("updates");
+          renderAdminInboxConversation(activeInboxPersonId);
         }
         teamDeepLinkApplied = true;
       }
@@ -3139,13 +3131,11 @@
     replyListenerReady = false;
     knownReplyKeys = new Set();
     unsubscribeReplies = shared.db.collectionGroup("receipts").onSnapshot(processReplySnapshot, () => {
-      renderReplyInbox();
     });
     fieldMessageListenerReady = false;
     knownFieldMessageIds = new Set();
     unsubscribeFieldMessages = shared.db.collection("fieldMessages").orderBy("createdAt", "desc").limit(200).onSnapshot(processFieldMessages, () => {
       fieldMessages = [];
-      renderReplyInbox();
       renderAdminUnifiedInbox();
     });
     directMessageListenerReady = false;
@@ -3160,13 +3150,13 @@
           `Message from ${latest.senderName || "MPI Team Member"}`,
           latest.message || "A team attachment is available.",
           `mpi-team-${latest.id}`,
-          `./admin.html?team=${encodeURIComponent(latest.senderUid || "")}`
+          `./admin.html?view=inbox&team=${encodeURIComponent(latest.senderUid || "")}`
         );
       }
       directMessageListenerReady = true;
       renderAdminUnifiedInbox();
       renderAdminSentMessages();
-      renderOperations();
+      refreshAdminInboxConversation();
     });
   }
 
@@ -3326,6 +3316,7 @@
       inboxComposeForm.reset();
       inboxComposeStatus.textContent = `Private message sent only to ${canonicalTeamName(person)}.`;
       inboxComposeStatus.className = "status success";
+      openAdminInboxConversation(person.id);
     } catch (error) {
       inboxComposeStatus.textContent = error?.message || "The private message could not be sent.";
       inboxComposeStatus.className = "status error";
@@ -3583,12 +3574,6 @@
     formElement._mpiFiles?.splice(Number(remove.dataset.removeChatFile), 1);
     renderChatFiles(formElement);
   });
-  subcontractorList?.addEventListener("submit", event => {
-    const formElement = event.target.closest("[data-subcontractor-message-form]");
-    if (!formElement) return;
-    event.preventDefault();
-    sendInspectorMessage(formElement);
-  });
   subcontractorList?.addEventListener("click", event => {
     const button = event.target.closest("[data-reset-admin-test-subcontractor]");
     if (button) resetAdminTestSubcontractor(button);
@@ -3637,21 +3622,6 @@
     if (completedField) completedField.hidden = statusControl.value !== "completed";
   });
   officeAlertButtons.forEach(button => button.addEventListener("click", () => enableOfficeAlerts(button, true)));
-  replyInbox?.addEventListener("click", event => {
-    const attachment = event.target.closest("[data-open-field-attachment]");
-    if (attachment) {
-      event.preventDefault();
-      event.stopPropagation();
-      openFieldAttachment(attachment);
-      return;
-    }
-    const button = event.target.closest("[data-open-reply-inspector]");
-    if (!button?.dataset.openReplyInspector) return;
-    markReplyRead(button.dataset.replyKey || "");
-    selectedInspectorId = button.dataset.openReplyInspector;
-    inspectorSelector.value = selectedInspectorId;
-    renderOperations();
-  });
   unifiedInboxList?.addEventListener("click", event => {
     const button = event.target.closest("[data-admin-inbox-kind]");
     if (!button) return;
@@ -3675,23 +3645,12 @@
     } else if (kind === "receipt") {
       markReplyRead(button.dataset.adminInboxKey || "");
     }
-    if (personId && overviewEntry(personId)) {
-      selectedInspectorId = personId;
-      selectedOperationDate = "";
-      inspectorSelector.value = personId;
-    }
-    showView("operations");
-    renderOperations();
+    if (personId) openAdminInboxConversation(personId);
   });
   sentMessagesList?.addEventListener("click", event => {
     const button = event.target.closest("[data-admin-sent-person]");
     const personId = button?.dataset.adminSentPerson || "";
-    if (!personId || !overviewEntry(personId)) return;
-    selectedInspectorId = personId;
-    selectedOperationDate = "";
-    inspectorSelector.value = personId;
-    showView("operations");
-    renderOperations();
+    if (personId) openAdminInboxConversation(personId);
   });
   safetyAlertCenter?.addEventListener("click", event => {
     const button = event.target.closest("[data-acknowledge-safety]");
@@ -3700,8 +3659,31 @@
     button.textContent = "ACKNOWLEDGED";
     acknowledgeSafetyAlert(button.dataset.acknowledgeSafety);
   });
-  safetyAlertCenter?.addEventListener("submit", event => {
-    const formElement = event.target.closest("[data-safety-reply-form]");
+  inboxConversation?.addEventListener("click", event => {
+    if (event.target.closest("[data-close-admin-conversation]")) {
+      closeAdminInboxConversation();
+      return;
+    }
+    const messageTodo = event.target.closest("[data-create-message-todo]");
+    if (messageTodo) {
+      createTodoFromMessage(messageTodo);
+      return;
+    }
+    const fieldAttachment = event.target.closest("[data-open-field-attachment]");
+    if (fieldAttachment) {
+      openFieldAttachment(fieldAttachment);
+      return;
+    }
+    const directAttachment = event.target.closest("[data-open-direct-attachment]");
+    if (directAttachment) {
+      openDirectAttachment(directAttachment);
+      return;
+    }
+    const officeAttachment = event.target.closest("[data-open-admin-attachment]");
+    if (officeAttachment) openAdminAttachment(officeAttachment);
+  });
+  inboxConversation?.addEventListener("submit", event => {
+    const formElement = event.target.closest("[data-admin-conversation-form]");
     if (!formElement) return;
     event.preventDefault();
     sendInspectorMessage(formElement);
@@ -3860,17 +3842,9 @@
       });
       return;
     }
-    const quick = event.target.closest("[data-quick-message]");
-    if (quick) {
-      const textarea = document.getElementById("adminMessageText");
-      if (textarea) textarea.value = quick.dataset.quickMessage;
-    }
   });
   inspectorDetail.addEventListener("submit", event => {
     event.preventDefault();
-    if (event.target.id === "adminMessageForm") sendInspectorMessage(event.target);
-    if (event.target.matches("[data-subcontractor-message-form]")) sendInspectorMessage(event.target);
-    if (event.target.matches("[data-office-message-form]")) sendInspectorMessage(event.target);
     if (event.target.id === "adminCorrectionForm") addAdminCorrection(event.target);
   });
   signInButton.addEventListener("click", async () => {
