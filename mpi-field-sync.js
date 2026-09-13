@@ -74,6 +74,7 @@
   let lastPublishedSessionSignature = "";
   let lastPublishedSpectoraSignature = "";
   let liveLocationInterval = 0;
+  let spectoraRefreshInterval = 0;
 
   if (profileMount && profileCard) profileMount.appendChild(profileCard);
   let liveLocationWatchId = null;
@@ -947,6 +948,16 @@
   function renderSession(user, profile, error) {
     currentUser = user;
     currentProfile = profile;
+    if (spectoraRefreshInterval) {
+      window.clearInterval(spectoraRefreshInterval);
+      spectoraRefreshInterval = 0;
+    }
+    if (user && profile?.active !== false) {
+      shared.requestSpectoraScheduleRefresh?.().catch(() => false);
+      spectoraRefreshInterval = window.setInterval(() => {
+        shared.requestSpectoraScheduleRefresh?.().catch(() => false);
+      }, 15 * 60 * 1000);
+    }
     synchronizeAccessChoice(user, profile);
     accountCard.hidden = false;
     if (!user || !profile) {

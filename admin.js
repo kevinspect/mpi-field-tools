@@ -1620,10 +1620,6 @@
   async function requestLiveLocationRefresh() {
     if (!currentUser || !shared.isAdminRole(currentProfile) || !liveLocationRefresh) return;
     const targets = liveLocationPeople().filter(person => liveWorkState(person).active);
-    if (!targets.length) {
-      liveLocationStatus.textContent = "No inspectors currently have an active workday.";
-      return;
-    }
     liveLocationRefresh.disabled = true;
     liveLocationRefresh.textContent = "REQUESTING…";
     const request = {
@@ -1633,6 +1629,11 @@
       requestedByName: currentProfile?.name || currentUser.displayName || "MPI Office"
     };
     try {
+      await shared.requestSpectoraScheduleRefresh?.();
+      if (!targets.length) {
+        liveLocationStatus.textContent = "Schedule refresh requested. No inspectors currently have an active workday location.";
+        return;
+      }
       const batch = shared.db.batch();
       targets.forEach(person => batch.set(shared.db.collection("users").doc(person.id), { liveLocationRequest: request }, { merge: true }));
       await batch.commit();
@@ -3891,6 +3892,7 @@
   shared.watchSession(({ user, profile, error }) => {
     currentUser = user;
     currentProfile = profile;
+    if (user && profile?.active !== false) shared.requestSpectoraScheduleRefresh?.().catch(() => false);
     readReplyKeys = new Set(Array.isArray(profile?.officeReplyReadKeys) ? profile.officeReplyReadKeys : []);
     authStatus.textContent = error?.message || "";
     if (!user || !profile || !shared.isAdminRole(profile)) {

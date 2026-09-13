@@ -502,6 +502,28 @@
     return true;
   }
 
+  async function requestSpectoraScheduleRefresh() {
+    const user = auth.currentUser;
+    if (!user || !MPI_PUSH_ENDPOINT) return false;
+    const lastAttempt = Number(sessionStorage.getItem("mpiSpectoraRefreshAttempt") || 0);
+    if (Date.now() - lastAttempt < 2 * 60 * 1000) return true;
+    sessionStorage.setItem("mpiSpectoraRefreshAttempt", String(Date.now()));
+    const idToken = await user.getIdToken();
+    const requestId = `spectora-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    await fetch(MPI_PUSH_ENDPOINT, {
+      method: "POST",
+      mode: "no-cors",
+      cache: "no-store",
+      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+      body: JSON.stringify({
+        source: "mpi-spectora-refresh",
+        requestId,
+        idToken
+      })
+    });
+    return true;
+  }
+
   function replyToUpdate(updateId, user, profile, message, update = null, files = []) {
     const replyText = String(message || "").trim().slice(0, 1000);
     if (!updateId || !user || (!replyText && !files.length)) return Promise.reject(new Error("Write a reply or attach a photo first."));
@@ -1100,6 +1122,7 @@
     markFieldMessagesDelivered,
     sendSafetyAlert,
     sendPushNotification,
+    requestSpectoraScheduleRefresh,
     loadOfficeAttachment,
     loadFieldAttachment,
     loadDirectAttachment,

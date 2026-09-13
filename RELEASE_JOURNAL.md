@@ -1,5 +1,12 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 178 — Read-only Spectora Schedule Sync
+
+- Added a protected, one-way Spectora schedule connector. It uses only the documented inspection retrieval endpoint and contains no Spectora create, edit, cancel, reschedule, upload, calendar-write, or publish operation.
+- Stores the API credential only in the protected backend and exposes only the minimum appointment fields needed by MPI Field Tools: stable job ID, address, appointment time, inspector, services, status, and job notes. Pricing, payments, report content, and internal Spectora data are excluded.
+- Synchronizes each operative's schedule into their existing MPI profile so Today's Jobs and the Office route planner use the same stable inspection ID and cannot accidentally open a different appointment.
+- Refreshes on app/admin sign-in, every 15 minutes while the field app is open, and from the Office map's Update Now control. Server-side throttling protects the Spectora quota.
+
 ## Build 177 — Map, Native Admin, and Training Reliability
 
 - Corrected the Firestore route-point schema so native background GPS points can be stored instead of being rejected.

@@ -20,6 +20,21 @@ var MPI_PUSH = Object.freeze({
   MAX_TARGETS: 30
 });
 
+// Spectora is a one-way schedule source. This service intentionally implements
+// GET requests only; it has no create, update, cancel, reschedule, upload, or
+// publish operation for Spectora.
+var MPI_SPECTORA = Object.freeze({
+  SOURCE: "mpi-spectora-refresh",
+  API_ROOT: "https://connect.spectora.com/v2",
+  API_KEY_PROPERTY: "MPI_SPECTORA_API_KEY",
+  PROJECT_ID: "mpi-field-notifications",
+  PAST_DAYS: 7,
+  FUTURE_DAYS: 120,
+  PAGE_SIZE: 200,
+  MIN_REFRESH_SECONDS: 300,
+  MAX_PAGES: 10
+});
+
 function doGet(event) {
   var parameters = event && event.parameter ? event.parameter : {};
   if (parameters.action === "status") {
@@ -39,6 +54,7 @@ function doPost(event) {
     requestId = safeText_(input.requestId, 120);
     var source = safeText_(input.source, 80);
     if (source === MPI_PUSH.SOURCE) return handlePushRequest_(input, requestId);
+    if (source === MPI_SPECTORA.SOURCE) return handleSpectoraRefresh_(input, requestId);
     if (!requestId || (source !== MPI_EMAIL.SOURCE && source !== MPI_EMAIL.WEEKLY_SOURCE && source !== "mpi-field-tools-form-email")) throw new Error("Request was not accepted");
 
     if (source === MPI_EMAIL.SOURCE) {
@@ -243,6 +259,263 @@ function authorizePushService() {
   console.log("MPI push service permission check: " + code);
   if (code < 200 || code >= 300) throw new Error("Push service permission check failed: " + code);
   return code;
+}
+
+function handleSpectoraRefresh_(input, requestId) {
+  try {
+    if (!requestId) throw new Error("Schedule refresh request ID is missing");
+    var sender = verifyFirebaseUser_(safeText_(input.idToken, 5000));
+    var companySender = sender && sender.emailVerified && isMpiCompanyEmail_(sender.email);
+    var subcontractorSender = sender && !sender.email && isActiveSubcontractor_(sender.uid);
+    if (!companySender && !subcontractorSender) throw new Error("Company device access could not be verified");
+    var result = syncSpectoraSchedule_(false);
+    return response_({
+      ok: true,
+      status: result.cached ? "current" : "synchronized",
+      requestId: requestId,
+      synchronizedAt: result.synchronizedAt,
+      inspections: result.inspections,
+      profiles: result.profiles
+    });
+  } catch (error) {
+    return response_({
+      ok: false,
+      status: "failed",
+      requestId: requestId,
+      message: safeText_(error && error.message ? error.message : "Schedule refresh failed", 180)
+    });
+  }
+}
+
+/** Runs from the protected Apps Script time trigger. */
+function syncSpectoraSchedule() {
+  return syncSpectoraSchedule_(true);
+}
+
+/** Installs one reconciliation trigger and removes only old copies of it. */
+function installSpectoraSyncTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (trigger) {
+    if (trigger.getHandlerFunction() === "syncSpectoraSchedule") ScriptApp.deleteTrigger(trigger);
+  });
+  ScriptApp.newTrigger("syncSpectoraSchedule").timeBased().everyMinutes(15).create();
+  return "Spectora read-only schedule trigger installed";
+}
+
+function syncSpectoraSchedule_(force) {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get("mpi-spectora-last-sync");
+  if (!force && cached) {
+    try {
+      var parsed = JSON.parse(cached);
+      parsed.cached = true;
+      return parsed;
+    } catch (_) {}
+  }
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    cached = cache.get("mpi-spectora-last-sync");
+    if (!force && cached) {
+      try {
+        var current = JSON.parse(cached);
+        current.cached = true;
+        return current;
+      } catch (_) {}
+    }
+
+    var inspections = fetchSpectoraInspections_();
+    var schedules = buildSpectoraSchedules_(inspections);
+    var profiles = writeSpectoraSchedules_(schedules);
+    var result = {
+      cached: false,
+      synchronizedAt: new Date().toISOString(),
+      inspections: inspections.length,
+      profiles: profiles
+    };
+    cache.put("mpi-spectora-last-sync", JSON.stringify(result), MPI_SPECTORA.MIN_REFRESH_SECONDS);
+    PropertiesService.getScriptProperties().setProperty("MPI_SPECTORA_LAST_SYNC", JSON.stringify(result));
+    return result;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function fetchSpectoraInspections_() {
+  var now = new Date();
+  var start = new Date(now.getTime() - MPI_SPECTORA.PAST_DAYS * 86400000);
+  var finish = new Date(now.getTime() + MPI_SPECTORA.FUTURE_DAYS * 86400000);
+  var fields = [
+    "slug", "datetime", "duration", "description", "notes", "request_notes",
+    "confirmed", "canceled_at", "deleted_at", "full_address", "property_address",
+    "property_address_2", "inspector_name", "service_names", "service_add_on_names"
+  ].join(",");
+  var collected = [];
+
+  for (var page = 1; page <= MPI_SPECTORA.MAX_PAGES; page += 1) {
+    var query = [
+      "fields[inspection]=" + encodeURIComponent(fields),
+      "filter[datetime_greater_than]=" + encodeURIComponent(start.toISOString()),
+      "filter[datetime_less_than]=" + encodeURIComponent(finish.toISOString()),
+      "page[number]=" + page,
+      "page[size]=" + MPI_SPECTORA.PAGE_SIZE,
+      "sort=datetime"
+    ].join("&");
+    var payload = spectoraGet_("/inspections?" + query);
+    var records = Array.isArray(payload.data) ? payload.data : [];
+    collected = collected.concat(records);
+    if (records.length < MPI_SPECTORA.PAGE_SIZE) break;
+  }
+  return collected;
+}
+
+/** The sole Spectora transport. It is deliberately hard-coded to HTTP GET. */
+function spectoraGet_(path) {
+  if (!/^\/inspections(?:[/?]|$)/.test(String(path || ""))) throw new Error("Spectora path was not allowed");
+  var apiKey = PropertiesService.getScriptProperties().getProperty(MPI_SPECTORA.API_KEY_PROPERTY);
+  if (!apiKey) throw new Error("Spectora API key is not configured");
+  var response = UrlFetchApp.fetch(MPI_SPECTORA.API_ROOT + path, {
+    method: "get",
+    headers: {
+      Authorization: "Bearer " + apiKey,
+      Accept: "application/vnd.api+json"
+    },
+    muteHttpExceptions: true
+  });
+  var code = response.getResponseCode();
+  if (code < 200 || code >= 300) throw new Error("Spectora read failed with status " + code);
+  var parsed = JSON.parse(response.getContentText() || "{}");
+  if (!parsed || !Array.isArray(parsed.data)) throw new Error("Spectora returned an unexpected response");
+  return parsed;
+}
+
+function buildSpectoraSchedules_(records) {
+  var schedules = {};
+  records.forEach(function (record) {
+    var attributes = record && record.attributes ? record.attributes : {};
+    var inspectorName = safeText_(attributes.inspector_name, 100);
+    var inspectorKey = normalizedPersonName_(inspectorName);
+    var scheduledStart = safeText_(attributes.datetime, 80);
+    if (!inspectorKey || !scheduledStart || attributes.deleted_at || attributes.canceled_at) return;
+    var start = new Date(scheduledStart);
+    if (isNaN(start.getTime())) return;
+    var durationHours = Math.max(0, Number(attributes.duration) || 0);
+    var scheduledEnd = new Date(start.getTime() + durationHours * 3600000).toISOString();
+    var dateKey = scheduledStart.slice(0, 10);
+    var services = splitSpectoraList_(attributes.service_names).concat(splitSpectoraList_(attributes.service_add_on_names));
+    var notes = [safeText_(attributes.notes, 3000), safeText_(attributes.request_notes, 3000)].filter(Boolean).join("\n\n");
+    if (!schedules[inspectorKey]) schedules[inspectorKey] = {};
+    if (!schedules[inspectorKey][dateKey]) schedules[inspectorKey][dateKey] = [];
+    schedules[inspectorKey][dateKey].push({
+      id: String(record.id || ""),
+      spectoraJobId: String(record.id || ""),
+      propertyAddress: safeText_(attributes.full_address || [attributes.property_address, attributes.property_address_2].filter(Boolean).join(", "), 300),
+      scheduledStart: scheduledStart,
+      scheduledEnd: scheduledEnd,
+      inspectorId: "",
+      inspectorName: inspectorName,
+      clientName: "",
+      clientPhone: "",
+      agentName: "",
+      agentPhone: "",
+      notes: notes,
+      status: attributes.confirmed === true ? "confirmed" : "scheduled",
+      services: uniqueStrings_(services)
+    });
+  });
+  return schedules;
+}
+
+function splitSpectoraList_(value) {
+  return String(value || "").split(/[,\n|]+/).map(function (item) { return safeText_(item, 120); }).filter(Boolean);
+}
+
+function normalizedPersonName_(value) {
+  return String(value || "").toLowerCase().replace(/\bcorey\b/g, "cory").replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function userSpectoraName_(fields) {
+  var candidates = [
+    firestoreString_(fields, "spectoraInspectorName"),
+    firestoreString_(fields, "name"),
+    firestoreString_(fields, "displayName"),
+    firestoreString_(fields, "inspectorName")
+  ].filter(Boolean);
+  var email = firestoreString_(fields, "email").toLowerCase();
+  if (email === "kev@michiganpropertyinspections.com") candidates.unshift("Kevin Cave");
+  return normalizedPersonName_(candidates[0] || "");
+}
+
+function writeSpectoraSchedules_(schedules) {
+  var documents = listFirestoreUserDocuments_();
+  var written = 0;
+  documents.forEach(function (document) {
+    var fields = document.fields || {};
+    var role = firestoreString_(fields, "role");
+    var active = !(fields.active && fields.active.booleanValue === false);
+    var personKey = userSpectoraName_(fields);
+    if (!active || ["owner", "inspector", "subcontractor"].indexOf(role) < 0 || !personKey) return;
+    var daysByDate = schedules[personKey] || {};
+    var days = Object.keys(daysByDate).sort().map(function (date) {
+      return {
+        date: date,
+        jobs: daysByDate[date].sort(function (a, b) { return a.scheduledStart.localeCompare(b.scheduledStart); })
+      };
+    });
+    patchFirestoreUserSchedule_(document.name, days);
+    written += 1;
+  });
+  return written;
+}
+
+function listFirestoreUserDocuments_() {
+  var response = UrlFetchApp.fetch("https://firestore.googleapis.com/v1/projects/" + MPI_SPECTORA.PROJECT_ID + "/databases/(default)/documents/users?pageSize=100", {
+    method: "get",
+    headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+    muteHttpExceptions: true
+  });
+  if (response.getResponseCode() !== 200) throw new Error("User directory read failed with status " + response.getResponseCode());
+  return JSON.parse(response.getContentText() || "{}").documents || [];
+}
+
+function patchFirestoreUserSchedule_(documentName, days) {
+  var resourcePath = String(documentName || "").replace(/^projects\/[\w-]+\/databases\/\(default\)\/documents\//, "");
+  if (!/^users\/[^/]+$/.test(resourcePath)) throw new Error("User profile path was not allowed");
+  var url = "https://firestore.googleapis.com/v1/projects/" + MPI_SPECTORA.PROJECT_ID + "/databases/(default)/documents/" + resourcePath
+    + "?updateMask.fieldPaths=spectoraScheduleDays"
+    + "&updateMask.fieldPaths=spectoraScheduleUpdatedAt"
+    + "&updateMask.fieldPaths=spectoraScheduleSource";
+  var response = UrlFetchApp.fetch(url, {
+    method: "patch",
+    contentType: "application/json",
+    headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+    payload: JSON.stringify({ fields: {
+      spectoraScheduleDays: firestoreValue_(days),
+      spectoraScheduleUpdatedAt: { timestampValue: new Date().toISOString() },
+      spectoraScheduleSource: { stringValue: "Spectora read-only sync" }
+    }}),
+    muteHttpExceptions: true
+  });
+  if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) {
+    throw new Error("Schedule profile write failed with status " + response.getResponseCode());
+  }
+}
+
+function firestoreString_(fields, key) {
+  return String(fields && fields[key] && fields[key].stringValue || "");
+}
+
+function firestoreValue_(value) {
+  if (value === null || value === undefined) return { nullValue: null };
+  if (Array.isArray(value)) return { arrayValue: { values: value.map(firestoreValue_) } };
+  if (typeof value === "object") {
+    var fields = {};
+    Object.keys(value).forEach(function (key) { fields[key] = firestoreValue_(value[key]); });
+    return { mapValue: { fields: fields } };
+  }
+  if (typeof value === "boolean") return { booleanValue: value };
+  if (typeof value === "number") return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value };
+  return { stringValue: String(value) };
 }
 
 function cleanWeeklyPayload_(input) {
