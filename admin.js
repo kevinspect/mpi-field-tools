@@ -46,8 +46,11 @@
   const liveLocationRefresh = document.getElementById("adminLiveLocationRefresh");
   const liveLocationHistory = document.getElementById("adminLiveLocationHistory");
   const liveLocationPlan = document.getElementById("adminLiveLocationPlan");
+  const liveLocationAllPlans = document.getElementById("adminLiveLocationAllPlans");
   const liveLocationShowAll = document.getElementById("adminLiveLocationShowAll");
   const liveRouteDate = document.getElementById("adminLiveRouteDate");
+  const liveCandidateAddress = document.getElementById("adminLiveCandidateAddress");
+  const liveCandidatePin = document.getElementById("adminLiveCandidatePin");
   const liveLocationRouteStatus = document.getElementById("adminLiveLocationRouteStatus");
   const spectoraScheduleStatus = document.getElementById("adminSpectoraScheduleStatus");
   const commentUsageUsed = document.getElementById("commentUsageUsed");
@@ -178,8 +181,11 @@
   let selectedLiveLocationPersonId = "";
   let liveLocationMapMode = "all";
   let liveLocationPlanVisible = false;
+  let liveLocationAllPlansVisible = false;
   let liveLocationRouteVisible = false;
   let liveLocationRouteLoading = false;
+  let liveLocationPlannedStops = [];
+  let liveLocationCandidate = null;
 
   const adminOnboardingSteps = [
     () => ({
@@ -923,9 +929,9 @@
     const name = person?.name || person?.email || "MPI Inspector";
     const photoSource = person?.profilePhoto || person?.photoURL;
     const photo = photoSource
-      ? `<img src="${escapeHtml(photoSource)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`
+      ? `<img src="${escapeHtml(photoSource)}" alt="" referrerpolicy="no-referrer" onerror="this.nextElementSibling.hidden=false;this.remove()">`
       : "";
-    return `<span class="inspector-avatar ${escapeHtml(extraClass)}">${photo}<b>${escapeHtml(initials(name))}</b></span>`;
+    return `<span class="inspector-avatar ${escapeHtml(extraClass)}">${photo}<b${photo ? " hidden" : ""}>${escapeHtml(initials(name))}</b></span>`;
   }
 
   function latestSyncDate(person, day = latestDay(person)) {
@@ -1130,17 +1136,40 @@
 
   function updateLiveLocationControls() {
     const person = liveLocationPeople().find(item => item.id === selectedLiveLocationPersonId);
+    const hasPeople = liveLocationPeople().length > 0;
+    if (liveLocationAllPlans) {
+      liveLocationAllPlans.disabled = !hasPeople || liveLocationRouteLoading;
+      liveLocationAllPlans.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationAllPlansVisible ? "HIDE ALL FUTURE JOBS" : "SHOW ALL FUTURE JOBS";
+    }
     if (liveLocationPlan) {
-      liveLocationPlan.disabled = !person || liveLocationRouteLoading;
-      liveLocationPlan.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationPlanVisible ? "HIDE JOB PLAN" : "SHOW JOB PLAN";
+      liveLocationPlan.disabled = !hasPeople || liveLocationRouteLoading;
+      liveLocationPlan.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationPlanVisible && !liveLocationAllPlansVisible ? "HIDE PERSON'S JOBS" : "SHOW PERSON'S JOBS";
     }
     if (liveLocationHistory) {
-      liveLocationHistory.disabled = !person || liveLocationRouteLoading;
-      liveLocationHistory.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationRouteVisible && !liveLocationPlanVisible ? "HIDE ACTUAL ROUTE" : "SHOW ACTUAL ROUTE";
+      liveLocationHistory.disabled = !hasPeople || liveLocationRouteLoading;
+      liveLocationHistory.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationRouteVisible && !liveLocationPlanVisible && !liveLocationAllPlansVisible ? "HIDE ACTUAL ROUTE" : "SHOW ACTUAL ROUTE";
     }
     if (!liveLocationRouteStatus) return;
-    if (!person) liveLocationRouteStatus.textContent = "Select an operative to inspect their position or route.";
+    if (!person) liveLocationRouteStatus.textContent = "Choose Job Plan or Actual Route. The dashboard will select the relevant operative automatically, or tap a name first.";
     else if (!liveLocationRouteVisible && !liveLocationRouteLoading) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> selected. Choose a date, then show the Spectora job plan or actual route.`;
+  }
+
+  function routePerson({ preferSchedule = false } = {}) {
+    const values = liveLocationPeople();
+    let person = values.find(item => item.id === selectedLiveLocationPersonId) || null;
+    if (!person && inspectorSelector?.value) person = values.find(item => item.id === inspectorSelector.value) || null;
+    const selectedDate = liveRouteDate?.value || dateKey();
+    const signedInFieldUser = currentUser?.uid ? values.find(item => item.id === currentUser.uid) || null : null;
+    if (!person && signedInFieldUser && (!preferSchedule || (scheduleDayFor(signedInFieldUser, selectedDate)?.jobs || []).some(job => scheduleAddress(job)))) person = signedInFieldUser;
+    if (!person && preferSchedule) person = values.find(item => (scheduleDayFor(item, selectedDate)?.jobs || []).some(job => scheduleAddress(job))) || null;
+    if (!person && signedInFieldUser) person = signedInFieldUser;
+    if (!person) person = values.find(item => operationDays(item).some(day => day?.date === selectedDate)) || values[0] || null;
+    if (person && selectedLiveLocationPersonId !== person.id) {
+      selectedLiveLocationPersonId = person.id;
+      liveLocationMapMode = "focus";
+      renderLiveLocationMap();
+    }
+    return person;
   }
 
   function renderLiveLocationMap() {
@@ -1162,7 +1191,8 @@
             ? "Location permission is blocked on phone"
             : "Waiting for the field app";
       const selected = item.person.id === selectedLiveLocationPersonId ? " selected" : "";
-      return `<button type="button" class="live-location-person ${escapeHtml(tone)}${selected}" data-live-location-person="${escapeHtml(item.person.id)}" aria-pressed="${selected ? "true" : "false"}"><span class="live-location-dot" aria-hidden="true"></span><div><strong>${escapeHtml(canonicalTeamName(item.person))}</strong><span>${escapeHtml(locationDetail)}</span></div><b>${escapeHtml(item.state.status.replace(/_/g, " "))}</b></button>`;
+      const operational = operationalContextHtml(item.person, item.person?.operationsCurrent, "em");
+      return `<button type="button" class="live-location-person ${escapeHtml(tone)}${selected}" data-live-location-person="${escapeHtml(item.person.id)}" aria-pressed="${selected ? "true" : "false"}"><span class="live-location-dot" aria-hidden="true"></span><div><strong>${escapeHtml(canonicalTeamName(item.person))}</strong><span>${escapeHtml(locationDetail)}</span>${operational}</div><b>${escapeHtml(item.state.status.replace(/_/g, " "))}</b></button>`;
     }).join("") : '<div class="empty">No active field users are configured.</div>';
     liveLocationStatus.textContent = current.length
       ? `${current.length} current position${current.length === 1 ? "" : "s"}${delayed.length ? ` · ${delayed.length} delayed` : ""}`
@@ -1194,13 +1224,17 @@
       if (selected) map.panTo([selected.location.latitude, selected.location.longitude]);
     }
     updateLiveLocationControls();
+    updateOperationalClocks();
     window.setTimeout(() => map.invalidateSize(), 0);
   }
 
   function hideHistoricalRoute({ keepSelection = true } = {}) {
     liveLocationRouteVisible = false;
     liveLocationPlanVisible = false;
+    liveLocationAllPlansVisible = false;
     liveLocationRouteLoading = false;
+    liveLocationPlannedStops = [];
+    liveLocationCandidate = null;
     liveLocationRouteLayer?.clearLayers();
     if (!keepSelection) selectedLiveLocationPersonId = "";
     updateLiveLocationControls();
@@ -1215,6 +1249,9 @@
     liveLocationMapMode = "focus";
     liveLocationRouteVisible = false;
     liveLocationPlanVisible = false;
+    liveLocationAllPlansVisible = false;
+    liveLocationPlannedStops = [];
+    liveLocationCandidate = null;
     liveLocationRouteLayer?.clearLayers();
     renderLiveLocationMap();
     const marker = liveLocationMarkers.get(personId);
@@ -1233,6 +1270,30 @@
     return { latitude, longitude, recordedAt, accuracyFeet: Math.max(0, Math.round(Number(value?.accuracyFeet) || 0)), workStatus: String(value?.workStatus || "") };
   }
 
+  function operationalRoutePoints(person, selectedDate) {
+    const day = operationDays(person).find(item => item?.date === selectedDate);
+    const values = [];
+    const add = (source, timestamp, workStatus = "") => {
+      const latitude = Number(source?.latitude);
+      const longitude = Number(source?.longitude);
+      const recordedAt = asDate(source?.recordedAtClient) || asDate(source?.recordedAt) || asDate(timestamp);
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !recordedAt) return;
+      values.push({ latitude, longitude, recordedAt, accuracyFeet: Math.max(0, Math.round(Number(source?.accuracyFeet) || 0)), workStatus });
+    };
+    (Array.isArray(day?.activity) ? day.activity : []).forEach(event => add(event?.data, event?.timestamp, event?.action));
+    (Array.isArray(day?.timeClock?.sessions) ? day.timeClock.sessions : []).forEach(session => {
+      add(session?.clockInLocation, session?.clockedInAt, "Hours Worked started");
+      add(session?.clockOutLocation, session?.clockedOutAt, "Clocked out");
+    });
+    if (String(person?.liveLocation?.workDate || "") === selectedDate) add(person.liveLocation, person?.liveLocationUpdatedAt, person?.liveLocation?.workStatus || "Latest recorded position");
+    const deduped = new Map();
+    values.sort((left, right) => left.recordedAt - right.recordedAt).forEach(point => {
+      const key = `${point.recordedAt.getTime()}:${point.latitude.toFixed(5)}:${point.longitude.toFixed(5)}`;
+      deduped.set(key, point);
+    });
+    return [...deduped.values()];
+  }
+
   async function loadHistoricalRoute() {
     if (liveLocationRouteLoading) return;
     if (liveLocationRouteVisible && !liveLocationPlanVisible) {
@@ -1242,9 +1303,12 @@
     if (liveLocationPlanVisible) {
       liveLocationRouteVisible = false;
       liveLocationPlanVisible = false;
+      liveLocationAllPlansVisible = false;
+      liveLocationPlannedStops = [];
+      liveLocationCandidate = null;
       liveLocationRouteLayer?.clearLayers();
     }
-    const person = liveLocationPeople().find(item => item.id === selectedLiveLocationPersonId);
+    const person = routePerson();
     if (!person || !liveLocationMap || !liveLocationRouteLayer) return;
     const selectedDate = liveRouteDate?.value || dateKey();
     liveLocationRouteLoading = true;
@@ -1252,6 +1316,7 @@
     if (liveLocationRouteStatus) liveLocationRouteStatus.textContent = `Loading ${canonicalTeamName(person)}'s recorded route…`;
     try {
       let points = [];
+      let fallbackStops = false;
       if (localPreview) {
         const origin = liveLocationRecord(person);
         if (origin) points = [-0.035, -0.022, -0.01, 0].map((offset, index) => ({ latitude: origin.latitude + offset * .45, longitude: origin.longitude + offset, recordedAt: new Date(Date.now() - (3 - index) * 18 * 60000), accuracyFeet: origin.accuracyFeet, workStatus: origin.workStatus }));
@@ -1259,11 +1324,16 @@
         const snapshot = await shared.db.collection("users").doc(person.id).collection("locationRouteDays").doc(selectedDate).collection("points").orderBy("recordedAtClient", "asc").limit(500).get();
         points = snapshot.docs.map(doc => routePointRecord(doc.data())).filter(Boolean);
       }
+      if (!points.length) {
+        points = operationalRoutePoints(person, selectedDate);
+        fallbackStops = points.length > 0;
+      }
       liveLocationRouteLayer.clearLayers();
       liveLocationRouteVisible = true;
       liveLocationPlanVisible = false;
+      liveLocationAllPlansVisible = false;
       if (!points.length) {
-        if (liveLocationRouteStatus) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> has no recorded route points for ${escapeHtml(new Date(`${selectedDate}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }))}. Route recording begins with Build 168.`;
+        if (liveLocationRouteStatus) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> has no uploaded GPS route or verified workflow locations for ${escapeHtml(new Date(`${selectedDate}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }))}.`;
         return;
       }
       const latLngs = points.map(point => [point.latitude, point.longitude]);
@@ -1275,7 +1345,9 @@
       liveLocationMapMode = "route";
       if (points.length === 1) liveLocationMap.setView(latLngs[0], 14);
       else liveLocationMap.fitBounds(latLngs, { padding: [38, 38], maxZoom: 15 });
-      if (liveLocationRouteStatus) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> · ${escapeHtml(points.length)} route point${points.length === 1 ? "" : "s"} · ${escapeHtml(formatTime(start.recordedAt))}–${escapeHtml(formatTime(end.recordedAt))}`;
+      if (liveLocationRouteStatus) liveLocationRouteStatus.innerHTML = fallbackStops
+        ? `<strong>${escapeHtml(canonicalTeamName(person))}</strong> · ${escapeHtml(points.length)} verified workflow location${points.length === 1 ? "" : "s"} shown. A continuous GPS route was not uploaded for this date.`
+        : `<strong>${escapeHtml(canonicalTeamName(person))}</strong> · ${escapeHtml(points.length)} route point${points.length === 1 ? "" : "s"} · ${escapeHtml(formatTime(start.recordedAt))}–${escapeHtml(formatTime(end.recordedAt))}`;
     } catch (error) {
       liveLocationRouteVisible = false;
       if (liveLocationRouteStatus) liveLocationRouteStatus.textContent = error?.message || "The route could not be loaded.";
@@ -1347,17 +1419,146 @@
     return `https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}${waypoints ? `&waypoints=${encodeURIComponent(waypoints)}` : ""}`;
   }
 
+  const PLAN_COLORS = ["#11186a", "#2775b9", "#28765e", "#9b3838", "#8a5b16", "#6a3aa8"];
+
+  function allSchedulePlansForDate(selectedDate) {
+    return liveLocationPeople().map((person, personIndex) => {
+      const day = scheduleDayFor(person, selectedDate);
+      const jobs = (Array.isArray(day?.jobs) ? day.jobs : [])
+        .filter(job => scheduleAddress(job))
+        .sort((left, right) => (asDate(left.scheduledStart)?.getTime() || 0) - (asDate(right.scheduledStart)?.getTime() || 0));
+      return { person, personIndex, day, jobs };
+    }).filter(plan => plan.jobs.length);
+  }
+
+  function distanceMiles(left, right) {
+    const radians = value => Number(value) * Math.PI / 180;
+    const earthRadiusMiles = 3958.8;
+    const latitudeDelta = radians(Number(right.latitude) - Number(left.latitude));
+    const longitudeDelta = radians(Number(right.longitude) - Number(left.longitude));
+    const startLatitude = radians(left.latitude);
+    const endLatitude = radians(right.latitude);
+    const haversine = Math.sin(latitudeDelta / 2) ** 2 + Math.cos(startLatitude) * Math.cos(endLatitude) * Math.sin(longitudeDelta / 2) ** 2;
+    return earthRadiusMiles * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+  }
+
+  async function loadAllPlannedScheduleRoutes({ force = false } = {}) {
+    if (liveLocationRouteLoading) return false;
+    if (liveLocationAllPlansVisible && !force) {
+      hideHistoricalRoute({ keepSelection: true });
+      return false;
+    }
+    const selectedDate = liveRouteDate?.value || dateKey();
+    const plans = allSchedulePlansForDate(selectedDate);
+    if (!plans.length) {
+      liveLocationRouteStatus.innerHTML = `<strong>No synchronized appointments</strong> are available for ${escapeHtml(formatDate(selectedDate))}. This view is read-only and can only show dates already supplied by the schedule sync.`;
+      return false;
+    }
+    const map = ensureLiveLocationMap();
+    if (!map || !liveLocationRouteLayer) return false;
+    liveLocationRouteLoading = true;
+    liveLocationPlanVisible = true;
+    liveLocationAllPlansVisible = true;
+    liveLocationRouteVisible = false;
+    liveLocationCandidate = null;
+    updateLiveLocationControls();
+    liveLocationRouteStatus.textContent = `Mapping ${plans.reduce((total, plan) => total + plan.jobs.length, 0)} synchronized appointments across the field team…`;
+    try {
+      const locatedPlans = await Promise.all(plans.map(async plan => ({
+        ...plan,
+        located: (await Promise.all(plan.jobs.map(async (job, jobIndex) => ({
+          job,
+          jobIndex,
+          coordinates: await geocodeScheduleAddress(scheduleAddress(job)).catch(() => null)
+        })))).filter(item => item.coordinates)
+      })));
+      liveLocationRouteLayer.clearLayers();
+      liveLocationPlannedStops = [];
+      locatedPlans.forEach(plan => {
+        const name = canonicalTeamName(plan.person);
+        const color = PLAN_COLORS[plan.personIndex % PLAN_COLORS.length];
+        const latLngs = plan.located.map(item => [item.coordinates.latitude, item.coordinates.longitude]);
+        if (latLngs.length > 1) liveLocationRouteLayer.addLayer(window.L.polyline(latLngs, { color, weight: 4, opacity: .76, dashArray: "8 8", lineJoin: "round" }));
+        plan.located.forEach(item => {
+          const stop = { ...item, person: plan.person, name, color };
+          liveLocationPlannedStops.push(stop);
+          const label = `${initials(name)}${item.jobIndex + 1}`;
+          const icon = window.L.divIcon({ className: "", html: `<span class="mpi-plan-marker" style="background:${escapeHtml(color)}">${escapeHtml(label)}</span>`, iconSize: [34, 34], iconAnchor: [17, 17] });
+          liveLocationRouteLayer.addLayer(window.L.marker([item.coordinates.latitude, item.coordinates.longitude], { icon }).bindPopup(`<strong>${escapeHtml(name)} · Job ${item.jobIndex + 1}</strong><br>${escapeHtml(scheduleAddress(item.job))}<br>${escapeHtml(formatTime(item.job.scheduledStart))}<br>${escapeHtml(scheduleServices(item.job).join(" · ") || "Inspection")}`));
+        });
+      });
+      if (!liveLocationPlannedStops.length) throw new Error("The synchronized addresses could not be placed on the map.");
+      const latLngs = liveLocationPlannedStops.map(item => [item.coordinates.latitude, item.coordinates.longitude]);
+      liveLocationRouteVisible = true;
+      liveLocationMapMode = "all-plans";
+      if (latLngs.length === 1) map.setView(latLngs[0], 13);
+      else map.fitBounds(latLngs, { padding: [42, 42], maxZoom: 11 });
+      const unmapped = plans.reduce((total, plan) => total + plan.jobs.length - plan.located.length, 0);
+      liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(formatDate(selectedDate))}</strong> · ${escapeHtml(liveLocationPlannedStops.length)} mapped appointment${liveLocationPlannedStops.length === 1 ? "" : "s"} for ${escapeHtml(locatedPlans.filter(plan => plan.located.length).length)} operative${locatedPlans.filter(plan => plan.located.length).length === 1 ? "" : "s"}.${unmapped ? ` ${escapeHtml(unmapped)} address${unmapped === 1 ? " was" : "es were"} not recognized.` : ""} Read-only planning view; Spectora data is unchanged.`;
+      return true;
+    } catch (error) {
+      liveLocationRouteVisible = false;
+      liveLocationPlanVisible = false;
+      liveLocationAllPlansVisible = false;
+      liveLocationPlannedStops = [];
+      liveLocationRouteStatus.textContent = error?.message || "The field-team job plan could not be loaded.";
+      return false;
+    } finally {
+      liveLocationRouteLoading = false;
+      updateLiveLocationControls();
+    }
+  }
+
+  async function dropPlanningCandidatePin() {
+    const address = String(liveCandidateAddress?.value || "").trim();
+    if (!address || !liveCandidatePin) {
+      if (liveLocationRouteStatus) liveLocationRouteStatus.textContent = "Enter the possible new job address first.";
+      liveCandidateAddress?.focus();
+      return;
+    }
+    liveCandidatePin.disabled = true;
+    liveCandidatePin.textContent = "LOCATING…";
+    try {
+      if (!liveLocationAllPlansVisible) await loadAllPlannedScheduleRoutes({ force: true });
+      const coordinates = await geocodeScheduleAddress(address);
+      if (!coordinates) throw new Error("That address could not be located. Include the street, city, state and ZIP code.");
+      if (!liveLocationRouteLayer) throw new Error("The planning map is not available.");
+      const icon = window.L.divIcon({ className: "", html: '<span class="mpi-candidate-marker"><span>+</span></span>', iconSize: [40, 40], iconAnchor: [12, 36] });
+      if (liveLocationCandidate?.marker) liveLocationRouteLayer.removeLayer(liveLocationCandidate.marker);
+      const marker = window.L.marker([coordinates.latitude, coordinates.longitude], { icon, zIndexOffset: 1000 }).bindPopup(`<strong>Possible new job</strong><br>${escapeHtml(address)}<br>Planning pin only · not sent to Spectora`);
+      liveLocationRouteLayer.addLayer(marker);
+      marker.openPopup();
+      liveLocationCandidate = { address, coordinates, marker };
+      const finalStops = [...new Map(liveLocationPlannedStops.map(stop => [stop.person.id, stop])).values()]
+        .map(stop => ({ name: stop.name, miles: distanceMiles(stop.coordinates, coordinates) }))
+        .sort((left, right) => left.miles - right.miles);
+      const bounds = [...liveLocationPlannedStops.map(stop => [stop.coordinates.latitude, stop.coordinates.longitude]), [coordinates.latitude, coordinates.longitude]];
+      if (bounds.length > 1) liveLocationMap.fitBounds(bounds, { padding: [48, 48], maxZoom: 11 });
+      else liveLocationMap.setView(bounds[0], 13);
+      const comparison = finalStops.slice(0, 4).map(item => `${item.name} ~${item.miles.toFixed(1)} mi`).join(" · ");
+      liveLocationRouteStatus.innerHTML = `<strong>Possible job:</strong> ${escapeHtml(address)}.${comparison ? ` Straight-line distance from each operative's final mapped appointment: ${escapeHtml(comparison)}.` : ""} This planning pin is temporary and does not change Spectora.`;
+    } catch (error) {
+      liveLocationRouteStatus.textContent = error?.message || "The possible job could not be placed on the map.";
+    } finally {
+      liveCandidatePin.disabled = false;
+      liveCandidatePin.textContent = "DROP PLANNING PIN";
+    }
+  }
+
   async function loadPlannedScheduleRoute() {
     if (liveLocationRouteLoading) return;
-    if (liveLocationPlanVisible) {
+    if (liveLocationPlanVisible && !liveLocationAllPlansVisible) {
       hideHistoricalRoute({ keepSelection: true });
       return;
     }
     if (liveLocationRouteVisible) {
       liveLocationRouteVisible = false;
+      liveLocationAllPlansVisible = false;
+      liveLocationPlannedStops = [];
+      liveLocationCandidate = null;
       liveLocationRouteLayer?.clearLayers();
     }
-    const person = liveLocationPeople().find(item => item.id === selectedLiveLocationPersonId);
+    const person = routePerson({ preferSchedule: true });
     if (!person || !liveLocationMap || !liveLocationRouteLayer) return;
     const selectedDate = liveRouteDate?.value || dateKey();
     const day = scheduleDayFor(person, selectedDate);
@@ -1381,6 +1582,9 @@
         liveLocationRouteLayer.addLayer(window.L.marker([item.coordinates.latitude, item.coordinates.longitude], { icon }).bindPopup(`<strong>${number}. ${escapeHtml(scheduleAddress(item.job))}</strong><br>${escapeHtml(formatTime(item.job.scheduledStart))}<br>${escapeHtml(scheduleServices(item.job).join(" · ") || "Inspection")}`));
       });
       liveLocationPlanVisible = true;
+      liveLocationAllPlansVisible = false;
+      liveLocationPlannedStops = located.map(item => ({ ...item, person, name: canonicalTeamName(person), color: PLAN_COLORS[0] }));
+      liveLocationCandidate = null;
       liveLocationRouteVisible = true;
       liveLocationMapMode = "plan";
       if (latLngs.length === 1) liveLocationMap.setView(latLngs[0], 13);
@@ -1390,6 +1594,8 @@
     } catch (error) {
       liveLocationRouteVisible = false;
       liveLocationPlanVisible = false;
+      liveLocationAllPlansVisible = false;
+      liveLocationPlannedStops = [];
       liveLocationRouteStatus.textContent = error?.message || "The planned route could not be loaded.";
     } finally {
       liveLocationRouteLoading = false;
@@ -1401,6 +1607,9 @@
     liveLocationRouteLayer?.clearLayers();
     liveLocationRouteVisible = false;
     liveLocationPlanVisible = false;
+    liveLocationAllPlansVisible = false;
+    liveLocationPlannedStops = [];
+    liveLocationCandidate = null;
     selectedLiveLocationPersonId = "";
     liveLocationMapSignature = "";
     const map = ensureLiveLocationMap();
@@ -1655,6 +1864,81 @@
   function nextAppointment(day) {
     const currentId = day?.currentJob?.id;
     return (day?.jobs || []).find(job => job.status !== "completed" && job.id !== currentId) || (day?.currentJob?.status !== "completed" ? day?.currentJob : null);
+  }
+
+  function operationalDuration(milliseconds) {
+    const minutes = Math.max(0, Math.floor(Number(milliseconds || 0) / 60000));
+    if (minutes < 60) return `${minutes} min`;
+    return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
+  }
+
+  function estimatedArrivalFor(day, job) {
+    const direct = asDate(job?.estimatedArrivalAt || job?.etaAt);
+    if (direct) return { date: direct, source: "recorded ETA" };
+    const jobId = String(job?.id || "");
+    const etaEvent = (day?.activity || []).filter(item => {
+      const matchesJob = !jobId || !eventJobId(item) || eventJobId(item) === jobId;
+      return matchesJob && /^\d{2}:\d{2}$/.test(String(item?.data?.etaTime || ""));
+    }).at(-1);
+    if (etaEvent?.data?.etaTime) {
+      const [hours, minutes] = etaEvent.data.etaTime.split(":").map(Number);
+      const base = asDate(etaEvent.timestamp) || asDate(job?.onMyWayAt) || new Date(`${day?.date || dateKey()}T12:00:00`);
+      const eta = new Date(base);
+      eta.setHours(hours, minutes, 0, 0);
+      return { date: eta, source: "inspector ETA" };
+    }
+    const departed = asDate(job?.onMyWayAt);
+    const driveMinutes = Math.max(0, Number(job?.estimatedDriveMinutes) || 0);
+    if (departed && driveMinutes) return { date: new Date(departed.getTime() + driveMinutes * 60000), source: "estimated drive" };
+    return null;
+  }
+
+  function operationalStatusContext(person, suppliedDay = null) {
+    const day = suppliedDay || (person?.operationsCurrent?.date === dateKey() ? person.operationsCurrent : latestDay(person));
+    const status = String(day?.liveStatus || "").toUpperCase();
+    const current = day?.currentJob || nextAppointment(day);
+    if (/INSPECTION IN PROGRESS/.test(status)) {
+      const started = asDate(current?.inspectionStartedAt) || asDate(rawActionTime(day, "Inspection started", current?.id));
+      if (started) return { type: "elapsed", timestamp: started.toISOString(), prefix: "Inspection running", text: `Inspection running ${operationalDuration(Date.now() - started.getTime())}` };
+    }
+    if (/ARRIVED AT JOB/.test(status)) {
+      const arrived = asDate(current?.arrivedAt) || asDate(rawActionTime(day, "Arrived", current?.id));
+      if (arrived) return { type: "elapsed", timestamp: arrived.toISOString(), prefix: "At property", text: `At property ${operationalDuration(Date.now() - arrived.getTime())}` };
+    }
+    if (/DRIVING TO (?:JOB|NEXT JOB)/.test(status)) {
+      const eta = estimatedArrivalFor(day, current);
+      if (eta?.date) {
+        const remaining = Math.max(0, eta.date.getTime() - Date.now());
+        return { type: "eta", timestamp: eta.date.toISOString(), prefix: "ETA", text: `ETA ${formatTime(eta.date)} · ${remaining ? `${operationalDuration(remaining)} remaining` : "due now"}` };
+      }
+      const appointment = asDate(current?.scheduledStart);
+      if (appointment) return { type: "static", text: `ETA not recorded · appointment ${formatTime(appointment)}` };
+    }
+    return null;
+  }
+
+  function operationalContextHtml(person, day, tag = "small") {
+    const context = operationalStatusContext(person, day);
+    if (!context) return "";
+    const dynamic = context.type === "elapsed"
+      ? ` data-operational-elapsed="${escapeHtml(context.timestamp)}" data-operational-prefix="${escapeHtml(context.prefix)}"`
+      : context.type === "eta"
+        ? ` data-operational-eta="${escapeHtml(context.timestamp)}"`
+        : "";
+    return `<${tag} class="operational-context"${dynamic}>${escapeHtml(context.text)}</${tag}>`;
+  }
+
+  function updateOperationalClocks() {
+    document.querySelectorAll("[data-operational-elapsed]").forEach(element => {
+      const started = asDate(element.dataset.operationalElapsed);
+      if (started) element.textContent = `${element.dataset.operationalPrefix || "In progress"} ${operationalDuration(Date.now() - started.getTime())}`;
+    });
+    document.querySelectorAll("[data-operational-eta]").forEach(element => {
+      const eta = asDate(element.dataset.operationalEta);
+      if (!eta) return;
+      const remaining = Math.max(0, eta.getTime() - Date.now());
+      element.textContent = `ETA ${formatTime(eta)} · ${remaining ? `${operationalDuration(remaining)} remaining` : "due now"}`;
+    });
   }
 
   function meaningfulAlerts(person, day) {
@@ -2130,7 +2414,7 @@
     const unread = unreadDirectFor(person);
     return `<button class="inspector-row${alerts.length || unread ? " has-alert" : ""}" type="button" data-open-inspector="${escapeHtml(person.id)}">
       <div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(person.name || person.email)}</strong><small>${escapeHtml(day?.currentJob?.property || (next ? `Next: ${next.property}` : "No current appointment"))}</small><small class="inspector-sync${stale ? " stale" : ""}">${escapeHtml(syncAgeLabel(person, day))}${stale ? " · confirm status" : ""}</small></div></div>
-      <div><span class="status-badge ${statusClass(status, alerts)}${stale ? " stale" : ""}">${escapeHtml(status)}</span><small>${alerts[0] ? escapeHtml(alerts[0]) : escapeHtml(punctuality)}</small></div>
+      <div><span class="status-badge ${statusClass(status, alerts)}${stale ? " stale" : ""}">${escapeHtml(status)}</span>${operationalContextHtml(person, day) || `<small>${alerts[0] ? escapeHtml(alerts[0]) : escapeHtml(punctuality)}</small>`}</div>
       <div class="row-metric"><span>Jobs</span><b>${counts.complete} / ${counts.total}</b></div>
       <div class="row-metric"><span>Hours worked</span><b>${formatMinutes(hours)}</b></div>
       <div class="row-metric"><span>Drive time</span><b>${formatMinutes(drive)}</b></div>
@@ -2586,7 +2870,7 @@
       ? `<a href="https://maps.apple.com/?q=${encodeURIComponent(`${lastLocation.latitude},${lastLocation.longitude}`)}" target="_blank" rel="noopener">Open last recorded location ↗</a> · ${escapeHtml(formatTime(lastLocation.timestamp))}`
       : "Not available";
     inspectorDetail.innerHTML = `
-      <div class="detail-hero"><div class="detail-person">${avatarHtml(person, "large")}<div><p class="ops-eyebrow">Inspector operations</p><h2>${escapeHtml(person.name || person.email)}</h2><p>${escapeHtml(person.email || "")} · Viewing ${escapeHtml(day?.date ? formatDate(day.date) : "no recorded day")} · ${escapeHtml(syncAgeLabel(person, day))}</p></div></div><div><span class="status-badge ${statusClass(day?.liveStatus, alerts)}">${escapeHtml(day?.liveStatus || "NOT STARTED")}</span><button class="detail-back" type="button" data-back-overview>← All inspectors</button></div></div>
+      <div class="detail-hero"><div class="detail-person">${avatarHtml(person, "large")}<div><p class="ops-eyebrow">Inspector operations</p><h2>${escapeHtml(person.name || person.email)}</h2><p>${escapeHtml(person.email || "")} · Viewing ${escapeHtml(day?.date ? formatDate(day.date) : "no recorded day")} · ${escapeHtml(syncAgeLabel(person, day))}</p></div></div><div><span class="status-badge ${statusClass(day?.liveStatus, alerts)}">${escapeHtml(day?.liveStatus || "NOT STARTED")}</span>${operationalContextHtml(person, day)}<button class="detail-back" type="button" data-back-overview>← All inspectors</button></div></div>
       <div class="ops-grid">
         <article class="ops-card span-6"><p class="ops-eyebrow">Current job</p><strong class="ops-primary">${escapeHtml(current?.property || "No job currently open")}</strong><p class="ops-sub">${current ? `Scheduled ${formatTime(current.scheduledStart)} · ${escapeHtml(current.arrivalPerformance || "Arrival not recorded")} · ${escapeHtml(String(current.status || "scheduled").replace(/-/g, " "))}` : "The inspector is not inside an active job workflow."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Arrived</span><strong>${escapeHtml(formatTime(currentArrivedAt))}</strong></div><div class="fact"><span>Inspection started</span><strong>${escapeHtml(formatTime(currentStartedAt))}</strong></div><div class="fact"><span>Time at property</span><strong>${timeAtProperty}</strong></div></div></article>
         <article class="ops-card span-6"><p class="ops-eyebrow">Next appointment</p><strong class="ops-primary">${escapeHtml(next?.property || "No remaining appointment")}</strong><p class="ops-sub">${next ? `${formatTime(next.scheduledStart)} · ${escapeHtml(next.arrivalPerformance || "On schedule")}` : "The scheduled job list is complete."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Estimated drive</span><strong>${current?.departurePlan?.estimatedDriveMinutes ? `${current.departurePlan.estimatedDriveMinutes} min` : "—"}</strong></div><div class="fact"><span>Required departure</span><strong>${escapeHtml(formatTime(current?.departurePlan?.leaveBy))}</strong></div><div class="fact"><span>Schedule status</span><strong>${alerts.some(item => /late|affect next/i.test(item)) ? "ATTENTION REQUIRED" : "ON SCHEDULE"}</strong></div></div></article>
@@ -2609,6 +2893,7 @@
       </div>`;
     teamOverview.hidden = true;
     inspectorDetail.hidden = false;
+    updateOperationalClocks();
     hydrateMessageReceipts(person);
   }
 
@@ -2631,6 +2916,7 @@
     renderReplyInbox();
     renderSafetyAlerts();
     renderLiveLocationMap();
+    updateOperationalClocks();
   }
 
   async function receiptSummary(updateId) {
@@ -2710,7 +2996,10 @@
     unsubscribeReplies?.();
     unsubscribeFieldMessages?.();
     unsubscribeDirectMessages?.();
-    if (!liveLocationAgeTimer) liveLocationAgeTimer = window.setInterval(renderLiveLocationMap, 60000);
+    if (!liveLocationAgeTimer) liveLocationAgeTimer = window.setInterval(() => {
+      renderLiveLocationMap();
+      updateOperationalClocks();
+    }, 60000);
     unsubscribePeople = shared.db.collection("users").orderBy("name").onSnapshot(snapshot => {
       people = snapshot.docs.map(doc => {
         const value = { id: doc.id, ...doc.data() };
@@ -3391,16 +3680,25 @@
     liveRouteDate.addEventListener("change", () => {
       if (liveLocationRouteVisible) {
         const showingPlan = liveLocationPlanVisible;
+        const showingAllPlans = liveLocationAllPlansVisible;
         liveLocationRouteVisible = false;
         liveLocationPlanVisible = false;
+        liveLocationAllPlansVisible = false;
         liveLocationRouteLayer?.clearLayers();
-        (showingPlan ? loadPlannedScheduleRoute() : loadHistoricalRoute()).catch(() => false);
+        (showingAllPlans ? loadAllPlannedScheduleRoutes({ force: true }) : showingPlan ? loadPlannedScheduleRoute() : loadHistoricalRoute()).catch(() => false);
       }
     });
   }
   liveLocationRefresh?.addEventListener("click", requestLiveLocationRefresh);
   liveLocationHistory?.addEventListener("click", () => loadHistoricalRoute().catch(() => false));
   liveLocationPlan?.addEventListener("click", () => loadPlannedScheduleRoute().catch(() => false));
+  liveLocationAllPlans?.addEventListener("click", () => loadAllPlannedScheduleRoutes().catch(() => false));
+  liveCandidatePin?.addEventListener("click", () => dropPlanningCandidatePin().catch(() => false));
+  liveCandidateAddress?.addEventListener("keydown", event => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    dropPlanningCandidatePin().catch(() => false);
+  });
   liveLocationShowAll?.addEventListener("click", showAllLiveLocations);
   liveLocationList?.addEventListener("click", event => {
     const person = event.target.closest("[data-live-location-person]");

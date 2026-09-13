@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="176">
+  <meta name="app-build" content="177">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4783,6 +4783,9 @@
     .training-record-card h3,.training-record-card p { margin:0; color:#fff; }
     .training-record-card h3 { font-size:20px; }
     .training-record-card p { margin-top:7px; color:#dce4ff; font-size:10.5px; line-height:1.5; }
+    .training-official-status { display:block; margin-top:10px; color:#fff; font-size:10px; font-weight:850; line-height:1.45; }
+    .training-official-credentials { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+    .training-official-credentials span { padding:5px 8px; color:#11186a; background:#eaf6f1; border:1px solid rgba(255,255,255,.34); border-radius:999px; font-size:8.5px; font-weight:950; }
     .training-record-actions { display:grid; gap:8px; }
     .training-record-actions a { display:grid; min-height:46px; place-items:center; padding:8px 10px; color:#11186a; background:#fff; border-radius:10px; font-size:9.5px; font-weight:950; text-align:center; text-decoration:none; }
     .training-member-number { display:inline-flex; margin-top:12px; padding:6px 9px; color:#11186a; background:#f3d26d; border-radius:999px; font-size:8.5px; font-weight:950; letter-spacing:.04em; }
@@ -5741,7 +5744,7 @@
     .app-bottom-nav a { min-width: 0; overflow: hidden; }
     .app-bottom-nav a span { overflow: hidden; max-width: 100%; text-overflow: ellipsis; white-space: nowrap; }
 
-    /* Build 176 — familiar app navigation and mailbox layout */
+    /* Build 177 — reliable routing, route history, and official credential status */
     .brand { color: inherit; text-decoration: none; }
     .brand:active { opacity: .8; }
     .top-profile-link { display: grid; width: 42px; height: 42px; place-items: center; flex: 0 0 42px; border: 1px solid rgba(255,255,255,.42); border-radius: 50%; text-decoration: none; }
@@ -5917,7 +5920,7 @@
       <a href="#comment-builder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4Z"/><path d="M8 8h8M8 12h5"/></svg><span><strong>Comment Creator</strong><small>Build a defect comment</small></span></a>
     </nav>
     <a class="home-office-link" id="officeConsoleCard" href="./admin.html" hidden>Open Office Console</a>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">176</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">177</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -7551,8 +7554,8 @@
       </div>
 
       <section class="panel training-record-card" aria-labelledby="internachi-record-title">
-        <div><p class="eyebrow">Official training record</p><h3 id="internachi-record-title">InterNACHI qualifications &amp; certificates</h3><p>Open the official Education Transcript or certificate record. InterNACHI controls these records and updates the transcript as courses are completed; MPI does not store your InterNACHI password.</p><span class="training-member-number" id="trainingMemberNumber">MEMBER NUMBER NOT SAVED</span></div>
-        <div class="training-record-actions"><a id="trainingTranscriptLink" href="https://www.nachi.org/my/education/transcript" target="_blank" rel="noopener">OPEN EDUCATION TRANSCRIPT</a><a href="https://www.nachi.org/my/" target="_blank" rel="noopener">OPEN MEMBER RECORDS</a><a href="#profile">UPDATE TRAINING PROFILE</a></div>
+        <div><p class="eyebrow">Official training record</p><h3 id="internachi-record-title">InterNACHI qualifications &amp; certificates</h3><p>MPI verifies the public InterNACHI credential attached to your member number. Your full private course transcript remains controlled by InterNACHI; MPI never stores your InterNACHI password.</p><span class="training-member-number" id="trainingMemberNumber">MEMBER NUMBER NOT SAVED</span><strong class="training-official-status" id="trainingOfficialStatus">Checking your official InterNACHI record…</strong><div class="training-official-credentials" id="trainingOfficialCredentials"></div></div>
+        <div class="training-record-actions"><a id="trainingTranscriptLink" href="https://www.nachi.org/my/education/transcript" target="_blank" rel="noopener" data-native-browser>OPEN EDUCATION TRANSCRIPT</a><a href="https://www.nachi.org/my/" target="_blank" rel="noopener" data-native-browser>OPEN MEMBER RECORDS</a><a href="#profile">UPDATE TRAINING PROFILE</a></div>
       </section>
 
       <section class="panel training-assignment-card" aria-labelledby="assigned-training-title">
@@ -8528,7 +8531,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 176</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 177</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8668,11 +8671,11 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=176"></script>
-  <script src="./mpi-shared.js?build=176"></script>
-  <script src="./mpi-field-sync.js?build=176"></script>
-  <script src="./mpi-subcontractor.js?build=176"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=176"></script>
+  <script src="./mpi-native-bridge.js?build=177"></script>
+  <script src="./mpi-shared.js?build=177"></script>
+  <script src="./mpi-field-sync.js?build=177"></script>
+  <script src="./mpi-subcontractor.js?build=177"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=177"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -15915,6 +15918,7 @@
           const eventAt = action => jobEvents.find(item => item.action === action)?.timestamp || "";
           const arrivalLocationEvent = jobEvents.filter(item => ["Arrival location verified", "Arrival location review required"].includes(item.action)).at(-1);
           const arrivalEvent = jobEvents.find(item => item.action === "Arrived");
+          const etaEvent = jobEvents.filter(item => /^\d{2}:\d{2}$/.test(String(item?.data?.etaTime || ""))).at(-1);
           const isActive = String(active?.calendarEventId || "") === String(job.id || "");
           const arrivedAt = eventAt("Arrived");
           const performance = arrivedAt ? workflowArrivalPerformance(arrivedAt, job.start?.dateTime || job.start?.date || job.scheduledStart) : null;
@@ -15929,6 +15933,9 @@
             arrivedAt,
             inspectionStartedAt: eventAt("Inspection started"),
             completedAt: eventAt("Final job completion"),
+            etaTime: String(etaEvent?.data?.etaTime || ""),
+            etaDisplay: String(etaEvent?.data?.etaDisplay || ""),
+            estimatedDriveMinutes: Math.max(0, Number(job?.estimatedDriveMinutes) || 0),
             arrivalPerformance: performance?.label || "Not recorded",
             arrivalLocation: arrivalLocationEvent?.data || arrivalEvent?.data || null,
             departurePlan: isActive && active?.departurePlan ? { ...active.departurePlan } : null

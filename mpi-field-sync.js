@@ -38,6 +38,8 @@
   const profileEmail = document.getElementById("mpiProfileEmail");
   const profileSave = document.getElementById("mpiProfileSave");
   const trainingMemberNumber = document.getElementById("trainingMemberNumber");
+  const trainingOfficialStatus = document.getElementById("trainingOfficialStatus");
+  const trainingOfficialCredentials = document.getElementById("trainingOfficialCredentials");
   const trainingTranscriptLink = document.getElementById("trainingTranscriptLink");
   const signInButtons = [...document.querySelectorAll("[data-mpi-sign-in]")];
   const signOutButtons = [...document.querySelectorAll("[data-mpi-sign-out]")];
@@ -263,6 +265,12 @@
   });
 
   document.addEventListener("click", event => {
+    const webLink = event.target.closest("a[data-native-browser], a[href*='nachi.org']");
+    if (webLink && window.MPI_NATIVE?.isNative) {
+      event.preventDefault();
+      window.MPI_NATIVE.openWebPage(webLink.href).catch(() => { window.location.assign(webLink.href); });
+      return;
+    }
     const recipient = event.target.closest("[data-team-message-recipient]")?.dataset.teamMessageRecipient;
     if (!recipient) return;
     window.setTimeout(() => {
@@ -271,6 +279,12 @@
       message?.focus();
     }, 120);
   });
+
+  [officeConsoleCard, settingsAdminLink].forEach(link => link?.addEventListener("click", event => {
+    if (!window.MPI_NATIVE?.isNative) return;
+    event.preventDefault();
+    window.location.assign("./admin.html");
+  }));
 
   function savedPushToken() {
     try { return String(localStorage.getItem("mpiPushTokenV1") || "").trim(); }
@@ -442,11 +456,11 @@
         liveLocationStatus: { status: "recorded", recordedAtClient: location.recordedAtClient, requestId: location.requestId },
         liveLocationUpdatedAt: shared.serverTimestamp()
       }, { merge: true });
-      await storeRoutePoint(location).catch(() => false);
-      if (suppliedPosition?.nativeId) {
+      const routeStored = await storeRoutePoint(location).catch(() => false);
+      if (suppliedPosition?.nativeId && routeStored) {
         await window.MPI_NATIVE?.acknowledgeLocations?.([suppliedPosition.nativeId]).catch(() => false);
       }
-      return true;
+      return suppliedPosition?.nativeId ? routeStored : true;
     } catch (error) {
       const status = Number(error?.code) === 1 ? "permission-denied" : Number(error?.code) === 3 ? "timed-out" : "unavailable";
       await shared.db.collection("users").doc(currentUser.uid).set({
@@ -593,14 +607,54 @@
       if (!avatar || !initials) return;
       avatar.querySelector("img")?.remove();
       initials.textContent = teamInitials(name);
+      initials.hidden = Boolean(source);
       if (!source) return;
       const image = document.createElement("img");
       image.alt = "";
       image.referrerPolicy = "no-referrer";
-      image.addEventListener("error", () => image.remove(), { once: true });
+      image.addEventListener("error", () => { image.remove(); initials.hidden = false; }, { once: true });
       image.src = source;
       avatar.prepend(image);
     });
+  }
+
+  function verifiedInterNachiCredentials(displayName) {
+    return String(displayName || "").split(",").map(value => value.trim()).filter(Boolean).slice(1);
+  }
+
+  async function renderOfficialInterNachiRecord(profile) {
+    if (!trainingOfficialStatus || !trainingOfficialCredentials) return;
+    const inspectorId = String(profile?.inspectorId || "").trim().toUpperCase();
+    trainingOfficialCredentials.innerHTML = "";
+    if (!/^NACHI\d{8}$/.test(inspectorId)) {
+      trainingOfficialStatus.textContent = "Add your InterNACHI member number in My Profile to verify your public credentials.";
+      return;
+    }
+    const cacheKey = `mpiInterNachiVerification:${inspectorId}`;
+    let payload = null;
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+      if (cached?.savedAt && Date.now() - Number(cached.savedAt) < 12 * 60 * 60 * 1000) payload = cached.payload;
+    } catch (_) {}
+    try {
+      if (!payload) {
+        trainingOfficialStatus.textContent = "Checking your official InterNACHI record…";
+        const response = await fetch(`https://www.nachi.org/api/verify?public_id=${encodeURIComponent(inspectorId)}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Verification unavailable (${response.status})`);
+        const result = await response.json();
+        if (!result?.ok || !result?.data) throw new Error("InterNACHI did not return a verified record.");
+        payload = result.data;
+        try { localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), payload })); } catch (_) {}
+      }
+      const credentials = verifiedInterNachiCredentials(payload.display_name);
+      trainingOfficialStatus.textContent = payload.is_certified
+        ? `Verified by InterNACHI · ${payload.display_name || inspectorId}`
+        : "InterNACHI record found · certification is not currently shown as active";
+      trainingOfficialCredentials.innerHTML = (credentials.length ? credentials : [payload.is_certified ? "Certified Professional Inspector" : "Member record"])
+        .map(value => `<span>${escapeHtml(value)}</span>`).join("");
+    } catch (error) {
+      trainingOfficialStatus.textContent = error?.message || "The official InterNACHI record could not be checked right now.";
+    }
   }
 
   function roleLabel(profile) {
@@ -686,6 +740,7 @@
     showProfilePhoto(profilePhotoSource(profile, user), profileName.value);
     if (trainingMemberNumber) trainingMemberNumber.textContent = profile.inspectorId ? `MEMBER ${profile.inspectorId}` : "MEMBER NUMBER NOT SAVED";
     if (trainingTranscriptLink) trainingTranscriptLink.href = /^https:\/\//i.test(String(profile.nachiTranscriptUrl || "")) ? profile.nachiTranscriptUrl : "https://www.nachi.org/my/education/transcript";
+    renderOfficialInterNachiRecord(profile).catch(() => false);
   }
 
   function loadImage(source) {

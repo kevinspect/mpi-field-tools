@@ -125,6 +125,7 @@ service cloud.firestore {
           "recordedAtClient",
           "workStatus",
           "source",
+          "nativePointId",
           "recordedAt"
         ]);
       allow update, delete: if false;

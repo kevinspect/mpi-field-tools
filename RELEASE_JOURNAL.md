@@ -1,5 +1,23 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 177 — Map, Native Admin, and Training Reliability
+
+- Corrected the Firestore route-point schema so native background GPS points can be stored instead of being rejected.
+- Retained queued native locations until the matching route point is safely uploaded.
+- Made Job Plan and Actual Route usable before manually selecting an operative; the console chooses the signed-in or scheduled field user.
+- Added a date-based all-operative planning map with separately colored, ordered appointment pins for every synchronized field schedule.
+- Added a temporary possible-job address pin and straight-line comparison from each operative's final mapped appointment; the planning tool cannot write to Spectora.
+- Added a recorded ETA/remaining-time status while an operative is travelling and a live elapsed-time status after arrival or Start Inspection.
+- Added truthful fallback map points from verified workflow locations when an older continuous GPS route is unavailable.
+- Bundled the Office Console into the native iPhone app and added deterministic native navigation.
+- Added official InterNACHI public credential verification by member number and opens private InterNACHI pages in the secure iOS browser.
+- Fixed profile initials overlaying an uploaded profile picture.
+
+### Validation record
+
+- Passed JavaScript, inline-script, native asset, Capacitor plugin, iOS project, background-location, push-notification, and Firestore rules validation.
+- Deployed the corrected Firestore route-point rule to `mpi-field-notifications`.
+
 ## Build 176 — iPhone Navigation and Inbox Polish
 
 - Made the MPI logo in the persistent top bar a Home control on every screen and added the signed-in user's profile avatar at the top-right.

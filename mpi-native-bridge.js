@@ -12,6 +12,7 @@
   const firebaseMessaging = isNative ? registerPlugin("FirebaseMessaging") : null;
   const haptics = isNative ? registerPlugin("Haptics") : null;
   const app = isNative ? registerPlugin("App") : null;
+  const browser = isNative ? registerPlugin("Browser") : null;
 
   function nativePosition(point) {
     const latitude = Number(point?.latitude);
@@ -134,6 +135,17 @@
   async function signOut() {
     if (!firebaseAuthentication?.signOut) return false;
     await firebaseAuthentication.signOut();
+    return true;
+  }
+
+  async function openWebPage(url) {
+    const target = new URL(String(url || ""), window.location.href);
+    if (!/^https?:$/.test(target.protocol)) throw new Error("That web address cannot be opened.");
+    if (!browser?.open) {
+      window.location.assign(target.href);
+      return true;
+    }
+    await browser.open({ url: target.href, presentationStyle: "fullscreen" });
     return true;
   }
 
@@ -268,6 +280,7 @@
     cancelAlarms,
     signInWithGoogle,
     signOut,
+    openWebPage,
     pushPermission,
     enablePushNotifications,
     prominentHaptic,
