@@ -1,5 +1,12 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 185 — Completed-Day Appointment Lock
+
+- Prevented the field app and Office Console from showing an old appointment as the next job after the inspector has clocked off and completed the day.
+- Corrected the shared Operations merge so explicit `currentJob: null` and `nextJob: null` values clear stale server state instead of reviving the previous appointment.
+- Added closed-day guards to the Home, My Day, Team overview, and inspector detail displays, while retaining the existing automatic reopen path for a genuinely new same-day appointment.
+- Strengthened completed-job matching across Spectora and workflow identifiers and retained the full scheduled-job identity set in the closeout receipt.
+
 ## Build 184 — Complete Historical Routes
 
 - Combines native background GPS points with verified Arrived, lab, home, and Clock Off workflow locations instead of discarding those checkpoints when GPS data exists.

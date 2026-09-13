@@ -984,10 +984,20 @@
     merged.jobs = mergeOperationsJobs(previous.jobs, incoming.jobs);
     merged.activity = mergeOperationsActivity(previous.activity, incoming.activity);
     merged.readiness = incoming.readiness || previous.readiness || null;
-    merged.labStop = incoming.labStop || previous.labStop || null;
-    merged.dayComplete = incoming.dayComplete || previous.dayComplete || null;
-    merged.currentJob = incoming.currentJob || previous.currentJob || null;
-    merged.nextJob = incoming.nextJob || previous.nextJob || null;
+    merged.labStop = Object.prototype.hasOwnProperty.call(incoming, "labStop")
+      ? (incoming.labStop || null)
+      : (previous.labStop || null);
+    merged.dayComplete = Object.prototype.hasOwnProperty.call(incoming, "dayComplete")
+      ? (incoming.dayComplete || null)
+      : (previous.dayComplete || null);
+    // A field snapshot deliberately sends null after a job/day is closed. Respect
+    // that explicit clear instead of reviving an older appointment from Firestore.
+    merged.currentJob = Object.prototype.hasOwnProperty.call(incoming, "currentJob")
+      ? (incoming.currentJob || null)
+      : (previous.currentJob || null);
+    merged.nextJob = Object.prototype.hasOwnProperty.call(incoming, "nextJob")
+      ? (incoming.nextJob || null)
+      : (previous.nextJob || null);
     merged.timeClock = timeClockStrength(incoming.timeClock) >= timeClockStrength(previous.timeClock)
       ? (incoming.timeClock || previous.timeClock || null)
       : (previous.timeClock || incoming.timeClock || null);

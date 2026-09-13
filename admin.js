@@ -1739,6 +1739,7 @@
     const driveTime = Number(incoming.driveTime?.totalMinutes || 0) >= Number(previous.driveTime?.totalMinutes || 0)
       ? (incoming.driveTime || previous.driveTime) : (previous.driveTime || incoming.driveTime);
     const latest = (asDate(incoming.updatedAtClient)?.getTime() || 0) >= (asDate(previous.updatedAtClient)?.getTime() || 0) ? incoming : previous;
+    const latestHas = key => Object.prototype.hasOwnProperty.call(latest || {}, key);
     return {
       ...previous,
       ...incoming,
@@ -1749,11 +1750,11 @@
       timeClock,
       driveTime,
       readiness: incoming.readiness || previous.readiness || null,
-      labStop: incoming.labStop || previous.labStop || null,
-      dayComplete: incoming.dayComplete || previous.dayComplete || null,
+      labStop: latestHas("labStop") ? (latest.labStop || null) : (incoming.labStop || previous.labStop || null),
+      dayComplete: latestHas("dayComplete") ? (latest.dayComplete || null) : (incoming.dayComplete || previous.dayComplete || null),
       nachiTraining: incoming.nachiTraining || previous.nachiTraining || null,
-      currentJob: incoming.currentJob || previous.currentJob || null,
-      nextJob: incoming.nextJob || previous.nextJob || null
+      currentJob: latestHas("currentJob") ? (latest.currentJob || null) : (incoming.currentJob || previous.currentJob || null),
+      nextJob: latestHas("nextJob") ? (latest.nextJob || null) : (incoming.nextJob || previous.nextJob || null)
     };
   }
 
@@ -1916,9 +1917,27 @@
     return { complete: jobs.filter(job => job.status === "completed").length, total: jobs.length };
   }
 
+  function operationDayIsClosed(day) {
+    if (!day) return false;
+    const sessions = Array.isArray(day?.timeClock?.effectiveSessions)
+      ? day.timeClock.effectiveSessions
+      : Array.isArray(day?.timeClock?.sessions) ? day.timeClock.sessions : [];
+    if (sessions.some(session => session?.startedAt && !session?.clockedOutAt)) return false;
+    if (String(day?.liveStatus || "").toUpperCase() === "CLOCKED OUT") return true;
+    if (day?.dayComplete?.completedAt) return true;
+    return sessions.length > 0 && sessions.every(session => Boolean(session?.clockedOutAt));
+  }
+
+  function currentAppointment(day) {
+    if (operationDayIsClosed(day)) return null;
+    return String(day?.currentJob?.status || "").toLowerCase() === "completed" ? null : (day?.currentJob || null);
+  }
+
   function nextAppointment(day) {
-    const currentId = day?.currentJob?.id;
-    return (day?.jobs || []).find(job => job.status !== "completed" && job.id !== currentId) || (day?.currentJob?.status !== "completed" ? day?.currentJob : null);
+    if (operationDayIsClosed(day)) return null;
+    const current = currentAppointment(day);
+    const currentId = current?.id;
+    return (day?.jobs || []).find(job => String(job?.status || "").toLowerCase() !== "completed" && job.id !== currentId) || current;
   }
 
   function operationalDuration(milliseconds) {
@@ -1951,7 +1970,7 @@
   function operationalStatusContext(person, suppliedDay = null) {
     const day = suppliedDay || (person?.operationsCurrent?.date === dateKey() ? person.operationsCurrent : latestDay(person));
     const status = String(day?.liveStatus || "").toUpperCase();
-    const current = day?.currentJob || nextAppointment(day);
+    const current = currentAppointment(day) || nextAppointment(day);
     if (/INSPECTION IN PROGRESS/.test(status)) {
       const started = asDate(current?.inspectionStartedAt) || asDate(rawActionTime(day, "Inspection started", current?.id));
       if (started) return { type: "elapsed", timestamp: started.toISOString(), prefix: "Inspection running", text: `Inspection running ${operationalDuration(Date.now() - started.getTime())}` };
@@ -2449,9 +2468,10 @@
     const status = day?.liveStatus || "NOT STARTED";
     const latestSync = latestSyncDate(person, day);
     const stale = !["NOT STARTED", "CLOCKED OUT"].includes(status) && latestSync && Date.now() - latestSync.getTime() > 20 * 60 * 1000;
-    const punctuality = day?.currentJob?.arrivalPerformance || next?.arrivalPerformance || (alerts.some(item => /late/i.test(item)) ? "Needs review" : "On schedule");
+    const current = currentAppointment(day);
+    const punctuality = current?.arrivalPerformance || next?.arrivalPerformance || (alerts.some(item => /late/i.test(item)) ? "Needs review" : "On schedule");
     return `<button class="inspector-row${alerts.length ? " has-alert" : ""}" type="button" data-open-inspector="${escapeHtml(person.id)}">
-      <div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(person.name || person.email)}</strong><small>${escapeHtml(day?.currentJob?.property || (next ? `Next: ${next.property}` : "No current appointment"))}</small><small class="inspector-sync${stale ? " stale" : ""}">${escapeHtml(syncAgeLabel(person, day))}${stale ? " · confirm status" : ""}</small></div></div>
+      <div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(person.name || person.email)}</strong><small>${escapeHtml(current?.property || (next ? `Next: ${next.property}` : "No current appointment"))}</small><small class="inspector-sync${stale ? " stale" : ""}">${escapeHtml(syncAgeLabel(person, day))}${stale ? " · confirm status" : ""}</small></div></div>
       <div><span class="status-badge ${statusClass(status, alerts)}${stale ? " stale" : ""}">${escapeHtml(status)}</span>${operationalContextHtml(person, day) || `<small>${alerts[0] ? escapeHtml(alerts[0]) : escapeHtml(punctuality)}</small>`}</div>
       <div class="row-metric"><span>Jobs</span><b>${counts.complete} / ${counts.total}</b></div>
       <div class="row-metric"><span>Hours worked</span><b>${formatMinutes(hours)}</b></div>
@@ -2926,7 +2946,7 @@
       Object.keys(summary).forEach(key => { summary[key] += Number(dayDrive?.[key]) || 0; });
       return summary;
     }, { morningMinutes: 0, betweenJobMinutes: 0, labMinutes: 0, finalMinutes: 0, totalMinutes: 0 });
-    const current = day?.currentJob;
+    const current = currentAppointment(day);
     const currentArrivedAt = current ? effectiveActionTime(person, day, "Arrived", current.id) : "";
     const currentStartedAt = current ? effectiveActionTime(person, day, "Inspection started", current.id) : "";
     const next = nextAppointment(day);
