@@ -1,5 +1,16 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 180 — Firestore Quota Reliability
+
+- Replaced the Office Console's 12-second message-receipt polling loop with one real-time receipt stream, eliminating a path that could consume tens of thousands of Firestore reads per hour.
+- Removed incorrect receipt lookups that used private-message IDs against office-update records, and now reads each legacy delivery status from the shared live receipt cache.
+- Keeps private messages, inspector replies, delivery/read indicators, and office-update summaries live without repeatedly reloading the same data.
+
+### Validation record
+
+- Passed JavaScript syntax, static read-amplification checks, native asset synchronization, Capacitor/native project verification, and signed iPhone compilation.
+- Re-ran the operative-day regression for future jobs, all-inspector map selection, completed-job Home state, messages, Hours Worked, drive-time boundaries, lab/end-of-day transitions, and persisted historical records.
+
 ## Build 179 — All-Inspector Future Map + Completed-Day Home State
 
 - Makes **All inspectors** a real selectable Office Console view and removes office-only users from the inspector filter.

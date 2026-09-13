@@ -140,8 +140,6 @@
   let unsubscribeReplies = null;
   let unsubscribeFieldMessages = null;
   let unsubscribeDirectMessages = null;
-  let replyRefreshTimer = 0;
-  let repliesRefreshing = false;
   let selectedFiles = [];
   let inspectorReplies = [];
   let fieldMessages = [];
@@ -163,6 +161,7 @@
   const assignedRequestMigrations = new Set();
   let legacyRequestChecked = false;
   const messageReceiptCache = new Map();
+  let updateReceiptRecords = [];
   const MAX_ATTACHMENT_FILES = 5;
   const MAX_ATTACHMENT_BYTES = 8 * 1024 * 1024;
   const MAX_ATTACHMENT_TOTAL_BYTES = 12 * 1024 * 1024;
@@ -636,22 +635,26 @@
       updateId: doc.ref.parent.parent?.id || doc.data().updateId || "",
       ...doc.data()
     }));
-    const nextKeys = new Set(values.map(replyKey));
+    updateReceiptRecords = values;
+    const replies = values.filter(item => item.status === "replied" || item.replyText);
+    const nextKeys = new Set(replies.map(replyKey));
     if (replyListenerReady) {
-      const newReplies = values.filter(reply => !knownReplyKeys.has(replyKey(reply)) && replyIsForCurrentAdmin(reply));
+      const newReplies = replies.filter(reply => !knownReplyKeys.has(replyKey(reply)) && replyIsForCurrentAdmin(reply));
       if (newReplies.length) {
         const latest = newReplies.sort((left, right) => (asDate(right.repliedAt)?.getTime() || 0) - (asDate(left.repliedAt)?.getTime() || 0))[0];
         showOfficeAlert(`Reply from ${latest.userName || "MPI Inspector"}`, latest.replyText || "A new inspector reply is available.", `mpi-reply-${latest.updateId}-${latest.userId}`);
       }
     }
-    inspectorReplies = values;
+    inspectorReplies = replies;
     knownReplyKeys = nextKeys;
     replyListenerReady = true;
     renderReplyInbox();
     renderAdminUnifiedInbox();
-    values.forEach(reply => { if (reply.updateId) messageReceiptCache.set(reply.updateId, reply); });
-    const selected = people.find(item => item.id === selectedInspectorId);
-    if (selected) hydrateMessageReceipts(selected);
+    messageReceiptCache.clear();
+    values.forEach(receipt => {
+      if (receipt.updateId && receipt.userId) messageReceiptCache.set(`${receipt.updateId}:${receipt.userId}`, receipt);
+    });
+    renderUpdates();
   }
 
   function notificationTokensForUpdate(audience, targetEmail = "", targetUid = "") {
@@ -2700,20 +2703,18 @@
         return `<article class="${item.direction}"><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || "MPI Team Member")}</strong><p>${escapeHtml(message.message || "Attachment sent")}</p>${delivery}${directAttachmentsHtml(message)}${item.direction === "field" ? `<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}" data-direct-message="true">CREATE TO-DO</button>` : ""}</article>`;
       }
       if (item.direction === "field") return `<article><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || person.name || "MPI Field User")} → Office</strong><p>${escapeHtml(message.message || "Photos sent to MPI Office")}</p>${fieldAttachmentsHtml(message)}<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}">CREATE TO-DO</button></article>`;
-      const receipt = messageReceiptCache.get(message.id);
+      const receipt = messageReceiptCache.get(`${message.id}:${person.id}`);
       const state = receipt?.status ? receipt.status.replace(/-/g, " ") : "Sent to app";
       return `<article><strong>${escapeHtml(formatDateTime(message.createdAt))} · MPI Office → ${escapeHtml(person.name || "field user")}</strong><p>${escapeHtml(message.message)}</p><p><b>Status:</b> ${escapeHtml(state)}</p>${adminAttachmentsHtml(message)}</article>`;
     }).join("") : '<div class="empty">No messages in this conversation yet.</div>';
   }
 
   async function hydrateMessageReceipts(person) {
-    shared.markDirectConversationRead?.(currentUser, person.id).catch(() => false);
-    await Promise.all(messagesFor(person).slice(0, 20).map(async message => {
-      try {
-        const receipt = await shared.db.collection("officeUpdates").doc(message.id).collection("receipts").doc(person.id).get();
-        if (receipt.exists) messageReceiptCache.set(message.id, receipt.data());
-      } catch (_) {}
-    }));
+    const hasUnreadDirectMessage = messagesFor(person).some(message =>
+      message.targetUid === currentUser?.uid
+      && !(Array.isArray(message.readBy) && message.readBy.includes(currentUser.uid))
+    );
+    if (hasUnreadDirectMessage) shared.markDirectConversationRead?.(currentUser, person.id).catch(() => false);
     if (selectedInspectorId === person.id && !inspectorDetail.hidden) {
       const host = document.getElementById("adminMessageHistory");
       if (host) host.innerHTML = messageHistoryHtml(person);
@@ -2990,24 +2991,19 @@
     updateOperationalClocks();
   }
 
-  async function receiptSummary(updateId) {
-    try {
-      const snapshot = await shared.db.collection("officeUpdates").doc(updateId).collection("receipts").get();
-      const values = snapshot.docs.map(doc => ({ userId: doc.id, ...doc.data() }));
-      return {
-        total: values.length,
-        delivered: values.filter(item => ["delivered", "acknowledged", "completed", "read", "replied"].includes(item.status)).length,
-        acknowledged: values.filter(item => ["acknowledged", "completed", "read", "replied"].includes(item.status)).length,
-        completed: values.filter(item => item.status === "completed").length,
-        replies: values.filter(item => item.replyText)
-      };
-    } catch (_) {
-      return { total: 0, delivered: 0, acknowledged: 0, completed: 0, replies: [] };
-    }
+  function receiptSummary(updateId) {
+    const values = updateReceiptRecords.filter(item => item.updateId === updateId);
+    return {
+      total: values.length,
+      delivered: values.filter(item => ["delivered", "acknowledged", "completed", "read", "replied"].includes(item.status)).length,
+      acknowledged: values.filter(item => ["acknowledged", "completed", "read", "replied"].includes(item.status)).length,
+      completed: values.filter(item => item.status === "completed").length,
+      replies: values.filter(item => item.replyText)
+    };
   }
 
-  async function renderUpdates() {
-    const summaries = await Promise.all(updates.map(update => receiptSummary(update.id)));
+  function renderUpdates() {
+    const summaries = updates.map(update => receiptSummary(update.id));
     const summaryReplies = summaries.flatMap((summary, index) => summary.replies.map(reply => ({
       ...reply,
       updateId: updates[index]?.id || "",
@@ -3067,6 +3063,8 @@
     unsubscribeReplies?.();
     unsubscribeFieldMessages?.();
     unsubscribeDirectMessages?.();
+    updateReceiptRecords = [];
+    messageReceiptCache.clear();
     if (!liveLocationAgeTimer) liveLocationAgeTimer = window.setInterval(() => {
       renderLiveLocationMap();
       updateOperationalClocks();
@@ -3140,7 +3138,7 @@
     }, error => { publishStatus.textContent = error.message; publishStatus.className = "status error"; });
     replyListenerReady = false;
     knownReplyKeys = new Set();
-    unsubscribeReplies = shared.db.collectionGroup("receipts").where("status", "==", "replied").onSnapshot(processReplySnapshot, () => {
+    unsubscribeReplies = shared.db.collectionGroup("receipts").onSnapshot(processReplySnapshot, () => {
       renderReplyInbox();
     });
     fieldMessageListenerReady = false;
@@ -3170,19 +3168,6 @@
       renderAdminSentMessages();
       renderOperations();
     });
-    if (!replyRefreshTimer) {
-      replyRefreshTimer = window.setInterval(async () => {
-        if (dashboard.hidden || repliesRefreshing || !updates.length) return;
-        repliesRefreshing = true;
-        try {
-          await renderUpdates();
-          const person = people.find(item => item.id === selectedInspectorId);
-          if (person) await hydrateMessageReceipts(person);
-        } finally {
-          repliesRefreshing = false;
-        }
-      }, 12000);
-    }
   }
 
   async function publishUpdate(event) {
@@ -4010,10 +3995,6 @@
       unsubscribeReplies = null;
       unsubscribeFieldMessages?.();
       unsubscribeFieldMessages = null;
-      if (replyRefreshTimer) {
-        window.clearInterval(replyRefreshTimer);
-        replyRefreshTimer = 0;
-      }
       return;
     }
     commentUsagePanel.hidden = !isPrimaryOwner();
