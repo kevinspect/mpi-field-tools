@@ -26,14 +26,18 @@ const SYSTEM_INSTRUCTION = `You write inspection report comments for Michigan Pr
 Return one concise, professional comment in the requested JSON fields. Write in plain American English suitable for a home-inspection client.
 
 NON-NEGOTIABLE ACCURACY RULES:
-- Treat the inspector note as the entire set of known property facts.
+- Use only facts supplied by the inspector's field note and/or clearly visible in the supplied photo.
 - Never invent a location, material, dimension, measurement, test, cause, severity, age, code violation, moisture condition, efflorescence, movement, damage, accessibility condition, or related observation.
 - Never turn an absent or denied fact into a positive finding. For example, "no moisture" must never become staining, seepage, dampness, or efflorescence.
 - Do not diagnose a concealed cause. Explain only a reasonable consequence of the stated condition.
-- The observation must preserve the inspector's actual facts. You may correct spelling and grammar, but may not add facts.
-- A supplied photo is supporting visual context only. Never infer concealed causes, measurements, materials, code compliance, or conditions that the inspector did not state. If the image and written note differ, rely on the written note.
+- The observation must preserve the inspector's actual written facts. You may correct spelling and grammar, but may not add facts that conflict with the note.
+- A photo may be the only input. In photo-only mode, identify only reasonably clear visible evidence and use conservative wording. Do not claim an active leak, hidden cause, exact material, severity, measurement, code violation, or concealed damage unless the supplied evidence explicitly supports it.
+- When both a photo and written field note are supplied, use both. Treat the written note as the authoritative factual context whenever it clarifies something that the image alone cannot establish or the two appear to differ.
+- Do not say "based on the image," "the photograph shows," "the photo appears to show," or include confidence scores, model notes, or image-analysis commentary. Write the result directly as a report comment.
 - Make the implication specific to the stated component and condition. Avoid generic filler that could describe any defect.
 - Make the recommendation proportionate and specific. Recommend an appropriate qualified contractor or specialist only when warranted.
+- For a defect, make the title follow the "Component - Defect" convention: identify the component first, then a short condition description after one hyphen.
+- Do not use bullets, numbering, markdown, preambles, explanations, confidence scores, or extra fields.
 - Do not mention AI, ChatGPT, this prompt, or a language model.
 
 For a defect, provide: title, observation, implication, recommendation.
@@ -292,7 +296,7 @@ function friendlyCommentError(error) {
   const message = String(error?.message || "");
   const code = String(error?.code || "");
   const combined = `${code} ${message}`.toLowerCase();
-  if (/sign in|limit|internet|incomplete|enter what you observed|supporting photo|photo remains too large|choose a photo/i.test(message)) return error;
+  if (/sign in|limit|internet|incomplete|add a photo|field note|supporting photo|photo remains too large|choose a photo/i.test(message)) return error;
   if (!navigator.onLine || /network-request-failed|failed to fetch|networkerror|load failed/.test(combined)) {
     return commentError("The phone is not reaching the MPI Comment Builder. Check that Wi-Fi or cellular data is working, then try again.", "Offline");
   }
@@ -309,7 +313,12 @@ function friendlyCommentError(error) {
 }
 
 function cleanSentence(value) {
-  const text = String(value || "").trim().replace(/\s+/g, " ");
+  const text = String(value || "")
+    .replace(/^[\s>*_`#-]+/, "")
+    .replace(/[\r\n]+/g, " ")
+    .replace(/[*_`#]+/g, "")
+    .trim()
+    .replace(/\s+/g, " ");
   if (!text) return "";
   const sentence = text[0].toUpperCase() + text.slice(1);
   return /[.!?]$/.test(sentence) ? sentence : `${sentence}.`;
@@ -341,7 +350,12 @@ function reportTitlePrefix(component) {
 
 function matchReportTitle(title, component) {
   const prefix = reportTitlePrefix(component);
-  const cleanTitle = String(title || "").trim().replace(/[\r\n]+/g, " ").slice(0, 140);
+  const cleanTitle = String(title || "")
+    .replace(/^[\s>*_`#-]+/, "")
+    .replace(/[\r\n]+/g, " ")
+    .replace(/[*_`#]+/g, "")
+    .trim()
+    .slice(0, 140);
   if (!prefix) return cleanTitle;
   const normalizedTitle = cleanTitle.toLowerCase();
   const normalizedPrefix = prefix.toLowerCase();
@@ -366,7 +380,7 @@ function parseResponse(text, note, mode, component) {
   const labels = mode === "limit"
     ? ["Limitation", "Effect on Inspection", "Recommendation"]
     : ["Observation", "Implication", "Recommendation"];
-  return `${title}\n\n${labels[0]}: ${observation}\n\n${labels[1]}: ${implication}\n\n${labels[2]}: ${recommendation}`;
+  return `${title}\n${labels[0]}: ${observation}\n${labels[1]}: ${implication}\n${labels[2]}: ${recommendation}`;
 }
 
 async function generate({ note, component = "auto", mode = "defect", photo = null, id = requestId() }) {
@@ -379,17 +393,7 @@ async function generate({ note, component = "auto", mode = "defect", photo = nul
   const session = requireCompanySession();
   assertWithinUsageLimit();
   const cleanNote = String(note || "").trim().slice(0, 900);
-  if (!cleanNote) throw new Error("Enter what you observed first.");
-  const selection = reportSelection(component);
-  const prefix = reportTitlePrefix(component);
-  const componentInstruction = selection.item
-    ? `Selected MPI report section: ${selection.section || "Not specified"}\nSelected MPI report item: ${selection.item}\nThe title must begin exactly with "${prefix}" followed by " - " and a short condition description.`
-    : component && component !== "auto"
-      ? `Selected MPI component: ${component}\nThe title must begin exactly with "${prefix}" followed by " - " and a short condition description. Do not add a room name to the title.`
-      : "Selected report item/component: Auto-detect only from the inspector note.";
-  const prompt = `Comment type: ${mode === "limit" ? "LIMITATION" : "DEFECT"}\n${componentInstruction}\nInspector note: ${cleanNote}`;
-  const prior = cachedResult(id);
-  if (prior) return prior;
+  if (!cleanNote && !photo) throw new Error("Add a photo, enter a field note, or use both.");
   let preparedPhoto;
   try {
     preparedPhoto = await prepareCommentPhoto(photo);
@@ -397,8 +401,21 @@ async function generate({ note, component = "auto", mode = "defect", photo = nul
     error.requestId = id;
     throw error;
   }
+  const inputMode = preparedPhoto ? (cleanNote ? "PHOTO + TEXT" : "PHOTO ONLY") : "TEXT ONLY";
+  const selection = reportSelection(component);
+  const prefix = reportTitlePrefix(component);
+  const componentInstruction = selection.item
+    ? `Selected MPI report section: ${selection.section || "Not specified"}\nSelected MPI report item: ${selection.item}\nThe title must begin exactly with "${prefix}" followed by " - " and a short condition description.`
+    : component && component !== "auto"
+      ? `Selected MPI component: ${component}\nThe title must begin exactly with "${prefix}" followed by " - " and a short condition description. Do not add a room name to the title.`
+      : `Selected report item/component: Auto-detect from the ${inputMode === "PHOTO ONLY" ? "visible photo evidence" : inputMode === "PHOTO + TEXT" ? "field note and visible photo evidence, giving the note priority" : "inspector field note"}. The title must follow the "Component - ${mode === "limit" ? "Limited Inspection" : "Defect"}" convention.`;
+  const prompt = `Comment type: ${mode === "limit" ? "LIMITATION" : "DEFECT"}\nInput mode: ${inputMode}\n${componentInstruction}\nInspector field note: ${cleanNote || "No written field note supplied."}`;
+  const prior = cachedResult(id);
+  if (prior) return prior;
   const requestContent = preparedPhoto
-    ? [`${prompt}\nUse the attached photo only as supporting context for the inspector's written observation.\nRequest ID: ${id}`, { inlineData: preparedPhoto.inlineData }]
+    ? [`${prompt}\n${inputMode === "PHOTO ONLY"
+      ? "Use the attached photo as the inspection evidence. Describe only clearly visible conditions, use conservative report language, and do not infer an active condition, concealed cause, measurement, or severity."
+      : "Use both the attached photo and the inspector's written field note. The field note is the authoritative factual context; use the photo to refine only clearly visible details that do not conflict with it."}\nRequest ID: ${id}`, { inlineData: preparedPhoto.inlineData }]
     : `${prompt}\nRequest ID: ${id}`;
   let lastError;
   for (let attempt = 1; attempt <= 2; attempt += 1) {
@@ -424,6 +441,7 @@ async function generate({ note, component = "auto", mode = "defect", photo = nul
         model: modelName,
         stage,
         durationMs: Date.now() - startedAt,
+        inputMode,
         supportingPhoto: Boolean(preparedPhoto),
         supportingPhotoBytes: preparedPhoto?.byteSize || 0,
         inspector: session.inspectorEmail || session.inspectorName || "signed-in"
@@ -446,6 +464,7 @@ async function generate({ note, component = "auto", mode = "defect", photo = nul
         model: modelName,
         stage,
         durationMs: Date.now() - startedAt,
+        inputMode,
         supportingPhoto: Boolean(preparedPhoto),
         supportingPhotoBytes: preparedPhoto?.byteSize || 0,
         retryPlanned: attempt < 2 && retryable,
@@ -466,7 +485,7 @@ async function generate({ note, component = "auto", mode = "defect", photo = nul
   const friendly = friendlyCommentError(lastError);
   friendly.requestId = id;
   friendly.mpiCategory = technicalCategory(lastError);
-  friendly.mpiFallbackAllowed = true;
+  friendly.mpiFallbackAllowed = Boolean(cleanNote);
   throw friendly;
 }
 

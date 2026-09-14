@@ -1,5 +1,19 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 188 — Multimodal Comment Builder
+
+- Added photo-only, text-only, and combined photo-plus-text defect generation to the existing MPI Comment Builder.
+- Photo-only comments now use the vision model with conservative evidence rules that avoid unsupported causes, active-condition claims, measurements, materials, or severity.
+- Combined input uses both sources while treating the inspector's written field note as the authoritative factual context.
+- Standardized successful report output as a component/defect title followed immediately by Observation, Implication, and Recommendation lines, without bullets or blank lines.
+- Enabled Generate whenever at least one valid input is present, while preserving the original photo and note, one automatic retry, technical reference logging, and disabled Copy behavior after a failed generation.
+- Kept the existing on-device text fallback for text-containing requests; photo-only requests never fall back to a rules engine that cannot inspect the image.
+
+### Validation record
+
+- Verified the empty, photo-only, text-only, and combined input gates; conservative vision instructions; written-note priority; continuous report formatting; failure preservation; automatic retry; and Copy availability safeguards.
+- Passed JavaScript and inline-script syntax checks, native asset synchronization, Capacitor/native project verification, and an iPhone device-target compilation.
+
 ## Build 187 — Accurate iPhone Notification Setup
 
 - Corrected the native notification screen so an allowed iPhone permission is no longer mislabeled as blocked when the remote push connection itself fails.

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="187">
+  <meta name="app-build" content="188">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5920,7 +5920,7 @@
       <a href="#comment-builder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4Z"/><path d="M8 8h8M8 12h5"/></svg><span><strong>Comment Creator</strong><small>Build a defect comment</small></span></a>
     </nav>
     <a class="home-office-link" id="officeConsoleCard" href="./admin.html" hidden>Open Office Console</a>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">187</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">188</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -6662,15 +6662,15 @@
           <p class="eyebrow">MPI report-writing tool</p>
           <h2 id="comment-builder-title">MPI Comment Builder.</h2>
         </div>
-        <p id="comment-builder-description">Describe what you observed in plain language. The tool identifies the component and condition, then builds a specific MPI observation, implication, and recommendation without adding property facts you did not enter.</p>
+        <p id="comment-builder-description">Add a photo, enter a field note, or use both. The tool builds a specific MPI observation, implication, and recommendation without adding unsupported property facts.</p>
       </div>
 
       <div class="comment-grid">
         <form class="panel comment-form" id="commentForm" novalidate>
           <div class="panel-heading">
             <div>
-              <h2 id="comment-note-title">Enter the inspection note</h2>
-              <p id="comment-note-help">Enter the visible condition or test result in plain language.</p>
+              <h2 id="comment-note-title">Add inspection evidence</h2>
+              <p id="comment-note-help">ADD A PHOTO, ENTER A FIELD NOTE, OR USE BOTH.</p>
             </div>
             <span class="step-count" id="commentModeBadge">Online</span>
           </div>
@@ -6684,25 +6684,25 @@
             <label for="commentArea">Report item / component</label>
             <div class="select-wrap">
               <select id="commentArea">
-                <option value="auto">Auto-detect from the note</option>
+                <option value="auto">Auto-detect from the evidence</option>
               </select>
             </div>
             <p class="rule-hint">Choose the component only. Room-by-room duplicates have been removed, or leave Auto-detect selected.</p>
           </div>
 
           <div class="comment-photo-field">
-            <strong>Supporting photo (optional)</strong>
+            <strong>Inspection photo</strong>
             <div class="comment-photo-actions">
               <label class="comment-photo-action" for="commentCameraPhoto"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h3l2-3h6l2 3h3v13H4Z"/><circle cx="12" cy="13" r="4"/></svg><span>Take Photo</span><input id="commentCameraPhoto" type="file" accept="image/*" capture="environment"></label>
               <label class="comment-photo-action" for="commentGalleryPhoto"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="2"/><path d="m4 18 5-5 3 3 3-4 5 6"/></svg><span>Upload From Gallery</span><input id="commentGalleryPhoto" type="file" accept="image/*,.heic,.heif"></label>
             </div>
             <div class="comment-photo-selected" id="commentPhotoSelected" hidden><span id="commentPhotoName">Photo selected</span><button id="removeCommentPhoto" type="button">REMOVE</button></div>
-            <small>Use one clear photo to support the written observation. It is reduced on the phone, used only for this request, and is not stored by MPI Field Tools.</small>
+            <small>Use one clear photo by itself or with a field note. It is reduced on the phone, used only for this request, and is not stored by MPI Field Tools.</small>
           </div>
 
           <div class="field">
-            <label for="defectInput" id="comment-note-label">What did you observe?</label>
-            <textarea id="defectInput" maxlength="900" placeholder="Example: The heating and cooling systems did not operate when the thermostat controls were activated. The furnace and air conditioner did not respond at either thermostat." required></textarea>
+            <label for="defectInput" id="comment-note-label">Field note (optional when a photo is added)</label>
+            <textarea id="defectInput" maxlength="900" placeholder="Example: The heating and cooling systems did not operate when the thermostat controls were activated. The furnace and air conditioner did not respond at either thermostat."></textarea>
             <div class="example-row">
               <span>Stick to visible conditions and test results.</span>
               <button class="example-btn" id="commentExampleBtn" type="button">Use example</button>
@@ -6710,7 +6710,7 @@
           </div>
 
           <div class="comment-actions">
-            <button class="decode-btn" id="generateCommentBtn" type="submit">Generate MPI defect</button>
+            <button class="decode-btn" id="generateCommentBtn" type="submit" disabled>Generate MPI defect</button>
             <button class="secondary-btn" id="clearCommentBtn" type="button">Clear</button>
           </div>
           <p class="privacy-note" id="commentPrivacyNote">Internet and MPI company sign-in are required. Use this only when the approved Spectora template does not already contain the right comment.</p>
@@ -6724,7 +6724,7 @@
               <p>The generated wording is locked. Correct the field information and generate it again if changes are needed.</p>
             </div>
           </div>
-          <textarea class="comment-output" id="commentOutput" aria-label="Generated read-only inspection comment" placeholder="Your formatted comment will appear here after you enter the inspection details." readonly></textarea>
+          <textarea class="comment-output" id="commentOutput" aria-label="Generated read-only inspection comment" placeholder="Your formatted comment will appear here after you add a photo, enter a field note, or use both." readonly></textarea>
           <div class="comment-result-actions" id="commentResultActions">
               <small id="comment-result-note">Review the complete wording for property-specific accuracy before copying it into Spectora.</small>
             <button class="copy-comment-btn" id="copyCommentBtn" type="button" disabled>Copy full comment</button>
@@ -8531,7 +8531,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 187</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 188</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8671,11 +8671,11 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=187"></script>
-  <script src="./mpi-shared.js?build=187"></script>
-  <script src="./mpi-field-sync.js?build=187"></script>
-  <script src="./mpi-subcontractor.js?build=187"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=187"></script>
+  <script src="./mpi-native-bridge.js?build=188"></script>
+  <script src="./mpi-shared.js?build=188"></script>
+  <script src="./mpi-field-sync.js?build=188"></script>
+  <script src="./mpi-subcontractor.js?build=188"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=188"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -9868,6 +9868,7 @@
       let fieldSentMessages = [];
       let fieldInboxUpdates = [];
       let selectedCommentPhoto = null;
+      let commentGenerationPending = false;
       let selectedTeamMemberId = "";
       let unsubscribeTeamDirectory = null;
       let unsubscribeTeamPresence = null;
@@ -13264,6 +13265,14 @@
           .replace(/\b(?:the )?field notes?\b/gi, "the inspection")
           .replace(/[ \t]+\n/g, "\n")
           .replace(/ {2,}/g, " ")
+          .trim();
+      }
+
+      function normalizeGeneratedCommentOutput(value) {
+        return String(value || "")
+          .replace(/\r\n?/g, "\n")
+          .replace(/^\s*(?:[-*•]|\d+[.)])\s*(?=(?:Observation|Implication|Recommendation|Limitation|Effect on Inspection):)/gmi, "")
+          .replace(/\n[ \t]*\n+(?=(?:Observation|Implication|Recommendation|Limitation|Effect on Inspection):)/gi, "\n")
           .trim();
       }
 
@@ -23754,13 +23763,11 @@
         commentModeBadge.textContent = "Online";
         commentBuilderTitle.textContent = "MPI Comment Builder.";
         commentBuilderDescription.textContent = limitation
-          ? "Describe what prevented full visibility, access, or operation. The secure online builder creates property-specific limitation wording for review in Spectora."
-          : "Describe what you observed in plain language. The secure online builder creates a specific observation, implication, and recommendation without deliberately adding property facts you did not enter.";
-        commentNoteTitle.textContent = limitation ? "Enter the inspection limitation" : "Enter the inspection note";
-        commentNoteHelp.textContent = limitation
-          ? "Enter what prevented visibility, access, or operation in plain language."
-          : "Enter the visible condition or test result in plain language.";
-        commentNoteLabel.textContent = "What did you observe?";
+          ? "Add a photo, enter a field note, or use both. The secure online builder creates property-specific limitation wording for review in Spectora."
+          : "Add a photo, enter a field note, or use both. The secure online builder creates a specific observation, implication, and recommendation without adding unsupported property facts.";
+        commentNoteTitle.textContent = "Add inspection evidence";
+        commentNoteHelp.textContent = "ADD A PHOTO, ENTER A FIELD NOTE, OR USE BOTH.";
+        commentNoteLabel.textContent = "Field note (optional when a photo is added)";
         defectInput.placeholder = limitation
           ? "Example: Stored items in front of the electrical panel restricted access and prevented a full inspection."
           : "Example: The heating and cooling systems did not operate when the thermostat controls were activated.";
@@ -23768,8 +23775,8 @@
         commentFormatLabel.textContent = limitation ? "MPI limitation format" : "MPI defect format";
         commentResultTitle.textContent = limitation ? "Generated limitation comment" : "Generated defect comment";
         commentOutput.placeholder = limitation
-          ? "Your formatted limitation comment will appear here after you enter the inspection note."
-          : "Your formatted defect comment will appear here after you enter the inspection note.";
+          ? "Your formatted limitation comment will appear here after you add a photo, enter a field note, or use both."
+          : "Your formatted defect comment will appear here after you add a photo, enter a field note, or use both.";
         commentResultNote.textContent = limitation
           ? "Review the limitation, effect, and recommendation for property-specific accuracy before copying it into Spectora."
           : "Review the observation, implication, and recommendation for property-specific accuracy before copying it into Spectora.";
@@ -23781,7 +23788,7 @@
         copyCommentBtn.disabled = true;
         commentOutput.hidden = false;
         commentResultActions.hidden = false;
-        generateCommentBtn.disabled = false;
+        updateCommentGenerateState();
       }
 
       function updateConfig() {
@@ -23850,8 +23857,15 @@
         defectInput.value = commentType === "limit"
           ? "Stored items in front of the electrical panel restricted access and prevented a full inspection."
           : "The heating and cooling systems did not operate when the thermostat controls were activated.";
+        updateCommentGenerateState();
         commentForm.requestSubmit();
       });
+
+      function updateCommentGenerateState() {
+        const hasEvidence = Boolean(defectInput.value.trim() || selectedCommentPhoto);
+        generateCommentBtn.disabled = commentGenerationPending || !hasEvidence;
+        generateCommentBtn.setAttribute("aria-disabled", String(commentGenerationPending || !hasEvidence));
+      }
 
       function setSelectedCommentPhoto(file = null) {
         selectedCommentPhoto = file || null;
@@ -23859,8 +23873,10 @@
         if (commentGalleryPhoto) commentGalleryPhoto.value = "";
         if (commentPhotoSelected) commentPhotoSelected.hidden = !selectedCommentPhoto;
         if (commentPhotoName) commentPhotoName.textContent = selectedCommentPhoto ? selectedCommentPhoto.name || "Photo selected" : "Photo selected";
+        updateCommentGenerateState();
       }
 
+      defectInput.addEventListener("input", updateCommentGenerateState);
       [commentCameraPhoto, commentGalleryPhoto].forEach(input => input?.addEventListener("change", () => {
         const file = input.files?.[0] || null;
         if (file) setSelectedCommentPhoto(file);
@@ -23917,12 +23933,13 @@
       commentForm.addEventListener("submit", async event => {
         event.preventDefault();
         const note = defectInput.value.trim();
-        if (!note) {
-          defectInput.focus();
-          showToast("Enter an inspection note first");
+        const photo = selectedCommentPhoto;
+        if (!note && !photo) {
+          showToast("Add a photo or enter a field note first");
           return;
         }
-        generateCommentBtn.disabled = true;
+        commentGenerationPending = true;
+        updateCommentGenerateState();
         generateCommentBtn.textContent = "Creating MPI comment…";
         commentModeBadge.textContent = "Connecting…";
         commentOutput.value = "";
@@ -23930,25 +23947,24 @@
         commentFailureActions.hidden = true;
         try {
           if (!window.MPI_COMMENT_AI?.generate) throw new Error("The secure MPI Comment Builder is still loading. Wait a moment and try again.");
-          const photo = selectedCommentPhoto;
           const requestSignature = JSON.stringify([note, commentArea.value, commentType, photo ? `${photo.name}:${photo.size}:${photo.lastModified}` : ""]);
           if (!activeCommentRequestId || activeCommentRequestSignature !== requestSignature) {
             activeCommentRequestId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
             activeCommentRequestSignature = requestSignature;
           }
-          commentOutput.value = await window.MPI_COMMENT_AI.generate({
+          commentOutput.value = normalizeGeneratedCommentOutput(await window.MPI_COMMENT_AI.generate({
             note,
             component: commentArea.value,
             mode: commentType,
             photo,
             id: activeCommentRequestId
-          });
+          }));
           copyCommentBtn.disabled = false;
           commentModeBadge.textContent = "Ready";
           showToast("MPI comment ready for review");
         } catch (error) {
-          if (error?.mpiFallbackAllowed) {
-            commentOutput.value = buildMpiComment(note, commentArea.value, commentType);
+          if (error?.mpiFallbackAllowed && note) {
+            commentOutput.value = normalizeGeneratedCommentOutput(buildMpiComment(note, commentArea.value, commentType));
             copyCommentBtn.disabled = false;
             commentModeBadge.textContent = "On-device backup";
             commentFailureActions.hidden = true;
@@ -23965,8 +23981,9 @@
           commentFailureActions.hidden = false;
           showToast("Comment not generated");
         } finally {
-          generateCommentBtn.disabled = false;
+          commentGenerationPending = false;
           generateCommentBtn.textContent = commentType === "limit" ? "Generate MPI limitation" : "Generate MPI defect";
+          updateCommentGenerateState();
           sizeCommentOutput();
           commentOutput.scrollTop = 0;
           commentOutput.scrollLeft = 0;
