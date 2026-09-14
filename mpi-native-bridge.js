@@ -164,7 +164,15 @@
     let permission = await pushPermission();
     if (permission?.receive === "prompt") permission = await firebaseMessaging.requestPermissions();
     if (permission?.receive !== "granted") throw new Error("Notifications are blocked in iPhone Settings.");
-    const result = await firebaseMessaging.getToken();
+    let result;
+    try {
+      result = await firebaseMessaging.getToken();
+    } catch (cause) {
+      const error = new Error("Notifications are allowed, but the MPI push connection could not be completed. Reopen the app and try once more.");
+      error.code = "MPI_PUSH_REGISTRATION_FAILED";
+      error.cause = cause;
+      throw error;
+    }
     const token = String(result?.token || "").trim();
     if (!token) throw new Error("The phone did not return an MPI notification token.");
     try { localStorage.setItem("mpiPushTokenV1", token); } catch (_) {}

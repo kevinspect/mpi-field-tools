@@ -1,5 +1,13 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 187 — Accurate iPhone Notification Setup
+
+- Corrected the native notification screen so an allowed iPhone permission is no longer mislabeled as blocked when the remote push connection itself fails.
+- Added automatic push-token recovery whenever iOS permission is already enabled, without making the user repeat the permission flow.
+- Registered the development iPhone bundle separately in the existing Firebase project and added build-aware Firebase configuration, keeping development and production identities aligned.
+- Added the Apple Push Notifications entitlement to the native project and validation coverage for signed development builds.
+- Preserved the existing inbox, notification permission, local field alarms, phone data, and production Firebase configuration.
+
 ## Build 186 — Reliable Comment Builder
 
 - Corrected the Firebase AI Logic project protection setting that caused valid, online iPhones to receive HTTP 403 responses.
