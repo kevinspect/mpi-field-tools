@@ -1,0 +1,417 @@
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = dirname(dirname(fileURLToPath(import.meta.url)));
+const failures = [];
+
+function run(label, command, args, options = {}) {
+  try {
+    execFileSync(command, args, {
+      cwd: root,
+      encoding: "utf8",
+      stdio: options.quiet === false ? "inherit" : "pipe"
+    });
+    console.log(`PASS  ${label}`);
+  } catch (error) {
+    const detail = String(error.stderr || error.stdout || error.message || error).trim();
+    failures.push(`${label}${detail ? `: ${detail}` : ""}`);
+    console.error(`FAIL  ${label}`);
+  }
+}
+
+async function assertText(label, path, predicate, failureDetail) {
+  try {
+    const source = await readFile(join(root, path), "utf8");
+    if (!predicate(source)) throw new Error(failureDetail);
+    console.log(`PASS  ${label}`);
+  } catch (error) {
+    failures.push(`${label}: ${error.message}`);
+    console.error(`FAIL  ${label}`);
+  }
+}
+
+for (const file of [
+  "mpi-native-bridge.js",
+  "mpi-shared.js",
+  "mpi-field-sync.js",
+  "mpi-subcontractor.js",
+  "mpi-comment-ai.js",
+  "admin.js",
+  "sw.js",
+  "scripts/prepare-native-web.mjs",
+  "scripts/native-doctor.mjs",
+  "scripts/simulator-smoke.mjs",
+  "scripts/verify-native.mjs"
+]) {
+  run(`JavaScript syntax — ${file}`, process.execPath, ["--check", file]);
+}
+
+const temporaryDirectory = await mkdtemp(join(tmpdir(), "mpi-native-verify-"));
+try {
+  const index = await readFile(join(root, "index.html"), "utf8");
+  const inlineScripts = [...index.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
+    .map(match => match[1])
+    .filter(source => source.trim());
+
+  for (const [index, source] of inlineScripts.entries()) {
+    const temporaryScript = join(temporaryDirectory, `inline-${index + 1}.js`);
+    await writeFile(temporaryScript, source);
+    run(`Inline app script ${index + 1} syntax`, process.execPath, ["--check", temporaryScript]);
+  }
+} finally {
+  await rm(temporaryDirectory, { recursive: true, force: true });
+}
+
+for (const plist of [
+  "ios/App/App/Info.plist",
+  "ios/App/App/GoogleService-Info.plist",
+  "ios/App/App/GoogleService-Info-Development.plist",
+  "ios/App/App/App.entitlements",
+  "ios/App/App/PrivacyInfo.xcprivacy",
+  "native-plugins/mpi-background-location/ios/Sources/MPIBackgroundLocationPlugin/PrivacyInfo.xcprivacy",
+  "ios/App/App.xcodeproj/project.pbxproj"
+]) {
+  run(`Apple property list — ${plist}`, "/usr/bin/plutil", ["-lint", plist]);
+}
+
+run("Capacitor package graph", "swift", ["package", "dump-package", "--package-path", "ios/App/CapApp-SPM"]);
+run("Background-location package graph", "swift", ["package", "dump-package", "--package-path", "native-plugins/mpi-background-location"]);
+run("Native app Swift syntax", "swiftc", ["-parse", "ios/App/App/AppDelegate.swift", "ios/App/App/SceneDelegate.swift"]);
+run("Background-location Swift syntax", "swiftc", ["-parse", "native-plugins/mpi-background-location/ios/Sources/MPIBackgroundLocationPlugin/MPIBackgroundLocationPlugin.swift"]);
+
+await assertText(
+  "Storyboard-backed Capacitor scene",
+  "ios/App/App/SceneDelegate.swift",
+  source => source.includes('UIStoryboard(name: "Main"') && !source.includes("rootViewController = CAPBridgeViewController()"),
+  "SceneDelegate can replace the configured storyboard controller and produce a blank launch screen"
+);
+
+await assertText(
+  "Firebase initializes before native plugins",
+  "ios/App/App/AppDelegate.swift",
+  source => source.includes("import FirebaseCore")
+    && source.includes("GoogleService-Info-Development")
+    && source.includes("FirebaseApp.configure(options: options)"),
+  "AppDelegate does not configure the bundled Firebase app"
+);
+
+await assertText(
+  "Remote notification delegate wiring",
+  "ios/App/App/AppDelegate.swift",
+  source => [
+    "didRegisterForRemoteNotificationsWithDeviceToken",
+    "didFailToRegisterForRemoteNotificationsWithError",
+    "didReceiveRemoteNotification"
+  ].every(value => source.includes(value)),
+  "AppDelegate is missing Firebase Messaging notification forwarding"
+);
+
+await assertText(
+  "Workday background modes",
+  "ios/App/App/Info.plist",
+  source => ["<string>location</string>", "<string>remote-notification</string>"].every(value => source.includes(value)),
+  "Info.plist is missing required background modes"
+);
+
+await assertText(
+  "Secure subcontractor app link",
+  "ios/App/App/Info.plist",
+  source => source.includes("<string>mpifieldtools</string>"),
+  "Info.plist does not register the private subcontractor activation route"
+);
+
+await assertText(
+  "Office-controlled first-launch choice",
+  "index.html",
+  source => source.includes("mpiAccessChoice") && source.includes("SUBCONTRACTOR INVITATION") && source.includes("cannot grant or change a role"),
+  "The installed app is missing its secure employee/subcontractor entry choice"
+);
+
+await assertText(
+  "Push entitlement",
+  "ios/App/App/App.entitlements",
+  source => source.includes("aps-environment"),
+  "App entitlements do not declare APNs"
+);
+
+await assertText(
+  "Native bundle uses local Firebase runtime",
+  "native-web/index.html",
+  source => source.includes("./vendor/firebase-app-compat.js") && !source.includes("accounts.google.com/gsi/client"),
+  "Prepared native bundle still depends on Google Identity Services or remote Firebase scripts"
+);
+
+await assertText(
+  "Native alarm bundled in Xcode target",
+  "ios/App/App.xcodeproj/project.pbxproj",
+  source => source.includes("mpi_alarm.wav in Resources"),
+  "The distinctive alarm sound is not in the app target"
+);
+
+await assertText(
+  "Firebase configuration bundled in Xcode target",
+  "ios/App/App.xcodeproj/project.pbxproj",
+  source => source.includes("GoogleService-Info.plist in Resources")
+    && source.includes("GoogleService-Info-Development.plist in Resources"),
+  "GoogleService-Info.plist is not in the app target"
+);
+
+await assertText(
+  "Debug app is signed for APNs",
+  "ios/App/App.xcodeproj/project.pbxproj",
+  source => {
+    const debug = source.split("504EC3171FED79650016851F /* Debug */")[1]?.split("504EC3181FED79650016851F /* Release */")[0] || "";
+    return debug.includes("APS_ENVIRONMENT = development;") && debug.includes("CODE_SIGN_ENTITLEMENTS = App/App.entitlements;");
+  },
+  "The installed Debug app does not receive the APS entitlement"
+);
+
+await assertText(
+  "Operations workspace excludes ordinary messaging",
+  "admin.html",
+  source => {
+    const operations = source.split('data-admin-panel="operations"')[1]?.split('data-admin-panel="requests"')[0] || "";
+    return !operations.includes("adminReplyInbox") && !operations.includes("Inspector Replies");
+  },
+  "Operations contains an ordinary reply inbox"
+);
+
+await assertText(
+  "Inspector operations excludes message composer",
+  "admin.js",
+  source => {
+    const detail = source.split("function renderInspectorDetail")[1]?.split("function renderOperations")[0] || "";
+    return !detail.includes("Message Inspector") && !detail.includes("adminMessageForm") && !detail.includes("adminMessageHistory");
+  },
+  "Inspector operational detail contains messaging controls"
+);
+
+await assertText(
+  "Messages workspace owns conversations",
+  "admin.html",
+  source => source.includes('id="adminInboxMailbox"') && source.includes('id="adminInboxConversation"') && source.includes("Sent Messages &amp; Updates"),
+  "Messages workspace is missing its mailbox, conversation, or sent items"
+);
+
+await assertText(
+  "Message refresh preserves active composer",
+  "admin.js",
+  source => {
+    const updates = source.split("function renderUpdates")[1]?.split("function canonicalTeamName")[0] || "";
+    return updates.includes("refreshAdminInboxConversation()") && !updates.includes("renderOperations()");
+  },
+  "A message/data refresh can still redraw Operations and clear an active message"
+);
+
+await assertText(
+  "Private-message read receipts only update inbound messages",
+  "mpi-shared.js",
+  source => {
+    const read = source.split("async function markDirectConversationRead")[1]?.split("async function markFieldMessageRead")[0] || "";
+    return read.includes("message.targetUid === user.uid")
+      && read.includes("message.senderUid !== user.uid")
+      && read.includes("message.readBy.includes(user.uid)");
+  },
+  "A legacy sent message can still make the whole conversation read-receipt batch fail"
+);
+
+await assertText(
+  "Opening or replying clears the field inbox unread badge",
+  "index.html",
+  source => source.includes("function markTeamConversationRead(userId)")
+    && source.includes('window.dispatchEvent(new CustomEvent("mpi-office-update-opened"')
+    && source.includes("markTeamConversationRead(selectedTeamMemberId);")
+    && source.includes("markTeamConversationRead(userId);"),
+  "The field inbox does not mark opened conversations and office updates read"
+);
+
+await assertText(
+  "Office-update replies clear unread state immediately",
+  "mpi-field-sync.js",
+  source => source.includes('status: "replied"')
+    && source.includes("async function markOpenedOfficeUpdateRead(updateId)")
+    && source.includes('window.addEventListener("mpi-office-update-opened"'),
+  "A read or replied office update can leave the field inbox badge stuck"
+);
+
+await assertText(
+  "Comment Builder accepts photo, text, or both",
+  "index.html",
+  source => source.includes("Boolean(defectInput.value.trim() || selectedCommentPhoto)")
+    && source.includes("if (!note && !photo)")
+    && source.includes("ADD A PHOTO, ENTER A FIELD NOTE, OR USE BOTH.")
+    && !/<textarea id="defectInput"[^>]*required/.test(source),
+  "The Comment Builder still requires text or does not recognize photo evidence"
+);
+
+await assertText(
+  "Photo-only comments use vision without text fallback",
+  "mpi-comment-ai.js",
+  source => source.includes('"PHOTO ONLY"')
+    && source.includes('"PHOTO + TEXT"')
+    && source.includes('"TEXT ONLY"')
+    && source.includes("friendly.mpiFallbackAllowed = Boolean(cleanNote)"),
+  "Photo-only input is missing or can incorrectly fall back to the text-only rules engine"
+);
+
+await assertText(
+  "Generated comments use continuous report lines",
+  "mpi-comment-ai.js",
+  source => source.includes("`${title}\\n${labels[0]}: ${observation}\\n${labels[1]}: ${implication}\\n${labels[2]}: ${recommendation}`"),
+  "Generated comments still insert blank lines between report fields"
+);
+
+await assertText(
+  "Completed jobs keep a durable restart lock",
+  "index.html",
+  source => source.includes('const WORKFLOW_COMPLETED_JOBS_STORAGE_KEY = "mpiWorkflowCompletedJobsV1"')
+    && source.includes("rememberWorkflowCompletedJob(job)")
+    && source.includes("workflowCompletedSnapshotJobs()")
+    && !source.split("function clearDeliveredWorkflowLogs")[1]?.split("const WORKFLOW_EMAIL_EQUIPMENT_LABELS")[0]?.includes("WORKFLOW_COMPLETED_JOBS_STORAGE_KEY"),
+  "Completed-job protection is missing or is cleared with the delivered daily log"
+);
+
+await assertText(
+  "Completed jobs reject every workflow restart action",
+  "index.html",
+  source => {
+    const update = source.split("function updateWorkflowStage")[1]?.split("function workflowClock")[0] || "";
+    const onMyWay = source.split("function setWorkflowOnMyWay")[1]?.split("function workflowArrivalPerformance")[0] || "";
+    return update.includes('status !== "completed" && rejectLockedWorkflowJob(job)')
+      && onMyWay.includes("rejectLockedWorkflowJob(job)");
+  },
+  "A stale completed-job card can still record On My Way or another workflow stage"
+);
+
+await assertText(
+  "Completion recovery uses one cached Office read",
+  "index.html",
+  source => {
+    const recovery = source.split("async function reconcileWorkflowCompletionsFromOffice")[1]?.split("function workflowCompletedEventIds")[0] || "";
+    return recovery.includes("MPI_SHARED.loadOwnOperationsDay(date)")
+      && recovery.includes("WORKFLOW_COMPLETION_SYNC_STORAGE_KEY")
+      && recovery.includes('receipt?.status === "complete"');
+  },
+  "Completed-job recovery is missing or can repeatedly consume Firebase reads"
+);
+
+await assertText(
+  "Signed-in inspector can recover their own completed jobs",
+  "mpi-shared.js",
+  source => source.includes("async function loadOwnOperationsDay(date)")
+    && source.includes("loadOwnOperationsDay,"),
+  "The field app cannot read its own preserved Operations day for restart protection"
+);
+
+await assertText(
+  "Historical route merges GPS and workflow checkpoints",
+  "admin.js",
+  source => source.includes("mergeHistoricalRoutePoints(uploadedPoints, verifiedPoints)")
+    && source.includes("operationalRoutePoints(person, selectedDate)")
+    && source.includes("loadHistoricalRoute({ refresh: true })"),
+  "Actual Route can omit verified arrival, lab, home, or Clock Off locations or remain stale"
+);
+
+await assertText(
+  "Historical route loads the complete workday efficiently",
+  "admin.js",
+  source => source.includes("async function uploadedHistoricalRoutePoints")
+    && source.includes('.limit(4000)')
+    && source.includes('where("recordedAtClient", ">=", latestRecordedAt)')
+    && !source.includes('collection("points").orderBy("recordedAtClient", "asc").limit(500)'),
+  "Actual Route is still capped at the first 500 points or lacks incremental refresh"
+);
+
+await assertText(
+  "Native route point density is bounded",
+  "native-plugins/mpi-background-location/ios/Sources/MPIBackgroundLocationPlugin/MPIBackgroundLocationPlugin.swift",
+  source => source.includes("elapsed >= 165 || (elapsed >= 45 && distance >= 500)"),
+  "The iPhone recorder can still write route points every few seconds while driving"
+);
+
+await assertText(
+  "Native route finalizes before tracking stops",
+  "mpi-field-sync.js",
+  source => {
+    const finalizer = source.split("async function finalizeNativeLocationSharing")[1]?.split("async function ensureNativeLocationSharing")[0] || "";
+    return finalizer.includes("currentWorkdayLocation")
+      && finalizer.includes('publishLiveLocation("native-final"')
+      && finalizer.indexOf("flushNativeLocations().catch") < finalizer.indexOf("stopWorkdayLocation?.().catch");
+  },
+  "Clock Off can stop native tracking before its final location is uploaded"
+);
+
+await assertText(
+  "Queued native route keeps observed timestamps",
+  "mpi-field-sync.js",
+  source => source.includes("const observedAt = Number(position?.timestamp)")
+    && source.includes("new Date(Number.isFinite(observedAt)"),
+  "Delayed native route uploads can be assigned the upload time instead of the observed time"
+);
+
+await assertText(
+  "Requested iPhone location bypasses route throttling",
+  "native-plugins/mpi-background-location/ios/Sources/MPIBackgroundLocationPlugin/MPIBackgroundLocationPlugin.swift",
+  source => source.includes("var requestedPoint: MPIQueuedLocation?")
+    && source.includes("requestedPoint != nil || shouldRecord(newest)"),
+  "The final requested iPhone point can still be discarded by distance/time throttling"
+);
+
+await assertText(
+  "Read-only Spectora completion closes the matching workflow job",
+  "index.html",
+  source => source.includes('status: String(job?.status || "")')
+    && source.includes("jobs.filter(job => workflowJobIsComplete(job)).forEach(job => rememberWorkflowCompletedJob(job))"),
+  "A completed read-only Spectora appointment can still be activated as a scheduled job"
+);
+
+await assertText(
+  "Closed field day cannot expose a next appointment",
+  "index.html",
+  source => {
+    const next = source.split("function workflowNextScheduledJob")[1]?.split("function workflowServiceLabel")[0] || "";
+    const snapshot = source.split("function workflowOperationsSnapshot")[1]?.split("function syncWorkflowOperationsNow")[0] || "";
+    const home = source.split("function renderActiveJob")[1]?.split("function saveActiveJob")[0] || "";
+    return next.includes("workflowDayCompleteRecord()?.completedAt")
+      && snapshot.includes("currentJob: null")
+      && snapshot.includes("nextJob: null")
+      && home.includes("completedDay?.completedAt ? []");
+  },
+  "A clocked-off field day can still display or restore a stale appointment"
+);
+
+await assertText(
+  "Operations merge preserves explicit appointment clears",
+  "mpi-shared.js",
+  source => {
+    const merge = source.split("function mergeOperationsDay")[1]?.split("async function syncOperationsSnapshot")[0] || "";
+    return merge.includes('hasOwnProperty.call(incoming, "currentJob")')
+      && merge.includes('hasOwnProperty.call(incoming, "nextJob")')
+      && merge.includes('hasOwnProperty.call(incoming, "dayComplete")');
+  },
+  "Firestore merging can revive a current job, next job, or stale completed-day state"
+);
+
+await assertText(
+  "Office next appointment respects closed workdays",
+  "admin.js",
+  source => {
+    const closed = source.split("function operationDayIsClosed")[1]?.split("function currentAppointment")[0] || "";
+    const next = source.split("function nextAppointment")[1]?.split("function operationalDuration")[0] || "";
+    return closed.includes('=== "CLOCKED OUT"')
+      && closed.includes("day?.dayComplete?.completedAt")
+      && next.includes("operationDayIsClosed(day)");
+  },
+  "Office Console can still label a completed appointment as the next job"
+);
+
+if (failures.length) {
+  console.error(`\n${failures.length} native verification check${failures.length === 1 ? "" : "s"} failed:`);
+  failures.forEach(failure => console.error(`- ${failure}`));
+  process.exitCode = 1;
+} else {
+  console.log("\nNative source and project validation passed.");
+}

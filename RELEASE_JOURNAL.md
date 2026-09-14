@@ -1,5 +1,12 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 190 — Reliable Inbox Read Receipts
+
+- Opening a private conversation now clears its unread badge immediately and records the receipt only on inbound messages, preventing legacy sent messages from blocking the entire read update.
+- New messages received while their conversation is already open are automatically marked read.
+- Opening an office update, or successfully replying to it, now clears its Inbox badge without requiring a second “Mark as read” action.
+- The read-state changes are preserved through the shared Firebase receipt records so every signed-in view receives the same status.
+
 ## Build 189 — Complete Workday Routes
 
 - Removed the Office map's first-500-point cutoff so a long workday no longer loses later traveled areas.

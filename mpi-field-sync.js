@@ -1147,10 +1147,38 @@
     try {
       const update = currentUpdates.find(item => item.id === card.dataset.updateId) || null;
       await shared.replyToUpdate(card.dataset.updateId, currentUser, currentProfile, message, update, files);
-      status.textContent = files.length ? `Reply and ${files.length} photo${files.length === 1 ? "" : "s"} sent to MPI management.` : "Reply sent to MPI management.";
+      const repliedAt = new Date().toISOString();
+      currentUpdates = currentUpdates.map(item => item.id === card.dataset.updateId ? {
+        ...item,
+        receipt: {
+          ...(item.receipt || {}),
+          status: "replied",
+          replyText: message,
+          repliedAtClient: repliedAt,
+          updatedAtClient: repliedAt
+        }
+      } : item);
+      renderUpdates(currentUpdates);
     } catch (error) {
       button.disabled = false;
       status.textContent = error?.message || "Reply could not be sent. Try again.";
+    }
+  }
+
+  async function markOpenedOfficeUpdateRead(updateId) {
+    const id = String(updateId || "").trim();
+    const update = currentUpdates.find(item => item.id === id);
+    if (!id || !update || !currentUser || ["read", "acknowledged", "completed", "replied"].includes(update.receipt?.status)) return;
+    const readAt = new Date().toISOString();
+    currentUpdates = currentUpdates.map(item => item.id === id ? {
+      ...item,
+      receipt: { ...(item.receipt || {}), status: "read", readAtClient: readAt, updatedAtClient: readAt }
+    } : item);
+    renderUpdates(currentUpdates);
+    try {
+      await shared.setUpdateStatus(id, currentUser, currentProfile, "read");
+    } catch (_) {
+      // The live receipt listener restores the unread state if this device is offline.
     }
   }
 
@@ -1179,6 +1207,7 @@
   updatesList.addEventListener("click", handleUpdateAction);
   updatesList.addEventListener("click", handleAttachmentOpen);
   updatesList.addEventListener("submit", handleUpdateReply);
+  window.addEventListener("mpi-office-update-opened", event => markOpenedOfficeUpdateRead(event.detail?.updateId));
   window.addEventListener("mpi-push-token-ready", event => {
     if (currentUser && currentProfile) registerPushDevice(currentUser, currentProfile, event.detail?.token).catch(() => {});
   });

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="189">
+  <meta name="app-build" content="190">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5920,7 +5920,7 @@
       <a href="#comment-builder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4Z"/><path d="M8 8h8M8 12h5"/></svg><span><strong>Comment Creator</strong><small>Build a defect comment</small></span></a>
     </nav>
     <a class="home-office-link" id="officeConsoleCard" href="./admin.html" hidden>Open Office Console</a>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">189</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">190</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -8531,7 +8531,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 189</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 190</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8671,11 +8671,11 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=189"></script>
-  <script src="./mpi-shared.js?build=189"></script>
-  <script src="./mpi-field-sync.js?build=189"></script>
-  <script src="./mpi-subcontractor.js?build=189"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=189"></script>
+  <script src="./mpi-native-bridge.js?build=190"></script>
+  <script src="./mpi-shared.js?build=190"></script>
+  <script src="./mpi-field-sync.js?build=190"></script>
+  <script src="./mpi-subcontractor.js?build=190"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=190"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -20035,6 +20035,27 @@
         teamPrivateThread.scrollTop = teamPrivateThread.scrollHeight;
       }
 
+      function markTeamConversationRead(userId) {
+        const user = window.MPI_SHARED?.auth?.currentUser;
+        const currentUid = window.MPI_COMPANY_SESSION?.userId || user?.uid || "";
+        const conversationId = window.MPI_SHARED?.directConversationId?.(currentUid, userId) || "";
+        if (!user || !currentUid || !conversationId) return;
+        let changed = false;
+        teamDirectMessages = teamDirectMessages.map(message => {
+          if (message.conversationId !== conversationId || message.senderUid === currentUid || message.targetUid !== currentUid) return message;
+          if (Array.isArray(message.readBy) && message.readBy.includes(currentUid)) return message;
+          changed = true;
+          return { ...message, readBy: [...new Set([...(Array.isArray(message.readBy) ? message.readBy : []), currentUid])], readAtClient: new Date().toISOString() };
+        });
+        if (changed) {
+          renderTeamDirectory();
+          renderFieldInbox();
+          window.MPI_SHARED.markDirectConversationRead(user, userId).catch(() => {
+            showToast("Read status will retry when the inbox reconnects");
+          });
+        }
+      }
+
       function openTeamProfile(userId) {
         const member = teamMemberRecord(userId);
         if (!member || userId === window.MPI_COMPANY_SESSION?.userId) return;
@@ -20044,8 +20065,8 @@
         teamPrivateProfile.hidden = false;
         teamPrivateSendStatus.textContent = "";
         if (changedPerson || !teamPrivateText.value) teamPrivateText.value = teamMessageDraft(userId);
+        markTeamConversationRead(userId);
         renderTeamPrivateThread();
-        window.MPI_SHARED?.markDirectConversationRead?.(window.MPI_SHARED.auth.currentUser, userId).catch(() => false);
       }
 
       function closeTeamProfile() {
@@ -20069,6 +20090,7 @@
           await window.MPI_SHARED.sendDirectMessage(user, { name: session.inspectorName, role: session.role }, member, teamPrivateText.value, [...teamPrivateFiles.files]);
           teamPrivateForm.reset();
           saveTeamMessageDraft("", selectedTeamMemberId);
+          markTeamConversationRead(selectedTeamMemberId);
           teamPrivateSendStatus.className = "damage-submit-status success";
           teamPrivateSendStatus.textContent = `Private message sent only to ${teamDisplayName(member.name)}.`;
         } catch (error) {
@@ -20168,7 +20190,10 @@
           teamDirectListenerReady = true;
           renderTeamDirectory();
           renderFieldInbox();
-          if (selectedTeamMemberId) renderTeamPrivateThread();
+          if (selectedTeamMemberId) {
+            markTeamConversationRead(selectedTeamMemberId);
+            renderTeamPrivateThread();
+          }
         });
         unsubscribeFieldSentMessages = window.MPI_SHARED.watchSentFieldMessages?.(window.MPI_SHARED.auth.currentUser, (records, error) => {
           if (error) return;
@@ -24103,6 +24128,7 @@
       fieldInboxList?.addEventListener("click", event => {
         const update = event.target.closest("[data-inbox-update]");
         if (update) {
+          window.dispatchEvent(new CustomEvent("mpi-office-update-opened", { detail: { updateId: update.dataset.inboxUpdate } }));
           window.location.hash = "#office-updates";
           return;
         }

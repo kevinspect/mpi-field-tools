@@ -751,7 +751,12 @@
     if (!user || !otherUid) return false;
     const conversationId = directConversationId(user.uid, otherUid);
     const snapshot = await db.collection("teamMessages").where("conversationId", "==", conversationId).get();
-    const unread = snapshot.docs.filter(doc => !Array.isArray(doc.data()?.readBy) || !doc.data().readBy.includes(user.uid));
+    const unread = snapshot.docs.filter(doc => {
+      const message = doc.data() || {};
+      return message.targetUid === user.uid
+        && message.senderUid !== user.uid
+        && (!Array.isArray(message.readBy) || !message.readBy.includes(user.uid));
+    });
     for (let start = 0; start < unread.length; start += 400) {
       const batch = db.batch();
       unread.slice(start, start + 400).forEach(doc => batch.set(doc.ref, { readBy: arrayUnion(user.uid), readAt: serverTimestamp() }, { merge: true }));
