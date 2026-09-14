@@ -187,6 +187,7 @@
   let liveLocationRouteVisible = false;
   let liveLocationRouteLoading = false;
   let liveLocationRouteLastLoadedAt = 0;
+  const historicalRoutePointCache = new Map();
   let liveLocationPlannedStops = [];
   let liveLocationCandidate = null;
   const LIVE_LOCATION_ROUTE_REFRESH_MS = 3 * 60 * 1000;
@@ -1279,6 +1280,25 @@
     return [...deduped.values()].sort((left, right) => left.recordedAt - right.recordedAt);
   }
 
+  async function uploadedHistoricalRoutePoints(personId, selectedDate, { refresh = false } = {}) {
+    const cacheKey = `${personId}:${selectedDate}`;
+    const cached = historicalRoutePointCache.get(cacheKey) || [];
+    if (cached.length && !refresh) return cached;
+    let query = shared.db.collection("users").doc(personId).collection("locationRouteDays").doc(selectedDate).collection("points");
+    if (cached.length) {
+      const latestRecordedAt = cached.at(-1)?.recordedAt?.toISOString?.();
+      if (latestRecordedAt) query = query.where("recordedAtClient", ">=", latestRecordedAt);
+      query = query.orderBy("recordedAtClient", "asc").limit(1000);
+    } else {
+      query = query.orderBy("recordedAtClient", "asc").limit(4000);
+    }
+    const snapshot = await query.get();
+    const received = snapshot.docs.map(doc => routePointRecord(doc.data())).filter(Boolean);
+    const complete = mergeHistoricalRoutePoints(cached, received);
+    historicalRoutePointCache.set(cacheKey, complete);
+    return complete;
+  }
+
   async function loadHistoricalRoute({ refresh = false } = {}) {
     if (liveLocationRouteLoading) return;
     if (liveLocationRouteVisible && !liveLocationPlanVisible && !refresh) {
@@ -1305,8 +1325,7 @@
         const origin = liveLocationRecord(person);
         if (origin) uploadedPoints = [-0.035, -0.022, -0.01, 0].map((offset, index) => ({ latitude: origin.latitude + offset * .45, longitude: origin.longitude + offset, recordedAt: new Date(Date.now() - (3 - index) * 18 * 60000), accuracyFeet: origin.accuracyFeet, workStatus: origin.workStatus }));
       } else {
-        const snapshot = await shared.db.collection("users").doc(person.id).collection("locationRouteDays").doc(selectedDate).collection("points").orderBy("recordedAtClient", "asc").limit(500).get();
-        uploadedPoints = snapshot.docs.map(doc => routePointRecord(doc.data())).filter(Boolean);
+        uploadedPoints = await uploadedHistoricalRoutePoints(person.id, selectedDate, { refresh });
       }
       const verifiedPoints = operationalRoutePoints(person, selectedDate);
       const points = mergeHistoricalRoutePoints(uploadedPoints, verifiedPoints);

@@ -1,5 +1,17 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 189 — Complete Workday Routes
+
+- Removed the Office map's first-500-point cutoff so a long workday no longer loses later traveled areas.
+- Added an in-memory route cache and incremental three-minute refresh, so an open historical route fetches only newly recorded points instead of repeatedly re-reading the full day.
+- Reduced future iPhone route-point density while retaining route shape: a point is recorded at least every three minutes, or after both a meaningful move and a short minimum interval.
+- Preserved today's existing uploaded route data, verified workflow checkpoints, job history, hours, and final Clock Off position.
+
+### Validation record
+
+- Confirmed Kevin's September 14 route contains 1,740 stored points from 9:25 AM through 6:25 PM; the old 500-point Office query was the verified truncation point.
+- Passed JavaScript and Swift syntax, full native synchronization/project validation, complete-route and incremental-refresh safeguards, and an iPhone device-target compilation.
+
 ## Build 188 — Multimodal Comment Builder
 
 - Added photo-only, text-only, and combined photo-plus-text defect generation to the existing MPI Comment Builder.
