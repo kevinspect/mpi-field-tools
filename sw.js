@@ -1,5 +1,5 @@
-const CACHE_NAME = "mpi-field-tools-shell-v190";
-const APP_SHELL = ["./", "./index.html", "./admin.html", "./mpi-native-bridge.js", "./mpi-native-bridge.js?build=190", "./mpi-shared.js", "./mpi-shared.js?build=190", "./mpi-field-sync.js", "./mpi-field-sync.js?build=190", "./mpi-subcontractor.js", "./mpi-subcontractor.js?build=190", "./mpi-comment-ai.js", "./mpi-comment-ai.js?build=190", "./admin.js", "./admin.js?build=190", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./mpi-logo.png", "./tool-thumbnails.png", "./mpi-email-template.html"];
+const CACHE_NAME = "mpi-field-tools-shell-v191";
+const APP_SHELL = ["./", "./index.html", "./admin.html", "./mpi-native-bridge.js", "./mpi-native-bridge.js?build=191", "./mpi-shared.js", "./mpi-shared.js?build=191", "./mpi-field-sync.js", "./mpi-field-sync.js?build=191", "./mpi-subcontractor.js", "./mpi-subcontractor.js?build=191", "./mpi-comment-ai.js", "./mpi-comment-ai.js?build=191", "./mpi-equipment.js", "./mpi-equipment.js?build=191", "./mpi-equipment-admin.js", "./mpi-equipment-admin.js?build=191", "./admin.js", "./admin.js?build=191", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./mpi-logo.png", "./tool-thumbnails.png", "./mpi-email-template.html"];
 
 async function fetchFresh(resource) {
   return fetch(resource, { cache: "no-store" });

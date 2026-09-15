@@ -754,7 +754,7 @@
       .stat strong { font-size:23px; }
       .tabbar {
         inset:auto 7px max(7px,env(safe-area-inset-bottom));
-        grid-template-columns:repeat(6,minmax(0,1fr));
+        grid-template-columns:repeat(7,minmax(0,1fr));
         gap:2px;
         padding:5px;
         border-radius:17px;
@@ -770,6 +770,102 @@
       .live-location-map { height:330px; }
       .inspector-row { grid-template-columns:1fr 1fr; }
       .inspector-row > :nth-child(5),.inspector-row > :nth-child(6) { display:block; }
+    }
+
+    /* Build 191 — company equipment records and signed acknowledgments */
+    .equipment-summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:11px; margin:4px 0 18px; }
+    .equipment-summary-card { display:grid; gap:4px; padding:15px; color:var(--navy); background:#f7f9fc; border:1px solid var(--line); border-left:4px solid var(--blue); border-radius:13px; text-align:left; }
+    .equipment-summary-card.active { background:#eef5fb; border-color:#9fc3df; border-left-color:var(--gold); box-shadow:0 7px 18px rgba(17,24,106,.07); }
+    .equipment-summary-card > span { font-size:12px; font-weight:900; }
+    .equipment-summary-card > strong { font-size:28px; }
+    .equipment-summary-card > small,.equipment-summary-card i { color:var(--muted); font-size:9px; font-style:normal; }
+    .equipment-summary-card div { display:grid; gap:3px; margin-top:7px; padding-top:8px; border-top:1px solid var(--line); }
+    .equipment-summary-card b { font-size:9px; }
+    .equipment-toolbar { display:flex; align-items:end; justify-content:space-between; gap:12px; margin-bottom:15px; padding:13px; background:#f4f7fb; border:1px solid var(--line); border-radius:13px; }
+    .equipment-toolbar label { display:grid; flex:1; gap:6px; color:var(--navy); font-size:10px; font-weight:900; }
+    .equipment-toolbar select { min-height:46px; padding:0 12px; background:#fff; border:1px solid #cbd3e1; border-radius:10px; }
+    .equipment-record-list,.equipment-history-list { display:grid; gap:11px; }
+    .equipment-record-card { padding:16px; background:#fff; border:1px solid var(--line); border-radius:14px; }
+    .equipment-record-card header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .equipment-record-card header span { color:var(--gold); font-size:8px; font-weight:950; letter-spacing:.08em; text-transform:uppercase; }
+    .equipment-record-card h3 { margin:5px 0 0; color:var(--navy); font-size:15px; }
+    .equipment-record-card header p { margin:4px 0 0; color:var(--muted); font-size:10px; }
+    .equipment-status { display:inline-flex; min-height:27px; align-items:center; padding:4px 9px; border-radius:999px; font-size:8px; text-transform:uppercase; }
+    .equipment-status.issued { color:#1c664f; background:#e5f4ed; }
+    .equipment-status.returned { color:#4e5875; background:#edf0f5; }
+    .equipment-status.attention { color:#8e302c; background:#ffe8e5; }
+    .equipment-record-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:14px; }
+    .equipment-record-fields label { display:grid; gap:6px; color:var(--navy); font-size:9px; font-weight:900; }
+    .equipment-record-fields label.wide { grid-column:1/-1; }
+    .equipment-record-fields input,.equipment-record-fields select,.equipment-record-fields textarea { width:100%; min-height:43px; padding:9px 10px; background:#fff; border:1px solid #cbd3e1; border-radius:9px; }
+    .equipment-record-fields textarea { min-height:70px; resize:vertical; }
+    .equipment-record-card footer { display:flex; align-items:center; flex-wrap:wrap; gap:9px; margin-top:12px; }
+    .equipment-record-card footer a { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
+    .equipment-add-panel { margin:17px 0; padding:0 15px 15px; background:#f7f9fc; border:1px solid var(--line); border-radius:14px; }
+    .equipment-add-panel summary { padding:15px 0; color:var(--blue); font-size:10px; font-weight:950; cursor:pointer; }
+    .equipment-history-head { margin:22px 0 10px; }
+    .equipment-history-head h3 { margin:0; color:var(--navy); font-size:17px; }
+    .equipment-history-head p { margin:5px 0 0; color:var(--muted); font-size:10px; }
+    .equipment-history-card { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px; background:#f7f9fc; border:1px solid var(--line); border-radius:12px; }
+    .equipment-history-card span,.equipment-history-card strong,.equipment-history-card small { display:block; }
+    .equipment-history-card span { color:var(--gold); font-size:8px; font-weight:950; }
+    .equipment-history-card strong { margin-top:4px; color:var(--navy); font-size:12px; }
+    .equipment-history-card small { margin-top:4px; color:var(--muted); font-size:9px; }
+    .equipment-history-card > div:last-child { display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:7px; }
+    .equipment-dialog { width:min(980px,calc(100% - 24px)); max-width:none; max-height:calc(100vh - 24px); margin:auto; padding:0; overflow:auto; background:#fff; border:0; border-radius:20px; box-shadow:0 28px 90px rgba(4,9,55,.42); }
+    .equipment-dialog::backdrop { background:rgba(5,10,57,.74); backdrop-filter:blur(7px); }
+    .equipment-ack-form { display:grid; gap:16px; padding-bottom:22px; }
+    .equipment-ack-head { position:sticky; z-index:2; top:0; display:flex; align-items:center; gap:13px; padding:17px 20px; color:#fff; background:linear-gradient(135deg,var(--navy),#293891); }
+    .equipment-ack-head img { width:50px; height:50px; object-fit:contain; }
+    .equipment-ack-head span { color:#f1d171; font-size:9px; font-weight:950; letter-spacing:.08em; text-transform:uppercase; }
+    .equipment-ack-head h2,.equipment-ack-head p { margin:3px 0 0; }
+    .equipment-ack-head p { color:#dce4ff; font-size:9px; }
+    .equipment-dialog-close { margin-left:auto; color:#fff; background:transparent; border:0; font-size:28px; }
+    .equipment-ack-party,.equipment-ack-items,.equipment-ack-form blockquote,.equipment-signature-grid,.equipment-ack-form > footer { margin-right:20px; margin-left:20px; }
+    .equipment-ack-party { display:grid; grid-template-columns:1fr 1fr .8fr; gap:10px; }
+    .equipment-ack-party label,.equipment-ack-party div { display:grid; gap:5px; padding:11px; color:var(--navy); background:#f4f7fb; border:1px solid var(--line); border-radius:10px; font-size:9px; font-weight:900; }
+    .equipment-ack-party input { min-height:42px; padding:8px 9px; border:1px solid #cbd3e1; border-radius:8px; }
+    .equipment-ack-items { display:grid; gap:9px; }
+    .equipment-ack-items fieldset { margin:0; padding:13px; border:1px solid var(--line); border-radius:12px; }
+    .equipment-ack-items legend { padding:0 6px; }
+    .equipment-ack-items legend strong,.equipment-ack-items legend span { display:block; }
+    .equipment-ack-items legend strong { color:var(--navy); font-size:11px; }
+    .equipment-ack-items legend span { margin-top:3px; color:var(--muted); font-size:8px; }
+    .equipment-ack-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+    .equipment-ack-options label { display:flex; align-items:center; gap:7px; min-height:44px; padding:8px; color:var(--navy); background:#f4f7fb; border-radius:9px; font-size:9px; font-weight:850; }
+    .equipment-ack-options input { width:19px; height:19px; accent-color:var(--navy); }
+    .equipment-ack-items textarea { width:100%; min-height:58px; margin-top:8px; padding:9px; border:1px solid #cbd3e1; border-radius:9px; resize:vertical; }
+    .equipment-ack-form blockquote { padding:14px 16px; color:#49380c; background:#fff8df; border-left:4px solid var(--gold); line-height:1.55; }
+    .equipment-signature-grid { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+    .equipment-signature-grid section { padding:13px; background:#f7f9fc; border:1px solid var(--line); border-radius:12px; }
+    .equipment-signature-grid h3 { margin:0 0 9px; color:var(--navy); font-size:11px; }
+    .equipment-signature-grid h3 b { color:var(--red); }
+    .equipment-signature-grid h3 span { color:var(--muted); font-weight:700; }
+    .equipment-signature-grid canvas { display:block; width:100%; height:135px; touch-action:none; background:#fff; border:1px solid #bac5d7; border-radius:8px; }
+    .equipment-signature-grid button { width:100%; margin-top:8px; }
+    .equipment-ack-form > footer { display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
+    .equipment-document-dialog { width:min(900px,calc(100% - 24px)); padding:18px; }
+    .equipment-document-dialog .head { padding:26px; color:#fff; background:var(--navy); text-align:center; }
+    .equipment-document-dialog .head img { width:70px; }
+    .equipment-document-dialog .head span { display:block; margin-top:7px; color:#f0d069; font-weight:900; }
+    .equipment-document-dialog .body { padding:20px; }
+    .equipment-document-dialog .facts,.equipment-document-dialog .signatures { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .equipment-document-dialog .facts div,.equipment-document-dialog .signatures section { padding:11px; background:#f4f7fb; border:1px solid var(--line); }
+    .equipment-document-dialog table { width:100%; margin:15px 0; border-collapse:collapse; }
+    .equipment-document-dialog th,.equipment-document-dialog td { padding:8px; border:1px solid var(--line); text-align:left; font-size:9px; }
+    .equipment-document-dialog .signatures img { width:100%; height:90px; object-fit:contain; background:#fff; }
+    .equipment-document-dialog .foot { padding:13px; color:var(--muted); background:#f4f7fb; text-align:center; }
+    .equipment-document-actions { position:sticky; bottom:0; display:flex; justify-content:flex-end; gap:9px; padding:13px; background:rgba(255,255,255,.96); border-top:1px solid var(--line); }
+
+    @media (max-width:760px) {
+      .equipment-toolbar,.equipment-history-card { display:grid; align-items:stretch; }
+      .equipment-record-fields,.equipment-ack-party,.equipment-signature-grid { grid-template-columns:1fr; }
+      .equipment-ack-options { grid-template-columns:1fr; }
+      .equipment-ack-party,.equipment-ack-items,.equipment-ack-form blockquote,.equipment-signature-grid,.equipment-ack-form > footer { margin-right:12px; margin-left:12px; }
+      .equipment-ack-head { padding:13px; }
+      .equipment-history-card > div:last-child { justify-content:stretch; }
+      .equipment-history-card button { width:100%; }
+      .equipment-document-dialog .facts,.equipment-document-dialog .signatures { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -834,6 +930,7 @@
         <button type="button" data-admin-view="diagnostics"><svg class="app-icon"><use href="#icon-alert"></use></svg><span>App issues</span><span class="nav-count" id="adminDiagnosticCount"></span></button>
         <button type="button" data-admin-view="publish"><svg class="app-icon"><use href="#icon-send"></use></svg><span>Send to field</span></button>
         <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Messages</span><span class="nav-count" id="adminReplyCount"></span></button>
+        <button type="button" data-admin-view="equipment"><svg class="app-icon"><use href="#icon-briefcase"></use></svg><span>Equipment</span></button>
         <button type="button" data-admin-view="people"><svg class="app-icon"><use href="#icon-users"></use></svg><span>Team</span></button>
       </nav>
 
@@ -922,11 +1019,41 @@
         </div>
       </section>
 
+      <section class="console-view" data-admin-panel="equipment">
+        <div class="panel content-panel" id="adminEquipmentDashboard">
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-briefcase"></use></svg></span><div><h2>MPI Issued Tools</h2><p>Manage each employee's current company equipment and preserve every signed acknowledgment.</p></div></div></div>
+          <div class="equipment-summary-grid" id="adminEquipmentSummary"><div class="empty">Equipment records are loading.</div></div>
+          <div class="equipment-toolbar"><label>Employee<select id="adminEquipmentEmployee"><option>Loading field team…</option></select></label><button class="primary" id="adminCreateEquipmentAcknowledgment" type="button">CREATE NEW ACKNOWLEDGMENT</button></div>
+          <div class="equipment-record-list" id="adminEquipmentList"><div class="empty">Choose an employee to view issued tools.</div></div>
+          <details class="equipment-add-panel">
+            <summary>ADD ANOTHER TOOL</summary>
+            <form id="adminAddEquipmentForm">
+              <div class="form-grid">
+                <div class="field"><label for="adminAddEquipmentEmployee">Employee</label><select name="employeeId" id="adminAddEquipmentEmployee" required></select></div>
+                <div class="field"><label>Tool name</label><input name="toolName" maxlength="140" required></div>
+                <div class="field"><label>Brand / model</label><input name="brandModel" maxlength="180"></div>
+                <div class="field"><label>Category</label><input name="category" maxlength="100" required value="Company equipment"></div>
+                <div class="field"><label for="adminAddEquipmentStatus">Status</label><select name="status" id="adminAddEquipmentStatus"></select></div>
+                <div class="field"><label>Date issued</label><input name="dateIssued" type="date"></div>
+                <div class="field"><label>Serial / asset number</label><input name="serialNumber" maxlength="120"></div>
+                <div class="field wide"><label>Notes</label><textarea name="notes" maxlength="700"></textarea></div>
+              </div>
+              <div class="form-actions"><button class="primary" type="submit">ADD TOOL</button><span class="status" id="adminAddEquipmentMessage"></span></div>
+            </form>
+          </details>
+          <div class="equipment-history-head"><h3>Signed acknowledgment history</h3><p>Submitted records are immutable. Updated equipment is included only in a new acknowledgment.</p></div>
+          <div class="equipment-history-list" id="adminEquipmentHistory"><div class="empty">No signed acknowledgments yet.</div></div>
+        </div>
+      </section>
+
       <section class="console-view" data-admin-panel="people">
         <div class="panel content-panel"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><div><h2>Team Accounts</h2><p>Manage company identity, contact details, access, and official training records.</p></div></div></div><div class="notice">For security, every person signs in with their own Michigan Property Inspections Google account. The app stays signed in on an approved company phone until that person signs out.</div><h3 style="margin:20px 0 10px;color:var(--navy)">Training &amp; Qualifications</h3><p class="ops-sub">Official InterNACHI education records are connected by each user from My Profile. MPI never stores an InterNACHI password.</p><div class="training-admin-list" id="adminTrainingList"><div class="empty">Waiting for team profiles.</div></div><h3 style="margin:22px 0 10px;color:var(--navy)">Account &amp; Profile Management</h3><div class="people-list" id="adminPeopleList"><div class="empty">No company accounts have signed in yet.</div></div></div>
       </section>
     </section>
   </main>
+
+  <dialog class="equipment-dialog" id="equipmentAcknowledgmentDialog"><div id="equipmentAcknowledgmentContent"></div></dialog>
+  <dialog class="equipment-dialog equipment-document-dialog" id="equipmentDocumentDialog"><div id="equipmentDocumentContent"></div></dialog>
 
   <section class="admin-onboarding" id="adminOnboarding" role="dialog" aria-modal="true" aria-labelledby="adminOnboardingTitle" hidden>
     <div class="admin-onboarding-card">
@@ -944,7 +1071,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
-  <script src="./mpi-shared.js?build=190"></script>
-  <script src="./admin.js?build=190"></script>
+  <script src="./mpi-shared.js?build=191"></script>
+  <script src="./mpi-equipment.js?build=191"></script>
+  <script src="./admin.js?build=191"></script>
+  <script src="./mpi-equipment-admin.js?build=191"></script>
 </body>
 </html>

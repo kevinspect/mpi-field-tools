@@ -235,6 +235,28 @@ service cloud.firestore {
       }
     }
 
+    match /equipmentAssignments/{assignmentId} {
+      allow read: if isAdmin() || (
+        activeFieldUser()
+        && resource.data.employeeId == request.auth.uid
+      );
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /equipmentAcknowledgments/{acknowledgmentId} {
+      allow read: if isAdmin() || (
+        activeFieldUser()
+        && resource.data.employeeId == request.auth.uid
+      );
+      allow create: if isAdmin()
+        && request.resource.data.employeeId is string
+        && request.resource.data.employeeSignature is string
+        && request.resource.data.employeeSignature.size() > 0
+        && request.resource.data.immutable == true;
+      allow update, delete: if false;
+    }
+
     match /officeUpdates/{updateId} {
       allow create, update: if isAdmin();
       allow delete: if false;

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="190">
+  <meta name="app-build" content="191">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5815,6 +5815,16 @@
     .field-inbox-copy strong { font-size: 11px; }
     .field-inbox-copy span { font-size: 9px; }
 
+    .issued-tools-panel { overflow: hidden; }
+    .issued-tools-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; padding: 14px; background: #f5f7fb; }
+    .issued-tool-card { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 13px; background: #fff; border: 1px solid var(--mpi-border); border-radius: 13px; }
+    .issued-tool-card > div { min-width: 0; }
+    .issued-tool-card strong,.issued-tool-card span,.issued-tool-card small { display: block; }
+    .issued-tool-card strong { color: var(--mpi-navy-900); font-size: 11px; line-height: 1.3; }
+    .issued-tool-card span { margin-top: 3px; color: var(--mpi-muted); font-size: 9px; line-height: 1.35; }
+    .issued-tool-card small { margin-top: 6px; color: #23704f; font-size: 8px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+    .issued-tool-card button { min-height: 37px; padding: 0 11px; color: var(--mpi-blue-600); background: var(--mpi-blue-100); border: 1px solid #c9dced; border-radius: 10px; font-size: 8px; font-weight: 900; }
+
     @media (max-width: 680px) {
       .topbar-actions { margin-left: auto; }
       .topbar-actions .offline-badge { display: none; }
@@ -5831,6 +5841,7 @@
       .field-compose-toggle { width: 44px; height: 44px; border-radius: 13px; }
       .field-compose-card { padding: 14px; }
       .field-inbox-panel { margin-inline: 0; }
+      .issued-tools-list { grid-template-columns: 1fr; padding: 10px; }
     }
   </style>
 </head>
@@ -5920,7 +5931,7 @@
       <a href="#comment-builder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4Z"/><path d="M8 8h8M8 12h5"/></svg><span><strong>Comment Creator</strong><small>Build a defect comment</small></span></a>
     </nav>
     <a class="home-office-link" id="officeConsoleCard" href="./admin.html" hidden>Open Office Console</a>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">190</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">191</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -6997,49 +7008,55 @@
           </div>
 
           <div class="tool-check-progress" aria-live="polite">
-            <div class="tool-check-progress-row"><span>Tool checklist</span><span id="toolCheckProgressCount">0 of 21 checked</span></div>
+            <div class="tool-check-progress-row"><span>Tool checklist</span><span id="toolCheckProgressCount">0 of 27 checked</span></div>
             <div class="tool-check-progress-track" aria-hidden="true"><div class="tool-check-progress-fill" id="toolCheckProgressFill"></div></div>
           </div>
 
           <div class="tool-check-groups" id="toolCheckGroups">
             <details class="tool-check-group" open>
-              <summary>Basic / Daily <span>11 items</span></summary>
+              <summary>Core / Daily <span>18 items</span></summary>
               <div class="tool-check-list">
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Electrical tester kit" data-tool-check="Electrical tester kit"><span><strong>Electrical tester kit</strong><small>Milwaukee 3203-20-2224-20</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="IR thermometer / secondary voltage detector" data-tool-check="IR thermometer / secondary voltage detector"><span><strong>IR thermometer / secondary voltage detector</strong><small>Milwaukee 2225-20</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Main multi-bit screwdriver" data-tool-check="Main multi-bit screwdriver"><span><strong>Main multi-bit screwdriver</strong><small>Milwaukee 48-22-2761</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Compact ratcheting screwdriver" data-tool-check="Compact ratcheting screwdriver"><span><strong>Compact ratcheting screwdriver</strong><small>Milwaukee 48-22-2913</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Rechargeable headlamp" data-tool-check="Rechargeable headlamp"><span><strong>Rechargeable headlamp</strong><small>Milwaukee 2012R</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Rechargeable pocket flood light" data-tool-check="Rechargeable pocket flood light"><span><strong>Rechargeable pocket flood light</strong><small>Milwaukee 2112-21</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Tool pouch" data-tool-check="Tool pouch"><span><strong>Tool pouch</strong><small>Milwaukee 48-22-8118</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Moisture meter" data-tool-check="Moisture meter"><span><strong>Moisture meter</strong><small>General Tools MM19</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Amp clamp / HVAC electrical meter" data-tool-check="Amp clamp / HVAC electrical meter"><span><strong>Amp clamp / HVAC electrical meter</strong><small>Milwaukee 2236-20</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Combustible gas detector" data-tool-check="Combustible gas detector"><span><strong>Combustible gas detector</strong><small>TOPTES PT210S</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Inspection tool bag / tote" data-tool-check="Inspection tool bag / tote"><span><strong>Inspection tool bag / tote</strong><small>Milwaukee</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Digital GFCI receptacle tester" data-tool-check="Digital GFCI receptacle tester"><span><strong>Digital GFCI receptacle tester</strong><small>Milwaukee 2224-20</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="11-in-1 multi-bit driver" data-tool-check="11-in-1 multi-bit driver"><span><strong>11-in-1 multi-bit driver</strong><small>Milwaukee</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Voltage detector / infrared thermometer" data-tool-check="Voltage detector / infrared thermometer"><span><strong>Voltage detector / infrared thermometer</strong><small>Milwaukee</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Rechargeable magnetic flood light" data-tool-check="Rechargeable magnetic flood light"><span><strong>Rechargeable magnetic flood light</strong><small>Milwaukee Rover REDLITHIUM USB</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="8-in-1 ratcheting multi-bit driver" data-tool-check="8-in-1 ratcheting multi-bit driver"><span><strong>8-in-1 ratcheting multi-bit driver</strong><small>Milwaukee</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Pin / pinless moisture meter" data-tool-check="Pin / pinless moisture meter"><span><strong>Pin / pinless moisture meter</strong><small>General MM9</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="400A AC True RMS clamp meter" data-tool-check="400A AC True RMS clamp meter"><span><strong>400A AC True RMS clamp meter</strong><small>Klein Tools CL220</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Combustible gas leak detector" data-tool-check="Combustible gas leak detector"><span><strong>Combustible gas leak detector</strong><small>TOPTES PT210S</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Rechargeable headlamp / task light" data-tool-check="Rechargeable headlamp / task light"><span><strong>Rechargeable headlamp / task light</strong><small>Milwaukee 2012R</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Clear safety glasses" data-tool-check="Clear safety glasses"><span><strong>Clear safety glasses with gasket</strong><small>Milwaukee</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="6 ft tape measure" data-tool-check="6 ft tape measure"><span><strong>6 ft / 2 m tape measure</strong><small>Milwaukee</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Reusable respirator" data-tool-check="Reusable respirator"><span><strong>Reusable respirator with OV/AG P100 cartridges</strong><small>3M · medium · quick latch</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Cut Level 5 gloves" data-tool-check="Cut Level 5 gloves"><span><strong>Cut Level 5 nitrile-dipped gloves</strong><small>Milwaukee · 9 inch</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Dead-blow / rubber mallet" data-tool-check="Dead-blow / rubber mallet"><span><strong>Dead-blow / rubber mallet</strong><small>Craftsman</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="18-inch pipe wrench" data-tool-check="18-inch pipe wrench"><span><strong>18-inch pipe wrench</strong><small>Kobalt</small></span></label>
                 <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Carbon monoxide detector" data-tool-check="Carbon monoxide detector"><span><strong>Carbon monoxide detector</strong><small>TOPTES CT-580</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="USB-C thermal imaging camera" data-tool-check="USB-C thermal imaging camera"><span><strong>USB-C thermal imaging camera</strong><small>TOPDON TC002C Duo</small></span></label>
               </div>
             </details>
 
-            <details class="tool-check-group" data-tool-group="field-general">
-              <summary>Field / General <span>5 items</span></summary>
+            <details class="tool-check-group" data-tool-group="site-well">
+              <summary>Site / Well <span>7 items</span></summary>
               <div class="tool-check-list">
-                <label class="tool-check-item tool-check-not-used"><input type="checkbox" name="Sections not used" value="Field / General" data-tool-section-not-used="field-general"><span><strong>Not used on this job</strong><small>Skip every item in this section.</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Dead blow hammer" data-tool-check="Dead blow hammer" data-tool-section="field-general"><span><strong>Dead blow hammer</strong><small>Milwaukee 48-22-9151</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Digging shovel" data-tool-check="Digging shovel" data-tool-section="field-general"><span><strong>Digging shovel</strong><small>Husky 77416-944</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Pry bar" data-tool-check="Pry bar" data-tool-section="field-general"><span><strong>Pry bar</strong><small>PITTSBURGH 39700</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Soil probe" data-tool-check="Soil probe" data-tool-section="field-general"><span><strong>Soil probe</strong><small>Bully Tools 99203</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Pick axe / mattock" data-tool-check="Pick axe / mattock" data-tool-section="field-general"><span><strong>Pick axe / mattock</strong><small>CENTRAL FORGE 94797</small></span></label>
+                <label class="tool-check-item tool-check-not-used"><input type="checkbox" name="Sections not used" value="Site / Well" data-tool-section-not-used="site-well"><span><strong>Not used on this job</strong><small>Skip every item in this section.</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="42-inch wrecking / pry bar" data-tool-check="42-inch wrecking / pry bar" data-tool-section="site-well"><span><strong>42-inch wrecking / pry bar</strong><small>DeWalt</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Well / yield testing kit" data-tool-check="Well / yield testing kit" data-tool-section="site-well"><span><strong>Well / yield testing kit</strong><small>Gauge, fittings and hose connections</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Wombat inspection crawler" data-tool-check="Wombat inspection crawler" data-tool-section="site-well"><span><strong>Wombat inspection crawler / robot</strong><small>UplinkRobotics</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Digging shovel" data-tool-check="Digging shovel" data-tool-section="site-well"><span><strong>Digging shovel with D-grip</strong><small>Razor-Back</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Pick / mattock" data-tool-check="Pick / mattock" data-tool-section="site-well"><span><strong>Pick / mattock-style digging tool</strong><small>Company-issued</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="50 ft garden hose" data-tool-check="50 ft garden hose" data-tool-section="site-well"><span><strong>50 ft × 5/8-inch garden hose</strong><small>Heavy-duty</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="15 ft leader hose" data-tool-check="15 ft leader hose" data-tool-section="site-well"><span><strong>15 ft × 5/8-inch leader hose</strong><small>Flexon</small></span></label>
               </div>
             </details>
 
             <details class="tool-check-group" data-tool-group="specialist-company">
-              <summary>Specialist / Company <span>5 items</span></summary>
+              <summary>Specialist / Company <span>2 items</span></summary>
               <div class="tool-check-list">
                 <label class="tool-check-item tool-check-not-used"><input type="checkbox" name="Sections not used" value="Specialist / Company" data-tool-section-not-used="specialist-company"><span><strong>Not used on this job</strong><small>Skip every item in this section.</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Mold / IAQ sampling pump" data-tool-check="Mold / IAQ sampling pump" data-tool-section="specialist-company"><span><strong>Mold / IAQ sampling pump</strong><small>Environmental Express Bio-Pump IAQ Lite Pro</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Telescoping ladder" data-tool-check="Telescoping ladder" data-tool-section="specialist-company"><span><strong>Telescoping ladder</strong><small>Xtend+Climb PSE155+/300</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Sewer scope" data-tool-check="Sewer scope" data-tool-section="specialist-company"><span><strong>Sewer scope</strong><small>Inspector Cameras Scout 3-Pro Plus Red AHD</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Crawlspace inspection robot" data-tool-check="Crawlspace inspection robot" data-tool-section="specialist-company"><span><strong>Crawlspace inspection robot</strong><small>UplinkRobotics Wombat</small></span></label>
-                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Roof inspection drone" data-tool-check="Roof inspection drone" data-tool-section="specialist-company"><span><strong>Roof inspection drone</strong><small>DJI Mini 4 Pro</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="DJI Mini 4 drone" data-tool-check="DJI Mini 4 drone" data-tool-section="specialist-company"><span><strong>DJI Mini 4 drone</strong><small>Aircraft, controller, batteries and case</small></span></label>
+                <label class="tool-check-item"><input type="checkbox" name="Tools accounted for" value="Scout 3-Pro Plus Micro sewer scope" data-tool-check="Scout 3-Pro Plus Micro sewer scope" data-tool-section="specialist-company"><span><strong>Scout 3-Pro Plus Micro sewer scope</strong><small>Camera, reel, monitor and accessories</small></span></label>
               </div>
             </details>
           </div>
@@ -7100,9 +7117,17 @@
       </div>
 
       <div class="sop-version-bar">
-        <span><strong>21 inventory tool cards + first-use setup</strong> · Model-specific manuals and copyable direct links are included.</span>
+        <span><strong>27 current MPI issued-tool guides</strong> · Cory's current issued list is the equipment source of truth.</span>
         <span class="sop-offline-badge">Cards work offline</span>
       </div>
+
+      <details class="panel escalation-guide issued-tools-panel" id="issuedToolsPanel" open>
+        <summary>
+          <span><strong>MPI ISSUED TOOLS</strong><small>Cory Leese · current assigned equipment and guide access.</small></span>
+          <span class="daily-readiness-status" id="issuedToolsStatus">27 issued</span>
+        </summary>
+        <div class="issued-tools-list" id="issuedToolsList"></div>
+      </details>
 
       <details class="panel escalation-guide" id="servicePackPanel">
         <summary>
@@ -7225,7 +7250,7 @@
               <button class="sop-chip" type="button" data-tool-query="moisture meter">Moisture meter</button>
               <button class="sop-chip" type="button" data-tool-query="carbon monoxide">CO detector</button>
               <button class="sop-chip" type="button" data-tool-query="combustible gas">Gas detector</button>
-              <button class="sop-chip" type="button" data-tool-query="ladder">Ladder</button>
+              <button class="sop-chip" type="button" data-tool-query="thermal camera">Thermal camera</button>
               <button class="sop-chip" type="button" data-tool-query="sewer scope">Sewer scope</button>
               <button class="sop-chip" type="button" data-tool-query="drone">Drone</button>
             </div>
@@ -8531,7 +8556,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 190</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span>Build 191</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8671,11 +8696,12 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=190"></script>
-  <script src="./mpi-shared.js?build=190"></script>
-  <script src="./mpi-field-sync.js?build=190"></script>
-  <script src="./mpi-subcontractor.js?build=190"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=190"></script>
+  <script src="./mpi-native-bridge.js?build=191"></script>
+  <script src="./mpi-shared.js?build=191"></script>
+  <script src="./mpi-equipment.js?build=191"></script>
+  <script src="./mpi-field-sync.js?build=191"></script>
+  <script src="./mpi-subcontractor.js?build=191"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=191"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -9638,6 +9664,8 @@
       const toolGuideResultCount = document.getElementById("toolGuideResultCount");
       const toolGuideResults = document.getElementById("toolGuideResults");
       const toolGuideDetail = document.getElementById("toolGuideDetail");
+      const issuedToolsList = document.getElementById("issuedToolsList");
+      const issuedToolsStatus = document.getElementById("issuedToolsStatus");
       const servicePackPanel = document.getElementById("servicePackPanel");
       const servicePackSelect = document.getElementById("servicePackSelect");
       const servicePackResult = document.getElementById("servicePackResult");
@@ -9874,9 +9902,10 @@
       let unsubscribeTeamPresence = null;
       let unsubscribeTeamDirectMessages = null;
       let unsubscribeFieldSentMessages = null;
+      let unsubscribeIssuedTools = null;
       let teamDirectListenerReady = false;
 
-      const TOOL_GUIDES = [
+      const LEGACY_TOOL_GUIDES = [
         {
           id: "new-tool-setup",
           category: "Company process",
@@ -10213,16 +10242,20 @@
           ]
         }
       ];
+      const TOOL_GUIDES = Array.isArray(window.MPI_EQUIPMENT?.tools) && window.MPI_EQUIPMENT.tools.length
+        ? window.MPI_EQUIPMENT.tools
+        : LEGACY_TOOL_GUIDES;
 
       const SERVICE_PACKS = {
         standard: {
           title: "Standard home inspection — high-use guide links",
           copy: "Use the complete assigned tool list and start-of-day readiness check. These are quick links to high-use equipment, not a complete packing list.",
           items: [
-            ["electrical-tester-kit", "Electrical tester kit", "Confirm the tester and voltage detector are present and function checked."],
-            ["moisture-meter", "Moisture meter", "Confirm battery, pins/sensor surfaces, and known-condition response."],
-            ["co-detector", "Carbon monoxide detector", "Confirm charge, sensor/service status, clean-air zero, and response check."],
-            ["telescoping-ladder", "Telescoping ladder", "Inspect rails, rungs, feet, locks, strap, and labels before the shift."]
+            ["gfci-tester", "Digital GFCI receptacle tester", "Confirm the display, controls, contacts, battery, and known-condition response."],
+            ["voltage-ir-detector", "Voltage detector / IR thermometer", "Prove voltage response and confirm the lens, display, and battery."],
+            ["moisture-meter-mm9", "Moisture meter", "Confirm battery, pins/sensor surfaces, mode, and known-condition response."],
+            ["co-detector-ct580", "Carbon monoxide detector", "Confirm charge, sensor/service status, clean-air zero, and response check."],
+            ["thermal-camera-tc002c", "Thermal camera", "Confirm the camera, cable, phone connection, app, storage, and image response."]
           ],
           extras: "Also confirm the company phone/cameras, backup power, thermography equipment, water-pressure gauge, PPE, forms, consumables, and every other assigned item that applies."
         },
@@ -10230,9 +10263,9 @@
           title: "Sewer scope — extra pack",
           copy: "Confirm the service is booked and the inspector is separately authorized before loading or operating the equipment.",
           items: [
-            ["sewer-scope", "Sewer scope", "Camera head, skid, cable, reel, monitor, battery, storage, and recording checked."],
-            ["pocket-flood-light", "Rechargeable pocket flood light", "Charged backup light for the cleanout and work area."],
-            ["tool-pouch", "Tool pouch", "Only the approved small tools needed for the access arrangement."]
+            ["sewer-scope-scout-3-micro", "Scout 3-Pro Plus Micro", "Camera, cable, reel, counter, monitor, battery, recording, and cleaning supplies checked."],
+            ["rover-flood-light", "Rechargeable flood light", "Charged backup light for the cleanout and work area."],
+            ["inspection-tote", "Inspection tool tote", "Only approved clean tools and property-protection supplies loaded."]
           ],
           extras: "Confirm approved PPE, drop cloth/property protection, cleaning and disinfection supplies, replacement O-rings/skids, and recording storage."
         },
@@ -10240,9 +10273,10 @@
           title: "Mold / IAQ sampling — extra pack",
           copy: "Sampling requires a contracted service, separate authorization, the approved sampling plan, and current laboratory instructions.",
           items: [
-            ["mold-pump", "Mold / IAQ sampling pump", "Pump, stand/tripod, tubing, charge, known-flow check, and timing control ready."],
-            ["moisture-meter", "Moisture meter", "Ready for factual moisture screening where the approved procedure calls for it."],
-            ["headlamp", "Rechargeable headlamp", "Charged hands-free light for safe setup and label verification."]
+            ["moisture-meter-mm9", "Moisture meter", "Ready for factual moisture screening where the approved procedure calls for it."],
+            ["thermal-camera-tc002c", "Thermal camera", "Camera, cable, host device, storage, and image response confirmed."],
+            ["respirator-p100", "Reusable respirator", "Use only when the respiratory-protection program and hazard assessment require it."],
+            ["headlamp-2012r", "Rechargeable headlamp", "Charged hands-free light for safe setup and label verification."]
           ],
           extras: "Confirm unopened sampling media, field blanks when required, labels, chain-of-custody form, timer, PPE decision, packaging, and laboratory delivery plan."
         },
@@ -10250,10 +10284,12 @@
           title: "Well, septic, or laboratory water service — extra pack",
           copy: "Confirm exactly which ancillary service is contracted. Well-yield, septic evaluation, and water-quality sampling each require the separately approved procedure and authorization.",
           items: [
+            ["well-yield-kit", "Well / yield testing kit", "Gauge, fittings, washers, connections, and known-condition readings checked."],
+            ["garden-hose-50", "50 ft garden hose", "Inspect, drain, route, and control the main discharge hose."],
+            ["leader-hose-15", "15 ft leader hose", "Inspect the short connection hose and couplings."],
             ["digging-shovel", "Digging shovel", "Inspect the handle and blade; load only when the approved field procedure requires it."],
-            ["soil-probe", "Soil probe", "Inspect the shaft, handle, and tip; use only within the approved procedure."],
             ["mattock", "Pick axe / mattock", "Load only for an approved task with a safe work area and current authorization."],
-            ["pocket-flood-light", "Rechargeable pocket flood light", "Charged light for equipment, access, labels, and sample documentation."]
+            ["rover-flood-light", "Rechargeable flood light", "Charged light for equipment, access, labels, and sample documentation."]
           ],
           extras: "Confirm the correct laboratory bottles, preservatives, cooler/ice, gloves, disinfectant, sample labels, current chain-of-custody form, water-pressure or well-test equipment, and delivery time requirements for the booked service."
         },
@@ -10261,7 +10297,7 @@
           title: "Drone roof inspection — extra pack",
           copy: "The assigned pilot must confirm current company and FAA authorization, airspace, weather, property permission, and a controlled launch area.",
           items: [
-            ["roof-drone", "Roof inspection drone", "Aircraft, propellers, batteries, controller, firmware, storage, Remote ID, and return-to-home setup checked."]
+            ["drone-mini-4", "DJI Mini 4 drone", "Aircraft, propellers, batteries, controller, firmware, storage, Remote ID, and return-to-home setup checked."]
           ],
           extras: "Confirm charged flight batteries, controller/phone cable, media capacity, landing pad or controlled recovery area, weather limits, and any required airspace authorization."
         },
@@ -10269,9 +10305,9 @@
           title: "Crawlspace robot inspection — extra pack",
           copy: "Confirm a dry, retrievable route from outside the access. The robot is not water resistant and does not authorize entry into an unsafe space.",
           items: [
-            ["crawlspace-robot", "Crawlspace inspection robot", "Crawler, wheels, camera, lights, battery, controller, recording, and retrieval plan checked."],
-            ["headlamp", "Rechargeable headlamp", "Charged hands-free light for the access and setup area."],
-            ["pocket-flood-light", "Rechargeable pocket flood light", "Charged backup light for orientation and retrieval."]
+            ["wombat-crawler", "Wombat inspection crawler", "Crawler, wheels, camera, lights, battery, controller, recording, and retrieval plan checked."],
+            ["headlamp-2012r", "Rechargeable headlamp", "Charged hands-free light for the access and setup area."],
+            ["rover-flood-light", "Rechargeable flood light", "Charged backup light for orientation and retrieval."]
           ],
           extras: "Confirm media storage, cleaning supplies that do not introduce water, property protection, and a safe recovery plan before deployment."
         }
@@ -19684,6 +19720,7 @@
           renderWorkflowDayComplete();
         });
         window.addEventListener("mpi-company-session-ready", event => {
+          watchIssuedTools(event.detail);
           if (String(event.detail?.role || "").toLowerCase() === "subcontractor") {
             acknowledgeTimedAlert();
             return;
@@ -19697,6 +19734,7 @@
           sendWorkflowWeeklySummaryIfDue().catch(() => false);
         });
         if (window.MPI_COMPANY_SESSION) {
+          watchIssuedTools(window.MPI_COMPANY_SESSION);
           if (String(window.MPI_COMPANY_SESSION.role || "").toLowerCase() !== "subcontractor") {
             syncWorkflowCompanyProfile({ detail: window.MPI_COMPANY_SESSION });
             watchInspectorRequests(window.MPI_COMPANY_SESSION);
@@ -22269,10 +22307,17 @@
           guide.model,
           guide.aliases,
           guide.purpose,
+          ...(guide.when || []),
+          ...(guide.setup || []),
           ...(guide.steps || []),
           ...(guide.record || []),
+          ...(guide.limitations || []),
+          ...(guide.safety || []),
           ...(guide.care || []),
-          ...(guide.stop || [])
+          ...(guide.battery || []),
+          ...(guide.troubleshooting || []),
+          ...(guide.stop || []),
+          ...(guide.workflow || [])
         ].join(" "));
       }
 
@@ -22350,10 +22395,17 @@
         purpose.className = "sop-entry";
         purpose.textContent = guide.purpose;
         content.append(safety, purpose);
-        appendToolGuideBlock(content, "Field sequence", guide.steps, true);
+        appendToolGuideBlock(content, "When to use it", guide.when);
+        appendToolGuideBlock(content, "Basic setup", guide.setup, true);
+        appendToolGuideBlock(content, "How to use it", guide.steps, true);
         appendToolGuideBlock(content, "Record before moving on", guide.record);
-        appendToolGuideBlock(content, "Care and return", guide.care);
-        appendToolGuideBlock(content, "Stop and get direction", guide.stop);
+        appendToolGuideBlock(content, "Limitations", guide.limitations);
+        appendToolGuideBlock(content, "Safety", guide.safety);
+        appendToolGuideBlock(content, "Cleaning and storage", guide.care);
+        appendToolGuideBlock(content, "Battery and charging", guide.battery);
+        appendToolGuideBlock(content, "Troubleshooting", guide.troubleshooting);
+        appendToolGuideBlock(content, "When not to use it", guide.stop);
+        appendToolGuideBlock(content, "MPI workflow", guide.workflow);
 
         if (guide.sopQuery) {
           const procedureLink = document.createElement("a");
@@ -22509,12 +22561,69 @@
         populateToolGuideCategories();
         const requestedGuideId = new URL(window.location.href).searchParams.get("tool") || "";
         const requestedGuide = TOOL_GUIDES.find(guide => guide.id === requestedGuideId);
-        const defaultGuide = requestedGuide || TOOL_GUIDES.find(guide => guide.id === "moisture-meter") || TOOL_GUIDES[0];
+        const defaultGuide = requestedGuide || TOOL_GUIDES.find(guide => guide.id === "moisture-meter-mm9") || TOOL_GUIDES[0];
         if (requestedGuide) toolGuideSearch.value = requestedGuide.title;
         activeToolGuideId = defaultGuide?.id || "";
         if (defaultGuide) renderToolGuideDetail(defaultGuide);
         renderServicePack();
         renderToolGuideResults();
+        renderIssuedTools();
+      }
+
+      function issuedToolDisplayRecords(records = []) {
+        const active = records.filter(item => item && item.active !== false && item.status !== "Returned");
+        if (active.length) return active;
+        return (window.MPI_EQUIPMENT?.tools || []).map(item => ({
+          id: item.id,
+          toolId: item.id,
+          toolName: item.title,
+          brandModel: item.model,
+          category: item.category,
+          employeeName: "Cory Leese",
+          status: "Issued",
+          dateIssued: "",
+          serialNumber: "",
+          notes: ""
+        }));
+      }
+
+      function renderIssuedTools(records = []) {
+        if (!issuedToolsList || !window.MPI_EQUIPMENT) return;
+        const assigned = issuedToolDisplayRecords(records);
+        issuedToolsStatus.textContent = `${assigned.length} current`;
+        issuedToolsList.replaceChildren();
+        assigned.forEach(record => {
+          const guide = window.MPI_EQUIPMENT.byId(record.toolId);
+          const card = document.createElement("article");
+          card.className = "issued-tool-card";
+          const copy = document.createElement("div");
+          const name = document.createElement("strong");
+          name.textContent = record.toolName || guide?.title || "MPI issued tool";
+          const detail = document.createElement("span");
+          detail.textContent = [record.brandModel || guide?.model, record.category || guide?.category].filter(Boolean).join(" · ");
+          const status = document.createElement("small");
+          status.textContent = `${record.status || "Issued"} · ${record.employeeName || "Cory Leese"}`;
+          copy.append(name, detail, status);
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = guide ? "USER GUIDE" : "NO GUIDE";
+          button.disabled = !guide;
+          button.dataset.openIssuedGuide = guide?.id || "";
+          card.append(copy, button);
+          issuedToolsList.appendChild(card);
+        });
+      }
+
+      function watchIssuedTools(session = window.MPI_COMPANY_SESSION) {
+        unsubscribeIssuedTools?.();
+        unsubscribeIssuedTools = null;
+        renderIssuedTools();
+        if (!session?.userId || !window.MPI_SHARED?.available) return;
+        const isCory = /^cory leese$/i.test(String(session.inspectorName || "").trim());
+        if (!isCory) return;
+        unsubscribeIssuedTools = window.MPI_SHARED.db.collection("equipmentAssignments")
+          .where("employeeId", "==", session.userId)
+          .onSnapshot(snapshot => renderIssuedTools(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))), () => renderIssuedTools());
       }
 
       function copyToolGuideLink(guideId) {
@@ -24224,6 +24333,11 @@
           option.setAttribute("aria-current", String(selected));
         }
         if (window.innerWidth < 861) toolGuideDetail.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      issuedToolsList?.addEventListener("click", event => {
+        const button = event.target.closest("[data-open-issued-guide]");
+        if (!button?.dataset.openIssuedGuide) return;
+        openServicePackTool(button.dataset.openIssuedGuide);
       });
       toolGuideDetail.addEventListener("click", event => {
         const copyGuideLink = event.target.closest("[data-copy-tool-guide]");

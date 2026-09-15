@@ -1,5 +1,13 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 191 — Cory Equipment Records and Signed Acknowledgments
+
+- Replaced the outdated field-tool guide source with Cory Leese's current 27-tool inventory and practical MPI guides, including detailed safety and workflow guidance for the specialist meters, respirator, well kit, crawler, drone, and sewer scope.
+- Added the Office Console Equipment workspace with per-tool status, issued date, serial/asset number, notes, employee totals, damaged/missing/replacement counts, and safe addition of future tools.
+- Added a mobile-friendly Issued Tool Acknowledgment flow with 27 independent receipt confirmations, notes, autosaved progress, required employee finger/stylus signature, optional admin signature, unique reference number, and orientation-safe signature pads.
+- Signed acknowledgments now create immutable branded records, email the normal MPI administration recipients with a branded HTML attachment, remain viewable/re-sendable in Equipment history, and never overwrite earlier signed versions.
+- Added Firestore access rules for equipment assignment records and immutable signed acknowledgments, plus native/web packaging and release verification coverage.
+
 ## Build 190 — Reliable Inbox Read Receipts
 
 - Opening a private conversation now clears its unread badge immediately and records the receipt only on inbound messages, preventing legacy sent messages from blocking the entire read update.
