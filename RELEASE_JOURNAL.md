@@ -1,5 +1,11 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 193 — Self-Contained Equipment Photographs
+
+- Bundled every specific equipment product photograph directly into the Office Console so the correct make/model images load reliably without separate website image requests.
+- Preserved the Build 192 focused private-message screen: opening a message shows only that conversation, with Back to Inbox, Reply, and Add Attachment controls.
+- Kept the individual photo files in the native iPhone package as an offline fallback.
+
 ## Build 192 — Equipment Handover Status Correction
 
 - Corrected Cory's 27-item equipment setup so the catalog begins as `Not Issued`; no tool is shown as issued before an actual handover is recorded.

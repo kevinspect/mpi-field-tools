@@ -25,7 +25,7 @@
     return Object.freeze({
       ...defaults,
       ...value,
-      image: value.image || `./equipment-images/${value.id}.jpg`,
+      image: value.image || window.MPI_EQUIPMENT_IMAGE_DATA?.[value.id] || `./equipment-images/${value.id}.jpg`,
       assignedEmployee: "Cory Leese",
       defaultStatus: "Not Issued",
       dateIssued: "",
