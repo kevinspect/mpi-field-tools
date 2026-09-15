@@ -259,6 +259,9 @@
     .planning-result dl { display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; margin:12px 0; }
     .planning-result dt { color:var(--muted); font-size:11px; }
     .planning-result dd { margin:2px 0 0; color:var(--navy); font-weight:850; }
+    .planning-comparison { padding:14px 0; border-bottom:1px solid #cbdff0; }
+    .planning-comparison:last-of-type { margin-bottom:12px; }
+    .planning-comparison h4 { margin:0; }
     @media (max-width:650px) { .planning-controls,.planning-result dl { grid-template-columns:1fr; } }
     .live-location-status { max-width:280px; color:var(--muted); font-size:9px; line-height:1.35; text-align:right; }
     .live-location-layout { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(250px,.7fr); gap:12px; margin-top:14px; }
@@ -786,7 +789,7 @@
       .inspector-row > :nth-child(5),.inspector-row > :nth-child(6) { display:block; }
     }
 
-    /* Build 195 — iPhone-style office Messages */
+    /* Build 196 — iPhone-style office Messages */
     [data-admin-panel="updates"] .content-panel { background:#f2f2f7; }
     .admin-compose-block { margin-bottom:12px; border:0; background:transparent; }
     .admin-compose-block > summary { width:max-content; min-height:42px; margin-left:auto; padding:0 14px; color:#087cff; background:#fff; border:1px solid #d9d9dd; border-radius:21px; }
@@ -1027,8 +1030,8 @@
             <div id="adminSafetyAlertList"></div>
           </section>
           <section class="live-location-panel" id="adminLiveLocationPanel" aria-labelledby="adminLiveLocationTitle">
-            <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Live Inspector &amp; Schedule Map</h3><p>Choose a date to compare every inspector's read-only appointment plan, or select one inspector to open their planned or actual route.</p></div><div class="live-location-actions"><span class="live-location-status" id="adminLiveLocationStatus">Waiting for active field devices.</span><input id="adminLiveRouteDate" type="date" aria-label="Map date"><button class="secondary" id="adminLiveLocationAllPlans" type="button" disabled>SHOW ALL INSPECTORS' JOBS</button><button class="secondary" id="adminLiveLocationPlan" type="button" disabled>SHOW SELECTED INSPECTOR'S JOBS</button><button class="secondary" id="adminLiveLocationHistory" type="button" disabled>SHOW ACTUAL ROUTE</button><button class="secondary" id="adminLiveLocationShowAll" type="button">LIVE LOCATIONS</button><button class="secondary" id="adminLiveLocationRefresh" type="button">UPDATE NOW</button><div class="live-location-planner"><div class="planning-address-field"><input id="adminLiveCandidateAddress" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="adminPlanningSuggestions" maxlength="180" aria-label="Possible new job address" placeholder="Start typing a potential job address"><div class="planning-address-results" id="adminPlanningSuggestions" role="listbox" hidden></div></div><button class="primary" id="adminLiveCandidatePin" type="button">CALCULATE TRAVEL</button></div></div></div>
-            <div class="planning-controls"><div class="field"><label for="adminPlanningInspector">Planning inspector</label><select id="adminPlanningInspector"><option value="">Select an inspector</option></select></div><div class="field"><label for="adminPlanningOrigin">From scheduled/current job</label><select id="adminPlanningOrigin"><option value="">Select an inspector first</option></select></div></div>
+            <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Live Inspector &amp; Schedule Map</h3><p>Choose a date to compare every inspector's read-only appointment plan, or select one inspector to open their planned or actual route.</p></div><div class="live-location-actions"><span class="live-location-status" id="adminLiveLocationStatus">Waiting for active field devices.</span><input id="adminLiveRouteDate" type="date" aria-label="Map date"><button class="secondary" id="adminLiveLocationAllPlans" type="button" disabled>SHOW ALL INSPECTORS' JOBS</button><button class="secondary" id="adminLiveLocationPlan" type="button" disabled>SHOW SELECTED INSPECTOR'S JOBS</button><button class="secondary" id="adminLiveLocationHistory" type="button" disabled>SHOW ACTUAL ROUTE</button><button class="secondary" id="adminLiveLocationShowAll" type="button">LIVE LOCATIONS</button><button class="secondary" id="adminLiveLocationRefresh" type="button">UPDATE NOW</button><div class="live-location-planner"><div class="planning-address-field"><input id="adminLiveCandidateAddress" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="adminPlanningSuggestions" maxlength="180" aria-label="Possible new job address" placeholder="Start typing a Michigan job address"><div class="planning-address-results" id="adminPlanningSuggestions" role="listbox" hidden></div></div><button class="primary" id="adminLiveCandidatePin" type="button">CALCULATE TRAVEL</button></div></div></div>
+            <div class="planning-controls"><div class="field"><label for="adminPlanningInspector">Planning inspector</label><select id="adminPlanningInspector"><option value="">Select an inspector</option><option value="all">All inspectors</option></select></div><div class="field"><label for="adminPlanningOrigin">From scheduled/current job</label><select id="adminPlanningOrigin"><option value="">Select an inspector first</option></select></div></div>
             <section class="planning-result" id="adminPlanningResult" aria-live="polite" hidden></section>
             <p class="spectora-readonly-note" id="adminSpectoraScheduleStatus"><strong>SPECTORA · READ ONLY</strong><span>The planner may display synchronized appointment data but cannot change anything in Spectora.</span></p>
             <div class="live-location-layout"><div><div class="live-location-map" id="adminLiveLocationMap" aria-label="Map of current inspector locations and read-only job plans"></div><p class="live-location-route-note" id="adminLiveLocationRouteStatus">Choose a date and show all future jobs, or select an operative for an individual route.</p></div><div class="live-location-list" id="adminLiveLocationList"><div class="empty">Waiting for inspector locations.</div></div></div>
@@ -1153,11 +1156,11 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
-  <script src="./mpi-shared.js?build=195"></script>
-  <script src="./mpi-equipment-images.js?build=195"></script>
-  <script src="./mpi-equipment.js?build=195"></script>
-  <script src="./mpi-planning.js?build=195"></script>
-  <script src="./admin.js?build=195"></script>
-  <script src="./mpi-equipment-admin.js?build=195"></script>
+  <script src="./mpi-shared.js?build=196"></script>
+  <script src="./mpi-equipment-images.js?build=196"></script>
+  <script src="./mpi-equipment.js?build=196"></script>
+  <script src="./mpi-planning.js?build=196"></script>
+  <script src="./admin.js?build=196"></script>
+  <script src="./mpi-equipment-admin.js?build=196"></script>
 </body>
 </html>

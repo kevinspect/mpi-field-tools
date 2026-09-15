@@ -2,6 +2,17 @@
   "use strict";
   const searchCache = new Map();
   const routeCache = new Map();
+  // Both peninsulas, not the office or currently visible map viewport.
+  const MICHIGAN_BOUNDS = [-90.5, 41.6, -82.1, 48.35];
+
+  function isMichiganAddress(result) {
+    const state = String(result?.state || "").trim();
+    const address = String(result?.matchedAddress || result?.address || "");
+    return (state ? /^(Michigan|MI|US-MI)$/i.test(state) : /,\s*(?:MI|Michigan)\b/i.test(address))
+      && Number.isFinite(result?.latitude) && Number.isFinite(result?.longitude)
+      && result.longitude >= MICHIGAN_BOUNDS[0] && result.latitude >= MICHIGAN_BOUNDS[1]
+      && result.longitude <= MICHIGAN_BOUNDS[2] && result.latitude <= MICHIGAN_BOUNDS[3];
+  }
 
   function addressResult(feature) {
     const properties = feature?.properties || {};
@@ -21,9 +32,9 @@
     const key = text.toLowerCase();
     if (searchCache.has(key)) return searchCache.get(key);
     const url = new URL("https://photon.komoot.io/api/");
-    Object.entries({ q: text, limit: "10", lang: "en", lat: "44", lon: "-85", zoom: "5", location_bias_scale: "0.1" }).forEach(([name, value]) => url.searchParams.set(name, value));
-    // Bias broadly across Michigan, never confine results to the office/map
-    // viewport. A second general search retains valid out-of-state matches.
+    Object.entries({ q: text, limit: "10", lang: "en", lat: "44", lon: "-85", zoom: "5", location_bias_scale: "0.1", bbox: MICHIGAN_BOUNDS.join(","), countrycode: "US" }).forEach(([name, value]) => url.searchParams.set(name, value));
+    // Both searches are Michigan-bounded. State filtering below also excludes
+    // neighboring states that overlap Michigan's rectangular search bounds.
     const michiganUrl = new URL(url);
     michiganUrl.searchParams.set("q", /\bMichigan\b|\bMI\b/i.test(text) ? text : `${text} Michigan`);
     const payloads = await Promise.all([michiganUrl, url].map(async endpoint => {
@@ -32,8 +43,8 @@
       return response.json();
     }));
     if (payloads.every(payload => !payload)) throw new Error("Address suggestions are temporarily unavailable. Enter the full address and try Calculate Travel.");
-    const results = [...new Map(payloads.flatMap(payload => payload?.features || []).map(addressResult).filter(Boolean).map(result => [result.address, result])).values()]
-      .sort((left, right) => Number(right.state === "Michigan") - Number(left.state === "Michigan") || Number(right.precise) - Number(left.precise));
+    const results = [...new Map(payloads.flatMap(payload => payload?.features || []).map(addressResult).filter(isMichiganAddress).map(result => [result.address, result])).values()]
+      .sort((left, right) => Number(right.precise) - Number(left.precise));
     if (searchCache.size > 60) searchCache.delete(searchCache.keys().next().value);
     searchCache.set(key, results);
     return results;
@@ -60,5 +71,11 @@
     return new Date(departure + Math.max(0, Number(driveMinutes)) * 60000).toISOString();
   }
 
-  window.MPI_PLANNING = Object.freeze({ searchAddresses, addressResult, roadTravel, earliestArrival });
+  function defaultJob(jobs, selectedDate, today, currentJobId = "", mode = "auto", now = Date.now()) {
+    if (mode === "last") return jobs.at(-1) || null;
+    const current = selectedDate === today && currentJobId ? jobs.find(job => String(job.id) === String(currentJobId)) : null;
+    return current || jobs.find(job => Date.parse(job.scheduledStart || "") >= (selectedDate === today ? now : Date.parse(`${selectedDate}T00:00:00`))) || jobs.at(-1) || null;
+  }
+
+  window.MPI_PLANNING = Object.freeze({ searchAddresses, addressResult, isMichiganAddress, roadTravel, earliestArrival, defaultJob });
 })();

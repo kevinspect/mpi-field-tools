@@ -566,6 +566,7 @@ await assertText(
 );
 
 run("Field update behavior regressions", process.execPath, ["scripts/test-field-update.mjs"]);
+run("Michigan / all-inspector planning regressions", process.execPath, ["scripts/test-planning-comparison.mjs"]);
 
 if (failures.length) {
   console.error(`\n${failures.length} native verification check${failures.length === 1 ? "" : "s"} failed:`);

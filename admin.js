@@ -1631,52 +1631,72 @@
       return;
     }
     liveCandidatePin.disabled = true;
-    const person = people.find(item => item.id === planningInspector?.value);
+    const compareAll = planningInspector?.value === "all";
+    const selectedPeople = compareAll ? operativePeople() : people.filter(item => item.id === planningInspector?.value);
     const originId = planningOrigin?.value;
-    if (!person || !originId) {
+    if (!selectedPeople.length || !originId) {
       liveCandidatePin.disabled = false;
       planningResult.hidden = false;
-      planningResult.textContent = "Select an inspector and a scheduled job as the starting point first. Live GPS is not required.";
+      planningResult.textContent = "Select All inspectors or one inspector and a scheduled starting point first. Live GPS is not required.";
       return;
     }
     const generation = ++planningCalculationGeneration;
     const selectedDate = liveRouteDate?.value || dateKey();
-    const job = planningJobs(person).find(item => String(item.id) === originId);
-    const live = originId === "live" ? liveLocationRecord(person) : null;
     liveCandidatePin.textContent = "CALCULATING…";
     planningResult.hidden = false;
     planningResult.textContent = "Calculating road distance and drive time…";
     try {
-      const coordinates = selectedPlanningAddress?.address === address ? selectedPlanningAddress : await geocodeScheduleAddress(address);
+      const lookupAddress = /\bMichigan\b|\bMI\b/i.test(address) ? address : `${address}, MI`;
+      const coordinates = selectedPlanningAddress?.address === address ? selectedPlanningAddress : await geocodeScheduleAddress(lookupAddress);
       if (!coordinates) throw new Error("That address could not be located. Include the street, city, state and ZIP code.");
+      if (!window.MPI_PLANNING.isMichiganAddress(coordinates)) throw new Error("Choose a Michigan address. Include the Michigan city or ZIP code to find the correct location.");
+      if (generation !== planningCalculationGeneration) return;
       address = String(coordinates.matchedAddress || coordinates.address || address);
       selectedPlanningAddress = { ...coordinates, address, selectedAt: new Date().toISOString() };
       liveCandidateAddress.value = address;
       try { localStorage.setItem("mpiAdminPotentialJobV1", JSON.stringify(selectedPlanningAddress)); } catch (_) {}
-      const origin = live || await geocodeScheduleAddress(job);
-      if (!origin) throw new Error("The inspector's scheduled starting address could not be located.");
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 14000);
-      let travel;
-      try { travel = await window.MPI_PLANNING.roadTravel(origin, coordinates, controller.signal); } finally { clearTimeout(timeout); }
+      const comparisons = [];
+      // Small field team: one route lookup at a time, cached by coordinates.
+      // Missing schedules are shown explicitly, never replaced by office GPS.
+      for (const person of selectedPeople) {
+        if (generation !== planningCalculationGeneration) return;
+        const currentJobId = person.operationsCurrent?.date === selectedDate ? person.operationsCurrent.currentJob?.id : "";
+        const job = compareAll ? window.MPI_PLANNING.defaultJob(planningJobs(person), selectedDate, dateKey(), currentJobId, originId) : planningJobs(person).find(item => String(item.id) === originId);
+        const live = !compareAll && originId === "live" ? liveLocationRecord(person) : null;
+        try {
+          if (!job && !live) throw new Error("No synchronized jobs on this date — no travel estimate available.");
+          const origin = live || await geocodeScheduleAddress(job);
+          if (!origin) throw new Error("Scheduled starting address could not be located.");
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 14000);
+          let travel;
+          try { travel = await window.MPI_PLANNING.roadTravel(origin, coordinates, controller.signal); } finally { clearTimeout(timeout); }
+          const plannedEnd = job?.scheduledEnd || job?.end?.dateTime || "";
+          const arrival = live ? new Date(Date.now() + travel.minutes * 60000).toISOString() : window.MPI_PLANNING.earliestArrival(plannedEnd, travel.minutes, selectedDate, dateKey());
+          comparisons.push({ person, origin, travel, plannedEnd, arrival, originAddress: live ? "Current live location" : scheduleAddress(job) });
+        } catch (error) {
+          comparisons.push({ person, error: error?.name === "AbortError" ? "Travel lookup timed out. Please try again." : error?.message || "Travel estimate unavailable." });
+        }
+      }
       if (generation !== planningCalculationGeneration) return;
-      const plannedEnd = job?.scheduledEnd || job?.end?.dateTime || "";
-      const arrival = live ? new Date(Date.now() + travel.minutes * 60000).toISOString() : window.MPI_PLANNING.earliestArrival(plannedEnd, travel.minutes, selectedDate, dateKey());
-      const originAddress = live ? "Current live location" : scheduleAddress(job);
-      planningResult.innerHTML = `<h4>POTENTIAL NEW JOB</h4><strong>${escapeHtml(address)}</strong><p>FROM: ${escapeHtml(canonicalTeamName(person))} · ${escapeHtml(originAddress)}</p><dl><div><dt>DISTANCE</dt><dd>${travel.miles.toFixed(1)} miles</dd></div><div><dt>ESTIMATED DRIVE TIME</dt><dd>${travel.minutes} minutes</dd></div><div><dt>PLANNED CURRENT JOB END</dt><dd>${plannedEnd ? escapeHtml(formatTime(plannedEnd)) : "Not available"}</dd></div><div><dt>ESTIMATED EARLIEST ARRIVAL</dt><dd>${arrival ? escapeHtml(formatTime(arrival)) : "Requires a scheduled job end time"}</dd></div></dl><small>Planning estimate only, not a guarantee. No live traffic, lab stops, job overruns or breaks included. ${coordinates.precise === false ? "Street-level suggestion: confirm the exact house address before booking. " : ""}OSRM / OpenStreetMap · Spectora appointments remain unchanged.</small>`;
-      if (!liveLocationRouteLayer) throw new Error("The planning map is not available.");
+      planningResult.innerHTML = `<h4>${compareAll ? "ALL INSPECTORS · TRAVEL COMPARISON" : "POTENTIAL NEW JOB"}</h4><strong>${escapeHtml(address)}</strong>${comparisons.map(({ person, originAddress, travel, plannedEnd, arrival, error }) => `<article class="planning-comparison"><h4>${escapeHtml(canonicalTeamName(person))}</h4>${error ? `<p>${escapeHtml(error)}</p>` : `<p>FROM: ${escapeHtml(originAddress)}</p><dl><div><dt>DISTANCE</dt><dd>${travel.miles.toFixed(1)} miles</dd></div><div><dt>ESTIMATED DRIVE TIME</dt><dd>${travel.minutes} minutes</dd></div><div><dt>PLANNED CURRENT JOB END</dt><dd>${plannedEnd ? escapeHtml(formatTime(plannedEnd)) : "Not available"}</dd></div><div><dt>ESTIMATED EARLIEST ARRIVAL</dt><dd>${arrival ? escapeHtml(formatTime(arrival)) : "Requires a scheduled job end time"}</dd></div></dl>`}</article>`).join("")}<small>Planning estimate only, not a guarantee. Compare the full day's appointments before booking; later jobs are not checked for conflicts. No live traffic, lab stops, job overruns or breaks included. ${coordinates.precise === false ? "Street-level suggestion: confirm the exact house address before booking. " : ""}OSRM / OpenStreetMap · Spectora appointments remain unchanged.</small>`;
+      const map = ensureLiveLocationMap();
+      if (!map || !liveLocationRouteLayer) throw new Error("The planning map is not available.");
       const icon = window.L.divIcon({ className: "", html: '<span class="mpi-candidate-marker"><span>+</span></span>', iconSize: [40, 40], iconAnchor: [12, 36] });
       if (liveLocationCandidate?.marker) liveLocationRouteLayer.removeLayer(liveLocationCandidate.marker);
       if (liveLocationCandidate?.route) liveLocationRouteLayer.removeLayer(liveLocationCandidate.route);
+      (liveLocationCandidate?.routes || []).forEach(route => liveLocationRouteLayer.removeLayer(route));
       const marker = window.L.marker([coordinates.latitude, coordinates.longitude], { icon, zIndexOffset: 1000 }).bindPopup(`<strong>Possible new job</strong><br>${escapeHtml(address)}<br>Planning pin only · not sent to Spectora`);
       liveLocationRouteLayer.addLayer(marker);
       marker.openPopup();
-      const route = window.L.polyline(travel.geometry.map(([longitude, latitude]) => [latitude, longitude]), { color: "#ad882f", weight: 5, dashArray: "7 5" }).addTo(liveLocationRouteLayer);
-      liveLocationCandidate = { address, coordinates, marker, route };
-      const bounds = [[origin.latitude, origin.longitude], [coordinates.latitude, coordinates.longitude]];
-      if (bounds.length > 1) liveLocationMap.fitBounds(bounds, { padding: [48, 48], maxZoom: 11 });
-      else liveLocationMap.setView(bounds[0], 13);
-      liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> · ${travel.miles.toFixed(1)} miles · approximately ${travel.minutes} minutes to this potential job. Dashed line is a planning estimate, not a recorded route.`;
+      const located = comparisons.filter(item => item.travel);
+      const routes = located.map(({ person, travel }, index) => window.L.polyline(travel.geometry.map(([longitude, latitude]) => [latitude, longitude]), { color: compareAll ? PLAN_COLORS[index % PLAN_COLORS.length] : "#ad882f", weight: 5, dashArray: "7 5" }).bindPopup(`<strong>${escapeHtml(canonicalTeamName(person))}</strong><br>${travel.miles.toFixed(1)} miles · approximately ${travel.minutes} minutes`).addTo(liveLocationRouteLayer));
+      liveLocationCandidate = { address, coordinates, marker, routes };
+      const bounds = [[coordinates.latitude, coordinates.longitude], ...located.map(item => [item.origin.latitude, item.origin.longitude]), ...located.flatMap(item => item.travel.geometry.map(([longitude, latitude]) => [latitude, longitude]))];
+      if (bounds.length > 1) map.fitBounds(bounds, { padding: [48, 48], maxZoom: 11 });
+      else map.setView(bounds[0], 13);
+      liveLocationRouteStatus.innerHTML = compareAll ? `<strong>All inspectors</strong> · ${located.length} travel estimate${located.length === 1 ? "" : "s"} for ${escapeHtml(formatDate(selectedDate))}. Tap a colored dashed route to identify its inspector.` : located.length ? `<strong>${escapeHtml(canonicalTeamName(located[0].person))}</strong> · ${located[0].travel.miles.toFixed(1)} miles · approximately ${located[0].travel.minutes} minutes to this potential job.` : "No travel estimate available from the selected starting point.";
+      liveLocationRouteStatus.innerHTML += " Dashed lines are planning estimates, not recorded routes.";
       liveLocationRouteStatus.dataset.result = "planning";
     } catch (error) {
       if (generation !== planningCalculationGeneration) return;
@@ -1696,8 +1716,15 @@
     if (!planningInspector || !planningOrigin) return;
     const selectedInspector = planningInspector.value;
     const inspectors = operativePeople().filter(person => person.active !== false && person.role !== "subcontractor");
-    const markup = '<option value="">Select an inspector</option>' + inspectors.map(person => `<option value="${escapeHtml(person.id)}">${escapeHtml(canonicalTeamName(person))}</option>`).join("");
+    const markup = '<option value="">Select an inspector</option><option value="all">All inspectors</option>' + inspectors.map(person => `<option value="${escapeHtml(person.id)}">${escapeHtml(canonicalTeamName(person))}</option>`).join("");
     if (planningInspector.innerHTML !== markup) { planningInspector.innerHTML = markup; planningInspector.value = selectedInspector; }
+    if (planningInspector.value === "all") {
+      const selectedOrigin = planningOrigin.value;
+      const allOrigins = '<option value="auto">Each inspector\'s current/next scheduled job</option><option value="last">Each inspector\'s final scheduled job</option>';
+      if (planningOrigin.innerHTML !== allOrigins) planningOrigin.innerHTML = allOrigins;
+      if (["auto", "last"].includes(selectedOrigin)) planningOrigin.value = selectedOrigin;
+      return;
+    }
     const person = people.find(item => item.id === planningInspector.value);
     const selectedOrigin = planningOrigin.value;
     const jobs = person ? planningJobs(person) : [];
@@ -1709,7 +1736,7 @@
       if (jobs.some(job => String(job.id) === selectedOrigin) || (selectedOrigin === "live" && liveAllowed)) planningOrigin.value = selectedOrigin;
       else {
         const currentJobId = person?.operationsCurrent?.date === (liveRouteDate?.value || dateKey()) ? person.operationsCurrent.currentJob?.id : "";
-        const relevant = jobs.find(job => String(job.id) === String(currentJobId)) || jobs.find(job => (asDate(job.scheduledStart)?.getTime() || 0) >= Date.now()) || jobs.at(-1);
+        const relevant = window.MPI_PLANNING.defaultJob(jobs, liveRouteDate?.value || dateKey(), dateKey(), currentJobId);
         if (relevant) planningOrigin.value = String(relevant.id);
       }
     }
@@ -1718,6 +1745,10 @@
   function invalidatePlanningResult() {
     planningCalculationGeneration += 1;
     if (planningResult) planningResult.hidden = true;
+    if (liveLocationCandidate?.marker) liveLocationRouteLayer?.removeLayer(liveLocationCandidate.marker);
+    if (liveLocationCandidate?.route) liveLocationRouteLayer?.removeLayer(liveLocationCandidate.route);
+    (liveLocationCandidate?.routes || []).forEach(route => liveLocationRouteLayer?.removeLayer(route));
+    liveLocationCandidate = null;
   }
 
   planningInspector?.addEventListener("change", () => { planningOrigin.innerHTML = ""; invalidatePlanningResult(); renderPlanningControls(); });
