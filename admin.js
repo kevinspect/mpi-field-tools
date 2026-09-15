@@ -155,6 +155,7 @@
   let knownOfficeUpdateIds = new Set();
   let knownReplyKeys = new Set();
   let readReplyKeys = new Set();
+  const ADMIN_LOCAL_DIRECT_READ_KEY = "mpiAdminLocallyReadMessagesV1";
   let unreadSafetyCount = 0;
   let replyListenerReady = false;
   let officeMessaging = null;
@@ -418,6 +419,27 @@
     }, { merge: true }).catch(() => {});
   }
 
+  function adminLocalDirectReadIds() {
+    const userId = currentUser?.uid || "device";
+    try {
+      const saved = JSON.parse(localStorage.getItem(`${ADMIN_LOCAL_DIRECT_READ_KEY}:${userId}`) || "[]");
+      return new Set(Array.isArray(saved) ? saved.map(String) : []);
+    } catch (_) {
+      return new Set();
+    }
+  }
+
+  function rememberAdminDirectRead(messages) {
+    const userId = currentUser?.uid || "device";
+    const saved = adminLocalDirectReadIds();
+    messages.filter(Boolean).forEach(message => saved.add(String(message.id || message)));
+    try { localStorage.setItem(`${ADMIN_LOCAL_DIRECT_READ_KEY}:${userId}`, JSON.stringify([...saved].slice(-500))); } catch (_) {}
+  }
+
+  function adminDirectMessageIsRead(message, userId = currentUser?.uid || "") {
+    return (Array.isArray(message?.readBy) && message.readBy.includes(userId)) || adminLocalDirectReadIds().has(String(message?.id || ""));
+  }
+
   function safetyMessages() {
     return fieldMessages
       .filter(item => item.kind === "safety-alert" && item.active !== false)
@@ -475,23 +497,25 @@
     });
     const directByPerson = new Map();
     directMessages.forEach(message => {
-      if (message.senderUid === currentUid) return;
-      const otherUid = message.senderUid;
+      const mine = message.senderUid === currentUid;
+      const otherUid = mine ? message.targetUid : message.senderUid;
       if (!otherUid) return;
       const timestamp = asDate(message.createdAt || message.createdAtClient)?.getTime() || 0;
-      const unread = !(Array.isArray(message.readBy) && message.readBy.includes(currentUid));
+      const unread = !mine && !adminDirectMessageIsRead(message, currentUid);
       const existing = directByPerson.get(otherUid);
+      const person = people.find(item => item.id === otherUid);
+      const name = person ? canonicalTeamName(person) : (mine ? message.targetName : message.senderName) || "MPI Team Member";
       if (!existing || timestamp > existing.sortTime) {
         directByPerson.set(otherUid, {
           key: `direct:${otherUid}`,
           kind: "direct",
           personId: otherUid,
-          name: message.senderName,
+          name,
           type: "Private conversation",
-          body: message.message || (message.attachments?.length ? `${message.attachments.length} attachment${message.attachments.length === 1 ? "" : "s"}` : "Private message"),
+          body: `${mine ? "You: " : ""}${message.message || (message.attachments?.length ? `${message.attachments.length} attachment${message.attachments.length === 1 ? "" : "s"}` : "Private message")}`,
           timestamp: message.createdAt || message.createdAtClient,
           sortTime: timestamp,
-          unread,
+          unread: Boolean(existing?.unread || unread),
           attachments: message.attachments || []
         });
       } else if (unread) existing.unread = true;
@@ -508,7 +532,18 @@
       unread: !readReplyKeys.has(replyKey(reply)),
       attachments: reply.attachments || []
     }));
-    return [...fieldItems, ...directByPerson.values(), ...receiptItems]
+    const safetyItems = fieldItems.filter(item => item.safety);
+    const conversationItems = [...fieldItems.filter(item => !item.safety), ...directByPerson.values(), ...receiptItems];
+    const byPerson = new Map();
+    conversationItems.forEach(item => {
+      const groupKey = item.personId || item.key;
+      const existing = byPerson.get(groupKey);
+      const itemTime = asDate(item.timestamp)?.getTime() || 0;
+      const existingTime = asDate(existing?.timestamp)?.getTime() || 0;
+      if (!existing || itemTime > existingTime) byPerson.set(groupKey, { ...item, unread: Boolean(existing?.unread || item.unread) });
+      else if (item.unread) existing.unread = true;
+    });
+    return [...safetyItems, ...byPerson.values()]
       .sort((left, right) => (asDate(right.timestamp)?.getTime() || 0) - (asDate(left.timestamp)?.getTime() || 0));
   }
 
@@ -520,7 +555,7 @@
     if (replyCount) replyCount.textContent = unread ? String(unread) : "";
     unifiedInboxList.innerHTML = items.length ? items.map(item => {
       const files = item.attachments?.length ? ` · ${item.attachments.length} attachment${item.attachments.length === 1 ? "" : "s"}` : "";
-      return `<button class="office-reply-card${item.unread ? " unread" : ""}${item.safety ? " safety" : ""}" type="button" data-admin-inbox-kind="${escapeHtml(item.kind)}" data-admin-inbox-key="${escapeHtml(item.key)}" data-admin-inbox-message="${escapeHtml(item.messageId || "")}" data-admin-inbox-person="${escapeHtml(item.personId || "")}"><div><strong>${escapeHtml(item.name || "MPI Team Member")}</strong><span class="admin-inbox-type">${escapeHtml(item.type)}</span>${item.unread ? '<span class="office-reply-new">Unread</span>' : ""}</div><div><span>${escapeHtml(item.body)}</span><small>${escapeHtml(files.replace(/^ · /, ""))}</small></div><time>${escapeHtml(formatDateTime(item.timestamp))}</time></button>`;
+      return `<button class="office-reply-card${item.unread ? " unread" : ""}${item.safety ? " safety" : ""}" type="button" data-admin-inbox-kind="${escapeHtml(item.kind)}" data-admin-inbox-key="${escapeHtml(item.key)}" data-admin-inbox-message="${escapeHtml(item.messageId || "")}" data-admin-inbox-person="${escapeHtml(item.personId || "")}"><span class="admin-message-avatar" aria-hidden="true">${escapeHtml(initials(item.name || "MPI"))}</span><div class="admin-message-row-copy"><strong>${escapeHtml(item.name || "MPI Team Member")}</strong><span>${escapeHtml(item.body)}</span><small>${escapeHtml(`${item.type}${files}`)}</small></div><time>${escapeHtml(formatDateTime(item.timestamp))}</time><span class="admin-message-chevron" aria-hidden="true">›</span></button>`;
     }).join("") : '<div class="empty">No received messages yet. Inspector messages and private team conversations will appear here automatically.</div>';
     renderAdminSentMessages();
   }
@@ -2693,18 +2728,18 @@
       const mirrorKey = `${reply.updateId}:${reply.userId || shared.normalizeEmail(reply.userEmail)}`;
       return belongsToPerson && !mirroredReceipts.has(mirrorKey);
     }).map(reply => ({ direction: "field", receipt: true, timestamp: reply.repliedAt || reply.updatedAt, message: { ...reply, message: reply.replyText, senderName: reply.userName || person.name, attachments: reply.attachments || [] } }));
-    const messages = [...privateMessages, ...legacyOffice, ...legacyField, ...receiptReplies].sort((left, right) => (asDate(right.timestamp)?.getTime() || 0) - (asDate(left.timestamp)?.getTime() || 0));
-    return messages.length ? messages.slice(0, 30).map(item => {
+    const messages = [...privateMessages, ...legacyOffice, ...legacyField, ...receiptReplies].sort((left, right) => (asDate(left.timestamp)?.getTime() || 0) - (asDate(right.timestamp)?.getTime() || 0));
+    return messages.length ? messages.slice(-50).map(item => {
       const message = item.message;
       if (item.direct) {
         const delivery = item.direction === "office" ? deliveryStateHtml(directDeliveryState(message)) : "";
         return `<article class="${item.direction}"><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || "MPI Team Member")}</strong><p>${escapeHtml(message.message || "Attachment sent")}</p>${delivery}${directAttachmentsHtml(message)}${item.direction === "field" ? `<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}" data-direct-message="true">CREATE TO-DO</button>` : ""}</article>`;
       }
-      if (item.receipt) return `<article><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || person.name || "MPI Field User")} → Office</strong><p>${escapeHtml(message.message || "Inspector replied")}</p>${fieldAttachmentsHtml(message)}</article>`;
-      if (item.direction === "field") return `<article><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || person.name || "MPI Field User")} → Office</strong><p>${escapeHtml(message.message || "Photos sent to MPI Office")}</p>${fieldAttachmentsHtml(message)}${message.kind === "lab-coc" ? "" : `<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}">CREATE TO-DO</button>`}</article>`;
+      if (item.receipt) return `<article class="field"><strong>${escapeHtml(formatDateTime(item.timestamp))}</strong><p>${escapeHtml(message.message || "Inspector replied")}</p>${fieldAttachmentsHtml(message)}</article>`;
+      if (item.direction === "field") return `<article class="field"><strong>${escapeHtml(formatDateTime(item.timestamp))}</strong><p>${escapeHtml(message.message || "Photos sent to MPI Office")}</p>${fieldAttachmentsHtml(message)}${message.kind === "lab-coc" ? "" : `<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}">CREATE TO-DO</button>`}</article>`;
       const receipt = messageReceiptCache.get(`${message.id}:${person.id}`);
       const state = receipt?.status ? receipt.status.replace(/-/g, " ") : "Sent to app";
-      return `<article><strong>${escapeHtml(formatDateTime(message.createdAt))} · MPI Office → ${escapeHtml(person.name || "field user")}</strong><p>${escapeHtml(message.message)}</p><p><b>Status:</b> ${escapeHtml(state)}</p>${adminAttachmentsHtml(message)}</article>`;
+      return `<article class="office"><strong>${escapeHtml(formatDateTime(message.createdAt))}</strong><p>${escapeHtml(message.message)}</p><span class="delivery-state">${escapeHtml(state)}</span>${adminAttachmentsHtml(message)}</article>`;
     }).join("") : '<div class="empty">No messages in this conversation yet.</div>';
   }
 
@@ -2724,17 +2759,14 @@
     inboxConversation.hidden = false;
     inboxConversation.innerHTML = `
       <header class="admin-conversation-head">
+        <button class="admin-conversation-back" type="button" data-close-admin-conversation>‹ Messages</button>
         <div class="admin-conversation-person">${avatarHtml(person)}<div><strong>${escapeHtml(canonicalTeamName(person))}</strong><span>${canReply ? `${escapeHtml(teamRoleLabel(person.role))} · Private MPI conversation` : "Your field submissions to the office"}</span></div></div>
-        <button class="admin-conversation-back" type="button" data-close-admin-conversation>← BACK TO INBOX</button>
       </header>
       <div class="admin-conversation-body">
         <div class="message-history admin-conversation-thread" id="adminInboxConversationHistory">${messageHistoryHtml(person)}</div>
-        ${canReply ? `<form class="compact-form admin-conversation-compose" data-admin-conversation-form data-person-id="${escapeHtml(person.id)}">
-          <h3>Message ${escapeHtml(canonicalTeamName(person))}</h3>
-          <p>The recipient is fixed. This message will only be delivered to this private conversation.</p>
-          <div class="field"><label>Message</label><textarea data-message-text maxlength="1200" required placeholder="Write a private message"></textarea></div>
-          ${chatAttachmentHtml()}
-          <button class="primary" type="submit"><svg class="app-icon"><use href="#icon-send"></use></svg><span>SEND MESSAGE</span></button>
+        ${canReply ? `<form class="admin-conversation-compose" data-admin-conversation-form data-person-id="${escapeHtml(person.id)}">
+          <div class="admin-message-bar"><label class="admin-chat-attachment" data-chat-drop tabindex="0" aria-label="Add attachment">＋<input type="file" data-chat-files accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple></label><textarea data-message-text maxlength="1200" required placeholder="iMessage"></textarea><button class="primary admin-message-send" type="submit" aria-label="Send message">↑</button></div>
+          <div class="attachment-list" data-chat-file-list></div>
           <span class="status" data-message-status aria-live="polite"></span>
         </form>` : '<aside class="admin-conversation-compose"><h3>Field submissions</h3><p>Attachments and activity sent from your inspector app are shown in this message history. Private messages to other team members can be started from Compose message.</p></aside>'}
       </div>`;
@@ -2750,6 +2782,18 @@
 
   function openAdminInboxConversation(personId) {
     if (!personId || !people.some(person => person.id === personId && person.active !== false)) return;
+    const person = people.find(item => item.id === personId);
+    const incoming = directMessages.filter(message => message.senderUid === personId && message.targetUid === currentUser?.uid);
+    rememberAdminDirectRead(incoming);
+    incoming.forEach(message => {
+      message.readBy = [...new Set([...(Array.isArray(message.readBy) ? message.readBy : []), currentUser.uid])];
+    });
+    fieldMessages.filter(message => message.kind !== "safety-alert" && (message.senderUid === personId || shared.normalizeEmail(message.senderEmail) === shared.normalizeEmail(person?.email))).forEach(message => {
+      message.readBy = [...new Set([...(Array.isArray(message.readBy) ? message.readBy : []), currentUser.uid])];
+      markReplyRead(`field:${message.id}`);
+      shared.markFieldMessageRead?.(currentUser, message.id).catch(() => false);
+    });
+    inspectorReplies.filter(reply => reply.userId === personId || shared.normalizeEmail(reply.userEmail) === shared.normalizeEmail(person?.email)).forEach(reply => markReplyRead(replyKey(reply)));
     showView("updates");
     renderAdminInboxConversation(personId);
     shared.markDirectConversationRead?.(currentUser, personId).catch(() => false);
@@ -2768,7 +2812,7 @@
   async function hydrateMessageReceipts(person) {
     const hasUnreadDirectMessage = messagesFor(person).some(message =>
       message.targetUid === currentUser?.uid
-      && !(Array.isArray(message.readBy) && message.readBy.includes(currentUser.uid))
+      && !adminDirectMessageIsRead(message, currentUser.uid)
     );
     if (hasUnreadDirectMessage) shared.markDirectConversationRead?.(currentUser, person.id).catch(() => false);
     if (activeInboxPersonId === person.id) refreshAdminInboxConversation();

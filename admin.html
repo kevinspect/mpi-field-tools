@@ -772,6 +772,64 @@
       .inspector-row > :nth-child(5),.inspector-row > :nth-child(6) { display:block; }
     }
 
+    /* Build 194 — iPhone-style office Messages */
+    [data-admin-panel="updates"] .content-panel { background:#f2f2f7; }
+    .admin-compose-block { margin-bottom:12px; border:0; background:transparent; }
+    .admin-compose-block > summary { width:max-content; min-height:42px; margin-left:auto; padding:0 14px; color:#087cff; background:#fff; border:1px solid #d9d9dd; border-radius:21px; }
+    .admin-compose-block > summary::after { content:""; }
+    .admin-compose-block .admin-inbox-title h3 { color:#087cff; font-size:11px; }
+    .admin-compose-block .admin-inbox-title > span { display:none; }
+    .admin-inbox-compose { margin-top:10px; background:#fff; border-radius:18px; }
+    .admin-conversation-list { display:block; overflow:hidden; background:#fff; border:0; border-radius:18px; }
+    .admin-inbox-list-heading { display:flex; min-height:48px; align-items:center; justify-content:space-between; gap:12px; padding:10px 16px; border-bottom:1px solid #e5e5ea; }
+    .admin-inbox-list-heading h3 { margin:0; color:#111; font-size:14px; }
+    .admin-inbox-list-heading span { color:#8e8e93; font-size:9px; }
+    .admin-conversation-list > .office-reply-list { display:block; margin:0; }
+    .admin-conversation-list .office-reply-card { position:relative; display:grid; grid-template-columns:50px minmax(0,1fr) auto 16px; gap:11px; min-height:76px; padding:10px 14px; background:#fff; border:0; border-radius:0; }
+    .admin-conversation-list .office-reply-card::after { content:""; position:absolute; right:0; bottom:0; left:75px; height:1px; background:#e5e5ea; }
+    .admin-conversation-list .office-reply-card:last-child::after { display:none; }
+    .admin-conversation-list .office-reply-card:hover { border-color:transparent; box-shadow:none; background:#f7f7fa; }
+    .admin-conversation-list .office-reply-card.unread { border:0; }
+    .admin-conversation-list .office-reply-card.unread::before { content:""; position:absolute; top:34px; left:5px; width:8px; height:8px; background:#087cff; border-radius:50%; }
+    .admin-message-avatar { display:grid; width:50px; height:50px; place-items:center; color:#fff; background:linear-gradient(155deg,#5ac8fa,#087cff); border-radius:50%; font-size:12px; font-weight:850; }
+    .office-reply-card.safety .admin-message-avatar { background:linear-gradient(155deg,#ff6961,#d7332c); }
+    .admin-message-row-copy { min-width:0; }
+    .admin-message-row-copy strong { color:#111; font-size:12px; font-weight:650; }
+    .office-reply-card.unread .admin-message-row-copy strong { font-weight:900; }
+    .admin-message-row-copy > span { margin-top:4px; color:#6e6e73; font-size:10px; }
+    .admin-message-row-copy small { color:#8e8e93; font-size:8px; }
+    .admin-conversation-list .office-reply-card time { align-self:start; padding-top:2px; color:#8e8e93; font-size:8px; font-weight:600; }
+    .admin-message-chevron { align-self:center; color:#c7c7cc; font-size:24px; font-weight:300; }
+    .office-reply-new { display:none !important; }
+    .admin-update-archive { margin-top:12px; background:#fff; border:0; border-radius:16px; }
+    .admin-inbox-conversation { min-height:calc(100vh - 240px); background:#fff; border:0; border-radius:18px; }
+    .admin-conversation-head { display:grid; grid-template-columns:minmax(105px,1fr) auto minmax(105px,1fr); min-height:82px; padding:8px 14px; background:rgba(249,249,249,.97); border-bottom:1px solid #d9d9dd; }
+    .admin-conversation-back { grid-column:1; grid-row:1; justify-self:start; min-height:44px; padding:0 3px; color:#087cff; background:transparent; border:0; border-radius:0; font-size:11px; font-weight:600; }
+    .admin-conversation-back::first-letter { font-size:25px; }
+    .admin-conversation-person { grid-column:2; grid-row:1; display:grid; justify-items:center; gap:3px; text-align:center; }
+    .admin-conversation-person .inspector-avatar { width:40px; height:40px; }
+    .admin-conversation-person strong { color:#111; font-size:11px; font-weight:650; }
+    .admin-conversation-person span { margin:0; color:#8e8e93; font-size:7.5px; }
+    .admin-conversation-body { display:flex; max-width:940px; min-height:calc(100vh - 325px); flex-direction:column; gap:0; margin:0 auto; padding:0; }
+    .admin-conversation-thread { display:flex; min-height:360px; max-height:calc(100vh - 430px); flex:1; flex-direction:column; gap:5px; overflow:auto; padding:18px 16px 12px; background:#fff; }
+    .admin-conversation-thread article { display:flex; width:max-content; max-width:72%; flex-direction:column; align-self:flex-start; padding:9px 12px; color:#111; background:#e9e9eb; border:0; border-radius:18px 18px 18px 5px; }
+    .admin-conversation-thread article.office { align-self:flex-end; color:#fff; background:#087cff; border-radius:18px 18px 5px 18px; }
+    .admin-conversation-thread article > strong { order:3; margin-top:4px; color:#8e8e93; font-size:7.5px; font-weight:500; }
+    .admin-conversation-thread article.office > strong { color:rgba(255,255,255,.75); }
+    .admin-conversation-thread article p { margin:0; font-size:11px; line-height:1.42; }
+    .admin-conversation-thread article .delivery-state { align-self:flex-end; margin:5px 0 0; padding:0; color:#8e8e93 !important; background:transparent; font-size:7.5px !important; text-transform:none; }
+    .admin-conversation-thread article.office .delivery-state { color:rgba(255,255,255,.8) !important; }
+    .admin-conversation-thread .message-todo { align-self:flex-start; margin-top:7px; color:#087cff; background:#fff; border:0; border-radius:12px; }
+    .admin-conversation-compose { position:sticky; bottom:0; padding:9px 12px 12px; background:rgba(249,249,249,.97); border:0; border-top:1px solid #d9d9dd; border-radius:0; }
+    .admin-message-bar { display:grid; grid-template-columns:38px minmax(0,1fr) 38px; gap:8px; align-items:end; }
+    .admin-message-bar textarea { width:100%; min-height:38px; max-height:110px; padding:9px 13px; background:#fff; border:1px solid #c7c7cc; border-radius:20px; font:inherit; font-size:11px; resize:none; }
+    .admin-chat-attachment,.admin-message-send { display:grid !important; width:38px; min-height:38px !important; height:38px; place-items:center; padding:0 !important; border:0 !important; border-radius:50% !important; }
+    .admin-chat-attachment { color:#636366; background:#e5e5ea; font-size:22px; cursor:pointer; }
+    .admin-chat-attachment input { display:none; }
+    .admin-message-send { color:#fff; background:#087cff !important; font-size:20px; }
+    .admin-conversation-compose [data-chat-file-list] { margin:5px 46px 0; }
+    .admin-conversation-compose [data-message-status] { display:block; margin:5px 46px 0; }
+
     /* Build 193 — accurate equipment handover status */
     .equipment-summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:11px; margin:4px 0 18px; }
     .equipment-summary-card { display:grid; gap:4px; padding:15px; color:var(--navy); background:#f7f9fc; border:1px solid var(--line); border-left:4px solid var(--blue); border-radius:13px; text-align:left; }
@@ -1015,13 +1073,13 @@
       <section class="console-view" data-admin-panel="updates">
         <div class="panel content-panel">
           <div id="adminInboxMailbox">
-            <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Messages</h2><p>All private conversations, inspector replies, attachments, delivery status, and sent updates are kept together here.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE MESSAGE ALERTS</span></button></div>
+            <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Messages</h2><p>Private team conversations, replies, attachments, delivery, and read status.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE MESSAGE ALERTS</span></button></div>
             <details class="admin-inbox-block admin-compose-block">
               <summary><div class="admin-inbox-title"><h3><svg class="app-icon"><use href="#icon-send"></use></svg> Compose message</h3><span>New private conversation</span></div></summary>
               <form class="admin-inbox-compose" id="adminInboxComposeForm"><div><h3>New private message</h3><p>Choose one recipient. This will not broadcast to the rest of the team.</p></div><div class="form-grid"><div class="field"><label for="adminInboxComposeRecipient">To</label><select id="adminInboxComposeRecipient" required><option value="">Choose team member</option></select></div><div class="field"><label for="adminInboxComposeText">Message</label><textarea id="adminInboxComposeText" maxlength="1200" required placeholder="Write a private MPI message"></textarea></div><div class="field wide"><label for="adminInboxComposeFiles">Photos or PDF (optional)</label><input id="adminInboxComposeFiles" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple></div></div><div class="form-actions"><button class="primary" id="adminInboxComposeSend" type="submit"><svg class="app-icon"><use href="#icon-send"></use></svg><span>SEND PRIVATE MESSAGE</span></button><span class="status" id="adminInboxComposeStatus"></span></div></form>
             </details>
-            <details class="admin-inbox-block" open><summary><div class="admin-inbox-title"><h3>Inbox</h3><span id="adminInboxSummary">Connecting…</span></div></summary><div class="office-reply-list" id="adminUnifiedInboxList"><div class="empty">Connecting to the MPI inbox…</div></div></details>
-            <details class="admin-inbox-block"><summary><div class="admin-inbox-title"><h3>Sent Messages &amp; Updates</h3><span id="adminSentSummary">Delivery and read status</span></div></summary><div class="admin-sent-direct-list" id="adminSentMessagesList"><div class="empty">No private messages have been sent.</div></div><div class="update-list" id="adminUpdatesList"><div class="empty">No office updates have been published.</div></div></details>
+            <section class="admin-inbox-block admin-conversation-list"><div class="admin-inbox-list-heading"><h3>Conversations</h3><span id="adminInboxSummary">Connecting…</span></div><div class="office-reply-list" id="adminUnifiedInboxList"><div class="empty">Connecting to the MPI inbox…</div></div></section>
+            <details class="admin-inbox-block admin-update-archive"><summary><div class="admin-inbox-title"><h3>Company updates</h3><span id="adminSentSummary">Published update history</span></div></summary><div class="admin-sent-direct-list" id="adminSentMessagesList" hidden></div><div class="update-list" id="adminUpdatesList"><div class="empty">No office updates have been published.</div></div></details>
           </div>
           <section class="admin-inbox-conversation" id="adminInboxConversation" aria-live="polite" hidden></section>
         </div>
@@ -1079,10 +1137,10 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
-  <script src="./mpi-shared.js?build=193"></script>
-  <script src="./mpi-equipment-images.js?build=193"></script>
-  <script src="./mpi-equipment.js?build=193"></script>
-  <script src="./admin.js?build=193"></script>
-  <script src="./mpi-equipment-admin.js?build=193"></script>
+  <script src="./mpi-shared.js?build=194"></script>
+  <script src="./mpi-equipment-images.js?build=194"></script>
+  <script src="./mpi-equipment.js?build=194"></script>
+  <script src="./admin.js?build=194"></script>
+  <script src="./mpi-equipment-admin.js?build=194"></script>
 </body>
 </html>

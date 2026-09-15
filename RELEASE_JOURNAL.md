@@ -1,5 +1,14 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 194 — Correct Equipment Images and iPhone-Style Messages
+
+- Replaced the rechargeable light with the exact Milwaukee REDLITHIUM USB light shown by MPI and replaced the well kit with the correct Inspector Outlet Well Inspection Pump Flow Gauge Set.
+- Rebuilt the inspector Messages screen as a clean iPhone-style conversation list with contact circles, unread dots, compact previews, and a dedicated conversation view.
+- Rebuilt private conversations with familiar left/right message bubbles, a compact attachment control, and an iMessage-style reply bar.
+- Combined sent and received private messages into one conversation per person so users no longer have to manage separate inbox and sent sections.
+- Added an immediate per-account read receipt safeguard on phones and office computers so a delayed or offline server snapshot cannot mark an already-opened conversation unread again.
+- Preserved synchronized shared read receipts, delivery/read labels, attachments, office updates, and admin Create To-Do controls.
+
 ## Build 193 — Self-Contained Equipment Photographs
 
 - Bundled every specific equipment product photograph directly into the Office Console so the correct make/model images load reliably without separate website image requests.
