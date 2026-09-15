@@ -39,6 +39,8 @@ for (const file of [
   "mpi-field-sync.js",
   "mpi-subcontractor.js",
   "mpi-comment-ai.js",
+  "mpi-equipment.js",
+  "mpi-equipment-admin.js",
   "admin.js",
   "sw.js",
   "scripts/prepare-native-web.mjs",
@@ -192,8 +194,21 @@ await assertText(
 await assertText(
   "Messages workspace owns conversations",
   "admin.html",
-  source => source.includes('id="adminInboxMailbox"') && source.includes('id="adminInboxConversation"') && source.includes("Sent Messages &amp; Updates"),
-  "Messages workspace is missing its mailbox, conversation, or sent items"
+  source => source.includes('id="adminInboxMailbox"') && source.includes('id="adminInboxConversation"') && source.includes("admin-conversation-list"),
+  "Messages workspace is missing its mailbox or focused conversation list"
+);
+
+await assertText(
+  "Opening an inbox item shows only its focused conversation",
+  "index.html",
+  source => source.includes('id="fieldInboxMailbox"')
+    && source.includes('id="fieldInboxConversation"')
+    && source.includes('id="fieldInboxThreadBack"')
+    && source.includes('id="fieldInboxThreadFiles"')
+    && source.includes("function openFieldInboxConversation(userId)")
+    && source.includes("fieldInboxMailbox.hidden = true")
+    && source.includes("closeFieldInboxConversation"),
+  "The field inbox cannot isolate one thread with Back, Reply, and attachment controls"
 );
 
 await assertText(
@@ -222,10 +237,20 @@ await assertText(
   "Opening or replying clears the field inbox unread badge",
   "index.html",
   source => source.includes("function markTeamConversationRead(userId)")
+    && source.includes("rememberFieldReadIds")
     && source.includes('window.dispatchEvent(new CustomEvent("mpi-office-update-opened"')
     && source.includes("markTeamConversationRead(selectedTeamMemberId);")
     && source.includes("markTeamConversationRead(userId);"),
   "The field inbox does not mark opened conversations and office updates read"
+);
+
+await assertText(
+  "Stale message snapshots cannot restore an opened unread badge",
+  "admin.js",
+  source => source.includes("ADMIN_LOCAL_DIRECT_READ_KEY")
+    && source.includes("rememberAdminDirectRead(incoming)")
+    && source.includes("adminDirectMessageIsRead"),
+  "The office inbox is missing its durable local read-state safeguard"
 );
 
 await assertText(
@@ -406,6 +431,111 @@ await assertText(
       && next.includes("operationDayIsClosed(day)");
   },
   "Office Console can still label a completed appointment as the next job"
+);
+
+await assertText(
+  "Cory equipment catalog contains the exact 27 planned tools",
+  "mpi-equipment.js",
+  source => (source.match(/\btool\(\{/g) || []).length === 27
+    && source.includes('model: "Milwaukee 2224-20"')
+    && source.includes('title: "Digital GFCI receptacle tester"')
+    && source.includes('model: "DJI Mini 4"')
+    && source.includes("Scout 3-Pro Plus Micro sewer scope")
+    && source.includes("never force the camera through an obstruction"),
+  "The planned equipment catalog or detailed sewer-scope guide is incomplete"
+);
+
+await assertText(
+  "Equipment remains not issued until handover",
+  "mpi-equipment-admin.js",
+  source => source.includes('status: "Not Issued"')
+    && source.includes('item.status === "Issued"')
+    && source.includes("!item.acknowledgmentReference")
+    && source.includes('!received ? "Not Issued"')
+    && source.includes("update.dateIssued = localDateKey(now)"),
+  "The initial equipment setup can still falsely mark tools issued or a handover does not set the issue date"
+);
+
+await assertText(
+  "Equipment records and mobile acknowledgment are available in Office",
+  "admin.html",
+  source => source.includes('data-admin-panel="equipment"')
+    && source.includes('id="adminEquipmentDashboard"')
+    && source.includes('id="equipmentEmployeeSignature"') === false
+    && source.includes("mpi-equipment-admin.js"),
+  "The Office Console is missing the equipment workspace or acknowledgment module"
+);
+
+await assertText(
+  "Issued-tool acknowledgment requires employee signature and preserves history",
+  "mpi-equipment-admin.js",
+  source => source.includes("SUBMIT SIGNED ACKNOWLEDGMENT")
+    && source.includes("if (!employeeSignature)")
+    && source.includes("immutable: true")
+    && source.includes("equipmentAcknowledgments")
+    && source.includes("RE-SEND EMAIL")
+    && source.includes("Tool added. It will appear in the employee's next acknowledgment."),
+  "Signature enforcement, immutable history, email resend, or future-tool handling is missing"
+);
+
+await assertText(
+  "Equipment handover contains only explicitly selected tools",
+  "mpi-equipment-admin.js",
+  source => source.includes("const selectedAssignmentIds = new Set()")
+    && source.includes("function selectedPendingAssignments()")
+    && source.includes('data-select-equipment-issue=')
+    && source.includes("The form will include only these items")
+    && source.includes("const records = selectedPendingAssignments();"),
+  "The acknowledgment can still include tools that the admin did not select for handover"
+);
+
+await assertText(
+  "Equipment cards use exact bundled product photos",
+  "admin.html",
+  source => source.includes(".equipment-product-photo")
+    && source.includes(".equipment-issue-select"),
+  "The equipment cards are missing their bundled product photos or handover selector"
+);
+
+await assertText(
+  "Every equipment guide maps to its own product photo",
+  "mpi-equipment.js",
+  source => source.includes('window.MPI_EQUIPMENT_IMAGE_DATA?.[value.id]')
+    && source.includes('`./equipment-images/${value.id}.jpg`'),
+  "Equipment guides no longer map to individual make/model product photos"
+);
+
+try {
+  const catalog = await readFile(join(root, "mpi-equipment.js"), "utf8");
+  const ids = [...catalog.matchAll(/^\s+id: "([^"]+)",$/gm)].map(match => match[1]);
+  if (ids.length !== 27) throw new Error(`expected 27 tool photos, found ${ids.length} catalog items`);
+  for (const id of ids) {
+    const photo = await readFile(join(root, "equipment-images", `${id}.jpg`));
+    if (photo.length < 1000) throw new Error(`${id}.jpg is missing or incomplete`);
+  }
+  console.log("PASS  All 27 individual equipment product photos are bundled");
+} catch (error) {
+  failures.push(`All 27 individual equipment product photos are bundled: ${error.message}`);
+  console.error("FAIL  All 27 individual equipment product photos are bundled");
+}
+
+await assertText(
+  "Firestore protects signed equipment acknowledgments",
+  "firestore.rules",
+  source => source.includes("match /equipmentAssignments/{assignmentId}")
+    && source.includes("match /equipmentAcknowledgments/{acknowledgmentId}")
+    && source.includes("allow update, delete: if false;"),
+  "Equipment collections or immutable acknowledgment rules are missing"
+);
+
+await assertText(
+  "Native app bundles equipment functionality",
+  "scripts/prepare-native-web.mjs",
+  source => source.includes('"mpi-equipment.js"')
+    && source.includes('"mpi-equipment-images.js"')
+    && source.includes('"mpi-equipment-admin.js"')
+    && source.includes('join(root, "equipment-images")'),
+  "The native iPhone build omits the equipment catalog, product photos, or admin workflow"
 );
 
 if (failures.length) {
