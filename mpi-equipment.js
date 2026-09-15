@@ -1,12 +1,13 @@
 (function () {
   "use strict";
 
-  const statuses = Object.freeze(["Issued", "Returned", "Damaged", "Missing", "Replacement Required"]);
+  const statuses = Object.freeze(["Not Issued", "Issued", "Returned", "Damaged", "Missing", "Replacement Required"]);
   const receiptStatuses = Object.freeze(["Received", "Not Received", "Damaged / Issue Noted"]);
 
   function tool(value) {
     const defaults = {
       aliases: "",
+      image: "",
       purpose: "Use the company-issued tool for its approved inspection task.",
       when: [],
       setup: [],
@@ -24,8 +25,9 @@
     return Object.freeze({
       ...defaults,
       ...value,
+      image: value.image || `./equipment-images/${value.id}.jpg`,
       assignedEmployee: "Cory Leese",
-      defaultStatus: "Issued",
+      defaultStatus: "Not Issued",
       dateIssued: "",
       serialNumber: "",
       notes: ""
@@ -546,7 +548,7 @@
   ]);
 
   window.MPI_EQUIPMENT = Object.freeze({
-    version: 1,
+    version: 2,
     owner: "Michigan Property Inspections, LLC",
     defaultEmployee: "Cory Leese",
     statuses,

@@ -1,5 +1,15 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 192 — Equipment Handover Status Correction
+
+- Corrected Cory's 27-item equipment setup so the catalog begins as `Not Issued`; no tool is shown as issued before an actual handover is recorded.
+- Added a safe live-data correction for unsigned catalog records that were prematurely initialized as issued. Signed acknowledgment history and genuine issue records are never changed.
+- Updated the Office summary and inspector list to distinguish issued tools from equipment awaiting handover.
+- A signed acknowledgment now marks only received items as issued, records their issue date, and leaves items marked `Not Received` as `Not Issued` for a future handover.
+- Admin now selects the exact tools being handed over; the acknowledgment form and signed record include only that selected subset, while every unselected tool remains `Not Issued`.
+- Added an individual product photo for every listed tool, using the stated make/model wherever provided and a representative product-type photo only where the inventory does not identify a model.
+- Simplified Messages so opening a private conversation shows only that thread, with Back to Inbox, Reply, and attachment controls.
+
 ## Build 191 — Cory Equipment Records and Signed Acknowledgments
 
 - Replaced the outdated field-tool guide source with Cory Leese's current 27-tool inventory and practical MPI guides, including detailed safety and workflow guidance for the specialist meters, respirator, well kit, crawler, drone, and sewer scope.

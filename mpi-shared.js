@@ -712,7 +712,7 @@
       body: text || `${attachments.length} attachment${attachments.length === 1 ? "" : "s"}`,
       link: ["owner", "admin"].includes(String(target?.role || "").toLowerCase())
         ? `./admin.html?team=${encodeURIComponent(user.uid)}`
-        : `./?team=${encodeURIComponent(user.uid)}#team-messages`,
+        : `./?team=${encodeURIComponent(user.uid)}#inbox`,
       tag: `mpi-team-${messageRef.id}`
     }).catch(() => false);
     return { id: messageRef.id, ...base, attachments, active: true };

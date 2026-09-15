@@ -11,6 +11,7 @@
   const list = document.getElementById("adminEquipmentList");
   const history = document.getElementById("adminEquipmentHistory");
   const createAcknowledgment = document.getElementById("adminCreateEquipmentAcknowledgment");
+  const selectionStatus = document.getElementById("adminEquipmentSelectionStatus");
   const addForm = document.getElementById("adminAddEquipmentForm");
   const addEmployee = document.getElementById("adminAddEquipmentEmployee");
   const addStatus = document.getElementById("adminAddEquipmentStatus");
@@ -33,6 +34,7 @@
   let unsubscribeAcknowledgments = null;
   let bootstrapInFlight = false;
   let assignmentSnapshotReady = false;
+  const selectedAssignmentIds = new Set();
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
@@ -65,10 +67,27 @@
   }
 
   function statusTone(status) {
+    if (status === "Not Issued") return "pending";
     if (status === "Issued") return "issued";
     if (status === "Returned") return "returned";
     if (status === "Damaged" || status === "Missing" || status === "Replacement Required") return "attention";
     return "neutral";
+  }
+
+  function selectedPendingAssignments() {
+    const pending = currentEmployeeAssignments().filter(item => item.status === "Not Issued");
+    const available = new Set(pending.map(item => item.id));
+    [...selectedAssignmentIds].forEach(id => { if (!available.has(id)) selectedAssignmentIds.delete(id); });
+    return pending.filter(item => selectedAssignmentIds.has(item.id));
+  }
+
+  function renderEquipmentSelectionState() {
+    const selected = selectedPendingAssignments();
+    createAcknowledgment.disabled = selected.length === 0;
+    createAcknowledgment.textContent = selected.length ? `CREATE ACKNOWLEDGMENT (${selected.length})` : "CREATE ACKNOWLEDGMENT";
+    if (selectionStatus) selectionStatus.textContent = selected.length
+      ? `${selected.length} tool${selected.length === 1 ? "" : "s"} selected. The form will include only these items.`
+      : "Select the tools being handed over today.";
   }
 
   function renderSelectors() {
@@ -91,10 +110,10 @@
       const signed = acknowledgments.filter(item => item.employeeId === id).sort((a, b) => String(b.submittedAtClient || "").localeCompare(String(a.submittedAtClient || "")))[0];
       const count = status => records.filter(item => item.status === status).length;
       const issuedDates = records.map(item => item.dateIssued).filter(Boolean).sort();
-      const issueDate = issuedDates.length ? friendlyDate(`${issuedDates[0]}T12:00:00`) : "Issue date not recorded";
+      const issueDate = issuedDates.length ? friendlyDate(`${issuedDates[0]}T12:00:00`) : "No handover recorded";
       return `<button type="button" class="equipment-summary-card${id === selectedEmployeeId ? " active" : ""}" data-equipment-employee="${escapeHtml(id)}">
-        <span>${escapeHtml(employeeName(id))}</span><strong>${records.filter(item => item.status !== "Returned").length}</strong><small>tools currently assigned</small>
-        <div><b>${signed ? `Signed ${escapeHtml(friendlyDate(signed.submittedAtClient || signed.submittedAt))}` : "Acknowledgment pending"}</b><i>${escapeHtml(issueDate)}</i><i>${count("Damaged")} damaged · ${count("Missing")} missing · ${count("Replacement Required")} replacement</i></div>
+        <span>${escapeHtml(employeeName(id))}</span><strong>${count("Issued")}</strong><small>tools issued</small>
+        <div><b>${signed ? `Signed ${escapeHtml(friendlyDate(signed.submittedAtClient || signed.submittedAt))}` : "No signed handover yet"}</b><i>${count("Not Issued")} awaiting handover · ${escapeHtml(issueDate)}</i><i>${count("Damaged")} damaged · ${count("Missing")} missing · ${count("Replacement Required")} replacement</i></div>
       </button>`;
     }).join("");
     summary.innerHTML = employeeCards || '<div class="empty">Equipment records are being prepared.</div>';
@@ -102,20 +121,21 @@
 
   function renderAssignments() {
     const records = currentEmployeeAssignments();
-    createAcknowledgment.disabled = !records.some(item => item.status !== "Returned");
+    selectedPendingAssignments();
     list.innerHTML = records.length ? records.map(record => {
       const guide = equipment.byId(record.toolId);
       return `<article class="equipment-record-card" data-equipment-assignment="${escapeHtml(record.id)}">
-        <header><div><span>${escapeHtml(record.category || "Company equipment")}</span><h3>${escapeHtml(record.toolName || guide?.title || "MPI issued tool")}</h3><p>${escapeHtml(record.brandModel || guide?.model || "Brand/model not recorded")}</p></div><b class="equipment-status ${statusTone(record.status)}">${escapeHtml(record.status || "Issued")}</b></header>
+        <header><div class="equipment-record-identification"><img class="equipment-product-photo" src="${escapeHtml(guide?.image || `./equipment-images/${record.toolId}.jpg`)}" alt="${escapeHtml(record.brandModel || guide?.model || record.toolName || "MPI equipment")} product reference" loading="lazy"><div><span>${escapeHtml(record.category || "Company equipment")} · Product photo</span><h3>${escapeHtml(record.toolName || guide?.title || "MPI equipment")}</h3><p>${escapeHtml(record.brandModel || guide?.model || "Brand/model not recorded")}</p></div></div><b class="equipment-status ${statusTone(record.status)}">${escapeHtml(record.status || "Not Issued")}</b></header>
         <div class="equipment-record-fields">
           <label>Status<select data-equipment-status>${equipment.statuses.map(status => `<option ${status === record.status ? "selected" : ""}>${escapeHtml(status)}</option>`).join("")}</select></label>
           <label>Date issued<input data-equipment-date type="date" value="${escapeHtml(record.dateIssued || "")}"></label>
           <label>Serial / asset number<input data-equipment-serial maxlength="120" value="${escapeHtml(record.serialNumber || "")}" placeholder="Optional"></label>
           <label class="wide">Notes<textarea data-equipment-notes maxlength="700" placeholder="Optional assignment, condition, accessory or service note">${escapeHtml(record.notes || "")}</textarea></label>
         </div>
-        <footer><button class="primary" type="button" data-save-equipment="${escapeHtml(record.id)}">SAVE TOOL</button>${guide ? `<a class="secondary" href="./?tool=${encodeURIComponent(guide.id)}#tool-guides">USER GUIDE</a>` : ""}<span class="status" data-equipment-save-status></span></footer>
+        <footer>${record.status === "Not Issued" ? `<label class="equipment-issue-select"><input type="checkbox" data-select-equipment-issue="${escapeHtml(record.id)}" ${selectedAssignmentIds.has(record.id) ? "checked" : ""}><span>INCLUDE IN THIS HANDOVER</span></label>` : ""}<button class="primary" type="button" data-save-equipment="${escapeHtml(record.id)}">SAVE TOOL</button>${guide ? `<a class="secondary" href="./?tool=${encodeURIComponent(guide.id)}#tool-guides">USER GUIDE</a>` : ""}<span class="status" data-equipment-save-status></span></footer>
       </article>`;
     }).join("") : '<div class="empty">No equipment has been assigned to this employee.</div>';
+    renderEquipmentSelectionState();
   }
 
   function renderHistory() {
@@ -138,9 +158,14 @@
     if (bootstrapInFlight || !assignmentSnapshotReady || !currentUser || !shared.isAdminRole(currentProfile)) return;
     const cory = people.find(person => person.active !== false && /^cory leese$/i.test(String(person.name || "").trim()));
     if (!cory) return;
-    const existing = new Set(assignments.filter(item => item.employeeId === cory.id).map(item => item.toolId));
+    const coryRecords = assignments.filter(item => item.employeeId === cory.id);
+    const existing = new Set(coryRecords.map(item => item.toolId));
     const missing = equipment.tools.filter(item => !existing.has(item.id));
-    if (!missing.length) return;
+    const prematureIssued = coryRecords.filter(item => item.status === "Issued"
+      && !item.dateIssued
+      && !item.acknowledgmentReference
+      && !item.acknowledgedAtClient);
+    if (!missing.length && !prematureIssued.length) return;
     bootstrapInFlight = true;
     try {
       const batch = shared.db.batch();
@@ -153,7 +178,7 @@
           toolName: item.title,
           brandModel: item.model,
           category: item.category,
-          status: "Issued",
+          status: "Not Issued",
           dateIssued: "",
           serialNumber: "",
           notes: "",
@@ -164,6 +189,15 @@
           createdAt: shared.serverTimestamp(),
           updatedAt: shared.serverTimestamp()
         });
+      });
+      prematureIssued.forEach(item => {
+        batch.set(shared.db.collection("equipmentAssignments").doc(item.id), {
+          status: "Not Issued",
+          setupCorrection: "Initial catalog record corrected before equipment handover",
+          updatedBy: currentUser.uid,
+          updatedByName: currentProfile?.name || currentUser.displayName || "MPI Admin",
+          updatedAt: shared.serverTimestamp()
+        }, { merge: true });
       });
       await batch.commit();
     } catch (error) {
@@ -293,12 +327,12 @@
   }
 
   function openAcknowledgment() {
-    const records = currentEmployeeAssignments().filter(item => item.status !== "Returned");
+    const records = selectedPendingAssignments();
     if (!records.length) return;
     const personId = selectedEmployeeId;
     const draft = loadDraft(personId);
     acknowledgmentContent.innerHTML = `<form class="equipment-ack-form" id="equipmentAcknowledgmentForm">
-      <header class="equipment-ack-head"><img src="./mpi-logo.png" alt=""><div><span>Michigan Property Inspections, LLC</span><h2>Issued Tool Acknowledgment</h2><p>${escapeHtml(records.length)} current items · saved while you complete it</p></div><button type="button" class="equipment-dialog-close" data-close-equipment-dialog aria-label="Close">×</button></header>
+      <header class="equipment-ack-head"><img src="./mpi-logo.png" alt=""><div><span>Michigan Property Inspections, LLC</span><h2>Issued Tool Acknowledgment</h2><p>${escapeHtml(records.length)} selected item${records.length === 1 ? "" : "s"} for this handover · saved while you complete it</p></div><button type="button" class="equipment-dialog-close" data-close-equipment-dialog aria-label="Close">×</button></header>
       <div class="equipment-ack-party"><label>Employee name<input name="employeeName" required maxlength="100" value="${escapeHtml(draft.employeeName || employeeName(personId))}"></label><label>Admin / witness name<input name="witnessName" required maxlength="100" value="${escapeHtml(draft.witnessName || currentProfile?.name || currentUser?.displayName || "")}"></label><div><span>Date and time</span><strong>${escapeHtml(friendlyDate(new Date(), true))}</strong></div></div>
       <div class="equipment-ack-items">${records.map(record => {
         const saved = (draft.items || []).find(item => item.assignmentId === record.id) || {};
@@ -392,7 +426,7 @@
       statement: "I acknowledge that I have received the MPI equipment identified above. I understand that this equipment remains the property of Michigan Property Inspections, LLC and is provided for company inspection work. I agree to take reasonable care of the equipment, report loss, damage or malfunction promptly, and return company equipment when requested or upon the end of my employment or assignment.",
       items: draft.items.map(item => {
         const assignment = records.find(record => record.id === item.assignmentId);
-        return { assignmentId: item.assignmentId, toolId: assignment?.toolId || "", toolName: assignment?.toolName || "MPI tool", brandModel: assignment?.brandModel || "", category: assignment?.category || "", assignmentStatus: assignment?.status || "Issued", receiptStatus: item.receiptStatus, notes: item.notes };
+        return { assignmentId: item.assignmentId, toolId: assignment?.toolId || "", toolName: assignment?.toolName || "MPI tool", brandModel: assignment?.brandModel || "", category: assignment?.category || "", assignmentStatus: assignment?.status || "Not Issued", receiptStatus: item.receiptStatus, notes: item.notes };
       }),
       catalogVersion: equipment.version,
       submittedAtClient: now.toISOString(),
@@ -405,10 +439,16 @@
       const batch = shared.db.batch();
       batch.set(acknowledgmentRef, { ...record, submittedAt: shared.serverTimestamp() });
       record.items.forEach(item => {
-        const nextStatus = item.receiptStatus === "Not Received" ? "Missing" : item.receiptStatus === "Damaged / Issue Noted" ? "Damaged" : "Issued";
-        batch.set(shared.db.collection("equipmentAssignments").doc(item.assignmentId), { status: nextStatus, acknowledgmentReference: reference, acknowledgedAtClient: record.submittedAtClient, updatedBy: currentUser.uid, updatedByName: record.submittedByName, updatedAt: shared.serverTimestamp() }, { merge: true });
+        const assignment = records.find(value => value.id === item.assignmentId);
+        const received = item.receiptStatus !== "Not Received";
+        const nextStatus = !received ? "Not Issued" : item.receiptStatus === "Damaged / Issue Noted" ? "Damaged" : "Issued";
+        const update = { status: nextStatus, acknowledgmentReference: reference, acknowledgedAtClient: record.submittedAtClient, updatedBy: currentUser.uid, updatedByName: record.submittedByName, updatedAt: shared.serverTimestamp() };
+        if (received && !assignment?.dateIssued) update.dateIssued = localDateKey(now);
+        batch.set(shared.db.collection("equipmentAssignments").doc(item.assignmentId), update, { merge: true });
       });
       await batch.commit();
+      record.items.forEach(item => selectedAssignmentIds.delete(item.assignmentId));
+      renderEquipmentSelectionState();
       clearDraft(personId);
       status.textContent = "Signed document saved. Sending the MPI email…";
       await sendAcknowledgmentEmail({ id: acknowledgmentRef.id, ...record });
@@ -450,7 +490,7 @@
         toolName: String(values.get("toolName") || "").trim().slice(0, 140),
         brandModel: String(values.get("brandModel") || "").trim().slice(0, 180),
         category: String(values.get("category") || "Company equipment").trim().slice(0, 100),
-        status: equipment.statuses.includes(String(values.get("status"))) ? String(values.get("status")) : "Issued",
+        status: equipment.statuses.includes(String(values.get("status"))) ? String(values.get("status")) : "Not Issued",
         dateIssued: String(values.get("dateIssued") || ""),
         serialNumber: String(values.get("serialNumber") || "").trim().slice(0, 120),
         notes: String(values.get("notes") || "").trim().slice(0, 700),
@@ -493,9 +533,17 @@
     const button = event.target.closest("[data-equipment-employee]");
     if (!button) return;
     selectedEmployeeId = button.dataset.equipmentEmployee;
+    selectedAssignmentIds.clear();
     renderAll();
   });
-  employeeSelect.addEventListener("change", () => { selectedEmployeeId = employeeSelect.value; renderAll(); });
+  employeeSelect.addEventListener("change", () => { selectedEmployeeId = employeeSelect.value; selectedAssignmentIds.clear(); renderAll(); });
+  list.addEventListener("change", event => {
+    const input = event.target.closest("[data-select-equipment-issue]");
+    if (!input) return;
+    if (input.checked) selectedAssignmentIds.add(input.dataset.selectEquipmentIssue);
+    else selectedAssignmentIds.delete(input.dataset.selectEquipmentIssue);
+    renderEquipmentSelectionState();
+  });
   list.addEventListener("click", event => {
     const button = event.target.closest("[data-save-equipment]");
     if (button) saveAssignment(button.closest("[data-equipment-assignment]"), button.dataset.saveEquipment);

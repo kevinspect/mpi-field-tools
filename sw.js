@@ -1,5 +1,43 @@
-const CACHE_NAME = "mpi-field-tools-shell-v191";
-const APP_SHELL = ["./", "./index.html", "./admin.html", "./mpi-native-bridge.js", "./mpi-native-bridge.js?build=191", "./mpi-shared.js", "./mpi-shared.js?build=191", "./mpi-field-sync.js", "./mpi-field-sync.js?build=191", "./mpi-subcontractor.js", "./mpi-subcontractor.js?build=191", "./mpi-comment-ai.js", "./mpi-comment-ai.js?build=191", "./mpi-equipment.js", "./mpi-equipment.js?build=191", "./mpi-equipment-admin.js", "./mpi-equipment-admin.js?build=191", "./admin.js", "./admin.js?build=191", "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./mpi-logo.png", "./tool-thumbnails.png", "./mpi-email-template.html"];
+const CACHE_NAME = "mpi-field-tools-shell-v192";
+const APP_SHELL = [
+  "./", "./index.html", "./admin.html",
+  "./mpi-native-bridge.js", "./mpi-native-bridge.js?build=192",
+  "./mpi-shared.js", "./mpi-shared.js?build=192",
+  "./mpi-field-sync.js", "./mpi-field-sync.js?build=192",
+  "./mpi-subcontractor.js", "./mpi-subcontractor.js?build=192",
+  "./mpi-comment-ai.js", "./mpi-comment-ai.js?build=192",
+  "./mpi-equipment.js", "./mpi-equipment.js?build=192",
+  "./mpi-equipment-admin.js", "./mpi-equipment-admin.js?build=192",
+  "./admin.js", "./admin.js?build=192",
+  "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./mpi-logo.png", "./tool-thumbnails.png", "./mpi-email-template.html",
+  "./equipment-images/inspection-tote.jpg",
+  "./equipment-images/gfci-tester.jpg",
+  "./equipment-images/driver-11-in-1.jpg",
+  "./equipment-images/voltage-ir-detector.jpg",
+  "./equipment-images/rover-flood-light.jpg",
+  "./equipment-images/ratcheting-driver-8-in-1.jpg",
+  "./equipment-images/moisture-meter-mm9.jpg",
+  "./equipment-images/clamp-meter-cl220.jpg",
+  "./equipment-images/gas-detector-pt210s.jpg",
+  "./equipment-images/headlamp-2012r.jpg",
+  "./equipment-images/safety-glasses.jpg",
+  "./equipment-images/tape-measure-6ft.jpg",
+  "./equipment-images/respirator-p100.jpg",
+  "./equipment-images/cut-level-5-gloves.jpg",
+  "./equipment-images/dead-blow-mallet.jpg",
+  "./equipment-images/pipe-wrench-18.jpg",
+  "./equipment-images/co-detector-ct580.jpg",
+  "./equipment-images/thermal-camera-tc002c.jpg",
+  "./equipment-images/wrecking-bar-42.jpg",
+  "./equipment-images/well-yield-kit.jpg",
+  "./equipment-images/wombat-crawler.jpg",
+  "./equipment-images/digging-shovel.jpg",
+  "./equipment-images/mattock.jpg",
+  "./equipment-images/garden-hose-50.jpg",
+  "./equipment-images/leader-hose-15.jpg",
+  "./equipment-images/drone-mini-4.jpg",
+  "./equipment-images/sewer-scope-scout-3-micro.jpg"
+];
 
 async function fetchFresh(resource) {
   return fetch(resource, { cache: "no-store" });

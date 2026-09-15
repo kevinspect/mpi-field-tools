@@ -414,7 +414,7 @@
     .admin-conversation-person strong { overflow:hidden; color:var(--navy); font-size:16px; text-overflow:ellipsis; white-space:nowrap; }
     .admin-conversation-person span { margin-top:3px; color:var(--muted); font-size:10px; }
     .admin-conversation-back { min-height:42px; padding:0 13px; color:var(--blue); background:#fff; border:1px solid #c9dced; border-radius:10px; font-size:10px; font-weight:900; cursor:pointer; }
-    .admin-conversation-body { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr); gap:16px; padding:18px; }
+    .admin-conversation-body { display:grid; grid-template-columns:1fr; max-width:900px; gap:16px; margin:0 auto; padding:18px; }
     .admin-conversation-thread { min-height:360px; max-height:620px; overflow:auto; padding:2px; }
     .admin-conversation-compose { align-self:start; padding:16px; border:1px solid #d7e3ef; border-radius:14px; background:#f7f9fc; }
     .admin-conversation-compose h3 { margin:0 0 5px; color:var(--navy); font-size:15px; }
@@ -772,7 +772,7 @@
       .inspector-row > :nth-child(5),.inspector-row > :nth-child(6) { display:block; }
     }
 
-    /* Build 191 — company equipment records and signed acknowledgments */
+    /* Build 192 — accurate equipment handover status */
     .equipment-summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:11px; margin:4px 0 18px; }
     .equipment-summary-card { display:grid; gap:4px; padding:15px; color:var(--navy); background:#f7f9fc; border:1px solid var(--line); border-left:4px solid var(--blue); border-radius:13px; text-align:left; }
     .equipment-summary-card.active { background:#eef5fb; border-color:#9fc3df; border-left-color:var(--gold); box-shadow:0 7px 18px rgba(17,24,106,.07); }
@@ -781,17 +781,22 @@
     .equipment-summary-card > small,.equipment-summary-card i { color:var(--muted); font-size:9px; font-style:normal; }
     .equipment-summary-card div { display:grid; gap:3px; margin-top:7px; padding-top:8px; border-top:1px solid var(--line); }
     .equipment-summary-card b { font-size:9px; }
-    .equipment-toolbar { display:flex; align-items:end; justify-content:space-between; gap:12px; margin-bottom:15px; padding:13px; background:#f4f7fb; border:1px solid var(--line); border-radius:13px; }
+    .equipment-toolbar { display:flex; align-items:end; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:15px; padding:13px; background:#f4f7fb; border:1px solid var(--line); border-radius:13px; }
     .equipment-toolbar label { display:grid; flex:1; gap:6px; color:var(--navy); font-size:10px; font-weight:900; }
     .equipment-toolbar select { min-height:46px; padding:0 12px; background:#fff; border:1px solid #cbd3e1; border-radius:10px; }
+    .equipment-toolbar-action { display:grid; justify-items:end; gap:5px; }
+    .equipment-selection-status { max-width:360px; color:var(--muted); font-size:9px; text-align:right; }
     .equipment-record-list,.equipment-history-list { display:grid; gap:11px; }
     .equipment-record-card { padding:16px; background:#fff; border:1px solid var(--line); border-radius:14px; }
     .equipment-record-card header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .equipment-record-identification { display:flex; align-items:center; min-width:0; gap:12px; }
+    .equipment-product-photo { flex:0 0 92px; width:92px; height:72px; padding:5px; object-fit:contain; background:#fff; border:1px solid #d6deea; border-radius:11px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.5); }
     .equipment-record-card header span { color:var(--gold); font-size:8px; font-weight:950; letter-spacing:.08em; text-transform:uppercase; }
     .equipment-record-card h3 { margin:5px 0 0; color:var(--navy); font-size:15px; }
     .equipment-record-card header p { margin:4px 0 0; color:var(--muted); font-size:10px; }
     .equipment-status { display:inline-flex; min-height:27px; align-items:center; padding:4px 9px; border-radius:999px; font-size:8px; text-transform:uppercase; }
     .equipment-status.issued { color:#1c664f; background:#e5f4ed; }
+    .equipment-status.pending { color:#735813; background:#fff3cf; }
     .equipment-status.returned { color:#4e5875; background:#edf0f5; }
     .equipment-status.attention { color:#8e302c; background:#ffe8e5; }
     .equipment-record-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:14px; }
@@ -801,6 +806,9 @@
     .equipment-record-fields textarea { min-height:70px; resize:vertical; }
     .equipment-record-card footer { display:flex; align-items:center; flex-wrap:wrap; gap:9px; margin-top:12px; }
     .equipment-record-card footer a { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
+    .equipment-issue-select { display:flex; align-items:center; min-height:44px; gap:9px; margin-right:auto; padding:8px 12px; color:var(--navy); background:#fff8e3; border:1px solid #e1c96f; border-radius:10px; cursor:pointer; }
+    .equipment-issue-select input { width:21px; height:21px; margin:0; accent-color:var(--navy); }
+    .equipment-issue-select span { font-size:9px; font-weight:950; letter-spacing:.03em; }
     .equipment-add-panel { margin:17px 0; padding:0 15px 15px; background:#f7f9fc; border:1px solid var(--line); border-radius:14px; }
     .equipment-add-panel summary { padding:15px 0; color:var(--blue); font-size:10px; font-weight:950; cursor:pointer; }
     .equipment-history-head { margin:22px 0 10px; }
@@ -1006,8 +1014,8 @@
 
       <section class="console-view" data-admin-panel="updates">
         <div class="panel content-panel">
-          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Messages</h2><p>All private conversations, inspector replies, attachments, delivery status, and sent updates are kept together here.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE MESSAGE ALERTS</span></button></div>
           <div id="adminInboxMailbox">
+            <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Messages</h2><p>All private conversations, inspector replies, attachments, delivery status, and sent updates are kept together here.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE MESSAGE ALERTS</span></button></div>
             <details class="admin-inbox-block admin-compose-block">
               <summary><div class="admin-inbox-title"><h3><svg class="app-icon"><use href="#icon-send"></use></svg> Compose message</h3><span>New private conversation</span></div></summary>
               <form class="admin-inbox-compose" id="adminInboxComposeForm"><div><h3>New private message</h3><p>Choose one recipient. This will not broadcast to the rest of the team.</p></div><div class="form-grid"><div class="field"><label for="adminInboxComposeRecipient">To</label><select id="adminInboxComposeRecipient" required><option value="">Choose team member</option></select></div><div class="field"><label for="adminInboxComposeText">Message</label><textarea id="adminInboxComposeText" maxlength="1200" required placeholder="Write a private MPI message"></textarea></div><div class="field wide"><label for="adminInboxComposeFiles">Photos or PDF (optional)</label><input id="adminInboxComposeFiles" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple></div></div><div class="form-actions"><button class="primary" id="adminInboxComposeSend" type="submit"><svg class="app-icon"><use href="#icon-send"></use></svg><span>SEND PRIVATE MESSAGE</span></button><span class="status" id="adminInboxComposeStatus"></span></div></form>
@@ -1021,10 +1029,10 @@
 
       <section class="console-view" data-admin-panel="equipment">
         <div class="panel content-panel" id="adminEquipmentDashboard">
-          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-briefcase"></use></svg></span><div><h2>MPI Issued Tools</h2><p>Manage each employee's current company equipment and preserve every signed acknowledgment.</p></div></div></div>
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-briefcase"></use></svg></span><div><h2>MPI Equipment &amp; Issued Tools</h2><p>Prepare equipment for handover, record what is actually issued, and preserve every signed acknowledgment.</p></div></div></div>
           <div class="equipment-summary-grid" id="adminEquipmentSummary"><div class="empty">Equipment records are loading.</div></div>
-          <div class="equipment-toolbar"><label>Employee<select id="adminEquipmentEmployee"><option>Loading field team…</option></select></label><button class="primary" id="adminCreateEquipmentAcknowledgment" type="button">CREATE NEW ACKNOWLEDGMENT</button></div>
-          <div class="equipment-record-list" id="adminEquipmentList"><div class="empty">Choose an employee to view issued tools.</div></div>
+          <div class="equipment-toolbar"><label>Employee<select id="adminEquipmentEmployee"><option>Loading field team…</option></select></label><div class="equipment-toolbar-action"><button class="primary" id="adminCreateEquipmentAcknowledgment" type="button" disabled>CREATE ACKNOWLEDGMENT</button><span class="equipment-selection-status" id="adminEquipmentSelectionStatus">Select the tools being handed over today.</span></div></div>
+          <div class="equipment-record-list" id="adminEquipmentList"><div class="empty">Choose an employee to view equipment records.</div></div>
           <details class="equipment-add-panel">
             <summary>ADD ANOTHER TOOL</summary>
             <form id="adminAddEquipmentForm">
@@ -1071,9 +1079,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
-  <script src="./mpi-shared.js?build=191"></script>
-  <script src="./mpi-equipment.js?build=191"></script>
-  <script src="./admin.js?build=191"></script>
-  <script src="./mpi-equipment-admin.js?build=191"></script>
+  <script src="./mpi-shared.js?build=192"></script>
+  <script src="./mpi-equipment.js?build=192"></script>
+  <script src="./admin.js?build=192"></script>
+  <script src="./mpi-equipment-admin.js?build=192"></script>
 </body>
 </html>
