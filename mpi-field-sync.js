@@ -333,19 +333,20 @@
       "END-OF-DAY CHECKS": "End-of-day check",
       "CLOCKED OUT": "Clocked out",
       OFFICE: "Office"
-    })[String(value || "").toUpperCase()] || "Status unavailable";
+    })[String(value || "").toUpperCase()] || String(value || "Status unavailable");
   }
 
   function teamStatusTone(value) {
     const status = String(value || "").toUpperCase();
-    if (/DRIVING|ROUTE/.test(status)) return "travel";
-    if (/ARRIVED|IN PROGRESS|AT LAB/.test(status)) return "active";
+    if (/DRIVING|ROUTE|ON WAY/.test(status)) return "travel";
+    if (/ARRIVED|IN PROGRESS|INSPECTION STARTED|^AT /.test(status)) return "active";
     if (/READY|WAITING|CHECK|COMPLETE/.test(status) && status !== "CLOCKED OUT") return "waiting";
     return "neutral";
   }
 
   function teamPresenceDate(item) {
-    const date = item?.updatedAt?.toDate?.() || new Date(item?.updatedAtClient || "");
+    const state = shared.currentWorkflowStatus(item || {});
+    const date = new Date(state.updatedAt || item?.updatedAtClient || "");
     return date && !Number.isNaN(date.getTime()) ? date : null;
   }
 
@@ -370,7 +371,7 @@
     const today = localDateKey();
     const operation = profile.operationsCurrent;
     if (operation?.date === today) {
-      const status = String(operation.liveStatus || "NOT STARTED").toUpperCase();
+      const status = shared.currentWorkflowStatus(operation).value;
       if (!["NOT STARTED", "CLOCKED OUT"].includes(status)) return { status, date: today };
     }
     if (role === "subcontractor") {
@@ -756,7 +757,7 @@
     }
     pendingProfilePhoto = null;
     profileName.value = profile.name || user.displayName || "";
-    profileJobTitle.value = profile.jobTitle || (profile.role === "inspector" ? "Inspector" : profile.role === "subcontractor" ? "Subcontractor" : "");
+    profileJobTitle.value = profile.jobTitle || shared.teamQualification(profile) || (profile.role === "inspector" ? "Inspector" : profile.role === "subcontractor" ? "Subcontractor" : "");
     profilePhone.value = profile.phone || "";
     profileInspectorId.value = profile.inspectorId || "";
     profileVehicle.value = profile.assignedVehicle || "";
@@ -904,7 +905,7 @@
     teamStatusList.innerHTML = values.length ? values.map(item => {
       const office = item.role === "admin";
       const sameDay = office || item.date === localDateKey();
-      const rawStatus = office ? "OFFICE" : sameDay ? item.status : "NOT STARTED";
+      const rawStatus = office ? "OFFICE" : sameDay ? shared.currentWorkflowStatus(item).value : "NOT STARTED";
       const age = teamPresenceAge(item);
       const updated = teamPresenceDate(item);
       const stale = !office && sameDay && rawStatus !== "CLOCKED OUT" && updated && Date.now() - updated.getTime() > 20 * 60 * 1000;

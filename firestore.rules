@@ -142,13 +142,23 @@ service cloud.firestore {
         && request.resource.data.photoURL is string
         && (!("profilePhoto" in request.resource.data)
           || (request.resource.data.profilePhoto is string && request.resource.data.profilePhoto.size() <= 220000))
-        && request.resource.data.status in [
+        && (request.resource.data.status in [
           "NOT STARTED",
           "READY / WAITING TO DEPART",
           "DRIVING TO JOB",
+          "ON WAY TO JOB",
           "ARRIVED AT JOB",
           "INSPECTION IN PROGRESS",
+          "INSPECTION STARTED",
           "FINAL JOB COMPLETE",
+          "JOB COMPLETE",
+          "ON WAY TO IMS",
+          "AT IMS",
+          "ON WAY TO WATER TECH",
+          "AT WATER TECH",
+          "ON WAY TO LAB",
+          "LAB COMPLETE",
+          "ARRIVED HOME / END LOCATION",
           "LAB STOP",
           "DRIVING TO LAB",
           "AT LAB",
@@ -158,8 +168,11 @@ service cloud.firestore {
           "DRIVING HOME / FINAL DESTINATION",
           "END-OF-DAY CHECKS",
           "NACHI TRAINING",
-          "CLOCKED OUT"
-        ]
+          "CLOCKED OUT",
+          "LAB COMPLETE / AVAILABLE",
+          "AVAILABLE / NO CURRENT JOB"
+        ] || (request.resource.data.role == "subcontractor"
+          && request.resource.data.status.matches("(ON WAY|AT JOB) – JOB [1-9][0-9]{0,2}|JOB [1-9][0-9]{0,2} COMPLETE / AVAILABLE|READY FOR JOB [1-9][0-9]{0,2}")))
         && request.resource.data.date is string
         && request.resource.data.active == true
         && request.resource.data.updatedAtClient is string
@@ -171,6 +184,8 @@ service cloud.firestore {
           "photoURL",
           "profilePhoto",
           "status",
+          "currentWorkflowStatus",
+          "statusUpdatedAt",
           "date",
           "active",
           "updatedAtClient",

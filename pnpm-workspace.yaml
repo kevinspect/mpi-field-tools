@@ -1,0 +1,7 @@
+allowBuilds:
+  '@firebase/util': true
+  protobufjs: true
+minimumReleaseAgeExclude:
+  - '@capacitor/cli@8.5.2'
+  - '@capacitor/core@8.5.2'
+  - '@capacitor/ios@8.5.2'

@@ -1,0 +1,49 @@
+{
+  "appId": "com.michiganpropertyinspections.fieldtools",
+  "appName": "MPI Field Tools",
+  "webDir": "native-web",
+  "ios": {
+    "contentInset": "always",
+    "preferredContentMode": "mobile",
+    "scheme": "MPI Field Tools",
+    "backgroundColor": "#11186A"
+  },
+  "experimental": {
+    "ios": {
+      "spm": {
+        "swiftToolsVersion": "6.1",
+        "packageTraits": {
+          "@capacitor-firebase/authentication": ["Google"]
+        },
+        "packageOptions": {
+          "@capacitor-firebase/authentication": {
+            "symlink": true
+          }
+        }
+      }
+    }
+  },
+  "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": false,
+      "providers": ["google.com"]
+    },
+    "FirebaseMessaging": {
+      "presentationOptions": ["alert", "badge", "sound"]
+    },
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "launchShowDuration": 900,
+      "backgroundColor": "#11186AFF",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#FFFFFF"
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_mpi",
+      "iconColor": "#11186A"
+    }
+  }
+}

@@ -42,6 +42,7 @@ for (const file of [
   "mpi-equipment.js",
   "mpi-equipment-admin.js",
   "admin.js",
+  "mpi-planning.js",
   "sw.js",
   "scripts/prepare-native-web.mjs",
   "scripts/native-doctor.mjs",
@@ -67,11 +68,27 @@ try {
   await rm(temporaryDirectory, { recursive: true, force: true });
 }
 
+try {
+  const releasedBuild = Number(JSON.parse(await readFile(join(root, "version.json"), "utf8")).build);
+  const appSource = await readFile(join(root, "index.html"), "utf8");
+  const projectSource = await readFile(join(root, "ios/App/App.xcodeproj/project.pbxproj"), "utf8");
+  const appBuild = Number(appSource.match(/<meta name="app-build" content="(\d+)">/)?.[1] || 0);
+  const projectBuilds = [...projectSource.matchAll(/CURRENT_PROJECT_VERSION = (\d+);/g)].map(match => Number(match[1]));
+  if (appBuild !== releasedBuild || projectBuilds.length < 2 || projectBuilds.some(build => build !== releasedBuild)) {
+    throw new Error(`release=${releasedBuild}, app=${appBuild}, iOS=${projectBuilds.join(",")}`);
+  }
+  console.log("PASS  Web and native build numbers match the release");
+} catch (error) {
+  failures.push(`Web and native build numbers match the release: ${error.message}`);
+  console.error("FAIL  Web and native build numbers match the release");
+}
+
 for (const plist of [
   "ios/App/App/Info.plist",
   "ios/App/App/GoogleService-Info.plist",
   "ios/App/App/GoogleService-Info-Development.plist",
   "ios/App/App/App.entitlements",
+  "ios/App/App/App-Debug.entitlements",
   "ios/App/App/PrivacyInfo.xcprivacy",
   "native-plugins/mpi-background-location/ios/Sources/MPIBackgroundLocationPlugin/PrivacyInfo.xcprivacy",
   "ios/App/App.xcodeproj/project.pbxproj"
@@ -162,13 +179,23 @@ await assertText(
 );
 
 await assertText(
-  "Debug app is signed for APNs",
+  "Debug app uses Personal Team signing without APNs",
   "ios/App/App.xcodeproj/project.pbxproj",
   source => {
     const debug = source.split("504EC3171FED79650016851F /* Debug */")[1]?.split("504EC3181FED79650016851F /* Release */")[0] || "";
-    return debug.includes("APS_ENVIRONMENT = development;") && debug.includes("CODE_SIGN_ENTITLEMENTS = App/App.entitlements;");
+    return debug.includes("CODE_SIGN_ENTITLEMENTS = App/App-Debug.entitlements;") && !debug.includes("APS_ENVIRONMENT");
   },
-  "The installed Debug app does not receive the APS entitlement"
+  "The Debug target must use the no-cost Personal Team entitlement set"
+);
+
+await assertText(
+  "Release app retains APNs",
+  "ios/App/App.xcodeproj/project.pbxproj",
+  source => {
+    const release = source.split("504EC3181FED79650016851F /* Release */")[1] || "";
+    return release.includes("APS_ENVIRONMENT = production;") && release.includes("CODE_SIGN_ENTITLEMENTS = App/App.entitlements;");
+  },
+  "The Release target must retain its production APNs entitlement"
 );
 
 await assertText(
@@ -278,7 +305,7 @@ await assertText(
   source => source.includes('"PHOTO ONLY"')
     && source.includes('"PHOTO + TEXT"')
     && source.includes('"TEXT ONLY"')
-    && source.includes("friendly.mpiFallbackAllowed = Boolean(cleanNote)"),
+    && source.includes("friendly.mpiFallbackAllowed = Boolean(cleanNote && !preparedPhoto)"),
   "Photo-only input is missing or can incorrectly fall back to the text-only rules engine"
 );
 
@@ -413,9 +440,9 @@ await assertText(
   "mpi-shared.js",
   source => {
     const merge = source.split("function mergeOperationsDay")[1]?.split("async function syncOperationsSnapshot")[0] || "";
-    return merge.includes('hasOwnProperty.call(incoming, "currentJob")')
-      && merge.includes('hasOwnProperty.call(incoming, "nextJob")')
-      && merge.includes('hasOwnProperty.call(incoming, "dayComplete")');
+    return merge.includes('hasOwnProperty.call(latestData, "currentJob")')
+      && merge.includes('hasOwnProperty.call(latestData, "nextJob")')
+      && merge.includes('hasOwnProperty.call(latestData, "dayComplete")');
   },
   "Firestore merging can revive a current job, next job, or stale completed-day state"
 );
@@ -537,6 +564,8 @@ await assertText(
     && source.includes('join(root, "equipment-images")'),
   "The native iPhone build omits the equipment catalog, product photos, or admin workflow"
 );
+
+run("Field update behavior regressions", process.execPath, ["scripts/test-field-update.mjs"]);
 
 if (failures.length) {
   console.error(`\n${failures.length} native verification check${failures.length === 1 ? "" : "s"} failed:`);

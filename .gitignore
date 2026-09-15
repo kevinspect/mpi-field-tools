@@ -1,0 +1,14 @@
+node_modules/
+.build/
+native-web/
+ios/App/Pods/
+ios/App/DerivedData/
+ios/App/build/
+ios/App/App/public/
+ios/App/App/config*.xml
+ios/App/CapApp-SPM/symlinks/
+ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x 2.png
+ios/App/App/Assets.xcassets/Splash.imageset/splash-2732x2732 2.png
+*.xcuserstate
+xcuserdata/
+.DS_Store

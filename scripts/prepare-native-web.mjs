@@ -8,11 +8,13 @@ const assets = [
   "index.html",
   "admin.html",
   "admin.js",
+  "mpi-planning.js",
   "mpi-shared.js",
   "mpi-field-sync.js",
   "mpi-subcontractor.js",
   "mpi-comment-ai.js",
   "mpi-equipment.js",
+  "mpi-equipment-images.js",
   "mpi-equipment-admin.js",
   "mpi-native-bridge.js",
   "mpi-logo.png",
@@ -37,6 +39,7 @@ await mkdir(output, { recursive: true });
 for (const asset of assets) {
   await cp(join(root, asset), join(output, asset));
 }
+await cp(join(root, "equipment-images"), join(output, "equipment-images"), { recursive: true });
 await mkdir(join(output, "vendor"), { recursive: true });
 for (const asset of firebaseAssets) {
   await cp(join(root, "node_modules", "firebase", asset), join(output, "vendor", asset));
@@ -58,4 +61,4 @@ adminHtml = adminHtml
   .replace("<script src=\"./mpi-shared.js", "<script src=\"./mpi-native-bridge.js?build=native\"></script>\n  <script src=\"./mpi-shared.js");
 await writeFile(adminPath, adminHtml);
 
-console.log(`Prepared ${assets.length + firebaseAssets.length} native web assets in ${output}`);
+console.log(`Prepared ${assets.length + firebaseAssets.length} native web assets and equipment product photos in ${output}`);

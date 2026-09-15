@@ -316,6 +316,7 @@ function cleanSentence(value) {
   const text = String(value || "")
     .replace(/^[\s>*_`#-]+/, "")
     .replace(/[\r\n]+/g, " ")
+    .replace(/\s[–—]\s/g, " - ")
     .replace(/[*_`#]+/g, "")
     .trim()
     .replace(/\s+/g, " ");
@@ -353,6 +354,7 @@ function matchReportTitle(title, component) {
   const cleanTitle = String(title || "")
     .replace(/^[\s>*_`#-]+/, "")
     .replace(/[\r\n]+/g, " ")
+    .replace(/\s[–—]\s/g, " - ")
     .replace(/[*_`#]+/g, "")
     .trim()
     .slice(0, 140);
@@ -377,6 +379,8 @@ function parseResponse(text, note, mode, component) {
   if (!title || !observation || !implication || !recommendation) {
     throw new Error("The MPI Comment Builder returned an incomplete result. Please try again.");
   }
+  if (mode !== "limit" && !/^.+\s-\s.+$/.test(title)) throw new Error("The MPI Comment Builder returned an incomplete component title. Please try again.");
+  if ([observation, implication, recommendation].some(value => /\b(?:the photograph shows|based on the image|confidence score)\b/i.test(value))) throw new Error("The MPI Comment Builder returned commentary instead of report wording. Please try again.");
   const labels = mode === "limit"
     ? ["Limitation", "Effect on Inspection", "Recommendation"]
     : ["Observation", "Implication", "Recommendation"];
@@ -485,7 +489,7 @@ async function generate({ note, component = "auto", mode = "defect", photo = nul
   const friendly = friendlyCommentError(lastError);
   friendly.requestId = id;
   friendly.mpiCategory = technicalCategory(lastError);
-  friendly.mpiFallbackAllowed = Boolean(cleanNote);
+  friendly.mpiFallbackAllowed = Boolean(cleanNote && !preparedPhoto);
   throw friendly;
 }
 

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>574980684703-rf5kfjv3t5kenihdlm8pofc8g5vuejq5.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.574980684703-rf5kfjv3t5kenihdlm8pofc8g5vuejq5</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDql2nDQPmFa9P4GPkp-80gRHWgd5eoS0I</string>
+	<key>GCM_SENDER_ID</key>
+	<string>574980684703</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.michiganpropertyinspections.fieldtools</string>
+	<key>PROJECT_ID</key>
+	<string>mpi-field-notifications</string>
+	<key>STORAGE_BUCKET</key>
+	<string>mpi-field-notifications.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:574980684703:ios:019e78ea668087ce729baa</string>
+</dict>
+</plist>

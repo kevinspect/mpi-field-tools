@@ -154,6 +154,12 @@
     return true;
   }
 
+  async function openSpectoraApp() {
+    if (!isNative || !backgroundLocation?.openSpectoraApp) return false;
+    const result = await backgroundLocation.openSpectoraApp();
+    return result?.opened === true;
+  }
+
   async function pushPermission() {
     if (!firebaseMessaging?.checkPermissions) return { receive: "unavailable" };
     return firebaseMessaging.checkPermissions();
@@ -295,6 +301,7 @@
     signInWithGoogle,
     signOut,
     openWebPage,
+    openSpectoraApp,
     pushPermission,
     enablePushNotifications,
     prominentHaptic,
@@ -304,6 +311,9 @@
 
   document.documentElement.classList.toggle("mpi-native-app", isNative);
   if (isNative) {
+    app?.addListener?.("appStateChange", state => {
+      window.dispatchEvent(new CustomEvent("mpi-native-app-state", { detail: { active: Boolean(state?.isActive) } }));
+    });
     addNotificationListeners().catch(() => {});
     addAppLinkListeners().catch(() => {});
   }

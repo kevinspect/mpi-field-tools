@@ -55,7 +55,42 @@
   ]);
 
   const authPersistenceReady = auth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL).catch(() => false);
-  db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+  // WKWebView/iOS can invalidate IndexedDB cursors when an app is suspended.
+  // Keep the SDK's default memory cache there. Drafts, retry identities and a
+  // last-known conversation cache remain durable without deleting old databases.
+  const mobileMemoryCache = Boolean(window.Capacitor?.isNativePlatform?.()
+    || /iPhone|iPad|iPod/.test(navigator.userAgent)
+    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+  if (!mobileMemoryCache) db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+  const directSubscriptions = new Map();
+  const receiptWrites = new Set();
+  const directSends = new Map();
+  const messagingState = { status: "not-started", listener: "not-started", backend: "not-tested", lastError: null, lastServerAt: "", cache: mobileMemoryCache ? "memory" : "persistent" };
+
+  function readMessageStore(key, fallback) {
+    try { return JSON.parse(localStorage.getItem(key) || "null") || fallback; } catch (_) { return fallback; }
+  }
+
+  function writeMessageStore(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) {}
+  }
+
+  function messageFailure(error, context = "send") {
+    if (error?.mpiMessageFailure) return error.mpiMessageFailure;
+    const referenceId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const diagnostic = { referenceId, timestamp: new Date().toISOString(), context, inspector: auth.currentUser?.uid || "", code: String(error?.code || "unknown"), detail: String(error?.message || error || "Unknown messaging error").slice(0, 1800), online: navigator.onLine, cache: messagingState.cache };
+    writeMessageStore("mpiMessagingDiagnosticsV1", [...readMessageStore("mpiMessagingDiagnosticsV1", []), diagnostic].slice(-30));
+    messagingState.lastError = diagnostic;
+    messagingState.status = "failed";
+    const failure = { referenceId, message: `MESSAGE NOT SENT — Your message has been preserved. Please try again. Reference: ${referenceId}` };
+    if (error && typeof error === "object") error.mpiMessageFailure = failure;
+    return failure;
+  }
+
+  function boundedMessageRequest(promise, milliseconds = 18000) {
+    let timer;
+    return Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => { const error = new Error("Messaging request timed out; acceptance will be checked on retry."); error.code = "messaging/timeout"; reject(error); }, milliseconds); })]).finally(() => clearTimeout(timer));
+  }
 
   function normalizeEmail(value) {
     return String(value || "").trim().toLowerCase();
@@ -327,6 +362,7 @@
         photoURL: String(user.photoURL || "").slice(0, 1000),
         ...(inspectorNumber ? { inspectorId: inspectorNumber } : {}),
         ...(approvedEndAddress ? { approvedEndAddress: approvedEndAddress } : {}),
+        ...(teamQualification({ email: user.email }) ? { qualification: teamQualification({ email: user.email }) } : {}),
         role: owner ? "owner" : "inspector",
         active: true,
         createdAt: serverTimestamp(),
@@ -341,6 +377,7 @@
         photoURL: String(user.photoURL || snapshot.data().photoURL || "").slice(0, 1000),
         ...(savedInspectorNumber ? { inspectorId: savedInspectorNumber } : {}),
         ...(savedApprovedEndAddress ? { approvedEndAddress: savedApprovedEndAddress } : {}),
+        ...(teamQualification({ email: user.email }) ? { qualification: teamQualification({ email: user.email }) } : {}),
         lastSeenAt: serverTimestamp()
       }, { merge: true });
     }
@@ -652,13 +689,37 @@
   }
 
   async function sendDirectMessage(user, profile, target, message, files = []) {
+    const signature = JSON.stringify([user?.uid, target?.id || target?.userId, String(message || "").trim(), [...files].map(file => [file.name, file.size, file.lastModified])]);
+    if (directSends.has(signature)) return directSends.get(signature);
+    const operation = sendDirectMessageAttempt(user, profile, target, message, files, signature)
+      .catch(error => {
+        const key = `mpiPendingDirectMessagesV1:${user?.uid || ""}`;
+        const pending = readMessageStore(key, {});
+        if (pending[signature]) writeMessageStore(key, { ...pending, [signature]: { ...pending[signature], state: "failed" } });
+        messageFailure(error);
+        throw error;
+      })
+      .finally(() => directSends.delete(signature));
+    directSends.set(signature, operation);
+    return operation;
+  }
+
+  async function sendDirectMessageAttempt(user, profile, target, message, files, signature) {
     const targetUid = String(target?.id || target?.userId || "").trim();
     const text = String(message || "").trim().slice(0, 1200);
     const selected = [...files].filter(file => /^image\//i.test(file?.type || "") || /application\/pdf/i.test(file?.type || "") || /\.(jpe?g|png|webp|heic|heif|pdf)$/i.test(file?.name || "")).slice(0, 3);
     if (!user || !targetUid || targetUid === user.uid) throw new Error("Choose another MPI team member.");
     if (!text && !selected.length) throw new Error("Write a message or attach a file first.");
     if (selected.some(file => Number(file.size) > 8 * 1024 * 1024)) throw new Error("Each attachment must be smaller than 8 MB.");
-    const messageRef = db.collection("teamMessages").doc();
+    if (!navigator.onLine) throw new Error("Messaging is offline. The draft is retained for retry.");
+    await boundedMessageRequest(user.getIdToken());
+    const pendingKey = `mpiPendingDirectMessagesV1:${user.uid}`;
+    const pending = readMessageStore(pendingKey, {});
+    const isRetry = Boolean(pending[signature]);
+    const attempt = pending[signature] || { id: db.collection("teamMessages").doc().id, createdAtClient: new Date().toISOString() };
+    pending[signature] = { ...attempt, state: "sending", lastAttemptAt: new Date().toISOString() };
+    writeMessageStore(pendingKey, pending);
+    const messageRef = db.collection("teamMessages").doc(attempt.id);
     const conversationId = directConversationId(user.uid, targetUid);
     const senderName = String(profile?.name || user.displayName || "MPI Team Member").trim().slice(0, 100);
     const targetName = String(target?.name || "MPI Team Member").trim().slice(0, 100);
@@ -679,54 +740,175 @@
       deliveredTo: [],
       active: selected.length === 0,
       createdAt: serverTimestamp(),
-      createdAtClient: new Date().toISOString()
+      createdAtClient: attempt.createdAtClient
     };
-    await messageRef.set(base);
+    // A previous call may have committed even if its acknowledgement was lost.
+    // Never overwrite an existing message or create a second ID on retry.
+    const existing = isRetry ? await boundedMessageRequest(messageRef.get({ source: "server" })).catch(error => {
+      // Participant-only rules reject reads of a nonexistent document. A create
+      // is still safe: the rules reject a full rewrite of an existing message.
+      if (String(error?.code || "").includes("permission-denied")) return { exists: false };
+      throw error;
+    }) : { exists: false };
+    if (existing.exists && existing.data()?.active !== false) {
+      const remaining = readMessageStore(pendingKey, {});
+      delete remaining[signature];
+      writeMessageStore(pendingKey, remaining);
+      messagingState.status = "healthy";
+      await notifyDirectMessage(user, { id: messageRef.id, ...existing.data() }, target);
+      return { id: messageRef.id, ...existing.data() };
+    }
+    if (!existing.exists) await boundedMessageRequest(messageRef.set(base));
     const attachments = [];
     try {
-      for (const original of selected) {
+      for (const [fileIndex, original] of selected.entries()) {
         const file = /^image\//i.test(original.type || "") ? await prepareFieldImage(original) : original;
         const encoded = await fileAsBase64(file);
         const pieces = [];
         for (let offset = 0; offset < encoded.length; offset += 600000) pieces.push(encoded.slice(offset, offset + 600000));
-        const attachmentRef = messageRef.collection("attachments").doc();
+        const attachmentRef = messageRef.collection("attachments").doc(`file-${fileIndex}`);
         const metadata = { id: attachmentRef.id, name: String(file.name || "team-file").slice(0, 160), type: file.type || "application/octet-stream", size: Number(file.size) || 0, chunkCount: pieces.length };
-        await attachmentRef.set({ ...metadata, senderUid: user.uid, active: true, createdAt: serverTimestamp() });
+        const savedAttachment = await boundedMessageRequest(attachmentRef.get({ source: "server" }));
+        if (!savedAttachment.exists) await boundedMessageRequest(attachmentRef.set({ ...metadata, senderUid: user.uid, active: true, createdAt: serverTimestamp() }));
         for (let start = 0; start < pieces.length; start += 6) {
-          await Promise.all(pieces.slice(start, start + 6).map((data, part) => attachmentRef.collection("chunks").doc(String(start + part).padStart(4, "0")).set({ index: start + part, data, senderUid: user.uid, active: true })));
+          await Promise.all(pieces.slice(start, start + 6).map(async (data, part) => {
+            const chunkRef = attachmentRef.collection("chunks").doc(String(start + part).padStart(4, "0"));
+            const savedChunk = await boundedMessageRequest(chunkRef.get({ source: "server" }));
+            if (!savedChunk.exists) await boundedMessageRequest(chunkRef.set({ index: start + part, data, senderUid: user.uid, active: true }));
+          }));
         }
         attachments.push(metadata);
       }
-      if (selected.length) await messageRef.update({ attachments, active: true, uploadedAt: serverTimestamp() });
+      if (selected.length) await boundedMessageRequest(messageRef.update({ attachments, active: true, uploadedAt: serverTimestamp(), uploadError: "" }));
     } catch (error) {
-      await messageRef.set({ active: false, uploadError: String(error?.message || "Attachment upload failed").slice(0, 200) }, { merge: true }).catch(() => {});
+      // Do not deactivate a message after an uncertain final commit. Retry checks
+      // the server's active state before resuming immutable attachment chunks.
+      writeMessageStore(pendingKey, { ...readMessageStore(pendingKey, {}), [signature]: { ...attempt, state: "failed", lastAttemptAt: new Date().toISOString() } });
       throw error;
     }
+    const remaining = readMessageStore(pendingKey, {});
+    delete remaining[signature];
+    writeMessageStore(pendingKey, remaining);
+    messagingState.status = "healthy";
+    const sent = { id: messageRef.id, ...base, attachments, active: true };
+    await notifyDirectMessage(user, sent, target);
+    return sent;
+  }
+
+  async function notifyDirectMessage(user, sent, target) {
+    // Notification transport cannot leave an already accepted message stuck in
+    // Sending. Retrying an uncertain commit still requests the same tagged alert.
     const targetTokens = [target?.notificationDevice?.token, target?.officeNotificationDevice?.token, target?.notificationToken].filter(Boolean);
-    await sendPushNotification({
+    return boundedMessageRequest(sendPushNotification({
       kind: "team-message",
       audience: ["owner", "admin"].includes(String(target?.role || "").toLowerCase()) ? "office" : "inspector",
       targetEmail: target?.email || "",
       targetTokens,
-      title: `Message from ${senderName}`,
-      body: text || `${attachments.length} attachment${attachments.length === 1 ? "" : "s"}`,
+      title: `Message from ${sent.senderName}`,
+      body: sent.message || `${sent.attachments?.length || 1} attachment${sent.attachments?.length === 1 ? "" : "s"}`,
       link: ["owner", "admin"].includes(String(target?.role || "").toLowerCase())
         ? `./admin.html?team=${encodeURIComponent(user.uid)}`
         : `./?team=${encodeURIComponent(user.uid)}#inbox`,
-      tag: `mpi-team-${messageRef.id}`
-    }).catch(() => false);
-    return { id: messageRef.id, ...base, attachments, active: true };
+      tag: `mpi-team-${sent.id}`
+    }), 5000).catch(() => false);
   }
 
   function watchDirectMessages(user, callback) {
     if (!user || typeof callback !== "function") return () => {};
-    return db.collection("teamMessages").where("participantIds", "array-contains", user.uid).onSnapshot(snapshot => {
+    let subscription = directSubscriptions.get(user.uid);
+    if (!subscription) {
+      subscription = { user, callbacks: new Set(), records: readMessageStore(`mpiDirectMessageCacheV1:${user.uid}`, []), unsubscribe: null, generation: 0 };
+      directSubscriptions.set(user.uid, subscription);
+    }
+    subscription.callbacks.add(callback);
+    if (subscription.records.length) callback(subscription.records, null);
+    startDirectSubscription(subscription);
+    return () => {
+      subscription.callbacks.delete(callback);
+      if (subscription.callbacks.size) return;
+      stopDirectSubscription(subscription);
+      directSubscriptions.delete(user.uid);
+      if (!directSubscriptions.size) messagingState.listener = "not-started";
+    };
+  }
+
+  function stopDirectSubscription(subscription) {
+    subscription.generation += 1;
+    subscription.unsubscribe?.();
+    subscription.unsubscribe = null;
+  }
+
+  function startDirectSubscription(subscription) {
+    if (subscription.unsubscribe || !subscription.callbacks.size || document.visibilityState === "hidden") return;
+    const generation = ++subscription.generation;
+    messagingState.listener = "connecting";
+    subscription.unsubscribe = db.collection("teamMessages").where("participantIds", "array-contains", subscription.user.uid).onSnapshot({ includeMetadataChanges: true }, snapshot => {
+      if (generation !== subscription.generation) return;
       const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(item => item.active !== false)
-        .sort((left, right) => timestampMilliseconds(right.createdAt || right.createdAtClient) - timestampMilliseconds(left.createdAt || left.createdAtClient));
-      callback(records, null);
-      markDirectMessagesDelivered(user, records).catch(() => false);
-    }, error => callback([], error));
+        .sort((left, right) => timestampMilliseconds(right.createdAtClient) - timestampMilliseconds(left.createdAtClient));
+      if (snapshot.metadata?.fromCache && !records.length && subscription.records.length) {
+        messagingState.listener = "cached";
+        subscription.callbacks.forEach(listener => listener(subscription.records, null));
+        return;
+      }
+      subscription.records = records;
+      // Persist timestamps as ISO strings, not SDK Timestamp instances.
+      writeMessageStore(`mpiDirectMessageCacheV1:${subscription.user.uid}`, records.map(item => ({ ...item, createdAt: item.createdAtClient })).slice(0, 500));
+      messagingState.listener = snapshot.metadata?.fromCache ? "cached" : "connected";
+      if (!snapshot.metadata?.fromCache) {
+        messagingState.lastServerAt = new Date().toISOString();
+        messagingState.backend = "connected";
+        messagingState.status = "healthy";
+      }
+      subscription.callbacks.forEach(listener => listener(records, null));
+      markDirectMessagesDelivered(subscription.user, records).catch(error => messageFailure(error, "delivery-receipt"));
+    }, error => {
+      if (generation !== subscription.generation) return;
+      messagingState.listener = "failed";
+      messageFailure(error, "conversation-listener");
+      subscription.callbacks.forEach(listener => listener(subscription.records, error));
+      stopDirectSubscription(subscription);
+    });
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    directSubscriptions.forEach(subscription => {
+      if (document.visibilityState === "hidden") stopDirectSubscription(subscription);
+      else startDirectSubscription(subscription);
+    });
+    if (document.visibilityState === "hidden" && directSubscriptions.size) messagingState.listener = "suspended";
+  });
+  window.addEventListener("online", () => directSubscriptions.forEach(subscription => { stopDirectSubscription(subscription); startDirectSubscription(subscription); }));
+  window.addEventListener("mpi-native-app-state", event => directSubscriptions.forEach(subscription => {
+    stopDirectSubscription(subscription);
+    if (event.detail?.active) startDirectSubscription(subscription);
+    else messagingState.listener = "suspended";
+  }));
+
+  async function messagingHealth() {
+    const user = auth.currentUser;
+    const pending = Object.values(readMessageStore(`mpiPendingDirectMessagesV1:${user?.uid || ""}`, {}));
+    const result = { ...messagingState, authentication: user ? "signed-in" : "not-signed-in", pending: pending.length, failed: pending.filter(item => item.state === "failed").length, subscriptions: directSubscriptions.size, sendCapability: "not-tested" };
+    if (!user || !navigator.onLine) return { ...result, status: "failed", backend: user ? "offline" : "not-authenticated" };
+    try {
+      await boundedMessageRequest(user.getIdToken(true), 10000);
+      await boundedMessageRequest(db.collection("teamMessages").where("participantIds", "array-contains", user.uid).limit(1).get({ source: "server" }), 10000);
+      let temporarySubscription;
+      if (!directSubscriptions.has(user.uid)) temporarySubscription = watchDirectMessages(user, () => {});
+      else directSubscriptions.forEach(subscription => { if (!subscription.unsubscribe) startDirectSubscription(subscription); });
+      try {
+        const startedAt = Date.now();
+        while (messagingState.listener !== "connected" && Date.now() - startedAt < 8000) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        if (messagingState.listener !== "connected") throw new Error("Private-message real-time subscription is not connected.");
+        return { ...result, backend: "connected", listener: "connected", authentication: "verified", status: pending.length ? "failed" : "healthy", sendCapability: "authenticated-participant-rules", lastServerAt: messagingState.lastServerAt };
+      } finally { temporarySubscription?.(); }
+    } catch (error) {
+      const failure = messageFailure(error, "health-check");
+      return { ...result, status: "failed", backend: "failed", referenceId: failure.referenceId, lastError: messagingState.lastError };
+    }
   }
 
   async function markDirectMessagesDelivered(user, records = []) {
@@ -735,14 +917,17 @@
       message?.id
       && message.targetUid === user.uid
       && !(Array.isArray(message.deliveredTo) && message.deliveredTo.includes(user.uid))
+      && !receiptWrites.has(`delivered:${user.uid}:${message.id}`)
     );
     for (let start = 0; start < pending.length; start += 400) {
+      const group = pending.slice(start, start + 400);
       const batch = db.batch();
-      pending.slice(start, start + 400).forEach(message => batch.set(db.collection("teamMessages").doc(message.id), {
+      group.forEach(message => { receiptWrites.add(`delivered:${user.uid}:${message.id}`); batch.set(db.collection("teamMessages").doc(message.id), {
         deliveredTo: arrayUnion(user.uid),
         deliveredAt: serverTimestamp()
-      }, { merge: true }));
-      await batch.commit();
+      }, { merge: true }); });
+      try { await boundedMessageRequest(batch.commit()); }
+      finally { group.forEach(message => receiptWrites.delete(`delivered:${user.uid}:${message.id}`)); }
     }
     return true;
   }
@@ -750,17 +935,21 @@
   async function markDirectConversationRead(user, otherUid) {
     if (!user || !otherUid) return false;
     const conversationId = directConversationId(user.uid, otherUid);
-    const snapshot = await db.collection("teamMessages").where("conversationId", "==", conversationId).get();
-    const unread = snapshot.docs.filter(doc => {
-      const message = doc.data() || {};
+    const subscription = directSubscriptions.get(user.uid);
+    const messages = subscription ? subscription.records : (await boundedMessageRequest(db.collection("teamMessages").where("conversationId", "==", conversationId).get())).docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const unread = messages.filter(message => {
       return message.targetUid === user.uid
         && message.senderUid !== user.uid
+        && message.conversationId === conversationId
+        && !receiptWrites.has(`read:${user.uid}:${message.id}`)
         && (!Array.isArray(message.readBy) || !message.readBy.includes(user.uid));
     });
     for (let start = 0; start < unread.length; start += 400) {
+      const group = unread.slice(start, start + 400);
       const batch = db.batch();
-      unread.slice(start, start + 400).forEach(doc => batch.set(doc.ref, { readBy: arrayUnion(user.uid), readAt: serverTimestamp() }, { merge: true }));
-      await batch.commit();
+      group.forEach(message => { receiptWrites.add(`read:${user.uid}:${message.id}`); batch.set(db.collection("teamMessages").doc(message.id), { readBy: arrayUnion(user.uid), readAt: serverTimestamp() }, { merge: true }); });
+      try { await boundedMessageRequest(batch.commit()); }
+      finally { group.forEach(message => receiptWrites.delete(`read:${user.uid}:${message.id}`)); }
     }
     return true;
   }
@@ -978,41 +1167,99 @@
     return /^corey leese$/i.test(name) ? "Cory Leese" : name;
   }
 
+  function teamQualification(person = {}) {
+    return normalizeEmail(person.email) === "cory@michiganpropertyinspections.com"
+      || String(person.inspectorId || person.id || "").toUpperCase() === "NACHI26090138"
+      ? "CPI – Certified Professional Inspector" : String(person.qualification || "");
+  }
+
+  function canonicalWorkflowStatus(value) {
+    const status = String(value || "NOT STARTED").toUpperCase().replace(/\bIMS LABORATORY\b/g, "IMS");
+    return ({ "DRIVING TO JOB": "ON WAY TO JOB", "DRIVING TO NEXT JOB": "ON WAY TO JOB", "INSPECTION IN PROGRESS": "INSPECTION STARTED", "FINAL JOB COMPLETE": "JOB COMPLETE", "DRIVING HOME / FINAL DESTINATION": "DRIVING HOME", "END-OF-DAY CHECKS": "ARRIVED HOME / END LOCATION" })[status] || status;
+  }
+
+  // The only workflow-to-status resolver. Persist its result with the actual
+  // transition timestamp; all app, Team, profile and map surfaces consume it.
+  function currentWorkflowStatus(day = {}) {
+    const candidates = [];
+    const add = (value, updatedAt, source = "workflow", eventId = "") => {
+      if (!updatedAt) return;
+      const milliseconds = timestampMilliseconds(updatedAt);
+      if (value && Number.isFinite(milliseconds)) candidates.push({ value: canonicalWorkflowStatus(value), updatedAt: new Date(milliseconds).toISOString(), source, eventId, milliseconds });
+    };
+    const stored = day.currentWorkflowStatus;
+    if (stored?.value) add(stored.value, stored.updatedAt, stored.source, stored.eventId);
+    const labName = value => /ims/i.test(String(value || "")) ? "IMS" : /water/i.test(String(value || "")) ? "WATER TECH" : "LAB";
+    const actions = { "Morning readiness completed": "READY / WAITING TO DEPART", "On My Way selected": "ON WAY TO JOB", "Arrived": "ARRIVED AT JOB", "Inspection started": "INSPECTION STARTED", "Job Complete selected": "JOB COMPLETE", "Final job completion": "JOB COMPLETE", "Lab visit completed": "LAB COMPLETE", "Lab route departure / continuation": "ON WAY TO JOB", "Proceed home selected": "DRIVING HOME", "Arrived home / end location": "ARRIVED HOME / END LOCATION", "Clocked off": "CLOCKED OUT", "NACHI training started": "NACHI TRAINING", "NACHI training ended": "READY / WAITING TO DEPART", "No final lab stop required": "READY TO DRIVE HOME" };
+    (Array.isArray(day.activity) ? day.activity : []).forEach(event => {
+      let value = actions[event.action];
+      if (event.action === "Lab selected") value = `ON WAY TO ${labName(event.data?.labs?.[0] || event.data?.lab)}`;
+      if (event.action === "Arrived at lab") value = `AT ${labName(event.data?.lab)}`;
+      add(value, event.timestamp, "workflow-event", event.id || "");
+    });
+    (Array.isArray(day.events) ? day.events : []).forEach(event => add(event.status, event.timestamp, "workflow-event", event.id || ""));
+    const lab = day.labStop;
+    if (lab?.stage === "travel") add(`ON WAY TO ${labName(lab.labs?.[lab.currentIndex || 0])}`, lab.travelStartedAt || lab.selectedAt);
+    if (lab?.stage === "arrived") add(`AT ${labName(lab.labs?.[lab.currentIndex || 0])}`, lab.arrivals?.[lab.labs?.[lab.currentIndex || 0]]);
+    if (lab?.stage === "driving-home") add("DRIVING HOME", lab.homeDepartureAt);
+    if (lab?.stage === "home-arrived") add("ARRIVED HOME / END LOCATION", lab.homeArrivedAt);
+    if (["done", "proceed-home"].includes(lab?.stage) && lab.completedAt) add("LAB COMPLETE", lab.completedAt);
+    const current = day.currentJob;
+    if (!Array.isArray(day.events)) {
+      add("ON WAY TO JOB", current?.onMyWayAt);
+      add("ARRIVED AT JOB", current?.arrivedAt);
+      add("INSPECTION STARTED", current?.inspectionStartedAt);
+      add("JOB COMPLETE", current?.completedAt);
+    }
+    if (day.readiness?.completedAt) add("READY / WAITING TO DEPART", day.readiness.completedAt);
+    const sessions = day.timeClock?.sessions || [];
+    if (day.dayComplete?.completedAt && !sessions.some(session => !session.clockedOutAt)) add("CLOCKED OUT", day.dayComplete.completedAt);
+    if (day.timeClock?.effectiveClockedOutAt && day.timeClock?.active === false) add("CLOCKED OUT", day.timeClock.effectiveClockedOutAt);
+    const latest = candidates.sort((left, right) => left.milliseconds - right.milliseconds).at(-1);
+    if (latest) { const { milliseconds, ...state } = latest; return state; }
+    return { value: canonicalWorkflowStatus(day.status || day.liveStatus), updatedAt: String(day.statusUpdatedAt || day.updatedAtClient || ""), source: "legacy", eventId: "" };
+  }
+
   function mergeOperationsDay(previous = {}, incoming = {}) {
-    if (!previous?.date) return { ...(incoming || {}) };
-    if (!incoming?.date) return { ...(previous || {}) };
+    if (!previous?.date || !incoming?.date) {
+      const initial = previous?.date ? previous : incoming;
+      const state = currentWorkflowStatus(initial || {});
+      return { ...(initial || {}), currentWorkflowStatus: state, liveStatus: state.value };
+    }
     const previousStrength = operationsDayStrength(previous);
     const incomingStrength = operationsDayStrength(incoming);
     const dominant = incomingStrength >= previousStrength ? incoming : previous;
     const secondary = dominant === incoming ? previous : incoming;
     const merged = mergeOperationsObject(secondary, dominant);
+    const latestData = (timestampMilliseconds(incoming.updatedAtClient) || 0) >= (timestampMilliseconds(previous.updatedAtClient) || 0) ? incoming : previous;
+    const earlierData = latestData === incoming ? previous : incoming;
     merged.jobs = mergeOperationsJobs(previous.jobs, incoming.jobs);
     merged.activity = mergeOperationsActivity(previous.activity, incoming.activity);
     merged.readiness = incoming.readiness || previous.readiness || null;
-    merged.labStop = Object.prototype.hasOwnProperty.call(incoming, "labStop")
-      ? (incoming.labStop || null)
-      : (previous.labStop || null);
-    merged.dayComplete = Object.prototype.hasOwnProperty.call(incoming, "dayComplete")
-      ? (incoming.dayComplete || null)
-      : (previous.dayComplete || null);
+    merged.labStop = Object.prototype.hasOwnProperty.call(latestData, "labStop")
+      ? (latestData.labStop || null)
+      : (earlierData.labStop || null);
+    merged.dayComplete = Object.prototype.hasOwnProperty.call(latestData, "dayComplete")
+      ? (latestData.dayComplete || null)
+      : (earlierData.dayComplete || null);
     // A field snapshot deliberately sends null after a job/day is closed. Respect
     // that explicit clear instead of reviving an older appointment from Firestore.
-    merged.currentJob = Object.prototype.hasOwnProperty.call(incoming, "currentJob")
-      ? (incoming.currentJob || null)
-      : (previous.currentJob || null);
-    merged.nextJob = Object.prototype.hasOwnProperty.call(incoming, "nextJob")
-      ? (incoming.nextJob || null)
-      : (previous.nextJob || null);
+    merged.currentJob = Object.prototype.hasOwnProperty.call(latestData, "currentJob")
+      ? (latestData.currentJob || null)
+      : (earlierData.currentJob || null);
+    merged.nextJob = Object.prototype.hasOwnProperty.call(latestData, "nextJob")
+      ? (latestData.nextJob || null)
+      : (earlierData.nextJob || null);
     merged.timeClock = timeClockStrength(incoming.timeClock) >= timeClockStrength(previous.timeClock)
       ? (incoming.timeClock || previous.timeClock || null)
       : (previous.timeClock || incoming.timeClock || null);
     merged.driveTime = Number(incoming.driveTime?.totalMinutes || 0) >= Number(previous.driveTime?.totalMinutes || 0)
       ? (incoming.driveTime || previous.driveTime || null)
       : (previous.driveTime || incoming.driveTime || null);
-    const incomingHasFieldActivity = (Array.isArray(incoming.jobs) && incoming.jobs.length > 0)
-      || (Array.isArray(incoming.activity) && incoming.activity.some(item => item?.action !== "Company-phone profile synchronized"))
-      || Boolean(incoming.readiness || incoming.labStop || incoming.dayComplete || incoming.currentJob || incoming.nextJob);
-    merged.liveStatus = incomingHasFieldActivity ? (incoming.liveStatus || previous.liveStatus || "NOT STARTED") : (previous.liveStatus || incoming.liveStatus || "NOT STARTED");
+    const states = [currentWorkflowStatus(previous), currentWorkflowStatus(incoming), currentWorkflowStatus(merged)];
+    const meaningfulStates = states.some(state => state.source !== "legacy") ? states.filter(state => state.source !== "legacy") : states;
+    merged.currentWorkflowStatus = meaningfulStates.sort((left, right) => (timestampMilliseconds(left.updatedAt) || 0) - (timestampMilliseconds(right.updatedAt) || 0)).at(-1);
+    merged.liveStatus = merged.currentWorkflowStatus.value;
     merged.updatedAtClient = [previous.updatedAtClient, incoming.updatedAtClient].filter(Boolean).sort().at(-1) || "";
     return merged;
   }
@@ -1023,7 +1270,6 @@
     const ref = db.collection("users").doc(user.uid);
     const clean = cleanOperationsValue(snapshot);
     let profile = {};
-    let savedSnapshot = clean;
     await db.runTransaction(async transaction => {
       const current = await transaction.get(ref);
       profile = current.data() || {};
@@ -1032,6 +1278,8 @@
       if (profile.operationsCurrent?.date === clean.date) sameDateDays.push(profile.operationsCurrent);
       const merged = sameDateDays.reduce((result, day) => mergeOperationsDay(result, day), {});
       const saved = mergeOperationsDay(merged, clean);
+      saved.currentWorkflowStatus = currentWorkflowStatus(saved);
+      saved.liveStatus = saved.currentWorkflowStatus.value;
       const days = existingDays
         .filter(day => day?.date && day.date !== clean.date)
         .concat(saved)
@@ -1042,23 +1290,19 @@
         operationsDays: days,
         operationsUpdatedAt: serverTimestamp()
       }, { merge: true });
-      savedSnapshot = saved;
+      const role = String(profile.role || "inspector").toLowerCase();
+      if (profile.active !== false && ["owner", "inspector", "subcontractor"].includes(role)) transaction.set(db.collection("teamPresence").doc(user.uid), {
+        userId: user.uid, name: teamDirectoryName(profile, user).slice(0, 80), role,
+        photoURL: String(profile.photoURL || user.photoURL || "").slice(0, 1000),
+        profilePhoto: String(profile.profilePhoto || "").slice(0, 220000),
+        status: saved.liveStatus, currentWorkflowStatus: saved.currentWorkflowStatus,
+        statusUpdatedAt: saved.currentWorkflowStatus.updatedAt,
+        date: String(saved.date || ""), active: profile.active !== false && ["owner", "inspector", "subcontractor"].includes(role),
+        updatedAtClient: saved.updatedAtClient, updatedAt: serverTimestamp()
+      }, { merge: true });
     });
     const role = String(profile.role || "inspector").toLowerCase();
-    const status = TEAM_STATUS_VALUES.has(String(savedSnapshot.liveStatus || "")) ? String(savedSnapshot.liveStatus) : "NOT STARTED";
     const teamVisible = profile.active !== false && ["owner", "inspector", "subcontractor"].includes(role);
-    await db.collection("teamPresence").doc(user.uid).set({
-      userId: user.uid,
-      name: teamDirectoryName(profile, user).slice(0, 80),
-      role,
-      photoURL: String(user.photoURL || profile.photoURL || "").slice(0, 1000),
-      profilePhoto: String(profile.profilePhoto || "").slice(0, 220000),
-      status,
-      date: String(savedSnapshot.date || ""),
-      active: teamVisible,
-      updatedAtClient: new Date().toISOString(),
-      updatedAt: serverTimestamp()
-    }, { merge: true }).catch(() => false);
     await db.collection("teamDirectory").doc(user.uid).set({
       userId: user.uid,
       name: teamDirectoryName(profile, user).slice(0, 80),
@@ -1142,6 +1386,8 @@
     replyToUpdate,
     sendFieldMessage,
     sendDirectMessage,
+    messageFailure,
+    messagingHealth,
     watchDirectMessages,
     markDirectMessagesDelivered,
     markDirectConversationRead,
@@ -1158,6 +1404,10 @@
     loadOwnOperationsDay,
     watchTeamPresence,
     watchTeamDirectory,
-    directConversationId
+    directConversationId,
+    currentWorkflowStatus,
+    canonicalWorkflowStatus,
+    teamQualification,
+    mergeOperationsDay
   };
 })();

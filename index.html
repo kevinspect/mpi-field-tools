@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="191">
+  <meta name="app-build" content="195">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5859,7 +5859,7 @@
       .issued-tools-list { grid-template-columns: 1fr; padding: 10px; }
     }
 
-    /* Build 194 — iPhone-style Messages */
+    /* Build 195 — iPhone-style Messages */
     #inbox { background:#f2f2f7; }
     .field-inbox-header { padding:4px 4px 0; }
     .field-inbox-header .field-section-heading h2 { font-size:30px; letter-spacing:-.035em; }
@@ -6000,7 +6000,7 @@
       <a href="#comment-builder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4Z"/><path d="M8 8h8M8 12h5"/></svg><span><strong>Comment Creator</strong><small>Build a defect comment</small></span></a>
     </nav>
     <a class="home-office-link" id="officeConsoleCard" href="./admin.html" hidden>Open Office Console</a>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">191</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">195</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -8637,7 +8637,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span>Build 194</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 195</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8777,12 +8777,12 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=194"></script>
-  <script src="./mpi-shared.js?build=194"></script>
-  <script src="./mpi-equipment.js?build=194"></script>
-  <script src="./mpi-field-sync.js?build=194"></script>
-  <script src="./mpi-subcontractor.js?build=194"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=194"></script>
+  <script src="./mpi-native-bridge.js?build=195"></script>
+  <script src="./mpi-shared.js?build=195"></script>
+  <script src="./mpi-equipment.js?build=195"></script>
+  <script src="./mpi-field-sync.js?build=195"></script>
+  <script src="./mpi-subcontractor.js?build=195"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=195"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -9926,6 +9926,7 @@
       const settingsOfflineStatus = document.getElementById("settingsOfflineStatus");
       const toast = document.getElementById("toast");
       const appBuildNumber = document.getElementById("appBuildNumber");
+      const settingsInstalledBuild = document.getElementById("settingsInstalledBuild");
       const checkForUpdatesBtn = document.getElementById("checkForUpdatesBtn");
       const appUpdateNotice = document.getElementById("appUpdateNotice");
       const appUpdateMessage = document.getElementById("appUpdateMessage");
@@ -15653,6 +15654,16 @@
       }
 
       function workflowLiveStatus(active, readiness, labStop, dayComplete, clockRecord) {
+        if (window.MPI_SHARED?.currentWorkflowStatus) return window.MPI_SHARED.currentWorkflowStatus({
+          activity: loadWorkflowActivity().filter(event => event.date === localDateKey()),
+          currentJob: active ? {
+            onMyWayAt: active.workflowTimestamps?.["on-my-way"], arrivedAt: active.workflowTimestamps?.arrived,
+            inspectionStartedAt: active.workflowTimestamps?.["in-progress"], completedAt: active.workflowTimestamps?.equipment
+          } : null,
+          readiness, labStop, dayComplete,
+          timeClock: clockRecord ? { ...clockRecord, active: Boolean(workflowActiveClockSession(clockRecord)), effectiveClockedOutAt: workflowPaySessions(clockRecord).at(-1)?.clockedOutAt || "" } : null,
+          liveStatus: loadWorkflowNachiTraining()?.active ? "NACHI TRAINING" : readiness ? "READY / WAITING TO DEPART" : "NOT STARTED"
+        }).value;
         if (dayComplete?.completedAt && !workflowActiveClockSession(clockRecord)) return "CLOCKED OUT";
         if (loadWorkflowNachiTraining()?.active) return "NACHI TRAINING";
         if (labStop) {
@@ -15813,6 +15824,7 @@
           : report.outcome === "repaired"
             ? `${report.repairs.length} ${report.repairs.length === 1 ? "issue was" : "issues were"} safely repaired. Your job information was preserved.`
             : `${report.issues.length} ${report.issues.length === 1 ? "issue requires" : "issues require"} office or support assistance. Your jobs, timestamps, Hours Worked, and offline records have been preserved.`;
+        if (report.issues?.some(issue => issue.code === "messaging")) appDiagnosticsResultBody.textContent = "MESSAGING – FAILED. Your drafts and conversation history are preserved. Retry sending or send this diagnostic to the office.";
         sendAppDiagnosticBtn.hidden = false;
       }
 
@@ -15836,6 +15848,8 @@
 
         const session = window.MPI_COMPANY_SESSION || null;
         if (!session?.userId) addIssue("authentication", "The MPI company account is not signed in.");
+        const messaging = window.MPI_SHARED?.messagingHealth ? await window.MPI_SHARED.messagingHealth() : { status: "failed", backend: "unavailable" };
+        if (messaging.status !== "healthy") addIssue("messaging", "MESSAGING – FAILED", messaging.referenceId || `${messaging.backend} · listener ${messaging.listener || "unavailable"} · ${messaging.pending || 0} pending`);
 
         let sync = appDiagnosticSyncCounts();
         if ((sync.pending || sync.failed) && online && session?.userId) {
@@ -15921,6 +15935,7 @@
           device: appDiagnosticDeviceSummary(),
           connectivity: { online, server: server.status },
           authentication: session?.userId ? "signed-in" : "not-signed-in",
+          messaging,
           sync: { ...sync, pendingDiagnosticReports: loadPendingAppDiagnostics().length },
           workflow: {
             status: workflowLiveStatus(activeJob, readiness, loadWorkflowLabStop(), workflowDayCompleteRecord(), clock),
@@ -16148,6 +16163,8 @@
 
       function syncWorkflowOperationsNow(snapshot = workflowOperationsSnapshot()) {
         if (!snapshot || !window.MPI_SHARED?.syncOperationsSnapshot) return Promise.resolve(false);
+        snapshot.currentWorkflowStatus = window.MPI_SHARED.currentWorkflowStatus(snapshot);
+        snapshot.liveStatus = snapshot.currentWorkflowStatus.value;
         return window.MPI_SHARED.syncOperationsSnapshot(snapshot).then(result => {
           if (result) markWorkflowEventsSynced();
           return result;
@@ -16171,6 +16188,9 @@
 
       function queueWorkflowOperationsSync() {
         if (String(window.MPI_COMPANY_SESSION?.role || "").toLowerCase() === "subcontractor") return;
+        const snapshot = workflowOperationsSnapshot();
+        const state = snapshot && window.MPI_SHARED?.currentWorkflowStatus?.(snapshot);
+        if (state) window.dispatchEvent(new CustomEvent("mpi-workflow-status-changed", { detail: { userId: window.MPI_COMPANY_SESSION?.userId, date: localDateKey(), currentWorkflowStatus: state, status: state.value, statusUpdatedAt: state.updatedAt } }));
         window.clearTimeout(workflowOperationsSyncTimer);
         workflowOperationsSyncTimer = window.setTimeout(() => syncWorkflowOperationsNow(), 900);
       }
@@ -18607,6 +18627,19 @@
         prepareTimedAlerts();
         monitorWorkflowDeparture();
         showToast("Inspection start time recorded");
+        // Persist/synchronize first; app handoff never changes Spectora data.
+        syncWorkflowOperationsNow();
+        openSpectoraInspectionApp();
+      }
+
+      async function openSpectoraInspectionApp() {
+        try {
+          if (!window.MPI_NATIVE?.isNative || !await window.MPI_NATIVE.openSpectoraApp?.()) throw new Error("Spectora V10 is unavailable.");
+        } catch (_) {
+          workflowSpectoraNote.hidden = false;
+          workflowSpectoraNote.innerHTML = "<strong>SPECTORA APP COULD NOT BE OPENED</strong>Please open/install the Spectora V10 app to continue the inspection report. Your MPI Inspection Started timestamp is recorded.";
+          showToast("Spectora app could not be opened — inspection start remains recorded");
+        }
       }
 
       function selectWorkflowJobComplete() {
@@ -20167,23 +20200,30 @@
         const user = window.MPI_SHARED?.auth?.currentUser;
         const session = window.MPI_COMPANY_SESSION;
         if (!member || !user || !session?.userId) return;
+        const replyRecipientId = activeFieldInboxPersonId;
+        const replyText = fieldInboxThreadText.value;
+        saveTeamMessageDraft(replyText, replyRecipientId);
+        fieldInboxThreadSend.textContent = "SEND";
         fieldInboxThreadSend.disabled = true;
         fieldInboxThreadStatus.className = "damage-submit-status";
         fieldInboxThreadStatus.textContent = `Sending only to ${teamDisplayName(member.name)}…`;
         try {
           await window.MPI_SHARED.sendDirectMessage(user, { name: session.inspectorName, role: session.role }, member, fieldInboxThreadText.value, [...(fieldInboxThreadFiles.files || [])]);
-          fieldInboxThreadForm.reset();
-          saveTeamMessageDraft("", activeFieldInboxPersonId);
+          if (teamMessageDraft(replyRecipientId, user.uid) === replyText) saveTeamMessageDraft("", replyRecipientId, user.uid);
+          if (window.MPI_COMPANY_SESSION?.userId !== user.uid || activeFieldInboxPersonId !== replyRecipientId) return;
+          if (fieldInboxThreadText.value === replyText) fieldInboxThreadForm.reset();
           fieldInboxThreadFileStatus.textContent = "No attachment selected.";
           fieldInboxThreadStatus.className = "damage-submit-status success";
           fieldInboxThreadStatus.textContent = "Reply sent.";
           markTeamConversationRead(activeFieldInboxPersonId);
           renderFieldInboxConversation();
         } catch (error) {
+          if (window.MPI_COMPANY_SESSION?.userId !== user.uid || activeFieldInboxPersonId !== replyRecipientId) return;
           fieldInboxThreadStatus.className = "damage-submit-status error";
-          fieldInboxThreadStatus.textContent = error?.message || "The reply could not be sent.";
+          fieldInboxThreadStatus.textContent = window.MPI_SHARED.messageFailure(error).message;
+          fieldInboxThreadSend.textContent = "TRY AGAIN";
         } finally {
-          fieldInboxThreadSend.disabled = false;
+          if (window.MPI_COMPANY_SESSION?.userId === user.uid) fieldInboxThreadSend.disabled = false;
         }
       }
 
@@ -20196,23 +20236,31 @@
         }
       }
 
-      function teamMessageDraftKey(userId = selectedTeamMemberId) {
-        const currentUid = window.MPI_COMPANY_SESSION?.userId || "";
-        return window.MPI_SHARED?.directConversationId?.(currentUid, userId) || String(userId || "");
+      function teamMessageDraftKey(userId = selectedTeamMemberId, authorUid = window.MPI_COMPANY_SESSION?.userId || "") {
+        if (!authorUid || !userId) return "";
+        return `${authorUid}::${window.MPI_SHARED.directConversationId(authorUid, userId)}`;
       }
 
-      function saveTeamMessageDraft(value, userId = selectedTeamMemberId) {
-        const key = teamMessageDraftKey(userId);
+      function saveTeamMessageDraft(value, userId = selectedTeamMemberId, authorUid = window.MPI_COMPANY_SESSION?.userId || "") {
+        const key = teamMessageDraftKey(userId, authorUid);
         if (!key) return;
         const drafts = loadTeamMessageDrafts();
         const text = String(value || "").slice(0, 1200);
-        if (text) drafts[key] = text;
-        else delete drafts[key];
+        drafts[key] = text;
         try { localStorage.setItem(TEAM_MESSAGE_DRAFT_STORAGE_KEY, JSON.stringify(drafts)); } catch (_) {}
       }
 
-      function teamMessageDraft(userId = selectedTeamMemberId) {
-        return String(loadTeamMessageDrafts()[teamMessageDraftKey(userId)] || "");
+      function teamMessageDraft(userId = selectedTeamMemberId, authorUid = window.MPI_COMPANY_SESSION?.userId || "") {
+        const drafts = loadTeamMessageDrafts();
+        const key = teamMessageDraftKey(userId, authorUid);
+        if (!key) return "";
+        if (Object.prototype.hasOwnProperty.call(drafts, key)) return String(drafts[key]);
+        // Keep legacy text intact and bind it to the account using this device
+        // at upgrade. A different signed-in user must not inherit their draft.
+        try { if (localStorage.getItem(`${TEAM_MESSAGE_DRAFT_STORAGE_KEY}:legacyOwner`) !== authorUid) return ""; } catch (_) { return ""; }
+        const legacy = String(drafts[window.MPI_SHARED.directConversationId(authorUid, userId)] || "");
+        if (legacy) saveTeamMessageDraft(legacy, userId, authorUid);
+        return legacy;
       }
 
       function teamRoleLabel(member) {
@@ -20225,7 +20273,7 @@
 
       function teamStatusLabel(member) {
         if (teamRoleLabel(member) === "OFFICE") return "OFFICE";
-        return String(member?.presence?.status || (member?.role === "subcontractor" ? "AVAILABLE" : "NOT STARTED"));
+        return window.MPI_SHARED?.currentWorkflowStatus?.(member?.presence || {}).value || String(member?.presence?.status || "NOT STARTED");
       }
 
       function teamAvatarMarkup(member) {
@@ -20252,7 +20300,9 @@
         const personRow = member => {
           const isYou = member.id === currentUid || member.userId === currentUid;
           const unread = teamMessagesWith(member.id).filter(message => message.senderUid !== currentUid && !fieldDirectMessageIsRead(message, currentUid)).length;
-          return `<button class="team-directory-person" type="button" data-team-member="${escapeHtml(member.id)}" ${isYou ? "disabled" : ""}>${teamAvatarMarkup(member)}<span><strong>${escapeHtml(teamDisplayName(member.name))}${isYou ? " · YOU" : ""}</strong><small>${escapeHtml(teamRoleLabel(member))} · ${escapeHtml(teamStatusLabel(member))}</small></span>${unread ? `<span class="team-unread">${unread} NEW</span>` : '<span aria-hidden="true">›</span>'}</button>`;
+          const state = window.MPI_SHARED.currentWorkflowStatus(member.presence || {});
+          const age = state.updatedAt ? ` · Updated ${Math.max(0, Math.floor((Date.now() - new Date(state.updatedAt).getTime()) / 60000))} min ago` : "";
+          return `<button class="team-directory-person" type="button" data-team-member="${escapeHtml(member.id)}" ${isYou ? "disabled" : ""}>${teamAvatarMarkup(member)}<span><strong>${escapeHtml(teamDisplayName(member.name))}${isYou ? " · YOU" : ""}</strong><small>${escapeHtml(teamRoleLabel(member))} · ${escapeHtml(teamStatusLabel(member))}${escapeHtml(age)}</small>${window.MPI_SHARED.teamQualification(member) ? `<small>${escapeHtml(window.MPI_SHARED.teamQualification(member))}</small>` : ""}</span>${unread ? `<span class="team-unread">${unread} NEW</span>` : '<span aria-hidden="true">›</span>'}</button>`;
         };
         const field = ordered.filter(member => teamRoleLabel(member) !== "OFFICE");
         const office = ordered.filter(member => teamRoleLabel(member) === "OFFICE");
@@ -20267,7 +20317,7 @@
         if (!member) return;
         const currentUid = window.MPI_COMPANY_SESSION?.userId || "";
         teamProfileName.textContent = teamDisplayName(member.name);
-        teamProfileRole.textContent = `${teamRoleLabel(member)} · ${teamStatusLabel(member)}`;
+        teamProfileRole.textContent = [teamRoleLabel(member), window.MPI_SHARED?.teamQualification?.(member), teamStatusLabel(member)].filter(Boolean).join(" · ");
         teamPrivateLabel.textContent = `MESSAGE ${teamDisplayName(member.name).toUpperCase()}`;
         const messages = teamMessagesWith(selectedTeamMemberId);
         teamPrivateThread.innerHTML = messages.length ? messages.map(message => {
@@ -20304,6 +20354,7 @@
         const member = teamMemberRecord(userId);
         if (!member || userId === window.MPI_COMPANY_SESSION?.userId) return;
         const changedPerson = selectedTeamMemberId !== userId;
+        if (changedPerson) teamPrivateFiles.value = "";
         selectedTeamMemberId = userId;
         teamDirectoryView.hidden = true;
         teamPrivateProfile.hidden = false;
@@ -20328,20 +20379,27 @@
         const user = window.MPI_SHARED?.auth?.currentUser;
         const session = window.MPI_COMPANY_SESSION;
         if (!member || !user || !session?.userId) return;
+        const privateRecipientId = selectedTeamMemberId;
+        const privateText = teamPrivateText.value;
+        saveTeamMessageDraft(privateText, privateRecipientId);
+        teamPrivateSend.textContent = "SEND PRIVATE MESSAGE";
         teamPrivateSend.disabled = true;
         teamPrivateSendStatus.textContent = `Sending only to ${teamDisplayName(member.name)}…`;
         try {
           await window.MPI_SHARED.sendDirectMessage(user, { name: session.inspectorName, role: session.role }, member, teamPrivateText.value, [...teamPrivateFiles.files]);
-          teamPrivateForm.reset();
-          saveTeamMessageDraft("", selectedTeamMemberId);
+          if (teamMessageDraft(privateRecipientId, user.uid) === privateText) saveTeamMessageDraft("", privateRecipientId, user.uid);
+          if (window.MPI_COMPANY_SESSION?.userId !== user.uid || selectedTeamMemberId !== privateRecipientId) return;
+          if (teamPrivateText.value === privateText) teamPrivateForm.reset();
           markTeamConversationRead(selectedTeamMemberId);
           teamPrivateSendStatus.className = "damage-submit-status success";
           teamPrivateSendStatus.textContent = `Private message sent only to ${teamDisplayName(member.name)}.`;
         } catch (error) {
+          if (window.MPI_COMPANY_SESSION?.userId !== user.uid || selectedTeamMemberId !== privateRecipientId) return;
           teamPrivateSendStatus.className = "damage-submit-status error";
-          teamPrivateSendStatus.textContent = error?.message || "The private message could not be sent.";
+          teamPrivateSendStatus.textContent = window.MPI_SHARED.messageFailure(error).message;
+          teamPrivateSend.textContent = "TRY AGAIN";
         } finally {
-          teamPrivateSend.disabled = false;
+          if (window.MPI_COMPANY_SESSION?.userId === user.uid) teamPrivateSend.disabled = false;
         }
       }
 
@@ -20362,21 +20420,29 @@
           fieldInboxComposeStatus.textContent = "Choose one MPI team member.";
           return;
         }
+        const composeRecipientId = member.id || member.userId;
+        const composeText = fieldInboxComposeText.value;
+        saveTeamMessageDraft(composeText, composeRecipientId);
+        fieldInboxComposeSend.textContent = "SEND PRIVATE MESSAGE";
         fieldInboxComposeSend.disabled = true;
         fieldInboxComposeStatus.className = "damage-submit-status";
         fieldInboxComposeStatus.textContent = `Sending only to ${teamDisplayName(member.name)}…`;
         try {
           await window.MPI_SHARED.sendDirectMessage(user, { name: session.inspectorName, role: session.role }, member, fieldInboxComposeText.value, [...(fieldInboxComposeFiles.files || [])]);
-          fieldInboxComposeForm.reset();
+          if (teamMessageDraft(composeRecipientId, user.uid) === composeText) saveTeamMessageDraft("", composeRecipientId, user.uid);
+          if (window.MPI_COMPANY_SESSION?.userId !== user.uid || fieldInboxComposeRecipient.value !== composeRecipientId) return;
+          if (fieldInboxComposeText.value === composeText) fieldInboxComposeForm.reset();
           fieldInboxComposeStatus.className = "damage-submit-status success";
           fieldInboxComposeStatus.textContent = `Private message sent only to ${teamDisplayName(member.name)}.`;
           setFieldInboxComposerOpen(false);
           showToast("Private message sent");
         } catch (error) {
+          if (window.MPI_COMPANY_SESSION?.userId !== user.uid || fieldInboxComposeRecipient.value !== composeRecipientId) return;
           fieldInboxComposeStatus.className = "damage-submit-status error";
-          fieldInboxComposeStatus.textContent = error?.message || "The private message could not be sent.";
+          fieldInboxComposeStatus.textContent = window.MPI_SHARED.messageFailure(error).message;
+          fieldInboxComposeSend.textContent = "TRY AGAIN";
         } finally {
-          fieldInboxComposeSend.disabled = false;
+          if (window.MPI_COMPANY_SESSION?.userId === user.uid) fieldInboxComposeSend.disabled = false;
         }
       }
 
@@ -20401,13 +20467,27 @@
       }
 
       function startTeamConnection(session = window.MPI_COMPANY_SESSION) {
-        if (!session?.userId || !window.MPI_SHARED?.watchTeamDirectory) return;
+        if (!window.MPI_SHARED?.watchTeamDirectory) return;
+        const nextUid = session?.userId || "";
+        if (nextUid && startTeamConnection.userId === nextUid && unsubscribeTeamDirectMessages) return;
         unsubscribeTeamDirectory?.();
         unsubscribeTeamPresence?.();
         unsubscribeTeamDirectMessages?.();
         unsubscribeFieldSentMessages?.();
+        unsubscribeTeamDirectory = unsubscribeTeamPresence = unsubscribeTeamDirectMessages = unsubscribeFieldSentMessages = null;
         teamDirectListenerReady = false;
+        if (startTeamConnection.userId !== nextUid || !nextUid) {
+          teamDirectoryRecords = []; teamPresenceRecords = []; teamDirectMessages = []; fieldSentMessages = [];
+          closeTeamProfile(); closeFieldInboxConversation(); fieldInboxComposeForm.reset();
+          fieldInboxThreadSend.disabled = teamPrivateSend.disabled = fieldInboxComposeSend.disabled = false;
+        }
+        startTeamConnection.userId = nextUid;
+        if (!nextUid) { renderTeamDirectory(); renderFieldInbox(); return; }
+        try {
+          if (!localStorage.getItem(`${TEAM_MESSAGE_DRAFT_STORAGE_KEY}:legacyOwner`)) localStorage.setItem(`${TEAM_MESSAGE_DRAFT_STORAGE_KEY}:legacyOwner`, nextUid);
+        } catch (_) {}
         unsubscribeTeamDirectory = window.MPI_SHARED.watchTeamDirectory((records, error) => {
+          if (window.MPI_COMPANY_SESSION?.userId !== nextUid) return;
           if (!error) teamDirectoryRecords = records.map(item => ({
             ...item,
             name: String(item.email || "").trim().toLowerCase() === "admin@michiganpropertyinspections.com"
@@ -20425,11 +20505,13 @@
           }
         });
         unsubscribeTeamPresence = window.MPI_SHARED.watchTeamPresence((records, error) => {
+          if (window.MPI_COMPANY_SESSION?.userId !== nextUid) return;
           if (!error) teamPresenceRecords = records;
           renderTeamDirectory();
           renderFieldInbox();
         });
         unsubscribeTeamDirectMessages = window.MPI_SHARED.watchDirectMessages(window.MPI_SHARED.auth.currentUser, (records, error) => {
+          if (window.MPI_COMPANY_SESSION?.userId !== nextUid) return;
           if (error) return;
           const known = new Set(teamDirectMessages.map(item => item.id));
           const fresh = teamDirectListenerReady ? records.find(item => !known.has(item.id) && item.senderUid !== session.userId) : null;
@@ -20448,11 +20530,21 @@
           }
         });
         unsubscribeFieldSentMessages = window.MPI_SHARED.watchSentFieldMessages?.(window.MPI_SHARED.auth.currentUser, (records, error) => {
+          if (window.MPI_COMPANY_SESSION?.userId !== nextUid) return;
           if (error) return;
           fieldSentMessages = records;
           renderFieldInbox();
         }) || null;
       }
+
+      window.addEventListener("mpi-workflow-status-changed", event => {
+        const update = event.detail;
+        if (!update?.userId) return;
+        teamPresenceRecords = teamPresenceRecords.map(record => record.id === update.userId || record.userId === update.userId ? { ...record, ...update } : record);
+        if (!teamPresenceRecords.some(record => record.id === update.userId || record.userId === update.userId)) teamPresenceRecords.push({ id: update.userId, ...update });
+        renderTeamDirectory();
+        if (selectedTeamMemberId) renderTeamPrivateThread();
+      });
 
       function loadActiveJob() {
         try {
@@ -22143,6 +22235,7 @@
 
       function initializeAppUpdates() {
         appBuildNumber.textContent = String(CURRENT_APP_BUILD);
+        settingsInstalledBuild.textContent = `Build ${CURRENT_APP_BUILD}`;
         if (window.MPI_NATIVE?.isNative) {
           appUpdateNotice.hidden = true;
           checkForUpdatesBtn.textContent = "Check installed version";
@@ -24474,6 +24567,15 @@
       teamProfileBack?.addEventListener("click", closeTeamProfile);
       teamPrivateForm?.addEventListener("submit", sendTeamPrivateMessage);
       fieldInboxComposeForm?.addEventListener("submit", sendFieldInboxMessage);
+      fieldInboxComposeText?.addEventListener("input", () => {
+        if (fieldInboxComposeRecipient?.value) saveTeamMessageDraft(fieldInboxComposeText.value, fieldInboxComposeRecipient.value);
+      });
+      fieldInboxComposeRecipient?.addEventListener("change", () => {
+        if (!fieldInboxComposeText.value) fieldInboxComposeText.value = teamMessageDraft(fieldInboxComposeRecipient.value);
+        if (fieldInboxComposeRecipient.value) saveTeamMessageDraft(fieldInboxComposeText.value, fieldInboxComposeRecipient.value);
+        fieldInboxComposeStatus.textContent = "";
+        fieldInboxComposeSend.textContent = "SEND PRIVATE MESSAGE";
+      });
       fieldInboxComposeToggle?.addEventListener("click", () => setFieldInboxComposerOpen(fieldInboxComposeCard?.hidden !== false));
       fieldInboxComposeClose?.addEventListener("click", () => setFieldInboxComposerOpen(false));
       fieldInboxThreadBack?.addEventListener("click", closeFieldInboxConversation);

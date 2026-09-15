@@ -1,0 +1,23 @@
+{
+  "name": "@mpi/background-location",
+  "version": "0.1.0",
+  "description": "MPI-owned Capacitor bridge for workday-only iOS background location tracking.",
+  "main": "dist/plugin.cjs.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "files": [
+    "dist/",
+    "ios/Sources/",
+    "Package.swift"
+  ],
+  "license": "UNLICENSED",
+  "private": true,
+  "peerDependencies": {
+    "@capacitor/core": ">=8.0.0"
+  },
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
+  }
+}

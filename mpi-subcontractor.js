@@ -293,6 +293,7 @@
 
   function syncState() {
     if (!session?.userId || !shared?.db || !state) return;
+    state.currentWorkflowStatus = shared.currentWorkflowStatus(state);
     const field = testMode ? "subcontractorTestCurrent" : "subcontractorCurrent";
     shared.db.collection("users").doc(session.userId).set({
       [field]: state,
@@ -302,12 +303,7 @@
     });
     if (!testMode) {
       const role = "subcontractor";
-      const status = state.lab?.status === "on-way" ? "DRIVING TO LAB"
-        : state.lab?.status === "arrived" ? "AT LAB"
-          : state.currentJob?.status === "on-way" ? "DRIVING TO JOB"
-            : state.currentJob?.status === "arrived" ? "ARRIVED AT JOB"
-              : state.currentJob?.status === "completed" ? "FINAL JOB COMPLETE"
-                : "READY / WAITING TO DEPART";
+      const status = state.currentWorkflowStatus.value;
       shared.db.collection("teamPresence").doc(session.userId).set({
         userId: session.userId,
         name: String(session.inspectorName || "MPI Subcontractor").slice(0, 80),
@@ -315,6 +311,8 @@
         photoURL: "",
         profilePhoto: "",
         status,
+        currentWorkflowStatus: state.currentWorkflowStatus,
+        statusUpdatedAt: state.currentWorkflowStatus.updatedAt,
         date: localDateKey(),
         active: true,
         updatedAtClient: nowIso(),
@@ -365,7 +363,7 @@
     const job = state.currentJob;
     const inLab = Boolean(state.lab);
     jobNumber.textContent = `JOB ${job.number}`;
-    statusLabel.textContent = inLab ? state.status : jobStatusText(job);
+    statusLabel.textContent = shared.currentWorkflowStatus(state).value;
     statusDetail.textContent = inLab
       ? `${state.lab.name} · ${state.lab.status === "on-way" ? `departed ${formatTime(state.lab.onWayAt)}` : state.lab.status === "arrived" ? `arrived ${formatTime(state.lab.arrivedAt)}` : "visit complete"}`
       : job.status === "on-way"

@@ -51,6 +51,16 @@
   const liveRouteDate = document.getElementById("adminLiveRouteDate");
   const liveCandidateAddress = document.getElementById("adminLiveCandidateAddress");
   const liveCandidatePin = document.getElementById("adminLiveCandidatePin");
+  const planningInspector = document.getElementById("adminPlanningInspector");
+  const planningOrigin = document.getElementById("adminPlanningOrigin");
+  const planningSuggestions = document.getElementById("adminPlanningSuggestions");
+  const planningResult = document.getElementById("adminPlanningResult");
+  let selectedPlanningAddress = null;
+  let planningSearchController = null;
+  let planningSearchTimer = null;
+  let planningSearchGeneration = 0;
+  let planningAddressMatches = [];
+  let planningCalculationGeneration = 0;
   const liveLocationRouteStatus = document.getElementById("adminLiveLocationRouteStatus");
   const spectoraScheduleStatus = document.getElementById("adminSpectoraScheduleStatus");
   const commentUsageUsed = document.getElementById("commentUsageUsed");
@@ -1072,12 +1082,12 @@
     const role = String(person?.role || "").toLowerCase();
     const operation = person?.operationsCurrent;
     if (operation?.date === today) {
-      const status = String(operation.liveStatus || "NOT STARTED").toUpperCase();
+      const status = shared.currentWorkflowStatus(operation).value;
       return { active: !["NOT STARTED", "CLOCKED OUT"].includes(status), status, date: today };
     }
     if (role === "subcontractor") {
       const record = person?.subcontractorCurrent || person?.subcontractorTestCurrent;
-      const status = String(record?.status || "AVAILABLE / NO CURRENT JOB").toUpperCase();
+      const status = record ? shared.currentWorkflowStatus(record).value : "AVAILABLE / NO CURRENT JOB";
       const recordDate = String(record?.date || record?.updatedAtClient || "").slice(0, 10);
       return { active: recordDate === today && !/AVAILABLE|NO CURRENT JOB|CLOCKED OUT/.test(status), status, date: recordDate };
     }
@@ -1183,6 +1193,7 @@
   }
 
   function renderLiveLocationMap() {
+    renderPlanningControls();
     if (!liveLocationPanel || !liveLocationList) return;
     const values = liveLocationValues();
     const spectoraDays = liveLocationPeople().reduce((total, person) => total + (Array.isArray(person?.spectoraScheduleDays) ? person.spectoraScheduleDays.length : 0), 0);
@@ -1613,40 +1624,148 @@
   }
 
   async function dropPlanningCandidatePin() {
-    const address = String(liveCandidateAddress?.value || "").trim();
+    let address = String(liveCandidateAddress?.value || "").trim();
     if (!address || !liveCandidatePin) {
       if (liveLocationRouteStatus) liveLocationRouteStatus.textContent = "Enter the possible new job address first.";
       liveCandidateAddress?.focus();
       return;
     }
     liveCandidatePin.disabled = true;
-    liveCandidatePin.textContent = "LOCATING…";
+    const person = people.find(item => item.id === planningInspector?.value);
+    const originId = planningOrigin?.value;
+    if (!person || !originId) {
+      liveCandidatePin.disabled = false;
+      planningResult.hidden = false;
+      planningResult.textContent = "Select an inspector and a scheduled job as the starting point first. Live GPS is not required.";
+      return;
+    }
+    const generation = ++planningCalculationGeneration;
+    const selectedDate = liveRouteDate?.value || dateKey();
+    const job = planningJobs(person).find(item => String(item.id) === originId);
+    const live = originId === "live" ? liveLocationRecord(person) : null;
+    liveCandidatePin.textContent = "CALCULATING…";
+    planningResult.hidden = false;
+    planningResult.textContent = "Calculating road distance and drive time…";
     try {
-      if (!liveLocationAllPlansVisible) await loadAllPlannedScheduleRoutes({ force: true });
-      const coordinates = await geocodeScheduleAddress(address);
+      const coordinates = selectedPlanningAddress?.address === address ? selectedPlanningAddress : await geocodeScheduleAddress(address);
       if (!coordinates) throw new Error("That address could not be located. Include the street, city, state and ZIP code.");
+      address = String(coordinates.matchedAddress || coordinates.address || address);
+      selectedPlanningAddress = { ...coordinates, address, selectedAt: new Date().toISOString() };
+      liveCandidateAddress.value = address;
+      try { localStorage.setItem("mpiAdminPotentialJobV1", JSON.stringify(selectedPlanningAddress)); } catch (_) {}
+      const origin = live || await geocodeScheduleAddress(job);
+      if (!origin) throw new Error("The inspector's scheduled starting address could not be located.");
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 14000);
+      let travel;
+      try { travel = await window.MPI_PLANNING.roadTravel(origin, coordinates, controller.signal); } finally { clearTimeout(timeout); }
+      if (generation !== planningCalculationGeneration) return;
+      const plannedEnd = job?.scheduledEnd || job?.end?.dateTime || "";
+      const arrival = live ? new Date(Date.now() + travel.minutes * 60000).toISOString() : window.MPI_PLANNING.earliestArrival(plannedEnd, travel.minutes, selectedDate, dateKey());
+      const originAddress = live ? "Current live location" : scheduleAddress(job);
+      planningResult.innerHTML = `<h4>POTENTIAL NEW JOB</h4><strong>${escapeHtml(address)}</strong><p>FROM: ${escapeHtml(canonicalTeamName(person))} · ${escapeHtml(originAddress)}</p><dl><div><dt>DISTANCE</dt><dd>${travel.miles.toFixed(1)} miles</dd></div><div><dt>ESTIMATED DRIVE TIME</dt><dd>${travel.minutes} minutes</dd></div><div><dt>PLANNED CURRENT JOB END</dt><dd>${plannedEnd ? escapeHtml(formatTime(plannedEnd)) : "Not available"}</dd></div><div><dt>ESTIMATED EARLIEST ARRIVAL</dt><dd>${arrival ? escapeHtml(formatTime(arrival)) : "Requires a scheduled job end time"}</dd></div></dl><small>Planning estimate only, not a guarantee. No live traffic, lab stops, job overruns or breaks included. ${coordinates.precise === false ? "Street-level suggestion: confirm the exact house address before booking. " : ""}OSRM / OpenStreetMap · Spectora appointments remain unchanged.</small>`;
       if (!liveLocationRouteLayer) throw new Error("The planning map is not available.");
       const icon = window.L.divIcon({ className: "", html: '<span class="mpi-candidate-marker"><span>+</span></span>', iconSize: [40, 40], iconAnchor: [12, 36] });
       if (liveLocationCandidate?.marker) liveLocationRouteLayer.removeLayer(liveLocationCandidate.marker);
+      if (liveLocationCandidate?.route) liveLocationRouteLayer.removeLayer(liveLocationCandidate.route);
       const marker = window.L.marker([coordinates.latitude, coordinates.longitude], { icon, zIndexOffset: 1000 }).bindPopup(`<strong>Possible new job</strong><br>${escapeHtml(address)}<br>Planning pin only · not sent to Spectora`);
       liveLocationRouteLayer.addLayer(marker);
       marker.openPopup();
-      liveLocationCandidate = { address, coordinates, marker };
-      const finalStops = [...new Map(liveLocationPlannedStops.map(stop => [stop.person.id, stop])).values()]
-        .map(stop => ({ name: stop.name, miles: distanceMiles(stop.coordinates, coordinates) }))
-        .sort((left, right) => left.miles - right.miles);
-      const bounds = [...liveLocationPlannedStops.map(stop => [stop.coordinates.latitude, stop.coordinates.longitude]), [coordinates.latitude, coordinates.longitude]];
+      const route = window.L.polyline(travel.geometry.map(([longitude, latitude]) => [latitude, longitude]), { color: "#ad882f", weight: 5, dashArray: "7 5" }).addTo(liveLocationRouteLayer);
+      liveLocationCandidate = { address, coordinates, marker, route };
+      const bounds = [[origin.latitude, origin.longitude], [coordinates.latitude, coordinates.longitude]];
       if (bounds.length > 1) liveLocationMap.fitBounds(bounds, { padding: [48, 48], maxZoom: 11 });
       else liveLocationMap.setView(bounds[0], 13);
-      const comparison = finalStops.slice(0, 4).map(item => `${item.name} ~${item.miles.toFixed(1)} mi`).join(" · ");
-      liveLocationRouteStatus.innerHTML = `<strong>Possible job:</strong> ${escapeHtml(address)}.${comparison ? ` Straight-line distance from each operative's final mapped appointment: ${escapeHtml(comparison)}.` : ""} This planning pin is temporary and does not change Spectora.`;
+      liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> · ${travel.miles.toFixed(1)} miles · approximately ${travel.minutes} minutes to this potential job. Dashed line is a planning estimate, not a recorded route.`;
+      liveLocationRouteStatus.dataset.result = "planning";
     } catch (error) {
-      liveLocationRouteStatus.textContent = error?.message || "The possible job could not be placed on the map.";
+      if (generation !== planningCalculationGeneration) return;
+      planningResult.textContent = error?.name === "AbortError" ? "Travel lookup timed out. Please try again. No appointment was changed." : error?.message || "The possible job could not be placed on the map.";
     } finally {
       liveCandidatePin.disabled = false;
-      liveCandidatePin.textContent = "DROP PLANNING PIN";
+      liveCandidatePin.textContent = "CALCULATE TRAVEL";
     }
   }
+
+  function planningJobs(person) {
+    const selectedDate = liveRouteDate?.value || dateKey();
+    return (scheduleDayFor(person, selectedDate)?.jobs || []).filter(job => scheduleAddress(job) && !/cancel|delete/i.test(String(job.status || ""))).sort((left, right) => (asDate(left.scheduledStart)?.getTime() || 0) - (asDate(right.scheduledStart)?.getTime() || 0));
+  }
+
+  function renderPlanningControls() {
+    if (!planningInspector || !planningOrigin) return;
+    const selectedInspector = planningInspector.value;
+    const inspectors = operativePeople().filter(person => person.active !== false && person.role !== "subcontractor");
+    const markup = '<option value="">Select an inspector</option>' + inspectors.map(person => `<option value="${escapeHtml(person.id)}">${escapeHtml(canonicalTeamName(person))}</option>`).join("");
+    if (planningInspector.innerHTML !== markup) { planningInspector.innerHTML = markup; planningInspector.value = selectedInspector; }
+    const person = people.find(item => item.id === planningInspector.value);
+    const selectedOrigin = planningOrigin.value;
+    const jobs = person ? planningJobs(person) : [];
+    const liveAllowed = person && (liveRouteDate?.value || dateKey()) === dateKey() && liveLocationRecord(person);
+    const originMarkup = jobs.map(job => `<option value="${escapeHtml(job.id)}">${escapeHtml(formatTime(job.scheduledStart))} · ${escapeHtml(scheduleAddress(job))}</option>`).join("") + (liveAllowed ? '<option value="live">FROM CURRENT LIVE LOCATION (optional)</option>' : "");
+    const nextMarkup = originMarkup || `<option value="">${person ? "No synchronized jobs on this date" : "Select an inspector first"}</option>`;
+    if (planningOrigin.innerHTML !== nextMarkup) {
+      planningOrigin.innerHTML = nextMarkup;
+      if (jobs.some(job => String(job.id) === selectedOrigin) || (selectedOrigin === "live" && liveAllowed)) planningOrigin.value = selectedOrigin;
+      else {
+        const currentJobId = person?.operationsCurrent?.date === (liveRouteDate?.value || dateKey()) ? person.operationsCurrent.currentJob?.id : "";
+        const relevant = jobs.find(job => String(job.id) === String(currentJobId)) || jobs.find(job => (asDate(job.scheduledStart)?.getTime() || 0) >= Date.now()) || jobs.at(-1);
+        if (relevant) planningOrigin.value = String(relevant.id);
+      }
+    }
+  }
+
+  function invalidatePlanningResult() {
+    planningCalculationGeneration += 1;
+    if (planningResult) planningResult.hidden = true;
+  }
+
+  planningInspector?.addEventListener("change", () => { planningOrigin.innerHTML = ""; invalidatePlanningResult(); renderPlanningControls(); });
+  planningOrigin?.addEventListener("change", invalidatePlanningResult);
+  liveRouteDate?.addEventListener("change", () => { planningOrigin.innerHTML = ""; invalidatePlanningResult(); renderPlanningControls(); });
+  liveCandidateAddress?.addEventListener("input", () => {
+    selectedPlanningAddress = null;
+    invalidatePlanningResult();
+    clearTimeout(planningSearchTimer);
+    planningSearchController?.abort();
+    const generation = ++planningSearchGeneration;
+    const query = liveCandidateAddress.value.trim();
+    planningSuggestions.hidden = true;
+    liveCandidateAddress.setAttribute("aria-expanded", "false");
+    if (query.length < 4) return;
+    planningSearchTimer = setTimeout(async () => {
+      const controller = new AbortController();
+      planningSearchController = controller;
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      try {
+        const matches = await window.MPI_PLANNING.searchAddresses(query, controller.signal);
+        if (generation !== planningSearchGeneration) return;
+        planningAddressMatches = matches;
+        planningSuggestions.innerHTML = matches.length ? matches.map((match, index) => `<button type="button" role="option" data-planning-address="${index}">${escapeHtml(match.address)}${match.precise ? "" : " · confirm house number"}</button>`).join("") : '<button type="button" disabled>No match yet. Include a city or ZIP code.</button>';
+        planningSuggestions.hidden = false;
+        liveCandidateAddress.setAttribute("aria-expanded", "true");
+      } catch (error) {
+        if (error.name !== "AbortError" && generation === planningSearchGeneration) {
+          planningSuggestions.innerHTML = '<button type="button" disabled>Suggestions unavailable. Enter the full address.</button>';
+          planningSuggestions.hidden = false;
+        }
+      } finally { clearTimeout(timeout); }
+    }, 650);
+  });
+  planningSuggestions?.addEventListener("click", event => {
+    const button = event.target.closest("[data-planning-address]");
+    const match = button && planningAddressMatches[Number(button.dataset.planningAddress)];
+    if (!match) return;
+    selectedPlanningAddress = { ...match, selectedAt: new Date().toISOString() };
+    liveCandidateAddress.value = match.address;
+    planningSuggestions.hidden = true;
+    liveCandidateAddress.setAttribute("aria-expanded", "false");
+    try { localStorage.setItem("mpiAdminPotentialJobV1", JSON.stringify(selectedPlanningAddress)); } catch (_) {}
+  });
+  liveCandidateAddress?.addEventListener("keydown", event => {
+    if (event.key === "ArrowDown" && !planningSuggestions.hidden) { event.preventDefault(); planningSuggestions.querySelector("button:not(:disabled)")?.focus(); }
+    if (event.key === "Escape") { planningSuggestions.hidden = true; liveCandidateAddress.setAttribute("aria-expanded", "false"); }
+  });
 
   async function loadPlannedScheduleRoute() {
     if (liveLocationRouteLoading) return;
@@ -1772,6 +1891,7 @@
   }
 
   function mergeAdminOperationDay(previous = null, incoming = null) {
+    if (shared.mergeOperationsDay) return shared.mergeOperationsDay(previous || {}, incoming || {});
     if (!previous) return incoming || {};
     if (!incoming) return previous;
     const mergeRows = (left, right, keyFn) => {
@@ -2023,9 +2143,9 @@
 
   function operationalStatusContext(person, suppliedDay = null) {
     const day = suppliedDay || (person?.operationsCurrent?.date === dateKey() ? person.operationsCurrent : latestDay(person));
-    const status = String(day?.liveStatus || "").toUpperCase();
+    const status = shared.currentWorkflowStatus(day || {}).value;
     const current = currentAppointment(day) || nextAppointment(day);
-    if (/INSPECTION IN PROGRESS/.test(status)) {
+    if (/INSPECTION IN PROGRESS|INSPECTION STARTED/.test(status)) {
       const started = asDate(current?.inspectionStartedAt) || asDate(rawActionTime(day, "Inspection started", current?.id));
       if (started) return { type: "elapsed", timestamp: started.toISOString(), prefix: "Inspection running", text: `Inspection running ${operationalDuration(Date.now() - started.getTime())}` };
     }
@@ -2033,7 +2153,7 @@
       const arrived = asDate(current?.arrivedAt) || asDate(rawActionTime(day, "Arrived", current?.id));
       if (arrived) return { type: "elapsed", timestamp: arrived.toISOString(), prefix: "At property", text: `At property ${operationalDuration(Date.now() - arrived.getTime())}` };
     }
-    if (/DRIVING TO (?:JOB|NEXT JOB)/.test(status)) {
+    if (/DRIVING TO (?:JOB|NEXT JOB)|ON WAY TO JOB/.test(status)) {
       const eta = estimatedArrivalFor(day, current);
       if (eta?.date) {
         const remaining = Math.max(0, eta.date.getTime() - Date.now());
@@ -2264,14 +2384,7 @@
   }
 
   function subcontractorDisplayStatus(state) {
-    const job = state?.currentJob || { number: state?.currentJobNumber || 1, status: "ready" };
-    if (state?.lab?.status === "on-way") return `ON WAY TO ${String(state.lab.name || "LAB").toUpperCase()}`;
-    if (state?.lab?.status === "arrived") return `AT ${String(state.lab.name || "LAB").toUpperCase()}`;
-    if (job.status === "on-way") return `ON WAY – JOB ${job.number || 1}`;
-    if (job.status === "arrived") return `AT JOB – JOB ${job.number || 1}`;
-    if (job.status === "completed") return `JOB ${job.number || 1} COMPLETE / AVAILABLE`;
-    if (/LAB COMPLETE/i.test(String(state?.status || ""))) return "LAB COMPLETE / AVAILABLE";
-    return state?.status || "AVAILABLE / NO CURRENT JOB";
+    return state ? shared.currentWorkflowStatus(state).value : "AVAILABLE / NO CURRENT JOB";
   }
 
   function subcontractorStateCard(person, state, isTest = false) {
@@ -2519,7 +2632,7 @@
     const next = nextAppointment(day);
     const hours = selectedDays(person).reduce((total, item) => total + workedMinutes(person, item), 0);
     const drive = selectedDays(person).reduce((total, item) => total + (Number(driveTimeForDay(item, person)?.totalMinutes) || 0), 0);
-    const status = day?.liveStatus || "NOT STARTED";
+    const status = shared.currentWorkflowStatus(day || {}).value;
     const latestSync = latestSyncDate(person, day);
     const stale = !["NOT STARTED", "CLOCKED OUT"].includes(status) && latestSync && Date.now() - latestSync.getTime() > 20 * 60 * 1000;
     const current = currentAppointment(day);
@@ -3039,7 +3152,7 @@
       ? `<a href="https://maps.apple.com/?q=${encodeURIComponent(`${lastLocation.latitude},${lastLocation.longitude}`)}" target="_blank" rel="noopener">Open last recorded location ↗</a> · ${escapeHtml(formatTime(lastLocation.timestamp))}`
       : "Not available";
     inspectorDetail.innerHTML = `
-      <div class="detail-hero"><div class="detail-person">${avatarHtml(person, "large")}<div><p class="ops-eyebrow">Inspector operations</p><h2>${escapeHtml(person.name || person.email)}</h2><p>${escapeHtml(person.email || "")} · Viewing ${escapeHtml(day?.date ? formatDate(day.date) : "no recorded day")} · ${escapeHtml(syncAgeLabel(person, day))}</p></div></div><div><span class="status-badge ${statusClass(day?.liveStatus, alerts)}">${escapeHtml(day?.liveStatus || "NOT STARTED")}</span>${operationalContextHtml(person, day)}<button class="detail-back" type="button" data-back-overview>← All inspectors</button></div></div>
+      <div class="detail-hero"><div class="detail-person">${avatarHtml(person, "large")}<div><p class="ops-eyebrow">Inspector operations</p><h2>${escapeHtml(person.name || person.email)}</h2>${shared.teamQualification?.(person) ? `<p>${escapeHtml(shared.teamQualification(person))}</p>` : ""}<p>${escapeHtml(person.email || "")} · Viewing ${escapeHtml(day?.date ? formatDate(day.date) : "no recorded day")} · ${escapeHtml(syncAgeLabel(person, day))}</p></div></div><div><span class="status-badge ${statusClass(day?.liveStatus, alerts)}">${escapeHtml(day?.liveStatus || "NOT STARTED")}</span>${operationalContextHtml(person, day)}<button class="detail-back" type="button" data-back-overview>← All inspectors</button></div></div>
       <div class="ops-grid">
         <article class="ops-card span-6"><p class="ops-eyebrow">Current job</p><strong class="ops-primary">${escapeHtml(current?.property || "No job currently open")}</strong><p class="ops-sub">${current ? `Scheduled ${formatTime(current.scheduledStart)} · ${escapeHtml(current.arrivalPerformance || "Arrival not recorded")} · ${escapeHtml(String(current.status || "scheduled").replace(/-/g, " "))}` : "The inspector is not inside an active job workflow."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Arrived</span><strong>${escapeHtml(formatTime(currentArrivedAt))}</strong></div><div class="fact"><span>Inspection started</span><strong>${escapeHtml(formatTime(currentStartedAt))}</strong></div><div class="fact"><span>Time at property</span><strong>${timeAtProperty}</strong></div></div></article>
         <article class="ops-card span-6"><p class="ops-eyebrow">Next appointment</p><strong class="ops-primary">${escapeHtml(next?.property || "No remaining appointment")}</strong><p class="ops-sub">${next ? `${formatTime(next.scheduledStart)} · ${escapeHtml(next.arrivalPerformance || "On schedule")}` : "The scheduled job list is complete."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Estimated drive</span><strong>${current?.departurePlan?.estimatedDriveMinutes ? `${current.departurePlan.estimatedDriveMinutes} min` : "—"}</strong></div><div class="fact"><span>Required departure</span><strong>${escapeHtml(formatTime(current?.departurePlan?.leaveBy))}</strong></div><div class="fact"><span>Schedule status</span><strong>${alerts.some(item => /late|affect next/i.test(item)) ? "ATTENTION REQUIRED" : "ON SCHEDULE"}</strong></div></div></article>
@@ -3397,7 +3510,7 @@
       status.className = "status success";
     } catch (error) {
       if (messageRef) messageRef.set({ active: false, attachmentUploadStatus: "failed" }, { merge: true }).catch(() => {});
-      status.textContent = error.message || "The message could not be sent.";
+      status.textContent = shared.messageFailure(error).message;
       status.className = "status error";
     }
   }
@@ -3420,7 +3533,7 @@
       inboxComposeStatus.className = "status success";
       openAdminInboxConversation(person.id);
     } catch (error) {
-      inboxComposeStatus.textContent = error?.message || "The private message could not be sent.";
+      inboxComposeStatus.textContent = shared.messageFailure(error).message;
       inboxComposeStatus.className = "status error";
     } finally {
       inboxComposeSend.disabled = false;
