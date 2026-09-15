@@ -87,6 +87,10 @@
   let nativeLocationContextSignature = "";
   let nativeLocationSyncInFlight = false;
   let nativeLocationStopInFlight = false;
+  let lastWorkflowLocationSignature = "";
+  let pendingLocationPrompt = false;
+  let localWorkflowLocationState = null;
+  let profileRecoveryTimer = 0;
   const NOTIFIED_UPDATE_STORAGE_KEY = "mpiNotifiedOfficeUpdatesV2";
   const ACCESS_PATH_STORAGE_KEY = "mpiSecureAccessPathV1";
   const LIVE_LOCATION_INTERVAL_MS = 3 * 60 * 1000;
@@ -370,6 +374,14 @@
     if (!profile || profile.active === false || !["owner", "inspector", "subcontractor"].includes(role)) return null;
     const today = localDateKey();
     const operation = profile.operationsCurrent;
+    if (localWorkflowLocationState?.userId === currentUser?.uid && localWorkflowLocationState.date === today) {
+      const serverState = operation?.date === today ? shared.currentWorkflowStatus(operation) : null;
+      if (!serverState || String(serverState.updatedAt || "") <= String(localWorkflowLocationState.updatedAt || "")) {
+        const inactive = ["NOT STARTED", "CLOCKED OUT"].includes(localWorkflowLocationState.status)
+          || (role === "subcontractor" && /AVAILABLE|NO CURRENT JOB|CLOCKED OUT/.test(localWorkflowLocationState.status));
+        return inactive ? null : localWorkflowLocationState;
+      }
+    }
     if (operation?.date === today) {
       const status = shared.currentWorkflowStatus(operation).value;
       if (!["NOT STARTED", "CLOCKED OUT"].includes(status)) return { status, date: today };
@@ -444,13 +456,13 @@
       ? { status: nativeContext.workStatus || "ACTIVE WORKDAY", date: nativeContext.workDate }
       : null;
     const state = nativeState || activeLiveLocationState();
-    if (!currentUser || !currentProfile || !state || liveLocationInFlight || !navigator.onLine) return false;
+    if (!currentUser || !currentProfile || !state || liveLocationInFlight || !navigator.onLine || shared.syncCoolingDown?.(currentUser.uid)) return false;
     const now = Date.now();
     if (reason === "automatic" && now - lastLiveLocationAttemptAt < LIVE_LOCATION_INTERVAL_MS - 15000) return false;
     liveLocationInFlight = true;
     lastLiveLocationAttemptAt = now;
     try {
-      const observedPosition = reason === "automatic" && lastObservedLivePosition && Date.now() - Number(lastObservedLivePosition.timestamp || 0) <= 90000
+      const observedPosition = reason !== "office-request" && lastObservedLivePosition && Date.now() - Number(lastObservedLivePosition.timestamp || 0) <= 90000
         ? lastObservedLivePosition
         : null;
       const position = suppliedPosition || observedPosition || await browserLocation({ maximumAge: reason === "office-request" ? 0 : 60000 });
@@ -466,15 +478,10 @@
       }
       return suppliedPosition?.nativeId ? routeStored : true;
     } catch (error) {
-      const status = Number(error?.code) === 1 ? "permission-denied" : Number(error?.code) === 3 ? "timed-out" : "unavailable";
-      await shared.db.collection("users").doc(currentUser.uid).set({
-        liveLocationStatus: {
-          status,
-          recordedAtClient: new Date().toISOString(),
-          requestId: String(requestId || "").slice(0, 100)
-        },
-        liveLocationUpdatedAt: shared.serverTimestamp()
-      }, { merge: true }).catch(() => false);
+      // A backend outage is not a phone location-permission failure. Never
+      // amplify a failed write with another status write to the same backend.
+      if (error?.code && ![1, 2, 3].includes(Number(error.code))) shared.deferPendingSync?.(currentUser.uid, error);
+      pendingLocationPrompt = true;
       return false;
     } finally {
       liveLocationInFlight = false;
@@ -484,13 +491,15 @@
   function handleLiveLocationRequest(profile = currentProfile) {
     const requestId = String(profile?.liveLocationRequest?.id || "");
     if (!requestId || requestId === lastLiveLocationRequestId) return;
-    if (!activeLiveLocationState(profile) || !navigator.onLine) return;
+    if (!navigator.onLine || !currentUser || shared.syncCoolingDown?.(currentUser.uid)) return;
     lastLiveLocationRequestId = requestId;
-    publishLiveLocation("office-request", requestId, null).then(success => {
-      if (!success && lastLiveLocationRequestId === requestId) lastLiveLocationRequestId = "";
-    }).catch(() => {
-      if (lastLiveLocationRequestId === requestId) lastLiveLocationRequestId = "";
-    });
+    // A stale office dashboard may still show a job after the phone clocked
+    // out. Always resend the workflow; only collect GPS during an active day.
+    window.dispatchEvent(new CustomEvent("mpi-office-status-requested", { detail: { userId: currentUser.uid, requestId } }));
+    flushNativeLocations().then(() => {
+      if (activeLiveLocationState(profile)) return publishLiveLocation("office-request", requestId, null);
+      return true;
+    }).catch(() => false);
   }
 
   function stopLiveLocationSharing() {
@@ -505,19 +514,41 @@
   }
 
   async function flushNativeLocations() {
-    if (!window.MPI_NATIVE?.isNative || nativeLocationSyncInFlight || !currentUser || !navigator.onLine) return false;
+    if (!window.MPI_NATIVE?.isNative || nativeLocationSyncInFlight || !currentUser || !navigator.onLine || shared.syncCoolingDown?.(currentUser.uid)) return false;
     nativeLocationSyncInFlight = true;
+    const userId = currentUser.uid;
     try {
-      const points = await window.MPI_NATIVE.pendingLocations();
-      let synced = false;
-      for (const point of points.slice(0, 120)) {
-        if (point.nativeContext?.userId && point.nativeContext.userId !== currentUser.uid) continue;
-        const result = await publishLiveLocation("native-background", "", point);
-        synced = result || synced;
-        if (!result) break;
+      const points = (await window.MPI_NATIVE.pendingLocations()).filter(point => point.nativeId && point.nativeContext?.workDate && (!point.nativeContext.userId || point.nativeContext.userId === userId));
+      let latest = null;
+      for (let start = 0; start < points.length; start += 400) {
+        if (currentUser?.uid !== userId) return false;
+        const group = points.slice(start, start + 400);
+        const batch = shared.db.batch();
+        group.forEach(point => {
+          const location = liveLocationValue(point, { status: point.nativeContext.workStatus || "ACTIVE WORKDAY", date: point.nativeContext.workDate }, "native-background", "");
+          const nativePointId = String(point.nativeId).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 100);
+          batch.set(shared.db.collection("users").doc(userId).collection("locationRouteDays").doc(location.workDate).collection("points").doc(`native-${nativePointId}`), {
+            userId, date: location.workDate, latitude: location.latitude, longitude: location.longitude,
+            accuracyFeet: location.accuracyFeet, heading: location.heading, speedMph: location.speedMph,
+            recordedAtClient: location.recordedAtClient, workStatus: location.workStatus, source: location.source,
+            nativePointId, recordedAt: shared.serverTimestamp()
+          });
+          if (!latest || location.recordedAtClient > latest.recordedAtClient) latest = location;
+        });
+        await batch.commit();
+        // Do not remove local route evidence until its server commit succeeds.
+        await window.MPI_NATIVE.acknowledgeLocations(group.map(point => point.nativeId));
       }
-      return synced;
-    } catch (_) {
+      // One profile update per upload, not one per GPS point. Old queued routes
+      // must never move today's live map backwards or resurrect an old status.
+      if (latest && currentUser?.uid === userId && latest.workDate === localDateKey() && latest.recordedAtClient > String(currentProfile?.liveLocation?.recordedAtClient || "")) {
+        await shared.db.collection("users").doc(userId).set({ liveLocation: latest,
+          liveLocationStatus: { status: "recorded", recordedAtClient: latest.recordedAtClient, requestId: "" },
+          liveLocationUpdatedAt: shared.serverTimestamp() }, { merge: true });
+      }
+      return Boolean(points.length);
+    } catch (error) {
+      shared.deferPendingSync?.(userId, error);
       return false;
     } finally {
       nativeLocationSyncInFlight = false;
@@ -553,9 +584,8 @@
     if (!nativeLocationListener) {
       nativeLocationListener = await window.MPI_NATIVE.addLocationListener(position => {
         lastObservedLivePosition = position;
-        if (navigator.onLine && Date.now() - lastLiveLocationAttemptAt >= LIVE_LOCATION_INTERVAL_MS - 15000) {
-          publishLiveLocation("native-background", "", position).catch(() => false);
-        }
+        // Background GPS stays in the phone's durable recorder until an action,
+        // office request, resume, reconnect, or final clock-out uploads it.
       });
     }
     if (!nativeResumeListener) {
@@ -569,7 +599,6 @@
       await window.MPI_NATIVE.updateWorkdayLocationContext(context);
     }
     nativeLocationContextSignature = signature;
-    await flushNativeLocations();
     return true;
   }
 
@@ -577,9 +606,6 @@
     if (!activeLiveLocationState() || liveLocationWatchId !== null || !navigator.geolocation?.watchPosition) return;
     liveLocationWatchId = navigator.geolocation.watchPosition(position => {
       lastObservedLivePosition = position;
-      if (Date.now() - lastLiveLocationAttemptAt >= LIVE_LOCATION_INTERVAL_MS - 15000) {
-        publishLiveLocation("automatic", "", position).catch(() => false);
-      }
     }, () => {}, { enableHighAccuracy: true, maximumAge: 60000, timeout: 30000 });
   }
 
@@ -609,16 +635,6 @@
       return;
     }
     syncLiveLocationSharing();
-    if (!liveLocationInterval) {
-      window.setTimeout(() => {
-        if (window.MPI_NATIVE?.isNative) flushNativeLocations().catch(() => false);
-        else publishLiveLocation("automatic").catch(() => false);
-      }, 1200);
-      liveLocationInterval = window.setInterval(() => {
-        if (window.MPI_NATIVE?.isNative) flushNativeLocations().catch(() => false);
-        else publishLiveLocation("automatic").catch(() => false);
-      }, LIVE_LOCATION_INTERVAL_MS);
-    }
     handleLiveLocationRequest(currentProfile);
   }
 
@@ -984,15 +1000,17 @@
     }
     if (user && profile?.active !== false) {
       shared.requestSpectoraScheduleRefresh?.().catch(() => false);
-      spectoraRefreshInterval = window.setInterval(() => {
-        shared.requestSpectoraScheduleRefresh?.().catch(() => false);
-      }, 15 * 60 * 1000);
+      // Schedule reads happen at sign-in or an explicit refresh, not per phone
+      // every fifteen minutes. No appointment is written back to Spectora.
     }
     synchronizeAccessChoice(user, profile);
     accountCard.hidden = false;
     if (!user || !profile) {
       if (topProfileLink) topProfileLink.href = "#settings";
       stopLiveLocationSharing();
+      localWorkflowLocationState = null;
+      lastWorkflowLocationSignature = "";
+      lastLiveLocationRequestId = "";
       lastPublishedSessionSignature = "";
       delete window.MPI_COMPANY_SESSION;
       window.dispatchEvent(new CustomEvent("mpi-company-session-ready", { detail: null }));
@@ -1038,6 +1056,7 @@
       profileWatchUserId = user.uid;
       unsubscribeProfile = shared.db.collection("users").doc(user.uid).onSnapshot(snapshot => {
         if (!snapshot.exists || currentUser?.uid !== user.uid) return;
+        if (!snapshot.metadata?.fromCache && !snapshot.metadata?.hasPendingWrites) shared.resumeSyncAfterServerSuccess?.(user.uid);
         currentProfile = { id: snapshot.id, ...snapshot.data() };
         if (currentProfile.active === false) {
           renderSession(null, null, new Error("MPI Office has revoked access for this device. Contact management to restore it."));
@@ -1048,10 +1067,15 @@
         publishSpectoraSchedule(currentProfile);
         syncLiveLocationSharing();
         handleLiveLocationRequest(currentProfile);
-        if (activeLiveLocationState(currentProfile) && Date.now() - lastLiveLocationAttemptAt >= LIVE_LOCATION_INTERVAL_MS) {
-          publishLiveLocation("automatic").catch(() => false);
-        }
-      }, () => {});
+      }, error => {
+        shared.deferPendingSync?.(user.uid, error);
+        window.clearTimeout(profileRecoveryTimer);
+        profileRecoveryTimer = window.setTimeout(() => {
+          if (currentUser?.uid !== user.uid) return;
+          profileWatchUserId = "";
+          renderSession(currentUser, currentProfile, null);
+        }, /resource-exhausted|quota|429/i.test(`${error.code} ${error.message}`) ? 30 * 60 * 1000 : 60000);
+      });
     }
     unsubscribeUpdates?.();
     unsubscribeUpdates = shared.watchUpdates(user, profile, renderUpdates);
@@ -1216,10 +1240,33 @@
     if (!document.hidden && currentUser && currentProfile) {
       syncLiveLocationSharing();
       handleLiveLocationRequest(currentProfile);
-      publishLiveLocation("automatic").catch(() => false);
+      flushNativeLocations().catch(() => false);
+      if (pendingLocationPrompt) publishLiveLocation("workflow-retry").then(success => { if (success) pendingLocationPrompt = false; });
     }
   });
-  window.addEventListener("online", () => publishLiveLocation("automatic").catch(() => false));
+  window.addEventListener("mpi-workflow-status-changed", event => {
+    const detail = event.detail;
+    if (!currentUser || detail?.userId !== currentUser.uid) return;
+    const signature = `${detail.date}:${detail.status}:${detail.statusUpdatedAt}`;
+    if (signature === lastWorkflowLocationSignature) return;
+    lastWorkflowLocationSignature = signature;
+    localWorkflowLocationState = { userId: currentUser.uid, date: detail.date, status: detail.status, updatedAt: detail.statusUpdatedAt };
+    syncLiveLocationSharing();
+    flushNativeLocations().then(() => {
+      if (detail.status !== "CLOCKED OUT") return publishLiveLocation("workflow-action");
+      return true;
+    }).then(success => { pendingLocationPrompt = !success; }).catch(() => { pendingLocationPrompt = true; });
+  });
+  window.addEventListener("online", () => {
+    handleLiveLocationRequest(currentProfile);
+    if (pendingLocationPrompt) publishLiveLocation("workflow-retry").then(success => { if (success) pendingLocationPrompt = false; });
+  });
   window.addEventListener("online", () => flushNativeLocations().catch(() => false));
+  window.addEventListener("mpi-operations-sync-acknowledged", event => {
+    if (event.detail?.userId === currentUser?.uid) {
+      flushNativeLocations().catch(() => false);
+      handleLiveLocationRequest(currentProfile);
+    }
+  });
   shared.watchSession(({ user, profile, error }) => renderSession(user, profile, error));
 })();

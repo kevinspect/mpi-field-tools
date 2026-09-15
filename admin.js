@@ -191,6 +191,7 @@
   let liveLocationMarkers = new Map();
   let liveLocationMapSignature = "";
   let liveLocationAgeTimer = 0;
+  let adminDataRecoveryTimer = 0;
   let selectedLiveLocationPersonId = "";
   let liveLocationMapMode = "all";
   let liveLocationPlanVisible = false;
@@ -424,7 +425,7 @@
     renderSafetyAlerts();
     renderOperationsStats();
     shared.db.collection("users").doc(currentUser.uid).set({
-      officeReplyReadKeys: savedKeys,
+      officeReplyReadKeys: shared.arrayUnion(key),
       officeRepliesReadAt: shared.serverTimestamp()
     }, { merge: true }).catch(() => {});
   }
@@ -457,7 +458,7 @@
   }
 
   function unreadSafetyAlerts() {
-    return safetyMessages().filter(item => !readReplyKeys.has(`field:${item.id}`));
+    return safetyMessages().filter(item => !readReplyKeys.has(`field:${item.id}`) && !item.readBy?.includes(currentUser?.uid));
   }
 
   function acknowledgeSafetyAlert(alertId) {
@@ -1872,7 +1873,7 @@
 
   async function requestLiveLocationRefresh() {
     if (!currentUser || !shared.isAdminRole(currentProfile) || !liveLocationRefresh) return;
-    const targets = liveLocationPeople().filter(person => liveWorkState(person).active);
+    const targets = liveLocationPeople().filter(person => !selectedLiveLocationPersonId || person.id === selectedLiveLocationPersonId);
     liveLocationRefresh.disabled = true;
     liveLocationRefresh.textContent = "REQUESTING…";
     const request = {
@@ -1889,7 +1890,7 @@
         const batch = shared.db.batch();
         targets.forEach(person => batch.set(shared.db.collection("users").doc(person.id), { liveLocationRequest: request }, { merge: true }));
         await batch.commit();
-        liveLocationStatus.textContent = `Update requested from ${targets.length} active field device${targets.length === 1 ? "" : "s"}. Open phones respond immediately.`;
+        liveLocationStatus.textContent = `Status requested from ${targets.length} field device${targets.length === 1 ? "" : "s"}. Location is shared only during an active workday.`;
       }
       if (liveLocationRouteVisible && !liveLocationPlanVisible && !liveLocationAllPlansVisible) {
         if (targets.length) await new Promise(resolve => window.setTimeout(resolve, 1200));
@@ -2940,7 +2941,7 @@
     inspectorReplies.filter(reply => reply.userId === personId || shared.normalizeEmail(reply.userEmail) === shared.normalizeEmail(person?.email)).forEach(reply => markReplyRead(replyKey(reply)));
     showView("updates");
     renderAdminInboxConversation(personId);
-    shared.markDirectConversationRead?.(currentUser, personId).catch(() => false);
+    shared.markDirectConversationRead?.(currentUser, personId, incoming.map(message => message.id)).catch(() => false);
   }
 
   function closeAdminInboxConversation() {
@@ -3270,14 +3271,14 @@
 
   function syncTeamDirectory() {
     if (!currentUser || !shared.isAdminRole(currentProfile) || !people.length) return;
-    const batch = shared.db.batch();
     const directoryPeople = [
       ...people.filter(person => person.active !== false && person.role !== "subcontractor"),
       ...preferredSubcontractors(people.filter(person => person.active !== false && person.role === "subcontractor"))
     ];
-    directoryPeople.forEach(person => {
+    shared.syncTeamDirectoryRecords(directoryPeople.map(person => {
       const correctedName = canonicalTeamName(person);
-      batch.set(shared.db.collection("teamDirectory").doc(person.id), {
+      return {
+        id: person.id,
         userId: person.id,
         name: correctedName.slice(0, 80),
         email: shared.normalizeEmail(person.email),
@@ -3285,14 +3286,13 @@
         photoURL: String(person.photoURL || "").slice(0, 1000),
         profilePhoto: String(person.profilePhoto || "").slice(0, 220000),
         notificationToken: String(person.notificationDevice?.token || person.officeNotificationDevice?.token || "").slice(0, 500),
-        active: true,
-        updatedAt: shared.serverTimestamp()
-      }, { merge: true });
-    });
-    batch.commit().catch(() => false);
+        active: true
+      };
+    })).catch(() => false);
   }
 
   function startAdminData() {
+    window.clearTimeout(adminDataRecoveryTimer);
     unsubscribePeople?.();
     unsubscribeUpdates?.();
     unsubscribeReplies?.();
@@ -3303,9 +3303,7 @@
     if (!liveLocationAgeTimer) liveLocationAgeTimer = window.setInterval(() => {
       renderLiveLocationMap();
       updateOperationalClocks();
-      if (liveLocationRouteVisible && !liveLocationPlanVisible && !liveLocationAllPlansVisible && !liveLocationRouteLoading && Date.now() - liveLocationRouteLastLoadedAt >= LIVE_LOCATION_ROUTE_REFRESH_MS) {
-        loadHistoricalRoute({ refresh: true }).catch(() => false);
-      }
+      // Map ages and clocks are local. Route reads require an explicit request.
     }, 60000);
     unsubscribePeople = shared.db.collection("users").orderBy("name").onSnapshot(snapshot => {
       people = snapshot.docs.map(doc => {
@@ -3314,6 +3312,11 @@
         if (shared.normalizeEmail(value.email) === "admin@michiganpropertyinspections.com") value.name = "Brooke";
         return value;
       });
+      const own = people.find(person => person.id === currentUser?.uid);
+      (own?.officeReplyReadKeys || []).forEach(key => readReplyKeys.add(key));
+      const syncNotice = document.getElementById("adminSyncNotice");
+      if (!snapshot.metadata?.fromCache && !snapshot.metadata?.hasPendingWrites) shared.resumeSyncAfterServerSuccess?.(currentUser?.uid);
+      if (syncNotice && !snapshot.metadata?.fromCache && !snapshot.metadata?.hasPendingWrites) syncNotice.hidden = true;
       people.forEach(person => progressAssignedRequests(person));
       if (!legacyRequestChecked) {
         legacyRequestChecked = true;
@@ -3359,7 +3362,20 @@
         teamDeepLinkApplied = true;
       }
       renderPeople();
-    }, error => { authStatus.textContent = error.message; });
+    }, error => {
+      authStatus.textContent = error.message;
+      const syncNotice = document.getElementById("adminSyncNotice");
+      if (syncNotice) {
+        syncNotice.hidden = false;
+        syncNotice.textContent = /resource-exhausted|quota|429/i.test(`${error.code} ${error.message}`)
+          ? "Updates delayed — the daily data allowance is exhausted. This is last-known information. Phone records and read receipts remain queued until service resumes."
+          : "Updates delayed — showing last-known information. Phone records and read receipts will synchronize when the connection returns.";
+      }
+      const uid = currentUser?.uid;
+      adminDataRecoveryTimer = window.setTimeout(() => {
+        if (currentUser?.uid === uid && shared.isAdminRole(currentProfile)) startAdminData();
+      }, /resource-exhausted|quota|429/i.test(`${error.code} ${error.message}`) ? 30 * 60 * 1000 : 60000);
+    });
     officeUpdateListenerReady = false;
     knownOfficeUpdateIds = new Set();
     unsubscribeUpdates = shared.db.collection("officeUpdates").orderBy("createdAt", "desc").limit(200).onSnapshot(snapshot => {
@@ -3886,7 +3902,7 @@
           message.readBy = [...new Set([...(Array.isArray(message.readBy) ? message.readBy : []), currentUser.uid])];
         }
       });
-      shared.markDirectConversationRead?.(currentUser, personId).catch(() => false);
+      shared.markDirectConversationRead?.(currentUser, personId, directMessages.filter(message => message.senderUid === personId && message.targetUid === currentUser.uid).map(message => message.id)).catch(() => false);
       renderAdminUnifiedInbox();
     } else if (kind === "receipt") {
       markReplyRead(button.dataset.adminInboxKey || "");

@@ -291,40 +291,65 @@
     localStorage.setItem(storageKey(), JSON.stringify(state));
   }
 
-  function syncState() {
+  let subcontractorSyncFlight = null;
+  let lastSubcontractorSyncSignature = "";
+  let subcontractorSyncRetryTimer = 0;
+  function syncState(force = false) {
     if (!session?.userId || !shared?.db || !state) return;
-    state.currentWorkflowStatus = shared.currentWorkflowStatus(state);
-    const field = testMode ? "subcontractorTestCurrent" : "subcontractorCurrent";
-    shared.db.collection("users").doc(session.userId).set({
-      [field]: state,
-      subcontractorUpdatedAt: shared.serverTimestamp()
-    }, { merge: true }).catch(() => {
+    if (!navigator.onLine || shared.syncCoolingDown?.(session.userId)) {
       actionStatus.textContent = "Saved on this phone. It will sync when the connection returns.";
-    });
+      return;
+    }
+    state.currentWorkflowStatus = shared.currentWorkflowStatus(state);
+    const signature = `${session.userId}:${testMode}:${shared.syncPayloadSignature(state)}`;
+    if (subcontractorSyncFlight || (force !== true && signature === lastSubcontractorSyncSignature)) return;
+    const captured = JSON.parse(JSON.stringify(state));
+    const userId = session.userId;
+    const field = testMode ? "subcontractorTestCurrent" : "subcontractorCurrent";
+    const writes = [shared.db.collection("users").doc(userId).set({
+      [field]: captured,
+      subcontractorUpdatedAt: shared.serverTimestamp()
+    }, { merge: true })];
     if (!testMode) {
       const role = "subcontractor";
       const status = state.currentWorkflowStatus.value;
-      shared.db.collection("teamPresence").doc(session.userId).set({
-        userId: session.userId,
+      writes.push(shared.db.collection("teamPresence").doc(userId).set({
+        userId,
         name: String(session.inspectorName || "MPI Subcontractor").slice(0, 80),
         role,
         photoURL: "",
         profilePhoto: "",
         status,
-        currentWorkflowStatus: state.currentWorkflowStatus,
-        statusUpdatedAt: state.currentWorkflowStatus.updatedAt,
+        currentWorkflowStatus: captured.currentWorkflowStatus,
+        statusUpdatedAt: captured.currentWorkflowStatus.updatedAt,
         date: localDateKey(),
         active: true,
         updatedAtClient: nowIso(),
         updatedAt: shared.serverTimestamp()
-      }, { merge: true }).catch(() => {});
+      }, { merge: true }));
     }
+    subcontractorSyncFlight = Promise.all(writes).then(() => { lastSubcontractorSyncSignature = signature; return true; }).catch(error => {
+      actionStatus.textContent = "Saved on this phone. It will sync when the connection returns.";
+      shared.deferPendingSync?.(userId, error);
+      window.clearTimeout(subcontractorSyncRetryTimer);
+      subcontractorSyncRetryTimer = window.setTimeout(() => { if (session?.userId === userId) syncState(); }, /resource-exhausted|quota|429/i.test(`${error.code} ${error.message}`) ? 30 * 60 * 1000 : 60000);
+      return false;
+    }).finally(() => {
+      subcontractorSyncFlight = null;
+      if (session?.userId === userId && !shared.syncCoolingDown?.(userId)
+        && `${userId}:${testMode}:${shared.syncPayloadSignature(state)}` !== signature) syncState();
+    });
+    return subcontractorSyncFlight;
   }
 
   function persist() {
     saveLocalState();
     render();
     syncState();
+    if (!testMode && session?.userId) window.dispatchEvent(new CustomEvent("mpi-workflow-status-changed", { detail: {
+      userId: session.userId, date: localDateKey(), status: state.currentWorkflowStatus?.value || state.status,
+      statusUpdatedAt: state.currentWorkflowStatus?.updatedAt || state.updatedAtClient
+    } }));
   }
 
   function watchRemoteState() {
@@ -608,6 +633,9 @@
   exitTestButton?.addEventListener("click", exitTestMode);
   resetButtons.forEach(button => button.addEventListener("click", resetTestDay));
   window.addEventListener("online", syncState);
+  window.addEventListener("mpi-office-status-requested", event => {
+    if (event.detail?.userId === session?.userId) syncState(true);
+  });
   window.addEventListener("mpi-company-session-ready", event => applySession(event.detail));
   if (window.MPI_COMPANY_SESSION) applySession(window.MPI_COMPANY_SESSION);
   else if (productionAccessRequested) applySession(null);

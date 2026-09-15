@@ -75,6 +75,107 @@
     try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) {}
   }
 
+  // Only pending work is retried. Local clocks never cause a network write.
+  const syncFlights = new Map();
+  const syncRetryTimers = new Map();
+  function syncStoreKey(uid) { return `mpiEventSyncV1:${uid}`; }
+  function syncQueue(uid) { return readMessageStore(syncStoreKey(uid), { operations: {}, receipts: {}, acknowledged: {}, failures: 0, retryAt: 0 }); }
+  function saveSyncQueue(uid, value) { writeMessageStore(syncStoreKey(uid), value); }
+  function syncPayloadSignature(value) {
+    const text = JSON.stringify(value, (key, item) => ["updatedAtClient", "syncStatus", "syncedAt", "receiptPending"].includes(key) ? undefined : item);
+    let first = 2166136261, second = 5381;
+    for (let index = 0; index < text.length; index += 1) { first = Math.imul(first ^ text.charCodeAt(index), 16777619); second = Math.imul(second, 33) ^ text.charCodeAt(index); }
+    return `${text.length}:${first >>> 0}:${second >>> 0}`;
+  }
+  function syncCoolingDown(uid = auth.currentUser?.uid) { return Boolean(uid && Number(syncQueue(uid).retryAt || 0) > Date.now()); }
+  function resumeSyncAfterServerSuccess(uid = auth.currentUser?.uid) {
+    if (!uid || auth.currentUser?.uid !== uid) return;
+    const queue = syncQueue(uid);
+    if (!queue.retryAt && !queue.failures) return;
+    // A successful read alone does not prove that a write quota recovered.
+    // Never allow metadata/rollback snapshots to defeat the quota cooldown.
+    if (queue.lastError?.quota && Date.now() - new Date(queue.lastError.at).getTime() < 30 * 60 * 1000) return;
+    queue.retryAt = 0; queue.failures = 0;
+    saveSyncQueue(uid, queue);
+    schedulePendingSync(uid);
+  }
+  function schedulePendingSync(uid) {
+    clearTimeout(syncRetryTimers.get(uid));
+    const queue = syncQueue(uid);
+    if (!Object.keys(queue.operations || {}).length && !Object.keys(queue.receipts || {}).length) return;
+    if (!navigator.onLine || auth.currentUser?.uid !== uid) return;
+    syncRetryTimers.set(uid, setTimeout(() => flushPendingSync(uid).catch(() => false), Math.max(1000, Number(queue.retryAt || 0) - Date.now())));
+  }
+  function deferPendingSync(uid, error) {
+    const queue = syncQueue(uid);
+    const quota = /resource-exhausted|quota|429/i.test(`${error?.code || ""} ${error?.message || ""}`);
+    queue.failures = Number(queue.failures || 0) + 1;
+    queue.retryAt = Date.now() + Math.min(quota ? 3 * 60 * 60 * 1000 : 15 * 60 * 1000, (quota ? 30 * 60 * 1000 : 60000) * 2 ** Math.min(queue.failures - 1, 4));
+    queue.lastError = { code: String(error?.code || "unavailable"), at: new Date().toISOString(), quota };
+    saveSyncQueue(uid, queue);
+    schedulePendingSync(uid);
+  }
+  function pendingReceipt(uid, kind, id) { return syncQueue(uid).receipts?.[`${kind}:${id}`]; }
+  function queueReadReceipt(user, kind, id, values = {}) {
+    if (!user?.uid || !id || auth.currentUser?.uid !== user.uid) return Promise.resolve(false);
+    const queue = syncQueue(user.uid);
+    queue.receipts ||= {};
+    const key = `${kind}:${id}`;
+    const previous = queue.receipts[key];
+    queue.receipts[key] = { ...previous, ...values, kind, id, readAtClient: previous?.readAtClient || new Date().toISOString() };
+    saveSyncQueue(user.uid, queue);
+    return flushPendingSync(user.uid);
+  }
+  async function flushPendingSync(uid = auth.currentUser?.uid) {
+    if (!uid || auth.currentUser?.uid !== uid || !navigator.onLine || syncCoolingDown(uid)) return false;
+    if (syncFlights.has(uid)) return syncFlights.get(uid);
+    const flight = (async () => {
+      try {
+        while (auth.currentUser?.uid === uid && navigator.onLine) {
+          const queue = syncQueue(uid);
+          const receipts = Object.entries(queue.receipts || {}).slice(0, 200);
+          if (receipts.length) {
+            const batch = db.batch();
+            receipts.forEach(([, receipt]) => {
+              if (receipt.kind === "update") batch.set(db.collection("officeUpdates").doc(receipt.id).collection("receipts").doc(uid), {
+                userId: uid, userEmail: receipt.userEmail || "", userName: receipt.userName || "MPI Team Member",
+                ...(receipt.status === "read" ? {} : { status: receipt.status }), [receipt.timeField || "readAt"]: serverTimestamp(),
+                readAtClient: receipt.readAtClient, updatedAt: serverTimestamp()
+              }, { merge: true });
+              else batch.set(db.collection(receipt.kind === "field" ? "fieldMessages" : "teamMessages").doc(receipt.id), {
+                readBy: arrayUnion(uid), readAt: serverTimestamp()
+              }, { merge: true });
+            });
+            await boundedMessageRequest(batch.commit());
+            const fresh = syncQueue(uid);
+            receipts.forEach(([key, value]) => { if (JSON.stringify(fresh.receipts?.[key]) === JSON.stringify(value)) delete fresh.receipts[key]; });
+            fresh.failures = 0; fresh.retryAt = 0;
+            saveSyncQueue(uid, fresh);
+            continue;
+          }
+          const entry = Object.entries(queue.operations || {}).sort(([left], [right]) => left.localeCompare(right))[0];
+          if (!entry) return true;
+          const [date, record] = entry;
+          await commitOperationsSnapshot(record.snapshot, uid);
+          const fresh = syncQueue(uid);
+          if (fresh.operations?.[date]?.signature === record.signature) delete fresh.operations[date];
+          fresh.acknowledged ||= {};
+          fresh.acknowledged[date] = record.signature;
+          fresh.failures = 0; fresh.retryAt = 0;
+          saveSyncQueue(uid, fresh);
+          window.dispatchEvent?.(new CustomEvent("mpi-operations-sync-acknowledged", { detail: { userId: uid, snapshot: record.snapshot } }));
+        }
+        return false;
+      } catch (error) { deferPendingSync(uid, error); return false; }
+    })().finally(() => { syncFlights.delete(uid); schedulePendingSync(uid); });
+    syncFlights.set(uid, flight);
+    return flight;
+  }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState !== "hidden") flushPendingSync().catch(() => false); });
+  window.addEventListener("online", () => flushPendingSync().catch(() => false));
+  window.addEventListener("mpi-company-session-ready", () => flushPendingSync().catch(() => false));
+  window.addEventListener("mpi-native-app-state", event => { if (event.detail?.active) flushPendingSync().catch(() => false); });
+
   function messageFailure(error, context = "send") {
     if (error?.mpiMessageFailure) return error.mpiMessageFailure;
     const referenceId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -432,7 +533,12 @@
       [...records.values()]
         .filter(item => item.active !== false)
         .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0))
-        .map(item => ({ ...item, receipt: receipts.get(item.id) || null }))
+        .map(item => {
+          const stored = receipts.get(item.id);
+          const pending = pendingReceipt(user.uid, "update", item.id);
+          const receipt = pending ? { ...stored, status: pending.status || "read", readAtClient: pending.readAtClient, receiptPending: true } : stored;
+          return { ...item, receipt: receipt && (receipt.readAt || receipt.readAtClient) && (!receipt.status || receipt.status === "delivered") ? { ...receipt, status: "read" } : receipt || null };
+        })
         .filter(item => !item.receipt?.clearedAt)
     );
     const syncReceiptListeners = () => {
@@ -448,16 +554,17 @@
         const unsubscribe = db.collection("officeUpdates").doc(updateId).collection("receipts").doc(user.uid)
           .onSnapshot(snapshot => {
             if (snapshot.exists) receipts.set(updateId, { id: snapshot.id, ...snapshot.data() });
-            else {
+            else if (!snapshot.metadata?.fromCache && !pendingReceipt(user.uid, "update", updateId)) {
               receipts.delete(updateId);
-              db.collection("officeUpdates").doc(updateId).collection("receipts").doc(user.uid).set({
-                userId: user.uid,
-                userEmail: normalizeEmail(user.email),
-                userName: profile?.name || user.displayName || "MPI Team Member",
-                status: "delivered",
-                deliveredAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-              }, { merge: true }).catch(() => false);
+              if (!syncCoolingDown(user.uid)) db.runTransaction(async transaction => {
+                const ref = db.collection("officeUpdates").doc(updateId).collection("receipts").doc(user.uid);
+                const existing = await transaction.get(ref);
+                // Another handset may already have read this update.
+                if (!existing.exists) transaction.set(ref, {
+                  userId: user.uid, userEmail: normalizeEmail(user.email), userName: profile?.name || user.displayName || "MPI Team Member",
+                  status: "delivered", deliveredAt: serverTimestamp(), updatedAt: serverTimestamp()
+                }, { merge: true });
+              }).catch(error => deferPendingSync(user.uid, error));
             }
             notify();
           }, () => notify());
@@ -487,14 +594,9 @@
   function setUpdateStatus(updateId, user, profile, status) {
     if (!updateId || !user) return Promise.reject(new Error("Sign in first."));
     const nowField = status === "completed" ? "completedAt" : status === "acknowledged" ? "acknowledgedAt" : "readAt";
-    return db.collection("officeUpdates").doc(updateId).collection("receipts").doc(user.uid).set({
-      userId: user.uid,
-      userEmail: normalizeEmail(user.email),
-      userName: profile?.name || user.displayName || "MPI Team Member",
-      status,
-      [nowField]: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    }, { merge: true });
+    return queueReadReceipt(user, "update", updateId, {
+      userEmail: normalizeEmail(user.email), userName: profile?.name || user.displayName || "MPI Team Member", status, timeField: nowField
+    }).then(success => { if (!success) throw new Error("Receipt saved on this device; synchronization is pending."); return true; });
   }
 
   function clearUpdate(updateId, user, profile) {
@@ -834,6 +936,8 @@
 
   function stopDirectSubscription(subscription) {
     subscription.generation += 1;
+    clearTimeout(subscription.retryTimer);
+    subscription.retryTimer = null;
     subscription.unsubscribe?.();
     subscription.unsubscribe = null;
   }
@@ -844,7 +948,13 @@
     messagingState.listener = "connecting";
     subscription.unsubscribe = db.collection("teamMessages").where("participantIds", "array-contains", subscription.user.uid).onSnapshot({ includeMetadataChanges: true }, snapshot => {
       if (generation !== subscription.generation) return;
-      const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      // Capture server receipts BEFORE views apply their optimistic read state.
+      if (!snapshot.metadata?.fromCache && !snapshot.metadata?.hasPendingWrites) subscription.confirmedReadIds = new Set(snapshot.docs.filter(doc => doc.data().readBy?.includes(subscription.user.uid)).map(doc => doc.id));
+      const records = snapshot.docs.map(doc => {
+        const message = { id: doc.id, ...doc.data() };
+        const pending = pendingReceipt(subscription.user.uid, "direct", message.id);
+        return pending && message.targetUid === subscription.user.uid ? { ...message, readBy: [...new Set([...(message.readBy || []), subscription.user.uid])], receiptPending: true } : message;
+      })
         .filter(item => item.active !== false)
         .sort((left, right) => timestampMilliseconds(right.createdAtClient) - timestampMilliseconds(left.createdAtClient));
       if (snapshot.metadata?.fromCache && !records.length && subscription.records.length) {
@@ -860,15 +970,22 @@
         messagingState.lastServerAt = new Date().toISOString();
         messagingState.backend = "connected";
         messagingState.status = "healthy";
+        if (!snapshot.metadata?.hasPendingWrites) resumeSyncAfterServerSuccess(subscription.user.uid);
       }
       subscription.callbacks.forEach(listener => listener(records, null));
       markDirectMessagesDelivered(subscription.user, records).catch(error => messageFailure(error, "delivery-receipt"));
+      flushPendingSync(subscription.user.uid).catch(() => false);
     }, error => {
       if (generation !== subscription.generation) return;
       messagingState.listener = "failed";
       messageFailure(error, "conversation-listener");
       subscription.callbacks.forEach(listener => listener(subscription.records, error));
       stopDirectSubscription(subscription);
+      deferPendingSync(subscription.user.uid, error);
+      subscription.retryTimer = setTimeout(() => {
+        subscription.retryTimer = null;
+        if (auth.currentUser?.uid === subscription.user.uid) startDirectSubscription(subscription);
+      }, Math.max(60000, Number(syncQueue(subscription.user.uid).retryAt || 0) - Date.now()));
     });
   }
 
@@ -912,7 +1029,7 @@
   }
 
   async function markDirectMessagesDelivered(user, records = []) {
-    if (!user) return false;
+    if (!user || !navigator.onLine || syncCoolingDown(user.uid)) return false;
     const pending = records.filter(message =>
       message?.id
       && message.targetUid === user.uid
@@ -932,7 +1049,7 @@
     return true;
   }
 
-  async function markDirectConversationRead(user, otherUid) {
+  async function markDirectConversationRead(user, otherUid, openedIds = []) {
     if (!user || !otherUid) return false;
     const conversationId = directConversationId(user.uid, otherUid);
     const subscription = directSubscriptions.get(user.uid);
@@ -941,27 +1058,25 @@
       return message.targetUid === user.uid
         && message.senderUid !== user.uid
         && message.conversationId === conversationId
-        && !receiptWrites.has(`read:${user.uid}:${message.id}`)
-        && (!Array.isArray(message.readBy) || !message.readBy.includes(user.uid));
+        && ((openedIds.includes(message.id) || message.receiptPending) && !subscription?.confirmedReadIds?.has(message.id)
+          || !Array.isArray(message.readBy) || !message.readBy.includes(user.uid));
     });
-    for (let start = 0; start < unread.length; start += 400) {
-      const group = unread.slice(start, start + 400);
-      const batch = db.batch();
-      group.forEach(message => { receiptWrites.add(`read:${user.uid}:${message.id}`); batch.set(db.collection("teamMessages").doc(message.id), { readBy: arrayUnion(user.uid), readAt: serverTimestamp() }, { merge: true }); });
-      try { await boundedMessageRequest(batch.commit()); }
-      finally { group.forEach(message => receiptWrites.delete(`read:${user.uid}:${message.id}`)); }
-    }
-    return true;
+    const queue = syncQueue(user.uid);
+    queue.receipts ||= {};
+    unread.forEach(message => {
+      const key = `direct:${message.id}`;
+      queue.receipts[key] ||= { kind: "direct", id: message.id, readAtClient: new Date().toISOString() };
+    });
+    saveSyncQueue(user.uid, queue);
+    const success = await flushPendingSync(user.uid);
+    if (!success && unread.length) throw new Error("Read receipt retained until synchronization is available.");
+    return success;
   }
 
   async function markFieldMessageRead(user, messageId) {
     const messageKey = String(messageId || "").trim();
     if (!user || !messageKey) return false;
-    await db.collection("fieldMessages").doc(messageKey).set({
-      readBy: arrayUnion(user.uid),
-      readAt: serverTimestamp()
-    }, { merge: true });
-    return true;
+    return queueReadReceipt(user, "field", messageKey);
   }
 
   function watchSentFieldMessages(user, callback) {
@@ -975,7 +1090,7 @@
   }
 
   async function markFieldMessagesDelivered(user, records = []) {
-    if (!user) return false;
+    if (!user || !navigator.onLine || syncCoolingDown(user.uid)) return false;
     const pending = records.filter(message =>
       message?.id
       && message.senderUid !== user.uid
@@ -1264,11 +1379,29 @@
     return merged;
   }
 
-  async function syncOperationsSnapshot(snapshot) {
+  async function syncOperationsSnapshot(snapshot, options = {}) {
     const user = auth.currentUser;
     if (!user || !snapshot?.date) return false;
-    const ref = db.collection("users").doc(user.uid);
     const clean = cleanOperationsValue(snapshot);
+    const queue = syncQueue(user.uid);
+    queue.operations ||= {};
+    queue.acknowledged ||= {};
+    const signature = syncPayloadSignature(clean);
+    if (!options.force && queue.acknowledged[clean.date] === signature && !queue.operations[clean.date]) return true;
+    const pending = queue.operations[clean.date]?.snapshot;
+    const saved = pending ? mergeOperationsDay(pending, clean) : clean;
+    queue.operations[clean.date] = { snapshot: saved, signature: syncPayloadSignature(saved) };
+    saveSyncQueue(user.uid, queue);
+    return flushPendingSync(user.uid).then(() => {
+      const latest = syncQueue(user.uid);
+      return !latest.operations?.[clean.date] && latest.acknowledged?.[clean.date] === syncPayloadSignature(saved);
+    });
+  }
+
+  async function commitOperationsSnapshot(clean, uid) {
+    if (auth.currentUser?.uid !== uid) throw new Error("Account changed; pending work remains with its original inspector.");
+    const user = auth.currentUser;
+    const ref = db.collection("users").doc(uid);
     let profile = {};
     await db.runTransaction(async transaction => {
       const current = await transaction.get(ref);
@@ -1283,10 +1416,11 @@
       const days = existingDays
         .filter(day => day?.date && day.date !== clean.date)
         .concat(saved)
-        .sort((left, right) => String(left.date).localeCompare(String(right.date)))
-        .slice(-14);
+        .sort((left, right) => String(left.date).localeCompare(String(right.date)));
+      const currentDay = String(profile.operationsCurrent?.date || "") > String(saved.date)
+        ? profile.operationsCurrent : saved;
       transaction.set(ref, {
-        operationsCurrent: saved,
+        operationsCurrent: currentDay,
         operationsDays: days,
         operationsUpdatedAt: serverTimestamp()
       }, { merge: true });
@@ -1295,15 +1429,16 @@
         userId: user.uid, name: teamDirectoryName(profile, user).slice(0, 80), role,
         photoURL: String(profile.photoURL || user.photoURL || "").slice(0, 1000),
         profilePhoto: String(profile.profilePhoto || "").slice(0, 220000),
-        status: saved.liveStatus, currentWorkflowStatus: saved.currentWorkflowStatus,
-        statusUpdatedAt: saved.currentWorkflowStatus.updatedAt,
-        date: String(saved.date || ""), active: profile.active !== false && ["owner", "inspector", "subcontractor"].includes(role),
-        updatedAtClient: saved.updatedAtClient, updatedAt: serverTimestamp()
+        status: currentDay.liveStatus, currentWorkflowStatus: currentWorkflowStatus(currentDay),
+        statusUpdatedAt: currentWorkflowStatus(currentDay).updatedAt,
+        date: String(currentDay.date || ""), active: profile.active !== false && ["owner", "inspector", "subcontractor"].includes(role),
+        updatedAtClient: currentDay.updatedAtClient, updatedAt: serverTimestamp()
       }, { merge: true });
     });
     const role = String(profile.role || "inspector").toLowerCase();
     const teamVisible = profile.active !== false && ["owner", "inspector", "subcontractor"].includes(role);
-    await db.collection("teamDirectory").doc(user.uid).set({
+    await syncTeamDirectoryRecords([{
+      id: user.uid,
       userId: user.uid,
       name: teamDirectoryName(profile, user).slice(0, 80),
       email: normalizeEmail(profile.email || user.email),
@@ -1311,10 +1446,36 @@
       photoURL: String(user.photoURL || profile.photoURL || "").slice(0, 1000),
       profilePhoto: String(profile.profilePhoto || "").slice(0, 220000),
       notificationToken: String(profile.notificationDevice?.token || profile.officeNotificationDevice?.token || "").slice(0, 500),
-      active: teamVisible || (["owner", "admin"].includes(role) && profile.active !== false),
-      updatedAt: serverTimestamp()
-    }, { merge: true }).catch(() => false);
+      active: teamVisible || (["owner", "admin"].includes(role) && profile.active !== false)
+    }]).catch(() => false);
     return true;
+  }
+
+  const directoryFlights = new Map();
+  async function syncTeamDirectoryRecords(records = []) {
+    const uid = auth.currentUser?.uid;
+    if (!uid || !navigator.onLine || syncCoolingDown(uid)) return false;
+    const key = `mpiDirectorySignaturesV1:${uid}`;
+    const acknowledged = readMessageStore(key, {});
+    const changed = records.map(({ id, ...value }) => ({ id, value, signature: syncPayloadSignature(value) }))
+      .filter(record => record.id && acknowledged[record.id] !== record.signature && directoryFlights.get(record.id) !== record.signature);
+    if (!changed.length) return true;
+    try {
+      for (let start = 0; start < changed.length; start += 400) {
+        const group = changed.slice(start, start + 400);
+        const batch = db.batch();
+        group.forEach(record => {
+          directoryFlights.set(record.id, record.signature);
+          batch.set(db.collection("teamDirectory").doc(record.id), { ...record.value, updatedAt: serverTimestamp() }, { merge: true });
+        });
+        await boundedMessageRequest(batch.commit());
+        const fresh = readMessageStore(key, {});
+        group.forEach(record => { fresh[record.id] = record.signature; });
+        writeMessageStore(key, fresh);
+      }
+      return true;
+    } catch (error) { deferPendingSync(uid, error); return false; }
+    finally { changed.forEach(record => { if (directoryFlights.get(record.id) === record.signature) directoryFlights.delete(record.id); }); }
   }
 
   async function loadOwnOperationsDay(date) {
@@ -1401,6 +1562,12 @@
     loadFieldAttachment,
     loadDirectAttachment,
     syncOperationsSnapshot,
+    syncTeamDirectoryRecords,
+    syncPayloadSignature,
+    syncCoolingDown,
+    resumeSyncAfterServerSuccess,
+    deferPendingSync,
+    flushPendingSync,
     loadOwnOperationsDay,
     watchTeamPresence,
     watchTeamDirectory,

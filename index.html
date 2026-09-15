@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="196">
+  <meta name="app-build" content="197">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5859,7 +5859,7 @@
       .issued-tools-list { grid-template-columns: 1fr; padding: 10px; }
     }
 
-    /* Build 196 — iPhone-style Messages */
+    /* Build 197 — iPhone-style Messages */
     #inbox { background:#f2f2f7; }
     .field-inbox-header { padding:4px 4px 0; }
     .field-inbox-header .field-section-heading h2 { font-size:30px; letter-spacing:-.035em; }
@@ -6000,7 +6000,7 @@
       <a href="#comment-builder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4Z"/><path d="M8 8h8M8 12h5"/></svg><span><strong>Comment Creator</strong><small>Build a defect comment</small></span></a>
     </nav>
     <a class="home-office-link" id="officeConsoleCard" href="./admin.html" hidden>Open Office Console</a>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">196</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">197</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -8637,7 +8637,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 196</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 197</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8777,12 +8777,12 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=196"></script>
-  <script src="./mpi-shared.js?build=196"></script>
-  <script src="./mpi-equipment.js?build=196"></script>
-  <script src="./mpi-field-sync.js?build=196"></script>
-  <script src="./mpi-subcontractor.js?build=196"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=196"></script>
+  <script src="./mpi-native-bridge.js?build=197"></script>
+  <script src="./mpi-shared.js?build=197"></script>
+  <script src="./mpi-equipment.js?build=197"></script>
+  <script src="./mpi-field-sync.js?build=197"></script>
+  <script src="./mpi-subcontractor.js?build=197"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=197"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -15360,7 +15360,6 @@
       let workflowTimeClockInFlight = false;
       let workflowTimeClockInterval = 0;
       let workflowOperationsSyncTimer = 0;
-      let workflowPresenceHeartbeatInterval = 0;
       let unsubscribeInspectorRequests = null;
       let workflowDocumentDbPromise = null;
       let workflowCocSyncInFlight = false;
@@ -16161,22 +16160,23 @@
         };
       }
 
-      function syncWorkflowOperationsNow(snapshot = workflowOperationsSnapshot()) {
+      function syncWorkflowOperationsNow(snapshot = workflowOperationsSnapshot(), options = {}) {
         if (!snapshot || !window.MPI_SHARED?.syncOperationsSnapshot) return Promise.resolve(false);
         snapshot.currentWorkflowStatus = window.MPI_SHARED.currentWorkflowStatus(snapshot);
         snapshot.liveStatus = snapshot.currentWorkflowStatus.value;
-        return window.MPI_SHARED.syncOperationsSnapshot(snapshot).then(result => {
-          if (result) markWorkflowEventsSynced();
+        return window.MPI_SHARED.syncOperationsSnapshot(snapshot, options).then(result => {
+          if (result) markWorkflowEventsSynced(snapshot);
           return result;
         }).catch(() => false);
       }
 
-      function markWorkflowEventsSynced() {
+      function markWorkflowEventsSynced(snapshot) {
+        const submitted = new Map((snapshot?.activity || []).map(item => [item.id, window.MPI_SHARED.syncPayloadSignature(item)]));
         const syncedAt = new Date().toISOString();
         const activity = loadWorkflowActivity();
         let changed = false;
         activity.forEach(item => {
-          if (item.data?.syncStatus !== "synced") {
+          if (item.data?.syncStatus !== "synced" && submitted.get(item.id) === window.MPI_SHARED.syncPayloadSignature(item)) {
             item.data = { ...(item.data || {}), syncStatus: "synced", syncedAt };
             changed = true;
           }
@@ -19894,9 +19894,13 @@
         workflowExportLog.addEventListener("click", () => copyText(workflowSummaryText(true), "Full activity log copied"));
         if (!workflowDepartureInterval) workflowDepartureInterval = window.setInterval(monitorWorkflowDeparture, 30000);
         if (!workflowTimeClockInterval) workflowTimeClockInterval = window.setInterval(renderWorkflowTimeClock, 30000);
-        if (!workflowPresenceHeartbeatInterval) workflowPresenceHeartbeatInterval = window.setInterval(() => {
-          if (!document.hidden && window.MPI_COMPANY_SESSION) queueWorkflowOperationsSync();
-        }, 120000);
+        // Render elapsed time locally; only actions or pending recovery sync data.
+        window.addEventListener("mpi-office-status-requested", event => {
+          if (event.detail?.userId === window.MPI_COMPANY_SESSION?.userId && window.MPI_COMPANY_SESSION?.role !== "subcontractor") syncWorkflowOperationsNow(undefined, { force: true });
+        });
+        window.addEventListener("mpi-operations-sync-acknowledged", event => {
+          if (event.detail?.userId === window.MPI_COMPANY_SESSION?.userId) markWorkflowEventsSynced(event.detail.snapshot);
+        });
         document.addEventListener("visibilitychange", () => {
           if (!document.hidden) {
             monitorWorkflowDeparture();
@@ -20345,7 +20349,7 @@
         });
         renderTeamDirectory();
         renderFieldInbox();
-        if (changed || incoming.length) window.MPI_SHARED.markDirectConversationRead(user, userId).catch(() => {
+        if (changed || incoming.length) window.MPI_SHARED.markDirectConversationRead(user, userId, incoming.map(message => message.id)).catch(() => {
           showToast("Read status saved on this phone and will sync when reconnected");
         });
       }

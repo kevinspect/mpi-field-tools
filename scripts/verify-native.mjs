@@ -34,6 +34,7 @@ async function assertText(label, path, predicate, failureDetail) {
 }
 
 for (const file of [
+  "scripts/test-event-sync.mjs",
   "mpi-native-bridge.js",
   "mpi-shared.js",
   "mpi-field-sync.js",
@@ -51,6 +52,7 @@ for (const file of [
 ]) {
   run(`JavaScript syntax — ${file}`, process.execPath, ["--check", file]);
 }
+run("Event-based syncing and cross-device receipts", process.execPath, ["scripts/test-event-sync.mjs"], { quiet: false });
 
 const temporaryDirectory = await mkdtemp(join(tmpdir(), "mpi-native-verify-"));
 try {
