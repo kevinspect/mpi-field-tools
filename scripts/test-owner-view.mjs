@@ -149,7 +149,13 @@ try {
         assert.equal(brand.alignment, "left");
         assert.ok(brand.fits, "Updated service copy fits inside the compact banner at every supported viewport");
         assert.equal(await office.locator(".office-planning-drawer[open]").count(), 0, "Planning controls are available without cluttering the live view");
-        assert.equal(await office.locator("a[aria-label='Return to Inspector App']").isVisible(), viewport.width < 761, "Inspector app link is removed from desktop admins, retained for phone return navigation");
+        assert.equal(await office.locator("a[aria-label='Return to Inspector App']").isVisible(), false, "Brooke and Adrienne never receive Inspector View");
+        if (viewport.width === 1280) {
+          await office.evaluate(() => window.MPI_OFFICE_SETUP.show(false));
+          assert.equal(await office.locator("#adminOnboardingTitle").textContent(), "SET UP MPI OFFICE ON THIS MAC");
+          assert.equal(await office.locator("#adminOnboardingNext").textContent(), "SET UP THIS MAC");
+          await office.evaluate(() => { document.querySelector("#adminOnboarding").hidden = true; document.body.style.overflow = ""; });
+        }
         if (viewport.width >= 1100) {
           const map = await office.locator("#adminLiveLocationPanel").boundingBox();
           const team = await office.locator("#adminTeamOverview").boundingBox();
@@ -256,6 +262,27 @@ try {
     if (process.env.MPI_VISUAL_QA) await page.screenshot({ path: `/tmp/mpi-build200-visuals/office-${viewport.width}-settings.png` });
     await office.locator("#adminDiagnosticHistory > summary").click();
   }
+  const setupPage = await browser.newPage();
+  setupPage.setDefaultTimeout(10000);
+  await setupPage.route("https://**/*", route => {
+    if (route.request().url().includes("firebase-app-compat")) return route.fulfill({ contentType: "text/javascript", body: sdk });
+    return route.abort();
+  });
+  await setupPage.goto(`http://127.0.0.1:${server.address().port}/admin.html?preview=operations`);
+  await setupPage.evaluate(() => window.MPI_OFFICE_SETUP.show(false));
+  assert.equal(await setupPage.locator("#adminOnboardingTitle").textContent(), "SET UP MPI OFFICE ON THIS MAC");
+  assert.equal(await setupPage.locator("#adminOnboardingNext").textContent(), "SET UP THIS MAC");
+  await setupPage.locator("#adminOnboardingNext").click();
+  assert.equal(await setupPage.locator("#adminOnboardingTitle").textContent(), "ADD MPI OFFICE TO THE DOCK");
+  assert.match(await setupPage.locator("#adminOnboardingBody").textContent(), /File > Add to Dock/);
+  await setupPage.close();
+  await page.selectOption("#ownerViewUser", "adrienne");
+  await page.selectOption("#ownerViewSurface", "office");
+  await page.waitForFunction(() => document.querySelector("#ownerViewStatus").textContent.startsWith("Adrienne Cave · "));
+  const adrienneOffice = await (await page.locator(".owner-view-frame").elementHandle()).contentFrame();
+  await adrienneOffice.waitForSelector("#adminDashboard:not([hidden])");
+  assert.equal(await adrienneOffice.locator("a[aria-label='Return to Inspector App']").isVisible(), false, "Adrienne has Office access without Inspector View");
+  assert.equal(await adrienneOffice.locator("#commentUsagePanel").isVisible(), false, "The private Comment Builder allowance remains Kevin-only");
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.selectOption("#ownerViewUser", "jason");
   await page.waitForFunction(() => document.querySelector("#ownerViewStatus").textContent.startsWith("Jason Chamarro · "));

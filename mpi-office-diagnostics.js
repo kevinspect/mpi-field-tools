@@ -32,6 +32,12 @@
     const add = (name, state, detail) => checks.push({ name, state, detail });
     try {
       add("Office sign-in", "passed", "This account has office access.");
+      const setupPolicy = window.MPI_OFFICE_SETUP_POLICY;
+      const isMac = setupPolicy?.isMac(navigator.platform, navigator.userAgent, navigator.maxTouchPoints);
+      if (isMac) {
+        const installed = setupPolicy.isInstalled(Boolean(navigator.standalone), window.matchMedia?.("(display-mode: standalone)")?.matches);
+        add("MPI Office installation", installed ? "passed" : "attention", installed ? "This check is running in the installed MPI Office app with Dock access." : "Open Settings and use Repair office setup to add MPI Office to the Dock.");
+      }
       const online = navigator.onLine !== false;
       const notice = document.getElementById("adminSyncNotice");
       const delayed = Boolean(shared()?.syncCoolingDown?.(user.uid) || (notice && !notice.hidden));
@@ -72,7 +78,7 @@
       catch (_) { add("Saved data access", "attention", "This browser is blocking local storage access. Keep unsent work safe before changing browser settings."); }
       if (!stillCurrent()) return;
       const incomplete = checks.some(check => check.state !== "passed");
-      output.innerHTML = `<h3>${incomplete ? "Check complete — review the items below" : "Device checks complete"}</h3><p>Checked ${escape(new Date().toLocaleString())}. This is a device check, not a full test of Comment Builder, payroll or every field device.</p><ul class="office-diagnosis-list">${checks.map(check => `<li><strong>${escape(check.name)}</strong><span class="office-check-status" data-state="${check.state}">${({ passed: "Checked", attention: "Attention", deferred: "Deferred" })[check.state]}</span><p>${escape(check.detail)}</p></li>`).join("")}</ul>`;
+      output.innerHTML = `<h3>${incomplete ? "Check complete — review the items below" : "Device checks complete"}</h3><p>Checked ${escape(new Date().toLocaleString())}. This is a device check, not a full test of Comment Builder, payroll or every field device.</p><ul class="office-diagnosis-list">${checks.map(check => `<li><strong>${escape(check.name)}</strong><span class="office-check-status" data-state="${check.state}">${({ passed: "Checked", attention: "Attention", deferred: "Deferred" })[check.state]}</span><p>${escape(check.detail)}</p></li>`).join("")}</ul>${incomplete && isMac ? '<button class="secondary" type="button" data-diagnostic-repair-office>Repair office setup</button>' : ""}`;
     } catch (_) {
       if (stillCurrent()) output.textContent = "This device check could not finish. Your recorded work is unchanged; try the check again or review diagnostic history below.";
     } finally {
@@ -81,6 +87,9 @@
     }
   }
   button.addEventListener("click", run);
-  window.MPI_OFFICE_DIAGNOSTICS = { setContext };
+  output.addEventListener("click", event => {
+    if (event.target.closest("[data-diagnostic-repair-office]")) window.dispatchEvent(new CustomEvent("mpi-repair-office-setup"));
+  });
+  window.MPI_OFFICE_DIAGNOSTICS = { setContext, run };
   setContext(null, null);
 })();

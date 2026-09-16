@@ -192,12 +192,13 @@ for (const [note, photo, disabled] of [["", null, true], ["", { name: "ceiling.j
   assert.equal(evidenceContext.generateCommentBtn.disabled, disabled);
 }
 const aiSource = await readFile(new URL("../mpi-comment-ai.js", import.meta.url), "utf8");
+const commentPolicySource = await readFile(new URL("../mpi-comment-policy.js", import.meta.url), "utf8");
 const parsing = aiSource.slice(aiSource.indexOf("function cleanSentence"), aiSource.indexOf("async function generate"));
 vm.runInContext(parsing, context);
 const output = context.parseResponse(JSON.stringify({ title: "Electrical - Loose GFCI", observation: "The GFCI receptacle was loose.", implication: "Movement may loosen electrical connections.", recommendation: "Have a qualified electrical contractor secure the receptacle." }), "Loose GFCI", "defect", "auto");
 assert.equal(output.split("\n").length, 4); assert.ok(!output.includes("\n\n"));
 assert.throws(() => context.parseResponse(JSON.stringify({ title: "Loose GFCI", observation: "Loose", implication: "Hazard", recommendation: "Repair" }), "", "defect", "auto"));
-assert.match(aiSource, /written note as the authoritative factual context/);
+assert.match(commentPolicySource, /inspector's factual field observation is authoritative/);
 assert.ok(!/<textarea id="defectInput"[^>]*required/.test(html));
 const modelRequests = [];
 let transientFailure = false;
@@ -220,6 +221,7 @@ const aiContext = vm.createContext({
   document: { createElement: () => ({ getContext: () => ({ fillRect() {}, drawImage() {} }), toBlob: callback => callback({ size: 100 }) }) },
   FileReader: class { readAsDataURL() { this.result = "data:image/jpeg;base64,cGhvdG8="; this.onload(); } }
 });
+vm.runInContext(commentPolicySource, aiContext);
 vm.runInContext(aiSource.replace(/^import .*;\n/gm, ""), aiContext);
 const photo = { name: "ceiling.jpg", type: "image/jpeg", size: 100 };
 for (const [id, note, supportingPhoto, mode] of [["photo", "", photo, "PHOTO ONLY"], ["text", "Ceiling staining", null, "TEXT ONLY"], ["both", "Prior staining, no active leak", photo, "PHOTO + TEXT"]]) {
@@ -230,6 +232,14 @@ for (const [id, note, supportingPhoto, mode] of [["photo", "", photo, "PHOTO ONL
   assert.equal(Array.isArray(request), Boolean(supportingPhoto));
   if (supportingPhoto) assert.equal(request[1].inlineData.mimeType, "image/jpeg");
 }
+const visionLog = aiWindow.MPI_COMMENT_AI.technicalLog().find(entry => entry.requestId === "photo" && entry.result === "success");
+assert.equal(visionLog.aiRequestContainedImage, true);
+assert.equal(visionLog.imageUploadSucceeded, true);
+assert.equal(visionLog.imageAnalysisCompleted, true);
+assert.equal(visionLog.imageCount, 1);
+assert.equal(visionLog.originalImageWidth, 100);
+assert.equal(visionLog.processedImageWidth, 100);
+assert.match(visionLog.promptVersion, /^mpi-comment-v\d/);
 transientFailure = true;
 const beforeRetry = modelRequests.length;
 await aiWindow.MPI_COMMENT_AI.generate({ id: "retry", note: "Ceiling staining", photo });

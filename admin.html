@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="209">
+  <meta name="app-build" content="210">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Office">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -170,6 +170,12 @@
     .admin-onboarding-list { display:grid; gap:9px; margin:18px 0 0; padding:0; list-style:none; }
     .admin-onboarding-list li { display:flex; gap:10px; align-items:flex-start; padding:12px 13px; color:#27305f; background:#f4f7fb; border:1px solid var(--line); border-radius:11px; line-height:1.42; }
     .admin-onboarding-list li::before { content:'\2713'; display:grid; flex:0 0 23px; height:23px; place-items:center; color:#fff; background:var(--green); border-radius:50%; font-size:11px; font-weight:950; }
+    .admin-setup-checks { display:grid; gap:8px; margin:18px 0 0; padding:0; list-style:none; }
+    .admin-setup-checks li { display:grid; grid-template-columns:30px minmax(0,1fr); gap:2px 10px; align-items:center; padding:11px 13px; border:1px solid var(--line); border-radius:11px; background:#f7f9fc; }
+    .admin-setup-checks li > span { grid-row:1/3; display:grid; width:26px; height:26px; place-items:center; border-radius:50%; color:#fff; background:var(--green); font-weight:950; }
+    .admin-setup-checks li.needs-attention > span { background:#b5760c; }
+    .admin-setup-checks strong { color:var(--navy); font-size:12px; }
+    .admin-setup-checks small { color:var(--muted); font-size:10px; line-height:1.4; }
     .admin-onboarding-alert { width:100%; margin-top:18px; }
     .admin-onboarding-status { min-height:18px; margin-top:9px!important; color:var(--blue)!important; font-size:11px; font-weight:850; }
     .admin-onboarding-progress { display:flex; justify-content:center; gap:7px; padding:0 24px 18px; }
@@ -962,8 +968,8 @@
       .equipment-document-dialog .facts,.equipment-document-dialog .signatures { grid-template-columns:1fr; }
     }
   </style>
-  <link rel="stylesheet" href="./mpi-app-theme.css?build=209">
-  <link rel="stylesheet" href="./mpi-office-workbench.css?build=209">
+  <link rel="stylesheet" href="./mpi-app-theme.css?build=210">
+  <link rel="stylesheet" href="./mpi-office-workbench.css?build=210">
 </head>
 <body class="mpi-office-ui office-workbench">
   <script>if (new URLSearchParams(location.search).get("field") === "1") document.body.classList.add("field-equipment-console");</script>
@@ -1024,7 +1030,7 @@
         <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Messages</span><span class="nav-count" id="adminReplyCount"></span></button>
         <button type="button" data-admin-view="equipment"><svg class="app-icon"><use href="#icon-briefcase"></use></svg><span>Equipment</span></button>
         <button type="button" data-admin-view="people"><svg class="app-icon"><use href="#icon-users"></use></svg><span>Team</span></button>
-        <div class="office-nav-footer"><span>Michigan Property Inspections</span><small>Office Console · Build 209</small></div>
+        <div class="office-nav-footer"><span>Michigan Property Inspections</span><small>Office Console · Build 210</small></div>
       </nav>
 
       <section class="console-view active" data-admin-panel="operations">
@@ -1095,6 +1101,7 @@
         <div class="panel content-panel office-settings-content">
           <section class="office-settings-card" aria-labelledby="officeSelfDiagnosisTitle"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-shield"></use></svg></span><div><h2 id="officeSelfDiagnosisTitle">Self-diagnosis</h2><p>Check this console’s connection, sign-in, messaging, notifications and saved data.</p></div></div></div><button class="primary" id="adminRunSelfDiagnosis" type="button">Run self-diagnosis</button><p class="office-diagnosis-note">Runs only when selected. No test messages are sent and no jobs, hours or history are reset.</p><section class="office-diagnosis-result" id="adminSelfDiagnosisResult" aria-live="polite" hidden></section></section>
           <section class="office-settings-card" aria-labelledby="officeNotificationSettingsTitle"><div class="office-settings-row"><div><h2 id="officeNotificationSettingsTitle">Notifications</h2><p>Allow office messages and safety alerts on this device.</p></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>Enable office alerts</span></button></div></section>
+          <section class="office-settings-card" aria-labelledby="officeRepairSetupTitle"><div class="office-settings-row"><div><h2 id="officeRepairSetupTitle">MPI Office on this Mac</h2><p>Recheck installation, Dock access, notifications, private messaging, live updates and the current version without deleting any company data.</p></div><button class="secondary" id="adminRepairOfficeSetup" type="button">Repair office setup</button></div><p class="office-diagnosis-note" id="adminRepairOfficeSetupStatus"></p></section>
           <details class="office-settings-card office-diagnostic-history" id="adminDiagnosticHistory"><summary><div><h2>Diagnostic history</h2><p>Saved reports from field users and their review status.</p></div><span class="nav-count" id="adminDiagnosticCount"></span></summary>
           <div class="operations-toolbar">
             <div><p class="ops-eyebrow">Issue queue</p><p class="sync-note" id="adminDiagnosticSummary">No diagnostic reports have been submitted.</p></div>
@@ -1185,10 +1192,10 @@
 
   <section class="admin-onboarding" id="adminOnboarding" role="dialog" aria-modal="true" aria-labelledby="adminOnboardingTitle" hidden>
     <div class="admin-onboarding-card">
-      <header class="admin-onboarding-head"><img src="./mpi-logo.png" alt=""><div><strong>MPI Office Console Setup</strong><span id="adminOnboardingStepLabel">Step 1 of 5</span></div></header>
+      <header class="admin-onboarding-head"><img src="./mpi-logo.png" alt=""><div><strong>MPI Office</strong><span id="adminOnboardingStepLabel">Mac setup</span></div></header>
       <div class="admin-onboarding-body" id="adminOnboardingBody"></div>
       <div class="admin-onboarding-progress" id="adminOnboardingProgress" aria-hidden="true"></div>
-      <footer class="admin-onboarding-actions"><button class="secondary" id="adminOnboardingBack" type="button">BACK</button><button class="primary" id="adminOnboardingNext" type="button">CONTINUE</button></footer>
+      <footer class="admin-onboarding-actions"><button class="secondary" id="adminOnboardingBack" type="button" hidden>BACK</button><button class="primary" id="adminOnboardingNext" type="button">SET UP THIS MAC</button></footer>
     </div>
   </section>
 
@@ -1196,14 +1203,15 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-office-navigation.js?build=209"></script>
-  <script src="./mpi-shared.js?build=209"></script>
-  <script src="./mpi-equipment-images.js?build=209"></script>
-  <script src="./mpi-equipment.js?build=209"></script>
-  <script src="./mpi-planning.js?build=209"></script>
-  <script src="./mpi-owner-view.js?build=209"></script>
-  <script src="./mpi-office-diagnostics.js?build=209"></script>
-  <script src="./admin.js?build=209"></script>
-  <script src="./mpi-equipment-admin.js?build=209"></script>
+  <script src="./mpi-office-navigation.js?build=210"></script>
+  <script src="./mpi-shared.js?build=210"></script>
+  <script src="./mpi-equipment-images.js?build=210"></script>
+  <script src="./mpi-equipment.js?build=210"></script>
+  <script src="./mpi-planning.js?build=210"></script>
+  <script src="./mpi-owner-view.js?build=210"></script>
+  <script src="./mpi-office-setup-policy.js?build=210"></script>
+  <script src="./mpi-office-diagnostics.js?build=210"></script>
+  <script src="./admin.js?build=210"></script>
+  <script src="./mpi-equipment-admin.js?build=210"></script>
 </body>
 </html>

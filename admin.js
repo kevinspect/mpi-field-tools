@@ -2,11 +2,13 @@
   "use strict";
 
   const shared = window.MPI_SHARED;
+  const officeSetupPolicy = window.MPI_OFFICE_SETUP_POLICY;
   const authCard = document.getElementById("adminAuthCard");
   const dashboard = document.getElementById("adminDashboard");
   const signInButton = document.getElementById("adminSignIn");
   const signOutButton = document.getElementById("adminSignOut");
   const settingsButton = document.getElementById("adminOpenSettings");
+  const inspectorAppLink = document.querySelector('a[aria-label="Return to Inspector App"]');
   const authStatus = document.getElementById("adminAuthStatus");
   document.getElementById("adminRetryConnection")?.addEventListener("click", () => window.location.reload());
   const accountPill = document.getElementById("adminAccountPill");
@@ -113,6 +115,8 @@
   const adminOnboardingProgress = document.getElementById("adminOnboardingProgress");
   const adminOnboardingBack = document.getElementById("adminOnboardingBack");
   const adminOnboardingNext = document.getElementById("adminOnboardingNext");
+  const repairOfficeSetupButton = document.getElementById("adminRepairOfficeSetup");
+  const repairOfficeSetupStatus = document.getElementById("adminRepairOfficeSetupStatus");
   const actionLabels = {
     "Morning readiness completed": "Morning Readiness Complete",
     "Inspector activity started": "Activity tracking started",
@@ -182,9 +186,7 @@
   const MAX_ATTACHMENT_BYTES = 8 * 1024 * 1024;
   const MAX_ATTACHMENT_TOTAL_BYTES = 12 * 1024 * 1024;
   const ATTACHMENT_CHUNK_LENGTH = 560000;
-  const ADMIN_ONBOARDING_VERSION = 1;
-  const ADMIN_ONBOARDING_EMAILS = new Set(["adrienne@michiganpropertyinspections.com"]);
-  let adminOnboardingStep = 0;
+  let officeSetupRunning = false;
   let teamDeepLinkApplied = false;
   let initialAdminViewApplied = false;
   let liveLocationMap = null;
@@ -206,73 +208,141 @@
   let liveLocationCandidate = null;
   const LIVE_LOCATION_ROUTE_REFRESH_MS = 3 * 60 * 1000;
 
-  const adminOnboardingSteps = [
-    () => ({
-      title: `Welcome, ${escapeHtml(currentProfile?.name || "Adrienne")}`,
-      copy: "Your secure MPI owner account is ready. This short setup will prepare the Office Console on this device and show you where the important daily controls are.",
-      items: ["Use your own MPI Google account every time.", "Your access includes live operations, messages, requests, reports and team management.", "Your sign-in stays on this approved device until you sign out or clear its browser data."]
-    }),
-    () => ({
-      title: "Keep the Office Console handy",
-      copy: "Save the console like an app so you can open it directly without finding the link again.",
-      items: ["iPhone or iPad: open this page in Safari, tap Share, then Add to Home Screen and Add.", "Computer: bookmark this page in the browser toolbar.", "Always open the MPI Office icon or the saved Office Console bookmark."]
-    }),
-    () => ({
-      title: "Turn on office alerts",
-      copy: "Alerts are important for inspector replies, urgent safety notices and new requests. Approve the notification prompt on every office device you use.",
-      items: ["Tap Enable Office Alerts below.", "Choose Allow when the device asks for notification permission.", "Repeat this one time on each additional phone or computer."],
-      alertButton: true
-    }),
-    () => ({
-      title: "Know the five office sections",
-      copy: "The main navigation keeps the office work in one place.",
-      items: ["Operations: live inspector status, job progress, hours, drive time and safety alerts.", "Requests: assign, update and complete employee requests.", "Send to Field: send messages, instructions, PDFs and images.", "Sent Updates: review delivery, confirmations and replies.", "Team: manage accounts, roles, phone numbers and inspector details."]
-    }),
-    () => ({
-      title: "Setup complete",
-      copy: "Adrienne now has owner-level Office Console access. Press Finish Setup to save this setup and open the live Operations screen.",
-      items: ["Use Enable Office Alerts on any new device.", "Safety alerts require each administrator to acknowledge them separately.", "The private MPI Comment Builder allowance remains visible only to Kevin, as previously requested."]
-    })
-  ];
-
-  function renderAdminOnboarding() {
-    if (!adminOnboarding || !adminOnboardingBody) return;
-    const step = adminOnboardingSteps[adminOnboardingStep]();
-    adminOnboardingStepLabel.textContent = `Step ${adminOnboardingStep + 1} of ${adminOnboardingSteps.length}`;
-    adminOnboardingBody.innerHTML = `<h2 id="adminOnboardingTitle">${step.title}</h2><p>${step.copy}</p><ul class="admin-onboarding-list">${step.items.map(item => `<li>${item}</li>`).join("")}</ul>${step.alertButton ? '<button class="primary admin-onboarding-alert" type="button" data-onboarding-enable-alerts>ENABLE OFFICE ALERTS</button><p class="admin-onboarding-status" data-onboarding-alert-status></p>' : ""}<p class="admin-onboarding-status" data-onboarding-save-status></p>`;
-    adminOnboardingProgress.innerHTML = adminOnboardingSteps.map((_, index) => `<span class="${index === adminOnboardingStep ? "active" : ""}"></span>`).join("");
-    adminOnboardingBack.hidden = adminOnboardingStep === 0;
-    adminOnboardingNext.textContent = adminOnboardingStep === adminOnboardingSteps.length - 1 ? "FINISH SETUP" : "CONTINUE";
+  function officeSetupEnvironment() {
+    return {
+      mac: officeSetupPolicy?.isMac(navigator.platform, navigator.userAgent, navigator.maxTouchPoints),
+      installed: officeSetupPolicy?.isInstalled(Boolean(navigator.standalone), window.matchMedia?.("(display-mode: standalone)")?.matches),
+      installedBuild: Number(document.querySelector('meta[name="app-build"]')?.content) || 0
+    };
   }
 
-  function maybeStartAdminOnboarding() {
-    if (!currentUser || !currentProfile || !adminOnboarding) return;
-    const email = shared.normalizeEmail(currentUser.email);
-    const completed = Number(currentProfile.adminOnboardingVersion || 0) >= ADMIN_ONBOARDING_VERSION;
-    if (!ADMIN_ONBOARDING_EMAILS.has(email) || completed) return;
-    adminOnboardingStep = 0;
-    renderAdminOnboarding();
+  function officeSetupRecord() {
+    if (!currentUser?.uid || !officeSetupPolicy) return {};
+    try { return JSON.parse(localStorage.getItem(officeSetupPolicy.storageKey(currentUser.uid)) || "{}"); }
+    catch (_) { return {}; }
+  }
+
+  function saveOfficeSetupRecord(value) {
+    if (!currentUser?.uid || !officeSetupPolicy) return;
+    try { localStorage.setItem(officeSetupPolicy.storageKey(currentUser.uid), JSON.stringify(value)); } catch (_) {}
+  }
+
+  function boundedOfficeSetup(task, milliseconds = 12000) {
+    let timer;
+    return Promise.race([
+      task,
+      new Promise((_, reject) => { timer = window.setTimeout(() => reject(new Error("office-setup-timeout")), milliseconds); })
+    ]).finally(() => window.clearTimeout(timer));
+  }
+
+  function showOfficeSetupIntro(repair = false) {
+    if (!adminOnboarding || !adminOnboardingBody) return;
+    adminOnboardingStepLabel.textContent = repair ? "Repair setup" : "First-time Mac setup";
+    adminOnboardingBody.innerHTML = `<h2 id="adminOnboardingTitle">${repair ? "REPAIR MPI OFFICE SETUP" : "SET UP MPI OFFICE ON THIS MAC"}</h2><p>This will set up MPI Office for quick access on this Mac, enable important notifications, verify private messaging and live updates, and confirm the current version.</p><ul class="admin-onboarding-list"><li>Preserves every job, message, hour and company record.</li><li>Uses one MPI setup action plus only confirmations required by Apple.</li><li>Checks this Mac independently from other office computers.</li></ul><p class="admin-onboarding-status" data-onboarding-save-status></p>`;
+    adminOnboardingProgress.innerHTML = "";
+    adminOnboardingBack.hidden = true;
+    adminOnboardingNext.hidden = false;
+    adminOnboardingNext.disabled = false;
+    adminOnboardingNext.textContent = repair ? "REPAIR THIS MAC" : "SET UP THIS MAC";
+    adminOnboardingNext.dataset.officeSetupAction = "run";
     adminOnboarding.hidden = false;
     document.body.style.overflow = "hidden";
   }
 
-  async function completeAdminOnboarding() {
-    const status = adminOnboardingBody?.querySelector("[data-onboarding-save-status]");
+  function setupCheckItems(checks) {
+    const labels = [
+      ["installed", "App Installed"],
+      ["installed", "Quick / Dock Access"],
+      ["version", "Current Version"],
+      ["notifications", "Notifications Enabled"],
+      ["messaging", "Private Messaging Connected"],
+      ["liveUpdates", "Live Updates Connected"],
+      ["adminServices", "Admin Services / To-Dos Connected"]
+    ];
+    return labels.map(([key, label]) => `<li class="${checks[key] ? "verified" : "needs-attention"}"><span aria-hidden="true">${checks[key] ? "✓" : "!"}</span><strong>${label}</strong><small>${escapeHtml(checks.details?.[key] || (checks[key] ? "Verified" : "Needs attention"))}</small></li>`).join("");
+  }
+
+  function renderOfficeSetupResult(checks) {
+    const ready = officeSetupPolicy.ready(checks);
+    adminOnboardingStepLabel.textContent = ready ? "Setup complete" : "Action required";
+    adminOnboardingBody.innerHTML = `<h2 id="adminOnboardingTitle">${ready ? "MPI OFFICE IS READY" : checks.installed ? "FINISH SETTING UP MPI OFFICE" : "ADD MPI OFFICE TO THE DOCK"}</h2><p>${ready ? "This Mac has passed the office setup checks." : checks.installed ? "Complete the item marked below, then check again." : "Apple requires this installation step. In Safari, choose File > Add to Dock, click Add, then open MPI Office from its new Dock icon."}</p><ul class="admin-setup-checks">${setupCheckItems(checks)}</ul><p class="admin-onboarding-status" data-onboarding-save-status>${escapeHtml(checks.summary || "")}</p>`;
+    adminOnboardingNext.hidden = false;
+    adminOnboardingNext.disabled = false;
+    adminOnboardingNext.dataset.officeSetupAction = ready ? "open" : checks.installed && !checks.version ? "update" : "run";
+    adminOnboardingNext.textContent = ready
+      ? "OPEN ADMIN DASHBOARD"
+      : checks.installed && !checks.version
+        ? "LOAD CURRENT VERSION"
+        : checks.installed && !checks.notifications
+          ? "ENABLE NOTIFICATIONS"
+          : checks.installed
+            ? "CHECK AGAIN"
+            : "I’VE ADDED MPI OFFICE";
+    adminOnboardingProgress.innerHTML = "";
+    if (ready) saveOfficeSetupRecord({ version: officeSetupPolicy.VERSION, ready: true, checks, completedAt: new Date().toISOString(), lastVerifiedAt: Date.now() });
+  }
+
+  async function verifyOfficeSetup({ requestPermission = true, showResult = true } = {}) {
+    if (officeSetupRunning || !currentUser || !officeSetupPolicy?.eligible(currentProfile)) return null;
+    officeSetupRunning = true;
     adminOnboardingNext.disabled = true;
-    if (status) status.textContent = "Saving your setup…";
+    adminOnboardingNext.textContent = "CHECKING THIS MAC…";
+    const environment = officeSetupEnvironment();
+    const checks = { installed: environment.installed, version: false, notifications: false, messaging: false, liveUpdates: false, adminServices: false, details: {} };
     try {
-      await shared.db.collection("users").doc(currentUser.uid).set({
-        adminOnboardingVersion: ADMIN_ONBOARDING_VERSION,
-        adminOnboardingCompletedAt: shared.serverTimestamp()
-      }, { merge: true });
-      currentProfile.adminOnboardingVersion = ADMIN_ONBOARDING_VERSION;
-      adminOnboarding.hidden = true;
-      document.body.style.overflow = "";
-      showView("operations");
-    } catch (error) {
-      if (status) status.textContent = error.message || "Setup could not be saved. Please try again.";
+      if (!environment.installed) {
+        checks.details.installed = "Safari > File > Add to Dock > Add, then open the new MPI Office app.";
+        checks.details.notifications = "Notification permission is requested from the installed MPI Office app.";
+        if (showResult) renderOfficeSetupResult(checks);
+        return checks;
+      }
+      checks.details.installed = "Running as the installed MPI Office web app.";
+      try {
+        const response = await boundedOfficeSetup(fetch(`./version.json?officeSetup=${Date.now()}`, { cache: "no-store" }), 10000);
+        const latest = response.ok ? await response.json() : {};
+        checks.version = Number(latest.build) > 0 && Number(latest.build) <= environment.installedBuild;
+        checks.details.version = checks.version ? `Build ${environment.installedBuild} is current.` : `Build ${latest.build || "unknown"} is required; reload MPI Office.`;
+      } catch (_) { checks.details.version = "The production version could not be verified."; }
+      checks.notifications = requestPermission ? await enableOfficeAlerts(adminOnboardingNext, true) : window.Notification?.permission === "granted" && Boolean(savedOfficePushToken());
+      checks.details.notifications = checks.notifications ? "Permission and MPI notification registration verified." : "Choose Allow when macOS asks, or enable MPI Office in System Settings > Notifications.";
+      try {
+        const health = await boundedOfficeSetup(shared.messagingHealth(), 31000);
+        checks.messaging = health?.backend === "connected" && health?.authentication === "verified" && health?.listener === "connected";
+        checks.details.messaging = checks.messaging ? "Account, conversation retrieval and real-time subscription verified." : `Messaging needs attention.${health?.referenceId ? ` Reference ${health.referenceId}.` : ""}`;
+      } catch (_) { checks.details.messaging = "Private messaging did not respond in time."; }
+      checks.liveUpdates = navigator.onLine !== false && !shared.syncCoolingDown?.(currentUser.uid);
+      checks.details.liveUpdates = checks.liveUpdates ? "No update delay is reported on this Mac." : "Live updates are offline or temporarily delayed.";
+      try {
+        if (!shared.db || shared.auth?.currentUser?.uid !== currentUser.uid || !shared.isAdminRole(currentProfile)) throw new Error("office-authorization");
+        await boundedOfficeSetup(shared.db.collection("users").limit(1).get({ source: "server" }), 12000);
+        checks.adminServices = true;
+        checks.details.adminServices = "Authorized office records, requests and To-Dos are reachable.";
+      } catch (_) {
+        checks.details.adminServices = "Office authorization, requests or To-Dos could not be verified.";
+      }
+      checks.summary = officeSetupPolicy.ready(checks) ? "All required checks passed." : "No company data was changed. Correct the marked item and run the check again.";
+      if (showResult) renderOfficeSetupResult(checks);
+      return checks;
     } finally {
-      adminOnboardingNext.disabled = false;
+      officeSetupRunning = false;
+      if (adminOnboardingNext && !adminOnboardingNext.hidden) adminOnboardingNext.disabled = false;
+    }
+  }
+
+  function maybeStartAdminOnboarding() {
+    if (!currentUser || !officeSetupPolicy?.eligible(currentProfile) || !adminOnboarding) return;
+    const environment = officeSetupEnvironment();
+    if (!environment.mac) return;
+    const record = officeSetupRecord();
+    if (record.version !== officeSetupPolicy.VERSION || !record.ready) {
+      showOfficeSetupIntro(false);
+      return;
+    }
+    if (Date.now() - Number(record.lastVerifiedAt || 0) >= officeSetupPolicy.HEALTH_INTERVAL_MS) {
+      verifyOfficeSetup({ requestPermission: false, showResult: false }).then(checks => {
+        if (!checks) return;
+        saveOfficeSetupRecord({ ...record, checks, ready: officeSetupPolicy.ready(checks), lastVerifiedAt: Date.now() });
+      }).catch(() => {});
     }
   }
 
@@ -3288,7 +3358,7 @@
         <article class="ops-card span-8"><h3>Activity Timeline</h3><div class="timeline">${timelineHtml(person, day)}</div></article>
         <article class="ops-card"><h3>Alerts / Exceptions</h3><div class="alert-list">${alerts.length ? alerts.map(item => `<div class="alert-item">${escapeHtml(item)}</div>`).join("") : '<div class="clear-item">✓ No meaningful workflow issues recorded.</div>'}</div></article>
         <article class="ops-card full"><h3>Arrival Location Review</h3><p class="ops-sub">Inspectors are never blocked. Any unusual location is recorded here for management review, while the original time and GPS evidence remain unchanged.</p>${arrivalReviewHtml(person, day)}</article>
-        ${(day?.commentFailures || []).length ? `<article class="ops-card full"><h3>Comment Builder Technical Log</h3><div class="timeline">${day.commentFailures.slice().reverse().map(item => `<div class="timeline-row"><time>${escapeHtml(formatTime(item.timestamp))}</time><span class="timeline-dot"></span><div><strong>${escapeHtml(item.category || "service-error")} · attempt ${escapeHtml(item.attempt || "—")}</strong><small>Request ${escapeHtml(item.requestId || "—")} · ${escapeHtml(item.connectivity || "unknown")} · ${escapeHtml(item.code || item.httpStatus || "no status")} · ${escapeHtml(item.message || "No technical message")}</small></div></div>`).join("")}</div></article>` : ""}
+        ${(day?.commentFailures || []).length ? `<article class="ops-card full"><h3>Comment Builder Technical Log</h3><div class="timeline">${day.commentFailures.slice().reverse().map(item => `<div class="timeline-row"><time>${escapeHtml(formatTime(item.timestamp))}</time><span class="timeline-dot"></span><div><strong>${escapeHtml(item.category || "service-error")} · attempt ${escapeHtml(item.attempt || "—")}</strong><small>Request ${escapeHtml(item.requestId || "—")} · ${escapeHtml(item.model || "model unavailable")} · ${escapeHtml(item.promptVersion || "prompt unavailable")} · ${escapeHtml(item.inputMode || "input unknown")}</small><small>${item.imageCount ? `${escapeHtml(item.imageCount)} image · ${escapeHtml(item.originalImageWidth)}×${escapeHtml(item.originalImageHeight)} → ${escapeHtml(item.processedImageWidth)}×${escapeHtml(item.processedImageHeight)} · request image ${item.aiRequestContainedImage ? "verified" : "missing"}` : "No image supplied"} · ${escapeHtml(item.stage || "stage unknown")} · ${escapeHtml(item.authenticationStatus || "auth unknown")}</small><small>${escapeHtml(item.connectivity || "unknown")} · ${escapeHtml(item.code || item.httpStatus || "no status")} · ${escapeHtml(item.message || "No technical message")}</small></div></div>`).join("")}</div></article>` : ""}
         <article class="ops-card"><h3>Morning Readiness</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${day?.readiness ? "Complete" : "Not recorded"}</strong></div><div class="fact"><span>Original time</span><strong>${formatTime(originalReadiness)}</strong></div>${readinessCorrection ? `<div class="fact"><span>Admin-adjusted time</span><strong>${formatTime(readinessCorrection.correctedValue)}</strong></div><div class="fact"><span>Effective activity start</span><strong>${formatTime(effectiveReadiness)}</strong></div><div class="fact"><span>Changed by</span><strong>${escapeHtml(readinessCorrection.correctedByName || readinessCorrection.correctedByEmail || "MPI Admin")}</strong></div><div class="fact"><span>Changed</span><strong>${escapeHtml(formatDateTime(readinessCorrection.correctedAt))}</strong></div><div class="fact"><span>Reason</span><strong>${escapeHtml(readinessCorrection.reason || "—")}</strong></div>` : `<div class="fact"><span>Effective activity start</span><strong>${formatTime(effectiveReadiness)}</strong></div>`}<div class="fact"><span>Important notifications</span><strong>${escapeHtml(day?.readiness?.notificationPermission === "granted" ? "Enabled" : day?.readiness?.notificationPermission || "Unknown")}</strong></div></div></article>
         <article class="ops-card span-6"><h3>Lab Activity &amp; Chain of Custody</h3>${labHtml(person, day)}</article>
         <article class="ops-card"><h3>End-of-Day Status</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${escapeHtml(eodStatus)}</strong></div><div class="fact"><span>Clock out</span><strong>${formatTime(clockOut)}</strong></div><div class="fact"><span>Last recorded location</span><strong>${locationLink}</strong></div><div class="fact"><span>Equipment check</span><strong>${day?.dayComplete?.equipment?.length ? "Complete" : "Pending"}</strong></div></div><p class="ops-sub">Installed company phones provide background workday route points. Verified workflow locations remain part of the saved historical route. Never treat a stale location as live.</p></article>
@@ -3871,30 +3941,36 @@
     }
   }
 
-  adminOnboardingBack?.addEventListener("click", () => {
-    if (adminOnboardingStep <= 0) return;
-    adminOnboardingStep -= 1;
-    renderAdminOnboarding();
-  });
-  adminOnboardingNext?.addEventListener("click", () => {
-    if (adminOnboardingStep < adminOnboardingSteps.length - 1) {
-      adminOnboardingStep += 1;
-      renderAdminOnboarding();
+  adminOnboardingNext?.addEventListener("click", async () => {
+    const action = adminOnboardingNext.dataset.officeSetupAction || "run";
+    if (action === "open") {
+      adminOnboarding.hidden = true;
+      document.body.style.overflow = "";
+      showView("operations");
       return;
     }
-    completeAdminOnboarding();
+    if (action === "update") {
+      adminOnboardingNext.disabled = true;
+      adminOnboardingNext.textContent = "LOADING CURRENT VERSION…";
+      try {
+        const registration = await navigator.serviceWorker?.getRegistration?.();
+        await registration?.update?.();
+      } catch (_) {}
+      const url = new URL(window.location.href);
+      url.searchParams.set("release", String(Date.now()));
+      window.location.replace(url.href);
+      return;
+    }
+    await verifyOfficeSetup({ requestPermission: true, showResult: true });
   });
-  adminOnboardingBody?.addEventListener("click", async event => {
-    const button = event.target.closest("[data-onboarding-enable-alerts]");
-    if (!button) return;
-    const status = adminOnboardingBody.querySelector("[data-onboarding-alert-status]");
-    button.disabled = true;
-    if (status) status.textContent = "Opening notification permission…";
-    const enabled = await enableOfficeAlerts(button, true);
-    button.disabled = enabled;
-    button.textContent = enabled ? "Office alerts enabled" : "Try office alerts again";
-    if (status) status.textContent = enabled ? "Alerts are enabled on this device." : "Alerts were not enabled. Check the device notification settings, then try again.";
+  repairOfficeSetupButton?.addEventListener("click", () => {
+    if (!currentUser || !officeSetupPolicy?.eligible(currentProfile)) return;
+    saveOfficeSetupRecord({});
+    if (repairOfficeSetupStatus) repairOfficeSetupStatus.textContent = "Ready to recheck this Mac. No company data has been removed.";
+    showOfficeSetupIntro(true);
   });
+  window.addEventListener("mpi-repair-office-setup", () => repairOfficeSetupButton?.click());
+  window.MPI_OFFICE_SETUP = Object.freeze({ show: showOfficeSetupIntro, verify: verifyOfficeSetup, environment: officeSetupEnvironment });
 
   tabButtons.forEach(button => button.addEventListener("click", () => showView(button.dataset.adminView)));
   dashboard.addEventListener("change", event => {
@@ -4357,6 +4433,7 @@
     accountName.textContent = profile.name || user.displayName || "MPI Owner";
     accountEmail.textContent = user.email || "";
     accountInitial.textContent = (profile.name || user.displayName || "K").trim().charAt(0).toUpperCase();
+    if (inspectorAppLink) inspectorAppLink.hidden = !shared.isOwnerEmail(user.email);
     if (!fieldEquipmentOnly) startAdminData();
     if (!initialAdminViewApplied) {
       const requestedView = new URL(window.location.href).searchParams.get("view");

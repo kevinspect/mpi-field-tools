@@ -16,6 +16,8 @@ const assets = [
   "mpi-field-sync.js",
   "mpi-subcontractor.js",
   "mpi-comment-ai.js",
+  "mpi-comment-policy.js",
+  "mpi-office-setup-policy.js",
   "mpi-equipment.js",
   "mpi-equipment-images.js",
   "mpi-equipment-admin.js",

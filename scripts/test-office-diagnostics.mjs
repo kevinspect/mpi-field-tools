@@ -7,7 +7,7 @@ function fixture(options = {}) {
   const calls = { fetch: 0, messaging: 0, storage: 0 };
   let click;
   const button = { disabled: false, textContent: "Run self-diagnosis", addEventListener: (_, callback) => { click = callback; } };
-  const output = { hidden: true, innerHTML: "", textContent: "" };
+  const output = { hidden: true, innerHTML: "", textContent: "", addEventListener() {} };
   const user = { uid: "brooke" }, profile = { role: "admin", active: true };
   const shared = {
     auth: { currentUser: user }, isAdminRole: person => ["admin", "owner"].includes(person?.role),

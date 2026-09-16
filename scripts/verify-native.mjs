@@ -39,7 +39,11 @@ for (const file of [
   "mpi-office-navigation.js",
   "mpi-owner-view.js",
   "mpi-office-diagnostics.js",
+  "mpi-office-setup-policy.js",
+  "mpi-comment-policy.js",
   "scripts/test-office-diagnostics.mjs",
+  "scripts/test-office-setup-policy.mjs",
+  "scripts/test-comment-policy.mjs",
   "mpi-tool-bag.js",
   "scripts/test-owner-view.mjs",
   "mpi-shared.js",
@@ -60,6 +64,8 @@ for (const file of [
 }
 run("Event-based syncing and cross-device receipts", process.execPath, ["scripts/test-event-sync.mjs"], { quiet: false });
 run("On-demand office self-diagnosis", process.execPath, ["scripts/test-office-diagnostics.mjs"], { quiet: false });
+run("One-time Mac office setup policy", process.execPath, ["scripts/test-office-setup-policy.mjs"], { quiet: false });
+run("Versioned Comment Builder multimodal policy", process.execPath, ["scripts/test-comment-policy.mjs"], { quiet: false });
 run("Owner-only read-only previews and field Tool Bag", process.execPath, ["scripts/test-owner-view.mjs"], { quiet: false });
 await assertText("Native Office does not wait for external map scripts", "native-web/admin.html", source => source.includes("./vendor/leaflet.css") && source.includes("./vendor/maplibre-gl.css") && source.includes("mpi-office-navigation.js") && !/<script[^>]+src="https:\/\/unpkg/.test(source), "Native Office still blocks on a remote map library");
 
@@ -313,9 +319,8 @@ await assertText(
 await assertText(
   "Photo-only comments use vision without text fallback",
   "mpi-comment-ai.js",
-  source => source.includes('"PHOTO ONLY"')
-    && source.includes('"PHOTO + TEXT"')
-    && source.includes('"TEXT ONLY"')
+  source => source.includes("commentPolicy.inputMode(cleanNote, preparedPhoto)")
+    && source.includes("commentPolicy.buildRequest")
     && source.includes("friendly.mpiFallbackAllowed = Boolean(cleanNote && !preparedPhoto)"),
   "Photo-only input is missing or can incorrectly fall back to the text-only rules engine"
 );

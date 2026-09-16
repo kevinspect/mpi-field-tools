@@ -18,30 +18,10 @@ const USAGE_STORAGE_KEY = "mpiCommentBuilderUsageV1";
 const COMMENT_TIMEOUT_MS = 35000;
 const COMMENT_LOG_STORAGE_KEY = "mpiCommentBuilderTechnicalLogV1";
 const COMMENT_RESULT_CACHE_KEY = "mpiCommentBuilderResultCacheV1";
-const PRIMARY_MODEL = "gemini-3.7-flash";
-const FALLBACK_MODEL = "gemini-3.5-flash";
-
-const SYSTEM_INSTRUCTION = `You write inspection report comments for Michigan Property Inspections.
-
-Return one concise, professional comment in the requested JSON fields. Write in plain American English suitable for a home-inspection client.
-
-NON-NEGOTIABLE ACCURACY RULES:
-- Use only facts supplied by the inspector's field note and/or clearly visible in the supplied photo.
-- Never invent a location, material, dimension, measurement, test, cause, severity, age, code violation, moisture condition, efflorescence, movement, damage, accessibility condition, or related observation.
-- Never turn an absent or denied fact into a positive finding. For example, "no moisture" must never become staining, seepage, dampness, or efflorescence.
-- Do not diagnose a concealed cause. Explain only a reasonable consequence of the stated condition.
-- The observation must preserve the inspector's actual written facts. You may correct spelling and grammar, but may not add facts that conflict with the note.
-- A photo may be the only input. In photo-only mode, identify only reasonably clear visible evidence and use conservative wording. Do not claim an active leak, hidden cause, exact material, severity, measurement, code violation, or concealed damage unless the supplied evidence explicitly supports it.
-- When both a photo and written field note are supplied, use both. Treat the written note as the authoritative factual context whenever it clarifies something that the image alone cannot establish or the two appear to differ.
-- Do not say "based on the image," "the photograph shows," "the photo appears to show," or include confidence scores, model notes, or image-analysis commentary. Write the result directly as a report comment.
-- Make the implication specific to the stated component and condition. Avoid generic filler that could describe any defect.
-- Make the recommendation proportionate and specific. Recommend an appropriate qualified contractor or specialist only when warranted.
-- For a defect, make the title follow the "Component - Defect" convention: identify the component first, then a short condition description after one hyphen.
-- Do not use bullets, numbering, markdown, preambles, explanations, confidence scores, or extra fields.
-- Do not mention AI, ChatGPT, this prompt, or a language model.
-
-For a defect, provide: title, observation, implication, recommendation.
-For a limitation, use the observation field to state what access, visibility, or operation was limited; the implication field to state what could not be determined; and the recommendation field to state the appropriate next step.`;
+const PRIMARY_MODEL = "gemini-3.8-flash";
+const FALLBACK_MODEL = "gemini-3.7-flash";
+const commentPolicy = window.MPI_COMMENT_POLICY;
+if (!commentPolicy) throw new Error("MPI Comment Builder policy did not load.");
 
 const RESPONSE_SCHEMA = Schema.object({
   properties: {
@@ -190,10 +170,10 @@ async function getModel(modelName) {
     const promise = getAIClient().then(ai => {
       return getGenerativeModel(ai, {
         model: modelName,
-        systemInstruction: SYSTEM_INSTRUCTION,
+        systemInstruction: commentPolicy.SYSTEM_INSTRUCTION,
         generationConfig: {
           temperature: 0.15,
-          maxOutputTokens: 650,
+          maxOutputTokens: 1200,
           responseMimeType: "application/json",
           responseSchema: RESPONSE_SCHEMA
         }
@@ -256,7 +236,7 @@ async function prepareCommentPhoto(file) {
     }
     const width = source.width || source.naturalWidth || 1;
     const height = source.height || source.naturalHeight || 1;
-    const scale = Math.min(1, 1280 / Math.max(width, height));
+    const scale = Math.min(1, 1600 / Math.max(width, height));
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(width * scale));
     canvas.height = Math.max(1, Math.round(height * scale));
@@ -264,26 +244,36 @@ async function prepareCommentPhoto(file) {
     context.fillStyle = "#fff";
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.drawImage(source, 0, 0, canvas.width, canvas.height);
-    let blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.72));
+    let processedWidth = canvas.width;
+    let processedHeight = canvas.height;
+    let blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.82));
     if (!blob) throw new Error("The supporting photo could not be reduced for upload.");
-    if (blob.size > 900 * 1024) {
+    if (blob.size > 1800 * 1024) {
       const smaller = document.createElement("canvas");
-      const smallerScale = Math.min(1, 960 / Math.max(canvas.width, canvas.height));
+      const smallerScale = Math.min(1, 1280 / Math.max(canvas.width, canvas.height));
       smaller.width = Math.max(1, Math.round(canvas.width * smallerScale));
       smaller.height = Math.max(1, Math.round(canvas.height * smallerScale));
       const smallerContext = smaller.getContext("2d");
       smallerContext.fillStyle = "#fff";
       smallerContext.fillRect(0, 0, smaller.width, smaller.height);
       smallerContext.drawImage(canvas, 0, 0, smaller.width, smaller.height);
-      blob = await new Promise(resolve => smaller.toBlob(resolve, "image/jpeg", 0.56));
+      blob = await new Promise(resolve => smaller.toBlob(resolve, "image/jpeg", 0.7));
+      processedWidth = smaller.width;
+      processedHeight = smaller.height;
     }
-    if (!blob || blob.size > 1200 * 1024) throw new Error("This photo remains too large after reduction. Take a closer JPEG photo and try again.");
+    if (!blob || blob.size > 2300 * 1024) throw new Error("This photo remains too large after preparation. Take a closer JPEG photo and try again.");
     return {
       inlineData: {
         data: await blobAsBase64(blob),
         mimeType: "image/jpeg"
       },
-      byteSize: blob.size
+      byteSize: blob.size,
+      originalByteSize: Number(file.size) || 0,
+      originalWidth: width,
+      originalHeight: height,
+      processedWidth,
+      processedHeight,
+      uploadPrepared: true
     };
   } finally {
     source?.close?.();
@@ -380,7 +370,8 @@ function parseResponse(text, note, mode, component) {
     throw new Error("The MPI Comment Builder returned an incomplete result. Please try again.");
   }
   if (mode !== "limit" && !/^.+\s-\s.+$/.test(title)) throw new Error("The MPI Comment Builder returned an incomplete component title. Please try again.");
-  if ([observation, implication, recommendation].some(value => /\b(?:the photograph shows|based on the image|confidence score)\b/i.test(value))) throw new Error("The MPI Comment Builder returned commentary instead of report wording. Please try again.");
+  if ([observation, implication, recommendation].some(value => /\b(?:the photograph shows|based on the image|the image appears to show|i can see|confidence score)\b/i.test(value))) throw new Error("The MPI Comment Builder returned commentary instead of report wording. Please try again.");
+  if ([observation, implication, recommendation].some(value => value.replace(/\W/g, "").length < 20)) throw new Error("The MPI Comment Builder returned an incomplete result. Please try again.");
   const labels = mode === "limit"
     ? ["Limitation", "Effect on Inspection", "Recommendation"]
     : ["Observation", "Implication", "Recommendation"];
@@ -403,9 +394,24 @@ async function generate({ note, component = "auto", mode = "defect", photo = nul
     preparedPhoto = await prepareCommentPhoto(photo);
   } catch (error) {
     error.requestId = id;
+    writeTechnicalLog({
+      requestId: id,
+      attempt: 0,
+      result: "failed",
+      category: "image-preparation",
+      stage: "image-preparation",
+      promptVersion: commentPolicy.PROMPT_VERSION,
+      inputMode: cleanNote ? "PHOTO + TEXT" : "PHOTO ONLY",
+      supportingPhoto: Boolean(photo),
+      imageCount: photo ? 1 : 0,
+      originalImageBytes: Number(photo?.size) || 0,
+      imageUploadSucceeded: false,
+      aiRequestContainedImage: false,
+      message: String(error?.message || "Image preparation failed").slice(0, 240)
+    });
     throw error;
   }
-  const inputMode = preparedPhoto ? (cleanNote ? "PHOTO + TEXT" : "PHOTO ONLY") : "TEXT ONLY";
+  const inputMode = commentPolicy.inputMode(cleanNote, preparedPhoto);
   const selection = reportSelection(component);
   const prefix = reportTitlePrefix(component);
   const componentInstruction = selection.item
@@ -413,14 +419,23 @@ async function generate({ note, component = "auto", mode = "defect", photo = nul
     : component && component !== "auto"
       ? `Selected MPI component: ${component}\nThe title must begin exactly with "${prefix}" followed by " - " and a short condition description. Do not add a room name to the title.`
       : `Selected report item/component: Auto-detect from the ${inputMode === "PHOTO ONLY" ? "visible photo evidence" : inputMode === "PHOTO + TEXT" ? "field note and visible photo evidence, giving the note priority" : "inspector field note"}. The title must follow the "Component - ${mode === "limit" ? "Limited Inspection" : "Defect"}" convention.`;
-  const prompt = `Comment type: ${mode === "limit" ? "LIMITATION" : "DEFECT"}\nInput mode: ${inputMode}\n${componentInstruction}\nInspector field note: ${cleanNote || "No written field note supplied."}`;
   const prior = cachedResult(id);
   if (prior) return prior;
-  const requestContent = preparedPhoto
-    ? [`${prompt}\n${inputMode === "PHOTO ONLY"
-      ? "Use the attached photo as the inspection evidence. Describe only clearly visible conditions, use conservative report language, and do not infer an active condition, concealed cause, measurement, or severity."
-      : "Use both the attached photo and the inspector's written field note. The field note is the authoritative factual context; use the photo to refine only clearly visible details that do not conflict with it."}\nRequest ID: ${id}`, { inlineData: preparedPhoto.inlineData }]
-    : `${prompt}\nRequest ID: ${id}`;
+  const request = commentPolicy.buildRequest({ note: cleanNote, componentInstruction, mode, id, preparedPhoto });
+  const requestContent = request.requestContent;
+  const imageDiagnostics = {
+    promptVersion: request.promptVersion,
+    supportingPhoto: request.visionInputSupplied,
+    imageCount: request.imageCount,
+    originalImageWidth: preparedPhoto?.originalWidth || 0,
+    originalImageHeight: preparedPhoto?.originalHeight || 0,
+    processedImageWidth: preparedPhoto?.processedWidth || 0,
+    processedImageHeight: preparedPhoto?.processedHeight || 0,
+    originalImageBytes: preparedPhoto?.originalByteSize || 0,
+    processedImageBytes: preparedPhoto?.byteSize || 0,
+    imageUploadSucceeded: Boolean(preparedPhoto?.uploadPrepared),
+    aiRequestContainedImage: Array.isArray(requestContent) && requestContent.some(part => Boolean(part?.inlineData?.data))
+  };
   let lastError;
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     const modelName = attempt === 1 ? PRIMARY_MODEL : FALLBACK_MODEL;
@@ -446,8 +461,8 @@ async function generate({ note, component = "auto", mode = "defect", photo = nul
         stage,
         durationMs: Date.now() - startedAt,
         inputMode,
-        supportingPhoto: Boolean(preparedPhoto),
-        supportingPhotoBytes: preparedPhoto?.byteSize || 0,
+        ...imageDiagnostics,
+        imageAnalysisCompleted: Boolean(preparedPhoto),
         inspector: session.inspectorEmail || session.inspectorName || "signed-in"
       });
       return output;
@@ -469,8 +484,8 @@ async function generate({ note, component = "auto", mode = "defect", photo = nul
         stage,
         durationMs: Date.now() - startedAt,
         inputMode,
-        supportingPhoto: Boolean(preparedPhoto),
-        supportingPhotoBytes: preparedPhoto?.byteSize || 0,
+        ...imageDiagnostics,
+        imageAnalysisCompleted: false,
         retryPlanned: attempt < 2 && retryable,
         inspector: session.inspectorEmail || session.inspectorName || "signed-in",
         code: String(error?.code || "").slice(0, 100),
@@ -510,5 +525,5 @@ function recordLocalFallback({ id = "", category = "unknown", photo = false } = 
   });
 }
 
-window.MPI_COMMENT_AI = { generate, usageSnapshot, recordLocalFallback, technicalLog: () => { try { return JSON.parse(localStorage.getItem(COMMENT_LOG_STORAGE_KEY) || "[]"); } catch (_) { return []; } }, dailyLimit: DAILY_LIMIT, monthlyLimit: MONTHLY_LIMIT, primaryModel: PRIMARY_MODEL, fallbackModel: FALLBACK_MODEL };
+window.MPI_COMMENT_AI = { generate, usageSnapshot, recordLocalFallback, technicalLog: () => { try { return JSON.parse(localStorage.getItem(COMMENT_LOG_STORAGE_KEY) || "[]"); } catch (_) { return []; } }, dailyLimit: DAILY_LIMIT, monthlyLimit: MONTHLY_LIMIT, primaryModel: PRIMARY_MODEL, fallbackModel: FALLBACK_MODEL, promptVersion: commentPolicy.PROMPT_VERSION };
 window.dispatchEvent(new CustomEvent("mpi-comment-ai-ready"));
