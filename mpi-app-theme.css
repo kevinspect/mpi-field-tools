@@ -1,0 +1,322 @@
+/* MPI's shared visual system. Presentation only: no workflow or data changes. */
+body.mpi-office-ui,
+body.mpi-field-ui {
+  --ui-ink: #18233b;
+  --ui-secondary: #64748b;
+  --ui-line: #e2e8f0;
+  --ui-canvas: #f5f7fa;
+  --ui-blue: #2467ba;
+  --ui-navy: #101b52;
+  --ui-blue-soft: #eef4fc;
+  --navy: var(--ui-navy);
+  --ink: var(--ui-ink);
+  --muted: var(--ui-secondary);
+  --line: var(--ui-line);
+  --mpi-navy-900: var(--ui-navy);
+  --mpi-text: var(--ui-ink);
+  --mpi-muted: var(--ui-secondary);
+  --mpi-border: var(--ui-line);
+  --mpi-blue-600: var(--ui-blue);
+  --mpi-blue-100: var(--ui-blue-soft);
+  color: var(--ui-ink);
+  background: var(--ui-canvas);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+body.mpi-office-ui :is(button, input, select, textarea),
+body.mpi-field-ui :is(button, input, select, textarea) { font-family: inherit; }
+body.mpi-office-ui :is(button, a, summary),
+body.mpi-field-ui :is(button, a, summary) { -webkit-tap-highlight-color: transparent; }
+body.mpi-office-ui :is(button, a, input, select, textarea, summary):focus-visible,
+body.mpi-field-ui :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid #77a9e9 !important;
+  outline-offset: 3px;
+  box-shadow: none !important;
+}
+/* A quiet branded toolbar; gold is an accent, not a bevel on every button. */
+body.mpi-office-ui .topbar,
+body.mpi-field-ui .topbar { background: var(--ui-navy); border-bottom: 1px solid #c5a14a; box-shadow: 0 2px 8px #101b5210; }
+body.mpi-office-ui .brand strong { font-size: 14px; font-weight: 650; letter-spacing: -.02em; }
+body.mpi-office-ui .brand span { font-size: 10px; letter-spacing: .08em; font-weight: 600; }
+body.mpi-office-ui .top-actions :is(a,button),
+body.mpi-field-ui .topbar-actions :is(a,button) { border-radius: 9px; font-weight: 600; box-shadow: none; }
+body.mpi-office-ui .shell { width: min(1440px, calc(100% - 48px)); padding-top: 24px; }
+body.mpi-office-ui .hero { align-items: center; gap: 18px; margin-bottom: 20px; }
+body.mpi-office-ui .hero .eyebrow { display: none; }
+body.mpi-office-ui .hero h1 { font-size: 28px; line-height: 1.2; letter-spacing: -.035em; font-weight: 700; }
+body.mpi-office-ui .hero p:last-child { margin-top: 6px; color: var(--ui-secondary); font-size: 13px; }
+body.mpi-office-ui .account-pill { padding: 9px 12px; border-radius: 10px; box-shadow: none; border: 1px solid var(--ui-line); }
+body.mpi-office-ui .account-pill strong { font-size: 13px; font-weight: 650; }
+body.mpi-office-ui .account-pill small { font-size: 11px; }
+body.mpi-office-ui .dashboard { grid-template-columns: 196px minmax(0,1fr); gap: 16px 22px; }
+body.mpi-office-ui .panel { border-radius: 14px; border-color: var(--ui-line); box-shadow: 0 2px 6px #18233b04; }
+body.mpi-office-ui .content-panel { padding: 24px; }
+/* Navigation reads like an app workspace, not another content card. */
+body.mpi-office-ui .tabbar { padding: 10px 8px; background: #fff; border: 1px solid var(--ui-line); border-radius: 12px; box-shadow: none; }
+body.mpi-office-ui .tabbar::before { padding: 10px 12px 14px; color: var(--ui-secondary); font-size: 10px; font-weight: 650; letter-spacing: .1em; }
+body.mpi-office-ui .tabbar button { min-height: 44px; color: #536178; font-size: 13px; font-weight: 600; border-radius: 8px; }
+body.mpi-office-ui .tabbar button .app-icon { color: #718098; }
+body.mpi-office-ui .tabbar button.active { color: var(--ui-blue); background: var(--ui-blue-soft); box-shadow: inset 3px 0 var(--ui-blue); }
+body.mpi-office-ui .tabbar button.active .app-icon { color: var(--ui-blue); }
+body.mpi-office-ui .nav-count { color: var(--ui-blue); background: #dceafa; font-size: 10px; }
+/* Four compact metrics share one surface and consistent baseline. */
+body.mpi-office-ui .stat-grid { gap: 0; background: #fff; border: 1px solid var(--ui-line); border-radius: 12px; overflow: hidden; }
+body.mpi-office-ui .stat { position: relative; min-height: 96px; padding: 16px 20px; background: transparent; border: 0; border-right: 1px solid var(--ui-line); border-radius: 0; box-shadow: none; }
+body.mpi-office-ui .stat:last-child { border-right: 0; }
+body.mpi-office-ui .stat-title { gap: 8px; padding-right: 26px; }
+body.mpi-office-ui .stat-title > span:last-child { font-size: 12px; font-weight: 550; letter-spacing: 0; text-transform: none; line-height: 1.4; }
+body.mpi-office-ui .stat-icon { position: absolute; top: 18px; right: 16px; width: 20px; height: 20px; color: #7b8aa1; background: transparent; border-radius: 0; }
+body.mpi-office-ui .stat-icon .app-icon { width: 19px; height: 19px; }
+body.mpi-office-ui .stat strong { margin-top: 10px; font-size: 27px; font-weight: 650; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -.03em; }
+body.mpi-office-ui .section-head { align-items: center; margin-bottom: 22px; }
+body.mpi-office-ui .section-head h2 { color: var(--ui-ink); font-size: 21px; font-weight: 650; letter-spacing: -.025em; }
+body.mpi-office-ui .section-head p { margin-top: 5px; font-size: 12px; line-height: 1.5; }
+body.mpi-office-ui .section-icon { width: 36px; height: 36px; border: 0; border-radius: 10px; color: var(--ui-blue); background: var(--ui-blue-soft); }
+/* One control family, including Safari's formerly thin native selects. */
+body.mpi-office-ui .field { gap: 6px; min-width: 0; }
+body.mpi-office-ui .field label,
+body.mpi-office-ui :is(.equipment-record-fields,.equipment-toolbar) label { color: #526079; font-size: 12px; font-weight: 600; }
+body.mpi-office-ui :is(.field,.person-controls,.equipment-record-fields,.equipment-toolbar) :is(input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea),
+body.mpi-field-ui :is(.field-compose-card,.comment-form,.mpi-profile-form) :is(input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea) {
+  width: 100%; min-width: 0; min-height: 44px; padding: 11px 12px; color: var(--ui-ink); background-color: #fff;
+  border: 1px solid #d3dce8; border-radius: 9px; font-size: 14px; font-weight: 400; line-height: 1.4; box-shadow: none;
+}
+body.mpi-office-ui :is(.field,.person-controls,.equipment-record-fields,.equipment-toolbar) select,
+body.mpi-field-ui :is(.field-compose-card,.comment-form,.mpi-profile-form) select {
+  -webkit-appearance: none; appearance: none; padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2364748b' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 12px center; background-repeat: no-repeat;
+}
+body.mpi-office-ui input::placeholder,
+body.mpi-office-ui textarea::placeholder { color: #8a97aa; opacity: 1; }
+body.mpi-office-ui :is(.primary,.secondary,.danger) { min-height: 44px; height: auto; padding: 10px 14px; border-radius: 9px; font-size: 12px; line-height: 1.4; font-weight: 650; letter-spacing: 0; text-transform: none; box-shadow: none; white-space: normal; }
+body.mpi-office-ui .primary { color: #fff; background: var(--ui-navy); border: 1px solid var(--ui-navy); }
+body.mpi-office-ui .secondary { color: var(--ui-blue); background: var(--ui-blue-soft); border: 1px solid #dae6f6; }
+body.mpi-office-ui .danger { color: #ad3737; background: #fff2f2; }
+body.mpi-office-ui .primary:hover { background: #1d3073; }
+body.mpi-office-ui .secondary:hover { background: #e2edfb; }
+body.mpi-office-ui button:disabled { cursor: default; }
+body.mpi-office-ui #adminRequestFilters { padding-bottom: 20px; margin-bottom: 6px; border-bottom: 1px solid var(--ui-line); gap: 14px; }
+body.mpi-office-ui .request-admin-card { padding: 18px; border-radius: 11px; border-left-width: 3px; box-shadow: none; }
+body.mpi-office-ui .request-admin-top h3 { margin-top: 9px; color: var(--ui-ink); font-size: 16px; font-weight: 650; }
+body.mpi-office-ui .request-admin-card p { margin: 9px 0; font-size: 12px; line-height: 1.55; }
+body.mpi-office-ui :is(.type-badge,.priority-badge,.role-badge,.status-badge,.equipment-status) { font-weight: 650; letter-spacing: .02em; }
+body.mpi-office-ui .request-admin-group-head h3 { font-size: 13px; font-weight: 600; }
+body.mpi-office-ui .request-editor { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--ui-line); }
+body.mpi-office-ui .request-editor > summary { display: flex; align-items: center; gap: 7px; width: fit-content; min-height: 40px; color: var(--ui-blue); font-size: 12px; font-weight: 600; cursor: pointer; list-style: none; }
+body.mpi-office-ui .request-editor > summary::-webkit-details-marker { display: none; }
+body.mpi-office-ui .request-editor > summary::after { content: "⌄"; margin-left: 8px; }
+body.mpi-office-ui .request-editor[open] > summary::after { content: "⌃"; }
+body.mpi-office-ui .request-admin-form { grid-template-columns: repeat(2,minmax(0,1fr)); margin-top: 8px; padding-top: 0; border: 0; }
+body.mpi-office-ui .request-admin-form textarea { min-height: 86px; }
+body.mpi-office-ui .request-admin-form .primary { justify-self: start; min-width: 142px; }
+body.mpi-office-ui .attachment-drop { min-height: 105px; background: #f8fafd; border: 1px dashed #a9bedb; border-radius: 11px; }
+body.mpi-office-ui .attachment-drop strong { font-size: 13px; font-weight: 600; }
+body.mpi-office-ui .attachment-drop span { font-size: 11px; }
+/* Photo/initials alignment must survive the message-card span rule. */
+body.mpi-office-ui :is(.inspector-avatar,.account-avatar),
+body.mpi-office-ui .office-reply-card .admin-message-avatar,
+body.mpi-field-ui :is(.workflow-team-avatar,.top-profile-avatar,.mpi-profile-avatar,.field-inbox-icon,.field-thread-avatar) {
+  position: relative; display: grid; place-items: center; align-content: center; overflow: hidden;
+  color: var(--ui-blue); background: #e7eef9; border: 1px solid #d9e3f2;
+  font-weight: 650; text-align: center; text-transform: none; letter-spacing: 0; line-height: 1;
+}
+body.mpi-office-ui .office-reply-card .admin-message-avatar { width: 44px; height: 44px; font-size: 13px; }
+body.mpi-office-ui .office-reply-card.safety .admin-message-avatar { color: #ae3b3b; background: #fbe9e9; border-color: #f5dada; }
+body.mpi-office-ui .inspector-avatar b,
+body.mpi-field-ui :is(.workflow-team-avatar,.top-profile-avatar,.mpi-profile-avatar) b { display: grid; place-items: center; width: 100%; height: 100%; margin: 0; }
+body.mpi-office-ui .inspector-avatar img,
+body.mpi-field-ui :is(.workflow-team-avatar,.top-profile-avatar,.mpi-profile-avatar) img { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* Messages: restrained list rows and readable, focused conversations. */
+body.mpi-office-ui [data-admin-panel=updates] .content-panel { background: #fff; }
+body.mpi-office-ui .admin-conversation-list { border: 1px solid var(--ui-line); border-radius: 11px; }
+body.mpi-office-ui .admin-inbox-list-heading { min-height: 46px; padding: 12px 16px; background: #f8fafc; }
+body.mpi-office-ui .admin-inbox-list-heading h3 { color: var(--ui-ink); font-size: 13px; font-weight: 600; }
+body.mpi-office-ui .admin-inbox-list-heading span { color: var(--ui-secondary); font-size: 11px; }
+body.mpi-office-ui .admin-conversation-list .office-reply-card { grid-template-columns: 44px minmax(0,1fr) auto 12px; min-height: 82px; padding: 14px 16px; gap: 12px; align-items: center; }
+body.mpi-office-ui .admin-conversation-list .office-reply-card::after { left: 72px; background: var(--ui-line); }
+body.mpi-office-ui .admin-message-row-copy strong { color: var(--ui-ink); font-size: 14px; font-weight: 650; }
+body.mpi-office-ui .admin-message-row-copy > span { color: #647087; font-size: 13px; }
+body.mpi-office-ui .admin-message-row-copy small { margin-top: 4px; color: #8591a3; font-size: 11px; }
+body.mpi-office-ui .admin-conversation-list .office-reply-card time { font-size: 11px; color: #8591a3; }
+body.mpi-office-ui .admin-message-chevron { color: #9eacc0; font-size: 22px; }
+body.mpi-office-ui .admin-update-archive { border: 1px solid var(--ui-line); border-radius: 11px; }
+body.mpi-office-ui .admin-inbox-title h3 { color: var(--ui-ink); font-size: 14px; font-weight: 600; }
+body.mpi-office-ui .admin-inbox-title > span { font-size: 11px; font-weight: 400; }
+body.mpi-office-ui .admin-compose-block > summary { border-radius: 9px; }
+body.mpi-office-ui .admin-compose-block { overflow: visible; }
+body.mpi-office-ui .admin-inbox-compose { border: 1px solid var(--ui-line); background: #f8fafc; box-shadow: none; }
+body.mpi-office-ui .admin-inbox-compose :is(h3,.field label) { color: var(--ui-ink); }
+body.mpi-office-ui .admin-inbox-compose p { color: var(--ui-secondary); font-size: 12px; }
+body.mpi-office-ui .admin-inbox-compose .primary { color: #fff; background: var(--ui-navy); }
+body.mpi-office-ui .admin-inbox-conversation { border: 1px solid var(--ui-line); border-radius: 12px; scroll-margin-top: 88px; }
+body.mpi-office-ui .admin-conversation-body { width: 100%; align-items: stretch; }
+body.mpi-office-ui :is(.admin-conversation-thread,.admin-conversation-compose) { width: 100%; }
+body.mpi-office-ui .admin-conversation-person strong { font-size: 13px; }
+body.mpi-office-ui .admin-conversation-back { font-size: 13px; }
+body.mpi-office-ui .admin-conversation-back::first-letter { font-size: inherit; }
+body.mpi-office-ui .admin-conversation-person span { font-size: 10px; }
+body.mpi-office-ui .admin-conversation-thread article p { color: inherit; font-size: 14px; line-height: 1.5; }
+body.mpi-office-ui .admin-conversation-thread article > strong { font-size: 10px; }
+body.mpi-office-ui .admin-conversation-thread article.office { background: var(--ui-blue); }
+body.mpi-office-ui .admin-message-bar { grid-template-columns: 42px minmax(0,1fr) 42px; }
+body.mpi-office-ui .admin-message-bar textarea { min-height: 42px; font-size: 14px; }
+body.mpi-office-ui :is(.admin-chat-attachment,.admin-message-send) { width: 42px; min-height: 42px !important; height: 42px; }
+/* Operations and equipment keep the same hierarchy as Requests and Messages. */
+body.mpi-office-ui .operations-toolbar { padding: 12px; background: #f8fafc; border-radius: 10px; }
+body.mpi-office-ui .range-picker button { font-size: 12px; font-weight: 600; border-radius: 8px; }
+body.mpi-office-ui .ops-card { padding: 18px; border-radius: 11px; box-shadow: none; }
+body.mpi-office-ui .ops-eyebrow { color: var(--ui-secondary); font-size: 10px; font-weight: 650; letter-spacing: .05em; }
+body.mpi-office-ui .inspector-row { border-radius: 11px; border-left-width: 3px; box-shadow: none; }
+body.mpi-office-ui .inspector-row:hover { transform: none; box-shadow: none; background: #fafcff; }
+body.mpi-office-ui .inspector-row strong { font-size: 14px; font-weight: 650; }
+body.mpi-office-ui .live-location-panel { border-radius: 12px; box-shadow: none; }
+body.mpi-office-ui .live-location-head h3 { color: var(--ui-ink); font-size: 17px; font-weight: 650; }
+body.mpi-office-ui .live-location-head p { font-size: 12px; }
+body.mpi-office-ui .live-location-actions .secondary { font-size: 11px; }
+body.mpi-office-ui .equipment-product-photo { border: 0; box-shadow: none; height: 84px; width: 104px; flex-basis: 104px; padding: 4px; object-fit: contain; }
+body.mpi-office-ui .equipment-record-card { border-radius: 11px; }
+body.mpi-office-ui .equipment-record-card h3 { color: var(--ui-ink); font-size: 15px; font-weight: 650; }
+body.mpi-office-ui .equipment-record-card header p { font-size: 12px; }
+body.mpi-office-ui :is(.equipment-ack-party,.equipment-ack-options) label,
+body.mpi-office-ui .equipment-signature-grid h3 { font-size: 12px; }
+body.mpi-office-ui .equipment-ack-items legend strong { font-size: 13px; }
+body.mpi-office-ui .equipment-ack-items legend span { font-size: 11px; }
+body.mpi-office-ui .equipment-ack-form blockquote { font-size: 13px; }
+body.mpi-office-ui.field-equipment-console .shell { width: 100%; }
+body.mpi-office-ui .equipment-toolbar { background: #f8fafc; border-radius: 10px; }
+body.mpi-office-ui .equipment-summary-card { border-radius: 10px; box-shadow: none; }
+body.mpi-office-ui .equipment-summary-card > span { font-weight: 600; }
+body.mpi-office-ui .person-card { border-radius: 11px; box-shadow: none; }
+body.mpi-office-ui .empty { padding: 30px 18px; color: var(--ui-secondary); background: #f8fafc; border: 1px dashed var(--ui-line); border-radius: 10px; font-size: 13px; line-height: 1.6; }
+/* Inspector: airy hierarchy, familiar dock, coherent surfaces. */
+body.mpi-field-ui :is(.app-home,.hub-screen,.field-app-section,#inbox) { background: var(--ui-canvas); }
+body.mpi-field-ui .home-intro { padding: 8px 3px 14px; background: transparent; border: 0; box-shadow: none; }
+body.mpi-field-ui .home-kicker { color: var(--ui-secondary); font-size: 10px; letter-spacing: .06em; font-weight: 600; }
+body.mpi-field-ui .home-title { font-size: 30px; font-weight: 700; letter-spacing: -.035em; line-height: 1.2; }
+body.mpi-field-ui .home-tagline { font-size: 13px; line-height: 1.5; }
+body.mpi-field-ui :is(.home-active-job,.home-tool-card,.mpi-home-updates,.field-compose-card,.field-inbox-panel,.workflow-card,.hub-list,.mpi-profile-card) { border-radius: 14px; border-color: var(--ui-line); box-shadow: 0 2px 6px #18233b04; }
+body.mpi-field-ui .home-quick-actions a { border-radius: 12px; box-shadow: none; }
+body.mpi-field-ui .home-quick-actions svg { color: var(--ui-blue); background: var(--ui-blue-soft); }
+body.mpi-field-ui .home-quick-actions strong { font-size: 12px; font-weight: 650; }
+body.mpi-field-ui .home-tool-copy strong { font-size: 14px; font-weight: 650; }
+body.mpi-field-ui .home-tool-copy small { font-size: 11px; line-height: 1.4; }
+body.mpi-field-ui :is(.hub-heading,.comment-heading,.damage-heading,.field-section-heading,.sop-heading) :is(h1,h2) { font-size: 28px; font-weight: 700; color: var(--ui-ink); }
+body.mpi-field-ui :is(.hub-heading,.comment-heading,.damage-heading,.field-section-heading,.sop-heading) > p { font-size: 13px; line-height: 1.5; }
+body.mpi-field-ui .app-bottom-nav { background: rgba(255,255,255,.98); border: 1px solid #dce3ed; box-shadow: 0 4px 20px #18233b14; }
+body.mpi-field-ui .app-bottom-nav a { color: #78869c; font-weight: 600; border-radius: 12px; font-size: 10px; }
+body.mpi-field-ui .app-bottom-nav a.active { color: var(--ui-navy); background: var(--ui-blue-soft); box-shadow: none; }
+body.mpi-field-ui .app-bottom-nav a[aria-current=page] { color: #fff; background: var(--ui-navy); box-shadow: none; }
+body.mpi-field-ui .toast { bottom: calc(108px + env(safe-area-inset-bottom)); background: var(--ui-navy); }
+body.mpi-field-ui .workflow-card-header h3 { font-weight: 650; letter-spacing: -.03em; }
+body.mpi-field-ui .workflow-card-header p { font-size: 13px; }
+body.mpi-field-ui :is(.workflow-button,.decode-btn) { border-radius: 10px; box-shadow: none; font-weight: 650; letter-spacing: 0; }
+body.mpi-field-ui .home-active-job-actions a { font-size: 12px; font-weight: 600; }
+body.mpi-field-ui .home-active-job-actions a:first-child { background: #fff; color: var(--ui-navy); }
+body.mpi-field-ui :is(.comment-form,.damage-form) { padding: 22px; border-radius: 14px; border-color: var(--ui-line); box-shadow: none; }
+body.mpi-field-ui :is(.comment-result-panel,.damage-info-panel,.training-record-card,.workflow-time-clock-card) { background: var(--ui-navy); border-radius: 14px; box-shadow: none; }
+body.mpi-field-ui .comment-result-panel::before,
+body.mpi-field-ui .damage-info-panel::after { display: none; }
+body.mpi-field-ui .comment-result-head h3 { font-size: 19px; font-weight: 650; }
+body.mpi-field-ui .comment-result-head p { font-size: 13px; }
+body.mpi-field-ui .comment-output { font-size: 15px; line-height: 1.6; border-radius: 10px; }
+body.mpi-field-ui :is(.comment-form,.damage-form) label { font-size: 12px; font-weight: 600; }
+body.mpi-field-ui .comment-photo-field small { font-size: 11px; }
+body.mpi-field-ui .comment-photo-actions label { border-radius: 10px; }
+body.mpi-field-ui .training-record-card h3 { font-size: 20px; font-weight: 650; }
+body.mpi-field-ui .training-record-card p { font-size: 13px; }
+body.mpi-field-ui .training-record-actions a { font-size: 12px; font-weight: 600; border-radius: 9px; }
+body.mpi-field-ui .workflow-time-clock-note { font-size: 11px; text-align: left; }
+body.mpi-field-ui .workflow-time-clock-status { border-radius: 10px; }
+body.mpi-field-ui .workflow-time-clock-status small { font-size: 12px; }
+body.mpi-field-ui .workflow-job-screen { color: var(--ui-ink); background: #fff; border: 1px solid var(--ui-line); }
+body.mpi-field-ui .workflow-job-screen .workflow-card-header h3 { color: var(--ui-ink); }
+body.mpi-field-ui .workflow-job-screen .workflow-card-header p { color: var(--ui-secondary); }
+body.mpi-field-ui .workflow-job-detail { background: #f8fafc; border-color: var(--ui-line); border-radius: 10px; }
+body.mpi-field-ui .workflow-job-detail span { color: var(--ui-secondary); font-size: 11px; }
+body.mpi-field-ui .workflow-job-detail strong { color: var(--ui-ink); font-size: 14px; }
+body.mpi-field-ui .workflow-job-notes { color: var(--ui-ink); background: #f8fafc; border-color: var(--ui-line); }
+body.mpi-field-ui .workflow-job-notes summary strong { color: var(--ui-ink); }
+body.mpi-field-ui .workflow-job-notes summary small { color: var(--ui-secondary); }
+body.mpi-field-ui .workflow-job-note-value { color: var(--ui-ink); }
+body.mpi-field-ui .workflow-job-note-label { color: var(--ui-secondary); }
+body.mpi-field-ui .workflow-status-pill { color: var(--ui-blue); background: var(--ui-blue-soft); font-weight: 650; }
+body.mpi-field-ui .field-inbox-list-head strong { color: var(--ui-ink); font-size: 13px; font-weight: 650; }
+body.mpi-field-ui .field-inbox-item { grid-template-columns: 44px minmax(0,1fr) 16px; min-height: 82px; padding: 14px; }
+body.mpi-field-ui .field-inbox-icon { width: 44px; height: 44px; font-size: 13px; }
+body.mpi-field-ui .field-inbox-copy strong { color: var(--ui-ink); font-size: 14px; font-weight: 650; }
+body.mpi-field-ui .field-inbox-copy span { color: var(--ui-secondary); font-size: 13px; }
+body.mpi-field-ui .field-inbox-copy small { font-size: 11px; }
+body.mpi-field-ui .field-inbox-thread-person strong { color: var(--ui-ink); font-size: 13px; }
+body.mpi-field-ui .field-inbox-thread-person > span:last-child { font-size: 9px; }
+body.mpi-field-ui .field-inbox-thread-list .team-private-message p { font-size: 15px; line-height: 1.45; }
+body.mpi-field-ui .field-inbox-thread-list .team-private-message > small { font-size: 10px; }
+body.mpi-field-ui .field-inbox-thread-list .team-private-message.mine { background: var(--ui-blue); }
+body.mpi-field-ui .field-inbox-thread-actions { grid-template-columns: 42px minmax(0,1fr) 42px; }
+body.mpi-field-ui .field-inbox-thread-compose textarea { min-height: 42px; font-size: 16px; }
+body.mpi-field-ui :is(.field-inbox-attachment,.field-inbox-thread-actions .decode-btn) { width: 42px; min-height: 42px; height: 42px; }
+body.mpi-field-ui .field-thread-avatar { color: var(--ui-blue) !important; font-size: 12px !important; }
+body.mpi-field-ui .tool-bag-head h2 { color: var(--ui-ink); font: 650 22px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+body.mpi-field-ui :is(.tool-bag-card,.tool-bag-guide) { color: var(--ui-ink); border-radius: 12px; border-color: var(--ui-line); box-shadow: none; }
+body.mpi-field-ui .tool-bag-card img { height: 154px; padding: 8px; }
+body.mpi-field-ui .tool-bag-card h3 { color: var(--ui-ink); font-weight: 650; }
+body.mpi-field-ui .tool-bag-overlay button { background: var(--ui-navy); border-radius: 9px; box-shadow: none; }
+@media (min-width:1200px) {
+  body.mpi-office-ui #adminRequestFilters { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+@media (max-width:1050px) and (min-width:761px) {
+  body.mpi-office-ui .dashboard { grid-template-columns: 176px minmax(0,1fr); gap: 14px; }
+  body.mpi-office-ui .stat:nth-child(2) { border-right: 0; }
+  body.mpi-office-ui .stat:nth-child(-n+2) { border-bottom: 1px solid var(--ui-line); }
+}
+@media (max-width:760px) {
+  body.mpi-office-ui .owner-view-toolbar,
+  body.mpi-field-ui .owner-view-toolbar { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr) auto; gap: 8px; padding: calc(10px + env(safe-area-inset-top)) 12px 10px; }
+  body.mpi-office-ui .owner-view-toolbar strong,
+  body.mpi-field-ui .owner-view-toolbar strong { grid-column: 1/-1; font-size: 12px; }
+  body.mpi-office-ui .owner-view-toolbar label,
+  body.mpi-field-ui .owner-view-toolbar label { min-width: 0; font-size: 10px; }
+  body.mpi-office-ui .owner-view-toolbar :is(select,button),
+  body.mpi-field-ui .owner-view-toolbar :is(select,button) { width: 100%; min-width: 0; font-size: 11px; padding: 8px; }
+  body.mpi-office-ui .owner-view-toolbar p,
+  body.mpi-field-ui .owner-view-toolbar p { grid-column: 1/-1; font-size: 10px; line-height: 1.4; }
+  body.mpi-office-ui .shell { width: calc(100% - 20px); padding-top: 16px; }
+  body.mpi-office-ui .hero h1 { font-size: 25px; }
+  body.mpi-office-ui .hero p:last-child { font-size: 12px; }
+  body.mpi-office-ui .dashboard { grid-template-columns: minmax(0,1fr); gap: 12px; }
+  body.mpi-office-ui .content-panel { padding: 16px; }
+  body.mpi-office-ui .section-head { align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+  body.mpi-office-ui .section-head h2 { font-size: 20px; }
+  body.mpi-office-ui .stat { min-height: 88px; padding: 14px; }
+  body.mpi-office-ui .stat:nth-child(2) { border-right: 0; }
+  body.mpi-office-ui .stat:nth-child(-n+2) { border-bottom: 1px solid var(--ui-line); }
+  body.mpi-office-ui .stat-title > span:last-child { font-size: 11px; }
+  body.mpi-office-ui .stat strong { font-size: 24px; }
+  body.mpi-office-ui .stat-icon { right: 12px; }
+  body.mpi-office-ui .tabbar { padding: 5px; border-radius: 15px; background: #fff; box-shadow: 0 4px 20px #18233b14; }
+  body.mpi-office-ui .tabbar button { padding: 6px 1px; min-height: 57px; font-size: 8px; }
+  body.mpi-office-ui .tabbar button.active { box-shadow: none; }
+  body.mpi-office-ui :is(.field,.person-controls,.equipment-record-fields,.equipment-toolbar) :is(input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea) { font-size: 16px; }
+  body.mpi-office-ui .admin-conversation-list .office-reply-card { grid-template-columns: 40px minmax(0,1fr) 10px; gap: 10px; padding: 12px; }
+  body.mpi-office-ui .office-reply-card .admin-message-avatar { width: 40px; height: 40px; }
+  body.mpi-office-ui .admin-conversation-list .office-reply-card time { grid-column: 2; grid-row: 2; padding: 0; margin-top: -5px; font-size: 10px; }
+  body.mpi-office-ui .admin-message-row-copy { grid-column: 2; grid-row: 1; }
+  body.mpi-office-ui .admin-message-chevron { grid-column: 3; grid-row: 1; }
+  body.mpi-office-ui .admin-conversation-list .office-reply-card::after { left: 62px; }
+  body.mpi-office-ui .admin-inbox-title { flex-wrap: wrap; gap: 5px; }
+  body.mpi-office-ui .request-admin-form { grid-template-columns: minmax(0,1fr); }
+  body.mpi-office-ui .request-admin-top { gap: 9px; }
+  body.mpi-office-ui .equipment-product-photo { width: 80px; flex-basis: 80px; height: 74px; }
+  body.mpi-office-ui .equipment-record-identification { gap: 8px; }
+  body.mpi-field-ui .home-title { font-size: 27px; }
+  body.mpi-field-ui .home-quick-actions strong { font-size: 11px; }
+  body.mpi-field-ui .home-quick-actions a { padding: 11px 4px; }
+  body.mpi-field-ui :is(.hub-heading,.comment-heading,.damage-heading,.field-section-heading,.sop-heading) :is(h1,h2) { font-size: 26px; }
+  body.mpi-field-ui .app-bottom-nav a { font-size: 9px; }
+  body.mpi-field-ui :is(.field-compose-card,.comment-form,.mpi-profile-form) :is(input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea) { font-size: 16px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  body.mpi-office-ui *,body.mpi-field-ui * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+}

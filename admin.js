@@ -2535,8 +2535,21 @@
     }
   }
 
-  function renderRequestTodos() {
+  function renderRequestTodos(savedKey = "") {
     if (!requestList) return;
+    // Presentation refreshes must preserve the current user's open editor.
+    // Saving continues through the existing auditable request transaction.
+    const editors = new Map([...requestList.querySelectorAll("[data-request-owner][data-request-id]")].map(card => {
+      const key = `${card.dataset.requestOwner}/${card.dataset.requestId}`;
+      const form = card.querySelector("[data-request-admin-form]");
+      const edited = form?.dataset.requestEdited === "true" && key !== savedKey;
+      const fields = edited ? [...form.querySelectorAll("select,input,textarea")].map(control => ({
+        attribute: [...control.attributes].find(attribute => attribute.name.startsWith("data-request-"))?.name,
+        value: control.value, focused: control === document.activeElement,
+        start: control.selectionStart, end: control.selectionEnd
+      })) : [];
+      return [key, { open: card.querySelector(".request-editor")?.open, fields }];
+    }));
     const all = allInspectorRequests();
     const attention = all.filter(requestNeedsAttention);
     requestCount.textContent = attention.length ? String(attention.length) : "";
@@ -2572,7 +2585,7 @@
         : assignee
           ? `With ${assignee.name || assignee.email} · ${String(item.status || "in-progress").replace("-", " ")}`
           : "Unassigned · waiting for office action";
-      return `<article class="request-admin-card ${escapeHtml(item.status || "new")}" data-request-owner="${escapeHtml(item.ownerUserId)}" data-request-id="${escapeHtml(item.id)}"><div class="request-admin-top"><div><span class="type-badge">${escapeHtml(item.type || "Request")}</span>${dueState === "asap" ? '<span class="priority-badge">ASAP</span>' : dueState === "overdue" ? '<span class="priority-badge">OVERDUE</span>' : ""}<h3>${escapeHtml(item.item || "Inspector request")}</h3></div><span class="role-badge">${escapeHtml(String(item.status || "new").replace("-", " "))}</span></div><p><strong>${escapeHtml(item.ownerName)}</strong> · Requested ${escapeHtml(formatDateTime(item.requestedAt))}${item.neededBy ? ` · Needed ${escapeHtml(formatDate(item.neededBy))}` : ""}</p><p><strong>Progress:</strong> ${escapeHtml(progress)}</p><p>${escapeHtml(item.details || "No detail supplied.")}</p>${item.suggestion ? `<p><strong>Suggested solution:</strong> ${escapeHtml(item.suggestion)}</p>` : ""}${item.managementNote ? `<div class="request-progress-note"><strong>Latest office progress</strong><span>${escapeHtml(item.managementNote)}</span></div>` : ""}<form class="request-admin-form" data-request-admin-form><div class="field"><label>Status</label><select data-request-status><option value="new" ${item.status === "new" ? "selected" : ""}>New</option><option value="in-progress" ${item.status === "in-progress" ? "selected" : ""}>In progress</option><option value="waiting" ${item.status === "waiting" ? "selected" : ""}>Waiting</option><option value="completed" ${item.status === "completed" ? "selected" : ""}>Completed</option></select></div><div class="field"><label>Assigned admin</label><select data-request-admin><option value="">Unassigned</option>${admins.map(admin => `<option value="${escapeHtml(admin.email)}" ${item.assignedAdmin === admin.email ? "selected" : ""}>${escapeHtml(admin.name || admin.email)}</option>`).join("")}</select></div><div class="field" data-request-completed-field ${item.status === "completed" ? "" : "hidden"}><label>Completed date</label><input data-request-completed type="date" value="${escapeHtml(item.completedAt ? String(item.completedAt).slice(0, 10) : "")}"></div><div class="field wide"><label>Internal management note</label><textarea data-request-note maxlength="1000" placeholder="Example: Order placed; awaiting delivery">${escapeHtml(item.managementNote || "")}</textarea></div><button class="primary" type="submit">SAVE PROGRESS</button><span class="status" data-request-save-status></span></form></article>`;
+      return `<article class="request-admin-card ${escapeHtml(item.status || "new")}" data-request-owner="${escapeHtml(item.ownerUserId)}" data-request-id="${escapeHtml(item.id)}"><div class="request-admin-top"><div><span class="type-badge">${escapeHtml(item.type || "Request")}</span>${dueState === "asap" ? '<span class="priority-badge">ASAP</span>' : dueState === "overdue" ? '<span class="priority-badge">OVERDUE</span>' : ""}<h3>${escapeHtml(item.item || "Inspector request")}</h3></div><span class="role-badge">${escapeHtml(String(item.status || "new").replace("-", " "))}</span></div><p><strong>${escapeHtml(item.ownerName)}</strong> · Requested ${escapeHtml(formatDateTime(item.requestedAt))}${item.neededBy ? ` · Needed ${escapeHtml(formatDate(item.neededBy))}` : ""}</p><p><strong>Progress:</strong> ${escapeHtml(progress)}</p><p>${escapeHtml(item.details || "No detail supplied.")}</p>${item.suggestion ? `<p><strong>Suggested solution:</strong> ${escapeHtml(item.suggestion)}</p>` : ""}${item.managementNote ? `<div class="request-progress-note"><strong>Latest office progress</strong><span>${escapeHtml(item.managementNote)}</span></div>` : ""}<details class="request-editor"><summary>Update request</summary><form class="request-admin-form" data-request-admin-form><div class="field"><label>Status</label><select data-request-status><option value="new" ${item.status === "new" ? "selected" : ""}>New</option><option value="in-progress" ${item.status === "in-progress" ? "selected" : ""}>In progress</option><option value="waiting" ${item.status === "waiting" ? "selected" : ""}>Waiting</option><option value="completed" ${item.status === "completed" ? "selected" : ""}>Completed</option></select></div><div class="field"><label>Assigned admin</label><select data-request-admin><option value="">Unassigned</option>${admins.map(admin => `<option value="${escapeHtml(admin.email)}" ${item.assignedAdmin === admin.email ? "selected" : ""}>${escapeHtml(admin.name || admin.email)}</option>`).join("")}</select></div><div class="field" data-request-completed-field ${item.status === "completed" ? "" : "hidden"}><label>Completed date</label><input data-request-completed type="date" value="${escapeHtml(item.completedAt ? String(item.completedAt).slice(0, 10) : "")}"></div><div class="field wide"><label>Internal management note</label><textarea data-request-note maxlength="1000" placeholder="Example: Order placed; awaiting delivery">${escapeHtml(item.managementNote || "")}</textarea></div><button class="primary" type="submit">Save progress</button><span class="status" data-request-save-status></span></form></details></article>`;
     };
     const groupDefinitions = [
       { status: "new", label: "New requests" },
@@ -2584,6 +2597,25 @@
       const items = filtered.filter(item => String(item.status || "new") === group.status);
       return items.length ? `<section class="request-admin-group" data-request-group="${group.status}"><div class="request-admin-group-head"><h3>${group.label}</h3><span>${items.length}</span></div>${items.map(requestCard).join("")}</section>` : "";
     }).join("") : '<div class="empty">No requests match these filters.</div>';
+    requestList.querySelectorAll("[data-request-owner][data-request-id]").forEach(card => {
+      const previous = editors.get(`${card.dataset.requestOwner}/${card.dataset.requestId}`);
+      if (!previous) return;
+      card.querySelector(".request-editor").open = Boolean(previous.open);
+      const form = card.querySelector("[data-request-admin-form]");
+      previous.fields.forEach(field => {
+        const control = field.attribute && form.querySelector(`[${field.attribute}]`);
+        if (!control) return;
+        control.value = field.value;
+        if (field.focused) {
+          control.focus({ preventScroll: true });
+          if (typeof field.start === "number" && control.setSelectionRange) control.setSelectionRange(field.start, field.end);
+        }
+      });
+      if (previous.fields.length) {
+        form.dataset.requestEdited = "true";
+        form.querySelector("[data-request-completed-field]").hidden = form.querySelector("[data-request-status]").value !== "completed";
+      }
+    });
 
     const newItems = all.filter(item => requestNeedsAttention(item) && !knownRequestIds.has(`${item.ownerUserId}/${item.id}`));
     if (knownRequestIds.size && newItems.length && "Notification" in window && Notification.permission === "granted") {
@@ -2647,7 +2679,7 @@
         reviewedBy: previewRequest.reviewedBy || currentProfile.name || currentUser.displayName || currentUser.email,
         updatedAt: changedAt
       });
-      renderRequestTodos();
+      renderRequestTodos(`${person.id}/${requestId}`);
       const savedCard = [...requestList.querySelectorAll("[data-request-owner][data-request-id]")].find(item => item.dataset.requestOwner === person.id && item.dataset.requestId === requestId);
       const savedStatus = savedCard?.querySelector("[data-request-save-status]");
       if (savedStatus) {
@@ -2913,7 +2945,7 @@
       <div class="admin-conversation-body">
         <div class="message-history admin-conversation-thread" id="adminInboxConversationHistory">${messageHistoryHtml(person)}</div>
         ${canReply ? `<form class="admin-conversation-compose" data-admin-conversation-form data-person-id="${escapeHtml(person.id)}">
-          <div class="admin-message-bar"><label class="admin-chat-attachment" data-chat-drop tabindex="0" aria-label="Add attachment">＋<input type="file" data-chat-files accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple></label><textarea data-message-text maxlength="1200" required placeholder="iMessage"></textarea><button class="primary admin-message-send" type="submit" aria-label="Send message">↑</button></div>
+          <div class="admin-message-bar"><label class="admin-chat-attachment" data-chat-drop tabindex="0" aria-label="Add attachment">＋<input type="file" data-chat-files accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple></label><textarea data-message-text maxlength="1200" required placeholder="Message"></textarea><button class="primary admin-message-send" type="submit" aria-label="Send message">↑</button></div>
           <div class="attachment-list" data-chat-file-list></div>
           <span class="status" data-message-status aria-live="polite"></span>
         </form>` : '<aside class="admin-conversation-compose"><h3>Field submissions</h3><p>Attachments and activity sent from your inspector app are shown in this message history. Private messages to other team members can be started from Compose message.</p></aside>'}
@@ -3881,10 +3913,15 @@
   requestList?.addEventListener("change", event => {
     const formElement = event.target.closest("[data-request-admin-form]");
     if (!formElement) return;
+    formElement.dataset.requestEdited = "true";
     const statusControl = formElement.querySelector("[data-request-status]");
     if (event.target.matches("[data-request-admin]") && event.target.value && statusControl.value === "new") statusControl.value = "in-progress";
     const completedField = formElement.querySelector("[data-request-completed-field]");
     if (completedField) completedField.hidden = statusControl.value !== "completed";
+  });
+  requestList?.addEventListener("input", event => {
+    const formElement = event.target.closest("[data-request-admin-form]");
+    if (formElement) formElement.dataset.requestEdited = "true";
   });
   officeAlertButtons.forEach(button => button.addEventListener("click", () => enableOfficeAlerts(button, true)));
   unifiedInboxList?.addEventListener("click", event => {

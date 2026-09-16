@@ -17,11 +17,16 @@
   dialog.setAttribute("role", "dialog"); dialog.setAttribute("aria-modal", "true"); dialog.setAttribute("aria-label", "Read-only user preview");
   dialog.innerHTML = '<header class="owner-view-toolbar"><strong>VIEW AS USER · READ ONLY</strong><label>User<select id="ownerViewUser"></select></label><label>Screen<select id="ownerViewSurface"><option value="app">Inspector app</option><option value="office">Office dashboard</option></select></label><button type="button" id="ownerViewExit">Exit preview</button><p id="ownerViewStatus">Last-synced records. Actions are disabled. Your real account stays Kevin.</p></header><iframe class="owner-view-frame" title="Read-only user app preview" sandbox="allow-scripts"></iframe>';
   document.body.append(dialog);
-  const selector = dialog.querySelector("#ownerViewUser"), surface = dialog.querySelector("#ownerViewSurface"), frame = dialog.querySelector("iframe"), status = dialog.querySelector("#ownerViewStatus");
+  const selector = dialog.querySelector("#ownerViewUser"), surface = dialog.querySelector("#ownerViewSurface"), status = dialog.querySelector("#ownerViewStatus");
+  let frame = dialog.querySelector("iframe");
   function authorized() {
     return Boolean(user?.uid && String(user.email || "").toLowerCase() === OWNER && profile?.active !== false && ["owner", "admin"].includes(profile?.role) && window.MPI_SHARED?.auth.currentUser?.uid === user.uid && String(window.MPI_SHARED.auth.currentUser.email || "").toLowerCase() === OWNER);
   }
-  function exit() { generation += 1; dialog.hidden = true; frame.removeAttribute("srcdoc"); button.focus(); }
+  function exit() {
+    generation += 1; dialog.hidden = true;
+    frame.removeAttribute("srcdoc"); frame.removeAttribute("src");
+    button.focus();
+  }
   function teamPeople(records) {
     const active = records.filter(person => person.active !== false && !person.test && !person.subcontractorCurrent?.test && !/test|trial/i.test(String(person.email || "")));
     return active.filter(person => person.role !== "subcontractor" || !active.some(other => other.id !== person.id && other.role === "subcontractor" && other.sourceProfileId === person.id))
@@ -38,7 +43,7 @@
   function script(source) { return `<script>${source.replace(/<\/script/gi, "<\\/script")}<\/script>`; }
   async function getSources() {
     if (sources) return sources;
-    const names = ["index.html", "admin.html", "mpi-shared.js", "mpi-planning.js", "mpi-equipment.js", "mpi-equipment-admin.js", "mpi-tool-bag.js", "mpi-field-sync.js", "mpi-subcontractor.js", "admin.js"];
+    const names = ["index.html", "admin.html", "mpi-app-theme.css", "mpi-shared.js", "mpi-planning.js", "mpi-equipment.js", "mpi-equipment-admin.js", "mpi-tool-bag.js", "mpi-field-sync.js", "mpi-subcontractor.js", "admin.js"];
     sources = Promise.all(names.map(async name => {
       const response = await fetch(new URL(name, location.href), { signal: AbortSignal.timeout(15000) });
       if (!response.ok) throw new Error("Preview files could not load.");
@@ -72,7 +77,7 @@
       if (path === "teamPresence") return seed.people.map(person => ({ ...person, status: person.operationsCurrent?.liveStatus || person.subcontractorCurrent?.status || "NOT STARTED" }));
       if (path === "officeUpdates") return seed.updates;
       if (path === "fieldMessages") return seed.fieldMessages;
-      if (path === "directMessages") return seed.directMessages;
+      if (path === "teamMessages") return seed.directMessages;
       if (path === "equipmentAssignments") return seed.assignments;
       if (path === "equipmentAcknowledgments") return seed.acknowledgments;
       return [];
@@ -96,7 +101,7 @@
     window.MPI_COMPANY_SESSION = { userId: selected.id, role: selected.role, active: true, inspectorName: selected.name, inspectorEmail: selected.email || "", inspectorId: selected.inspectorId || "", phone: selected.phone || "", assignedVehicle: selected.assignedVehicle || "", approvedEndAddress: selected.approvedEndAddress || "", adminCorrections: selected.adminCorrections || [], subcontractorOnly: selected.role === "subcontractor" };
     window.MPI_SPECTORA_SCHEDULE_DAYS = selected.spectoraScheduleDays || [];
     // Navigation is available; workflow mutations and external navigation are not.
-    const canBrowse = target => target.closest("[data-admin-view], [data-open-inspector], [data-open-office], [data-inbox-open-thread], [data-admin-inbox-kind], [data-open-team-profile], [data-bag-guide], [data-bag-list], [data-bag-back], .app-bottom-nav a, a[href^='#'], [data-owner-preview-browse]");
+    const canBrowse = target => target.closest("[data-admin-view], [data-open-inspector], [data-open-office], [data-inbox-open-thread], [data-admin-inbox-kind], [data-close-admin-conversation], #fieldInboxThreadBack, [data-open-team-profile], [data-bag-guide], [data-bag-list], [data-bag-back], .app-bottom-nav a, a[href^='#'], [data-owner-preview-browse]");
     document.addEventListener("click", event => {
       const anchor = event.target.closest("a[href^='#']");
       if (anchor) { event.preventDefault(); location.hash = anchor.getAttribute("href"); }
@@ -130,12 +135,17 @@
       mpiTodayJobsCacheV1: { date: today, source: "spectora-read-only", calendarName: "Spectora · read only", jobs: jobs.map(job => ({ ...job, location: job.property, summary: job.property, start: { dateTime: job.scheduledStart }, end: { dateTime: job.scheduledEnd }, serviceNames: job.services || [] })) }
     };
     storage[`mpiSubcontractorDayV1:${person.id}:live`] = person.subcontractorCurrent || null;
-    return clean({ person, people: data.people, storage, assignments: data.assignments || [], acknowledgments: data.acknowledgments || [], updates: data.updates || [], fieldMessages: ["owner", "admin"].includes(person.role) ? data.fieldMessages || [] : (data.fieldMessages || []).filter(message => message.senderUid === person.id), directMessages: (data.directMessages || []).filter(message => message.participantUids?.includes(person.id)) });
+    return clean({ person, people: data.people, storage, assignments: data.assignments || [], acknowledgments: data.acknowledgments || [], updates: data.updates || [], fieldMessages: ["owner", "admin"].includes(person.role) ? data.fieldMessages || [] : (data.fieldMessages || []).filter(message => message.senderUid === person.id), directMessages: (data.directMessages || []).filter(message => message.participantIds?.includes(person.id)) });
   }
   function buildDocument(page, seed, files) {
     const parsed = new DOMParser().parseFromString(files[page === "office" ? "admin.html" : "index.html"], "text/html");
     const inline = [...parsed.querySelectorAll("script:not([src])")].map(node => node.textContent);
     parsed.querySelectorAll("script,link[rel=manifest],meta[http-equiv='Content-Security-Policy']").forEach(node => node.remove());
+    // The preview uses the same theme without permitting network access inside
+    // its opaque read-only sandbox.
+    parsed.querySelectorAll('link[href*="mpi-app-theme.css"]').forEach(node => node.remove());
+    const theme = parsed.createElement("style"); theme.textContent = files["mpi-app-theme.css"];
+    parsed.head.append(theme);
     const base = parsed.createElement("base"); base.href = new URL("./", location.href).href; parsed.head.prepend(base);
     const csp = parsed.createElement("meta"); csp.httpEquiv = "Content-Security-Policy";
     csp.content = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: https: capacitor:; connect-src 'none'; frame-src 'none'; form-action 'none'; font-src data:; worker-src 'none'"; parsed.head.prepend(csp);
@@ -158,7 +168,11 @@
     try {
       const files = await getSources();
       if (request !== generation || !authorized() || dialog.hidden) return;
-      frame.srcdoc = buildDocument(surface.value, seedFor(person), files);
+      // Destroy the previous preview's timers/listeners before changing users.
+      // A fresh opaque frame also avoids overlapping in-flight navigations.
+      const nextFrame = frame.cloneNode(false);
+      nextFrame.removeAttribute("src"); nextFrame.srcdoc = buildDocument(surface.value, seedFor(person), files);
+      frame.replaceWith(nextFrame); frame = nextFrame;
       status.textContent = `${person.name} · ${person.role === "subcontractor" ? "Subcontractor" : person.role === "inspector" ? "Inspector" : "Office"} · last-synced data. No changes, sends, receipt updates or GPS. Private conversations not shared with you are unavailable.`;
     } catch (error) { status.textContent = error.message || "Preview unavailable. Exit and try again."; }
   }

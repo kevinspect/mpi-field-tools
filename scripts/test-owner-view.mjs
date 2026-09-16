@@ -61,17 +61,28 @@ try {
     { id: "cory", email: "cory@michiganpropertyinspections.com", name: "Cory Leese", role: "inspector", active: true, inspectorId: "NACHI26090138", notificationDevice: { token: "DO-NOT-COPY" }, operationsCurrent: { date: today, liveStatus: "CLOCKED OUT", jobs: [], timeClock: { hoursWorkedStartedAt: `${today}T09:00:00-04:00`, sessions: [{ clockedInAt: `${today}T09:00:00-04:00`, clockedOutAt: `${today}T12:00:00-04:00`, startSource: "nachi-training" }] } } },
     { id: "jason", email: "", name: "Jason Chamarro", role: "subcontractor", active: true }
   ];
-  await page.evaluate(profiles => {
+  profiles[0].fieldRequests = [{ id: "safety-glasses", type: "PPE or safety equipment", item: "Replacement safety glasses", details: "Please replace my scratched safety glasses.", status: "in-progress", requestedAt: `${today}T09:00:00-04:00`, assignedAdmin: profiles[1].email, managementNote: "Order placed; awaiting delivery.", reviewedAt: `${today}T10:00:00-04:00` }];
+  profiles[1].fieldRequests = [{ id: "client-credit", type: "Office follow-up", item: "Sewer scope credit", details: "Confirm the client credit following the cancelled sewer scope.", status: "waiting", requestedAt: `${today}T11:00:00-04:00`, assignedAdmin: profiles[0].email, managementNote: "Waiting for confirmation from accounting.", reviewedAt: `${today}T11:05:00-04:00` }];
+  const messages = {
+    directMessages: [{ id: "private-message", conversationId: "brooke__kevin", participantIds: ["brooke", "kevin"], senderUid: "kevin", senderName: "Kevin Cave", targetUid: "brooke", targetName: "Brooke", message: "Thank you. Please confirm when the replacement arrives.", createdAtClient: `${today}T14:00:00-04:00`, active: true, readBy: ["kevin", "brooke"] }],
+    fieldMessages: [
+      { id: "coc-message", kind: "lab-coc", senderUid: "cory", senderName: "Cory Leese", message: "Chain of Custody photo recorded at IMS Laboratory.", createdAtClient: `${today}T13:00:00-04:00`, readBy: ["brooke"], attachments: [] },
+      { id: "safety-message", kind: "safety-alert", senderUid: "jason", senderName: "Jason Chamarro", message: "Near miss reported. Please review the safety follow-up.", createdAtClient: `${today}T12:00:00-04:00`, readBy: ["brooke"], attachments: [] }
+    ]
+  };
+  await page.evaluate(({ profiles, messages }) => {
     window.testProfiles = profiles;
     window.MPI_SHARED.auth = { currentUser: { uid: "kevin", email: profiles[0].email } };
     window.MPI_OWNER_VIEW.setContext(window.MPI_SHARED.auth.currentUser, profiles[0]);
-    window.MPI_OWNER_VIEW.setData({ people: profiles });
-  }, profiles);
+    window.MPI_OWNER_VIEW.setData({ people: profiles, ...messages });
+  }, { profiles, messages });
   assert.equal(await page.locator("#mpiOwnerViewButton").isVisible(), true);
   await page.click("#mpiOwnerViewButton");
   await page.selectOption("#ownerViewUser", "cory");
-  await page.waitForFunction(() => document.querySelector(".owner-view-frame").srcdoc.includes("Cory Leese"));
-  const frame = page.frames().find(frame => frame.parentFrame());
+  await page.waitForFunction(() => document.querySelector("#ownerViewStatus").textContent.startsWith("Cory Leese · "));
+  await page.frameLocator(".owner-view-frame").locator(".app-bottom-nav").waitFor();
+  const frame = await (await page.locator(".owner-view-frame").elementHandle()).contentFrame();
+  await frame.waitForFunction(() => window.MPI_COMPANY_SESSION?.userId === "cory");
   await frame.waitForSelector(".app-bottom-nav");
   for (const viewport of [{ width: 1280, height: 800 }, { width: 393, height: 852 }, { width: 430, height: 932 }]) {
     await page.setViewportSize(viewport);
@@ -94,13 +105,16 @@ try {
   assert.equal(await frame.evaluate(() => window.MPI_SHARED.auth.currentUser.uid), "cory");
   assert.equal(await page.evaluate(() => window.MPI_SHARED.auth.currentUser.uid), "kevin");
   assert.equal(await frame.evaluate(() => { try { return Boolean(parent.MPI_SHARED); } catch (_) { return false; } }), false);
-  assert.equal((await page.locator(".owner-view-frame").getAttribute("srcdoc")).includes("DO-NOT-COPY"), false);
+  assert.equal(await frame.evaluate(() => document.documentElement.outerHTML.includes("DO-NOT-COPY")), false);
+  assert.equal(await frame.evaluate(() => origin), "null", "The preview must retain its opaque sandbox origin");
   assert.equal(await frame.evaluate(() => document.querySelector("#workflowClockOffBtn")?.disabled ?? true), true);
   assert.equal(await frame.evaluate(async () => { try { await window.MPI_SHARED.db.collection("users").doc("cory").set({ name: "Changed" }); return false; } catch (_) { return true; } }), true);
   await page.selectOption("#ownerViewUser", "brooke");
   await page.selectOption("#ownerViewSurface", "office");
-  await page.waitForFunction(() => document.querySelector(".owner-view-frame").srcdoc.includes('"id":"brooke"'));
-  const office = page.frames().find(frame => frame.parentFrame());
+  await page.waitForFunction(() => document.querySelector("#ownerViewStatus").textContent.startsWith("Brooke · "));
+  await page.frameLocator(".owner-view-frame").locator("#adminAccountName").filter({ hasText: "Brooke" }).waitFor();
+  const office = await (await page.locator(".owner-view-frame").elementHandle()).contentFrame();
+  await office.waitForFunction(() => window.MPI_COMPANY_SESSION?.userId === "brooke" && document.body.classList.contains("mpi-office-ui"));
   await office.waitForSelector("#adminDashboard:not([hidden])");
   assert.equal(await office.locator("#commentUsagePanel").isVisible(), false);
   assert.equal(await office.locator("#adminAccountName").textContent(), "Brooke");
@@ -110,19 +124,56 @@ try {
     const views = await office.locator(".tabbar [data-admin-view]").evaluateAll(buttons => [...new Set(buttons.map(button => button.dataset.adminView))]);
     for (const view of views) {
       await office.locator(`.tabbar [data-admin-view='${view}']`).click();
+      if (view === "requests") {
+        assert.equal(await office.locator(".request-admin-card").count(), 2);
+        assert.equal(await office.locator(".request-editor[open]").count(), 0, "Request queue opens with summaries, not a wall of editors");
+        const height = await office.locator("#adminRequestStatusFilter").evaluate(node => node.getBoundingClientRect().height);
+        assert.ok(height >= 44, "Safari and Chrome selects use the same full-height controls");
+        await office.locator(".request-editor > summary").first().click();
+        await office.evaluate(() => {
+          const note = document.querySelector("[data-request-note]");
+          note.value = "Typing must survive a queue refresh";
+          note.dispatchEvent(new Event("input", { bubbles: true }));
+          document.querySelector("#adminRequestSort").dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        assert.equal(await office.locator("[data-request-note]").first().inputValue(), "Typing must survive a queue refresh");
+        assert.equal(await office.locator(".request-editor[open]").count(), 1);
+        await auditControls(office, `Office ${viewport.width} open request editor`);
+        await office.locator(".request-editor > summary").first().click();
+      }
+      if (view === "updates") {
+        assert.equal(await office.locator(".admin-message-avatar").count(), 3);
+        const avatars = await office.locator(".admin-message-avatar").evaluateAll(nodes => nodes.map(node => {
+          const box = node.getBoundingClientRect(), range = document.createRange(); range.selectNodeContents(node);
+          const text = range.getBoundingClientRect();
+          return { display: getComputedStyle(node).display, dx: Math.abs(text.x + text.width/2 - box.x - box.width/2), dy: Math.abs(text.y + text.height/2 - box.y - box.height/2) };
+        }));
+        assert.ok(avatars.every(avatar => avatar.display === "grid" && avatar.dx < 3 && avatar.dy < 4), `Message initials are centered, not clipped: ${JSON.stringify(avatars)}`);
+        await office.locator("[data-admin-inbox-kind='direct']").click();
+        await office.waitForSelector("#adminInboxConversation:not([hidden])");
+        await auditControls(office, `Office ${viewport.width} focused private thread`);
+        if (process.env.MPI_VISUAL_QA) await page.screenshot({ path: `/tmp/mpi-build200-visuals/office-${viewport.width}-private-thread.png` });
+        await office.locator(".admin-conversation-back").click();
+      }
       await auditControls(office, `Office ${viewport.width} ${view}`);
-      if (process.env.MPI_VISUAL_QA) await page.screenshot({ path: `/tmp/mpi-build200-visuals/office-${viewport.width}-${view}.png` });
+      if (process.env.MPI_VISUAL_QA) {
+        await office.evaluate(() => scrollTo(0,0));
+        await page.screenshot({ path: `/tmp/mpi-build200-visuals/office-${viewport.width}-${view}.png` });
+      }
     }
   }
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.selectOption("#ownerViewUser", "jason");
-  await page.waitForFunction(() => document.querySelector(".owner-view-frame").srcdoc.includes('"id":"jason"'));
-  const subcontractor = page.frames().find(frame => frame.parentFrame());
+  await page.waitForFunction(() => document.querySelector("#ownerViewStatus").textContent.startsWith("Jason Chamarro · "));
+  await page.frameLocator(".owner-view-frame").locator("#subcontractorOnWayBtn").waitFor();
+  const subcontractor = await (await page.locator(".owner-view-frame").elementHandle()).contentFrame();
   await subcontractor.waitForFunction(() => window.MPI_COMPANY_SESSION?.userId === "jason");
   assert.equal(await page.locator("#ownerViewSurface").inputValue(), "app");
   assert.equal(await subcontractor.locator("#subcontractorOnWayBtn").isDisabled(), true);
   await page.click("#ownerViewExit");
   assert.equal(await page.locator(".owner-view-dialog").isVisible(), false);
+  assert.equal(await page.locator(".owner-view-frame").getAttribute("src"), null, "Exiting releases the preview document");
+  assert.equal(await page.locator(".owner-view-frame").getAttribute("srcdoc"), null);
   for (const index of [1, 2, 3, 4]) {
     await page.evaluate(index => { const p = window.testProfiles[index]; window.MPI_SHARED.auth.currentUser = { uid: p.id, email: p.email }; window.MPI_OWNER_VIEW.setContext(window.MPI_SHARED.auth.currentUser, p); }, index);
     assert.equal(await page.locator("#mpiOwnerViewButton").isVisible(), false);

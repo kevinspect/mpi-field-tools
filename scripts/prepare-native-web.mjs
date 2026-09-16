@@ -7,6 +7,7 @@ const output = join(root, "native-web");
 const assets = [
   "index.html",
   "admin.html",
+  "mpi-app-theme.css",
   "admin.js",
   "mpi-planning.js",
   "mpi-shared.js",
