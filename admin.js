@@ -2619,17 +2619,118 @@
     return ({ owner: "Owner", admin: "Office admin", inspector: "Inspector", subcontractor: "Subcontractor" })[String(roleValue || "inspector").toLowerCase()] || "Team member";
   }
 
+  const INTERNAL_TRAINING_CATALOG = [
+    { id: "mpi-onboarding", title: "MPI new inspector onboarding", detail: "Company standards, supervised field pathway and management sign-off.", lessonId: "" },
+    { id: "field-workflow", title: "Field workflow and timekeeping", detail: "Morning readiness, job actions, drive time, completion and clock-off controls.", lessonId: "" },
+    { id: "report-writing", title: "MPI report writing standard", detail: "Observation, implication and recommendation wording with report release quality checks.", lessonId: "report-writing" },
+    { id: "safe-stop", title: "Safety and stop-work authority", detail: "When to stop, protect the property and contact management.", lessonId: "safe-stop" },
+    { id: "departure-check", title: "Equipment and property closeout", detail: "Final restoration, tool accountability and end-of-day checks.", lessonId: "departure-check" },
+    { id: "electrical-device-testing", title: "Electrical device testing safety", detail: "Safe tester sequence, reset and limitations.", lessonId: "electrical-device-testing" },
+    { id: "water-sampling-coc", title: "Water sampling and chain of custody", detail: "Sample identification, handling and laboratory documentation.", lessonId: "water-sampling-coc" },
+    { id: "sewer-scope-boundary", title: "Sewer scope operating boundary", detail: "Approved access, controlled advance, documentation and restoration.", lessonId: "sewer-scope-boundary" },
+    { id: "mold-iaq-sampling", title: "Mold and indoor-air sampling", detail: "Authorized setup, sample controls and chain of custody.", lessonId: "mold-iaq-sampling" }
+  ];
+
+  function trainingAssignmentsFor(person) {
+    return (Array.isArray(person?.trainingAssignments) ? person.trainingAssignments : []).filter(item => item?.id && item.active !== false);
+  }
+
+  function trainingStatusLabel(value) {
+    return ({ assigned: "Assigned", "in-progress": "In progress", submitted: "Awaiting review", approved: "Approved", returned: "Changes requested" })[String(value || "assigned")] || "Assigned";
+  }
+
   function renderTrainingProfiles() {
     if (!trainingList) return;
     const records = people.filter(person => person.active !== false && (person.inspectorId || person.nachiTranscriptUrl || person.role === "inspector"));
     trainingList.innerHTML = records.length ? records.map(person => {
       const recordUrl = /^https:\/\//i.test(String(person.nachiTranscriptUrl || "")) ? person.nachiTranscriptUrl : "";
       const memberNumber = String(person.inspectorId || "").trim();
+      const level = ["CPI", "CMI"].includes(String(person.nachiCredentialLevel || "").toUpperCase()) ? String(person.nachiCredentialLevel).toUpperCase() : "";
+      const confirmed = person.nachiCredentialStatus === "confirmed" && Boolean(level);
+      const assignments = trainingAssignmentsFor(person);
       const connection = recordUrl
-        ? `<div><small>Official education record</small><strong>Connected by team member</strong><span>MPI stores the link only — never their InterNACHI password.</span></div><a href="${escapeHtml(recordUrl)}" target="_blank" rel="noopener">OPEN OFFICIAL RECORD</a>`
-        : `<button class="training-profile-connect" type="button" data-connect-training-profile="${escapeHtml(person.id)}" aria-label="Open ${escapeHtml(canonicalTeamName(person))}'s profile connection"><small>Official education record</small><strong>Awaiting profile connection</strong><span>Open the relevant profile field to connect this record →</span></button><small>Team member can also add this from My Profile.</small>`;
-      return `<article class="training-admin-card"><div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(canonicalTeamName(person))}</strong><span>${escapeHtml(teamRoleLabel(person.role))}</span></div></div><div><small>InterNACHI / inspector number</small><strong>${escapeHtml(memberNumber || "Not supplied")}</strong></div>${connection}</article>`;
+        ? `<div><small>Official record supplied</small><strong>${confirmed ? `${escapeHtml(level)} confirmed` : "Awaiting confirmation"}</strong><span>MPI stores the link only — never an InterNACHI password.</span></div><a href="${escapeHtml(recordUrl)}" target="_blank" rel="noopener">OPEN OFFICIAL RECORD</a>`
+        : `<button class="training-profile-connect" type="button" data-connect-training-profile="${escapeHtml(person.id)}" aria-label="Open ${escapeHtml(canonicalTeamName(person))}'s profile connection"><small>Official record</small><strong>Link not supplied</strong><span>Open the relevant profile field →</span></button>`;
+      const assignmentRows = assignments.length ? assignments.map(item => {
+        const state = String(item.status || "assigned");
+        const reviewActions = state === "submitted" ? `<button type="button" data-training-review="approved" data-training-person="${escapeHtml(person.id)}" data-training-assignment="${escapeHtml(item.id)}">APPROVE</button><button class="secondary" type="button" data-training-review="returned" data-training-person="${escapeHtml(person.id)}" data-training-assignment="${escapeHtml(item.id)}">RETURN</button>` : "";
+        return `<div class="training-assignment-row"><div><strong>${escapeHtml(item.title || "MPI training")}<span class="training-assignment-status ${state === "approved" ? "approved" : ""}">${escapeHtml(trainingStatusLabel(state))}</span></strong><p>${item.dueDate ? `Due ${escapeHtml(formatDate(item.dueDate))} · ` : ""}${escapeHtml(item.detail || "Company training assignment")}${item.managementNote ? ` · Note: ${escapeHtml(item.managementNote)}` : ""}</p></div><div class="training-assignment-actions">${reviewActions}<button class="secondary" type="button" data-training-review="archive" data-training-person="${escapeHtml(person.id)}" data-training-assignment="${escapeHtml(item.id)}">REMOVE</button></div></div>`;
+      }).join("") : '<div class="empty">No MPI training is currently assigned.</div>';
+      return `<article class="training-admin-card" data-training-card="${escapeHtml(person.id)}"><div class="training-admin-summary"><div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(canonicalTeamName(person))}</strong><span>${escapeHtml(teamRoleLabel(person.role))}</span></div></div><div><small>InterNACHI member number</small><strong>${escapeHtml(memberNumber || "Not supplied")}</strong></div>${connection}</div><div class="training-credential-control"><label>Credential<select data-training-credential><option value="" ${!level ? "selected" : ""}>Not confirmed</option><option value="CPI" ${level === "CPI" ? "selected" : ""}>CPI</option><option value="CMI" ${level === "CMI" ? "selected" : ""}>CMI</option></select></label><label>MPI verification<select data-training-credential-status><option value="pending" ${!confirmed ? "selected" : ""}>Pending</option><option value="confirmed" ${confirmed ? "selected" : ""}>Confirmed</option></select></label><button type="button" data-save-training-credential="${escapeHtml(person.id)}">SAVE CREDENTIAL</button></div><div class="training-assignment-manager"><h4>MPI internal training</h4><form class="training-assignment-form" data-training-assignment-form="${escapeHtml(person.id)}"><label>Assign training<select data-training-catalog required><option value="">Choose training</option>${INTERNAL_TRAINING_CATALOG.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.title)}</option>`).join("")}</select></label><label>Due date<input type="date" data-training-due></label><label>Management instruction<textarea data-training-note maxlength="300" placeholder="Optional focus or expected evidence"></textarea></label><button type="submit">ASSIGN</button></form><div class="training-assignment-list">${assignmentRows}</div></div></article>`;
     }).join("") : '<div class="empty">No active team profiles are available.</div>';
+  }
+
+  async function saveTrainingCredential(button) {
+    const person = people.find(item => item.id === button.dataset.saveTrainingCredential);
+    const card = button.closest("[data-training-card]");
+    if (!person || !card || !shared.isAdminRole(currentProfile)) return;
+    const level = card.querySelector("[data-training-credential]").value;
+    const status = level && card.querySelector("[data-training-credential-status]").value === "confirmed" ? "confirmed" : "pending";
+    button.disabled = true;
+    try {
+      await shared.db.collection("users").doc(person.id).set({
+        nachiCredentialLevel: level,
+        nachiCredentialStatus: status,
+        nachiCredentialVerifiedAt: status === "confirmed" ? new Date().toISOString() : "",
+        nachiCredentialVerifiedBy: status === "confirmed" ? currentUser.uid : "",
+        nachiCredentialVerifiedByName: status === "confirmed" ? (currentProfile.name || currentUser.displayName || currentUser.email) : "",
+        trainingUpdatedAt: shared.serverTimestamp()
+      }, { merge: true });
+    } catch (error) {
+      authStatus.textContent = error?.message || "Credential could not be saved.";
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function assignInternalTraining(formElement) {
+    const person = people.find(item => item.id === formElement.dataset.trainingAssignmentForm);
+    const catalogItem = INTERNAL_TRAINING_CATALOG.find(item => item.id === formElement.querySelector("[data-training-catalog]").value);
+    if (!person || !catalogItem || !shared.isAdminRole(currentProfile)) return;
+    const button = formElement.querySelector('button[type="submit"]');
+    const assignment = {
+      id: `${catalogItem.id}-${Date.now()}`,
+      catalogId: catalogItem.id,
+      lessonId: catalogItem.lessonId,
+      title: catalogItem.title,
+      detail: catalogItem.detail,
+      dueDate: formElement.querySelector("[data-training-due]").value,
+      managementNote: formElement.querySelector("[data-training-note]").value.trim().slice(0, 300),
+      status: "assigned",
+      active: true,
+      assignedAt: new Date().toISOString(),
+      assignedBy: currentUser.uid,
+      assignedByName: currentProfile.name || currentUser.displayName || currentUser.email
+    };
+    button.disabled = true;
+    try {
+      const next = [...(Array.isArray(person.trainingAssignments) ? person.trainingAssignments : []), assignment].slice(-100);
+      await shared.db.collection("users").doc(person.id).set({ trainingAssignments: next, trainingUpdatedAt: shared.serverTimestamp() }, { merge: true });
+      formElement.reset();
+      shared.sendPushNotification?.({ kind: "training-assigned", audience: "user", targetUid: person.id, title: "New MPI training assigned", body: assignment.title, link: "./#training-center", tag: `mpi-training-${assignment.id}` }).catch(() => false);
+    } catch (error) {
+      authStatus.textContent = error?.message || "Training could not be assigned.";
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function reviewInternalTraining(button) {
+    const person = people.find(item => item.id === button.dataset.trainingPerson);
+    const action = button.dataset.trainingReview;
+    if (!person || !shared.isAdminRole(currentProfile)) return;
+    const assignments = (Array.isArray(person.trainingAssignments) ? person.trainingAssignments : []).map(item => {
+      if (item.id !== button.dataset.trainingAssignment) return item;
+      if (action === "archive") return { ...item, active: false, archivedAt: new Date().toISOString(), archivedBy: currentUser.uid };
+      return { ...item, status: action, reviewedAt: new Date().toISOString(), reviewedBy: currentUser.uid, reviewedByName: currentProfile.name || currentUser.displayName || currentUser.email };
+    });
+    button.disabled = true;
+    try {
+      await shared.db.collection("users").doc(person.id).set({ trainingAssignments: assignments, trainingUpdatedAt: shared.serverTimestamp() }, { merge: true });
+    } catch (error) {
+      authStatus.textContent = error?.message || "Training review could not be saved.";
+      button.disabled = false;
+    }
   }
 
   function openTrainingProfileConnection(personId) {
@@ -2689,7 +2790,7 @@
           </select>
           <label class="check" style="padding:8px"><input data-person-active type="checkbox" ${person.active !== false ? "checked" : ""} ${person.role === "owner" ? "disabled" : ""}><span>Active</span></label>
         </div>
-        <details class="person-profile-details" ${person.id === expandedContactId ? "open" : ""}><summary>Contact, emergency &amp; professional profile</summary><div class="person-controls"><input data-person-job-title aria-label="Job title for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.jobTitle || "")}" maxlength="80" placeholder="Job title" ${person.role === "owner" ? "disabled" : ""}><input data-person-personal-address aria-label="Personal address for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.personalAddress || "")}" maxlength="180" placeholder="Personal address" ${person.role === "owner" ? "disabled" : ""}><input data-person-emergency-name aria-label="Emergency contact for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.emergencyContactName || "")}" maxlength="80" placeholder="Emergency contact" ${person.role === "owner" ? "disabled" : ""}><input data-person-emergency-phone aria-label="Emergency phone for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.emergencyContactPhone || "")}" maxlength="30" placeholder="Emergency phone" ${person.role === "owner" ? "disabled" : ""}><input data-person-transcript-url aria-label="InterNACHI record link for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.nachiTranscriptUrl || "")}" maxlength="500" placeholder="InterNACHI transcript / education URL" ${person.role === "owner" ? "disabled" : ""}>${person.nachiTranscriptUrl ? `<a class="secondary" href="${escapeHtml(person.nachiTranscriptUrl)}" target="_blank" rel="noopener">OPEN TRAINING RECORD</a>` : ""}</div></details>
+        <details class="person-profile-details" ${person.id === expandedContactId ? "open" : ""}><summary>Contact, emergency &amp; professional profile</summary><div class="person-controls"><input data-person-job-title aria-label="Job title for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.jobTitle || "")}" maxlength="80" placeholder="Job title" ${person.role === "owner" ? "disabled" : ""}><input data-person-personal-address aria-label="Personal address for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.personalAddress || "")}" maxlength="180" placeholder="Personal address" ${person.role === "owner" ? "disabled" : ""}><input data-person-emergency-name aria-label="Emergency contact for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.emergencyContactName || "")}" maxlength="80" placeholder="Emergency contact" ${person.role === "owner" ? "disabled" : ""}><input data-person-emergency-phone aria-label="Emergency phone for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.emergencyContactPhone || "")}" maxlength="30" placeholder="Emergency phone" ${person.role === "owner" ? "disabled" : ""}><input data-person-transcript-url aria-label="InterNACHI record link for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.nachiTranscriptUrl || "")}" maxlength="500" placeholder="Official InterNACHI profile / credential link" ${person.role === "owner" ? "disabled" : ""}>${person.nachiTranscriptUrl ? `<a class="secondary" href="${escapeHtml(person.nachiTranscriptUrl)}" target="_blank" rel="noopener">OPEN OFFICIAL RECORD</a>` : ""}</div></details>
         ${person.role === "subcontractor" ? `<div class="subcontractor-access-actions"><button class="secondary" type="button" data-copy-subcontractor-link="${escapeHtml(person.id)}">COPY APP ACTIVATION LINK</button><button class="danger" type="button" data-revoke-subcontractor="${escapeHtml(person.id)}">REVOKE SUBCONTRACTOR ACCESS</button><span class="status" data-subcontractor-access-status></span></div>` : ""}
         </div>
       </details>`;
@@ -4593,6 +4694,16 @@
   trainingList?.addEventListener("click", event => {
     const connect = event.target.closest("[data-connect-training-profile]");
     if (connect) openTrainingProfileConnection(connect.dataset.connectTrainingProfile);
+    const credential = event.target.closest("[data-save-training-credential]");
+    if (credential) saveTrainingCredential(credential);
+    const review = event.target.closest("[data-training-review]");
+    if (review) reviewInternalTraining(review);
+  });
+  trainingList?.addEventListener("submit", event => {
+    const formElement = event.target.closest("[data-training-assignment-form]");
+    if (!formElement) return;
+    event.preventDefault();
+    assignInternalTraining(formElement);
   });
   peopleList.addEventListener("click", event => {
     const copy = event.target.closest("[data-copy-subcontractor-link]");

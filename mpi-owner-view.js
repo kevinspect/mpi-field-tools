@@ -36,7 +36,7 @@
   function clean(value) {
     if (value?.toDate) return value.toDate().toISOString();
     if (Array.isArray(value)) return value.map(clean);
-    if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).filter(([key]) => !/token|password|secret|accessId|activation|credential/i.test(key)).map(([key, item]) => [key, clean(item)]));
+    if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).filter(([key]) => !/token|password|secret|accessId|activation/i.test(key)).map(([key, item]) => [key, clean(item)]));
     return value;
   }
   function serialize(value) { return JSON.stringify(value).replace(/</g, "\\u003c"); }
@@ -98,7 +98,7 @@
     const firestore = () => db; firestore.FieldValue = { serverTimestamp: () => new Date().toISOString(), arrayUnion: (...value) => value };
     window.firebase = { apps: [{}], app: () => ({ auth: authFactory, firestore }), initializeApp() {}, auth: authFactory, firestore };
     window.MPI_OWNER_PREVIEW = true;
-    window.MPI_COMPANY_SESSION = { userId: selected.id, role: selected.role, active: true, inspectorName: selected.name, inspectorEmail: selected.email || "", inspectorId: selected.inspectorId || "", phone: selected.phone || "", assignedVehicle: selected.assignedVehicle || "", approvedEndAddress: selected.approvedEndAddress || "", adminCorrections: selected.adminCorrections || [], subcontractorOnly: selected.role === "subcontractor" };
+    window.MPI_COMPANY_SESSION = { userId: selected.id, role: selected.role, active: true, inspectorName: selected.name, inspectorEmail: selected.email || "", inspectorId: selected.inspectorId || "", phone: selected.phone || "", assignedVehicle: selected.assignedVehicle || "", approvedEndAddress: selected.approvedEndAddress || "", nachiCredentialLevel: selected.nachiCredentialLevel || "", nachiCredentialStatus: selected.nachiCredentialStatus || "", nachiCredentialVerifiedAt: selected.nachiCredentialVerifiedAt || "", nachiCredentialVerifiedByName: selected.nachiCredentialVerifiedByName || "", trainingAssignments: Array.isArray(selected.trainingAssignments) ? selected.trainingAssignments.map(item => ({ ...item })) : [], adminCorrections: selected.adminCorrections || [], subcontractorOnly: selected.role === "subcontractor" };
     window.MPI_SPECTORA_SCHEDULE_DAYS = selected.spectoraScheduleDays || [];
     // Navigation is available; workflow mutations and external navigation are not.
     const canBrowse = target => target.closest("#adminBrandHome, #adminAccountPill, [data-connect-training-profile], [data-admin-view], [data-office-team-tab], [data-open-inspector], [data-open-office], [data-inbox-open-thread], [data-admin-inbox-kind], [data-close-admin-conversation], #fieldInboxThreadBack, [data-open-team-profile], [data-bag-guide], [data-bag-list], [data-bag-back], .app-bottom-nav a, a[href^='#'], [data-owner-preview-browse]");

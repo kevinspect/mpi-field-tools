@@ -61,6 +61,10 @@ try {
     { id: "cory", email: "cory@michiganpropertyinspections.com", name: "Cory Leese", role: "inspector", active: true, inspectorId: "NACHI26090138", notificationDevice: { token: "DO-NOT-COPY" }, spectoraScheduleDays: [{ date: today, jobs: [{ id: "cory-job", propertyAddress: "200 Main St, Canton, MI 48187", scheduledStart: `${today}T13:00:00-04:00`, scheduledEnd: `${today}T15:00:00-04:00`, status: "scheduled" }] }], operationsCurrent: { date: today, liveStatus: "CLOCKED OUT", jobs: [], timeClock: { hoursWorkedStartedAt: `${today}T09:00:00-04:00`, sessions: [{ clockedInAt: `${today}T09:00:00-04:00`, clockedOutAt: `${today}T12:00:00-04:00`, startSource: "nachi-training" }] } } },
     { id: "jason", email: "", name: "Jason Chamarro", role: "subcontractor", active: true }
   ];
+  profiles[3].nachiCredentialLevel = "CPI";
+  profiles[3].nachiCredentialStatus = "confirmed";
+  profiles[3].nachiCredentialVerifiedByName = "Kevin Cave";
+  profiles[3].trainingAssignments = [{ id: "safe-stop-test", catalogId: "safe-stop", lessonId: "safe-stop", title: "Safety and stop-work authority", detail: "When to stop and contact management.", status: "assigned", active: true, dueDate: today, assignedByName: "Kevin Cave" }];
   profiles[0].fieldRequests = [{ id: "safety-glasses", type: "PPE or safety equipment", item: "Replacement safety glasses", details: "Please replace my scratched safety glasses.", status: "in-progress", requestedAt: `${today}T09:00:00-04:00`, assignedAdmin: profiles[1].email, managementNote: "Order placed; awaiting delivery.", reviewedAt: `${today}T10:00:00-04:00` }];
   profiles[1].fieldRequests = [{ id: "client-credit", type: "Office follow-up", item: "Sewer scope credit", details: "Confirm the client credit following the cancelled sewer scope.", status: "waiting", requestedAt: `${today}T11:00:00-04:00`, assignedAdmin: profiles[0].email, managementNote: "Waiting for confirmation from accounting.", reviewedAt: `${today}T11:05:00-04:00` }];
   profiles[3].appDiagnostics = [{ id: "preserved-diagnostic", status: "INVESTIGATING", createdAt: `${today}T10:00:00-04:00`, summary: "Existing connection report" }];
@@ -108,6 +112,11 @@ try {
   }
   await page.setViewportSize({ width: 1280, height: 800 });
   assert.equal(await frame.evaluate(() => window.MPI_COMPANY_SESSION.userId), "cory");
+  await frame.locator(".app-bottom-nav a[href='#training-center']").click();
+  assert.equal(await frame.locator("#managedTrainingList .managed-training-item").count(), 1, "Inspectors see only centrally assigned MPI training");
+  assert.match(await frame.locator("#trainingOfficialStatus").textContent(), /CPI confirmed by MPI management/, "Training shows the management-confirmed CPI/CMI credential without pulling a transcript");
+  assert.equal(await frame.locator(".training-module:visible").count(), 0, "The legacy refresher wall stays out of the active app training experience");
+  console.log("PASS Managed training shows assigned work only and CPI/CMI confirmation stays separate.");
   assert.equal(await frame.evaluate(() => window.MPI_SHARED.auth.currentUser.uid), "cory");
   assert.equal(await page.evaluate(() => window.MPI_SHARED.auth.currentUser.uid), "kevin");
   assert.equal(await frame.evaluate(() => { try { return Boolean(parent.MPI_SHARED); } catch (_) { return false; } }), false);

@@ -659,43 +659,20 @@
     });
   }
 
-  function verifiedInterNachiCredentials(displayName) {
-    return String(displayName || "").split(",").map(value => value.trim()).filter(Boolean).slice(1);
-  }
-
-  async function renderOfficialInterNachiRecord(profile) {
+  function renderOfficialInterNachiRecord(profile) {
     if (!trainingOfficialStatus || !trainingOfficialCredentials) return;
     const inspectorId = String(profile?.inspectorId || "").trim().toUpperCase();
+    const credential = String(profile?.nachiCredentialLevel || "").trim().toUpperCase();
+    const confirmed = profile?.nachiCredentialStatus === "confirmed" && ["CPI", "CMI"].includes(credential);
     trainingOfficialCredentials.innerHTML = "";
-    if (!/^NACHI\d{8}$/.test(inspectorId)) {
-      trainingOfficialStatus.textContent = "Add your InterNACHI member number in My Profile to verify your public credentials.";
-      return;
-    }
-    const cacheKey = `mpiInterNachiVerification:${inspectorId}`;
-    let payload = null;
-    try {
-      const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
-      if (cached?.savedAt && Date.now() - Number(cached.savedAt) < 12 * 60 * 60 * 1000) payload = cached.payload;
-    } catch (_) {}
-    try {
-      if (!payload) {
-        trainingOfficialStatus.textContent = "Checking your official InterNACHI record…";
-        const response = await fetch(`https://www.nachi.org/api/verify?public_id=${encodeURIComponent(inspectorId)}`, { cache: "no-store" });
-        if (!response.ok) throw new Error(`Verification unavailable (${response.status})`);
-        const result = await response.json();
-        if (!result?.ok || !result?.data) throw new Error("InterNACHI did not return a verified record.");
-        payload = result.data;
-        try { localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), payload })); } catch (_) {}
-      }
-      const credentials = verifiedInterNachiCredentials(payload.display_name);
-      trainingOfficialStatus.textContent = payload.is_certified
-        ? `Verified by InterNACHI · ${payload.display_name || inspectorId}`
-        : "InterNACHI record found · certification is not currently shown as active";
-      trainingOfficialCredentials.innerHTML = (credentials.length ? credentials : [payload.is_certified ? "Certified Professional Inspector" : "Member record"])
-        .map(value => `<span>${escapeHtml(value)}</span>`).join("");
-    } catch (error) {
-      trainingOfficialStatus.textContent = error?.message || "The official InterNACHI record could not be checked right now.";
-    }
+    trainingOfficialStatus.textContent = confirmed
+      ? `${credential} confirmed by MPI management${profile?.nachiCredentialVerifiedByName ? ` · ${profile.nachiCredentialVerifiedByName}` : ""}`
+      : /^NACHI\d{8}$/.test(inspectorId)
+        ? "Member number saved · waiting for MPI management confirmation"
+        : "Add your InterNACHI member number, then ask management to confirm CPI or CMI.";
+    trainingOfficialCredentials.innerHTML = confirmed
+      ? `<span>${credential === "CMI" ? "Certified Master Inspector (CMI)" : "Certified Professional Inspector (CPI)"}</span>`
+      : '<span>NOT CONFIRMED</span>';
   }
 
   function roleLabel(profile) {
@@ -717,6 +694,11 @@
       phone: String(profile.phone || "").trim(),
       assignedVehicle: String(profile.assignedVehicle || "").trim(),
       approvedEndAddress: String(profile.approvedEndAddress || "").trim(),
+      nachiCredentialLevel: String(profile.nachiCredentialLevel || "").trim(),
+      nachiCredentialStatus: String(profile.nachiCredentialStatus || "").trim(),
+      nachiCredentialVerifiedAt: String(profile.nachiCredentialVerifiedAt || "").trim(),
+      nachiCredentialVerifiedByName: String(profile.nachiCredentialVerifiedByName || "").trim(),
+      trainingAssignments: Array.isArray(profile.trainingAssignments) ? profile.trainingAssignments.map(item => ({ ...item })) : [],
       adminCorrections: Array.isArray(profile.adminCorrections) ? profile.adminCorrections.map(item => ({ ...item })) : []
     };
   }
@@ -784,7 +766,7 @@
     showProfilePhoto(profilePhotoSource(profile, user), profileName.value);
     if (trainingMemberNumber) trainingMemberNumber.textContent = profile.inspectorId ? `MEMBER ${profile.inspectorId}` : "MEMBER NUMBER NOT SAVED";
     if (trainingTranscriptLink) trainingTranscriptLink.href = /^https:\/\//i.test(String(profile.nachiTranscriptUrl || "")) ? profile.nachiTranscriptUrl : "https://www.nachi.org/my/education/transcript";
-    renderOfficialInterNachiRecord(profile).catch(() => false);
+    renderOfficialInterNachiRecord(profile);
   }
 
   function loadImage(source) {
@@ -887,6 +869,7 @@
       profileStatus.textContent = "Profile saved";
       if (trainingMemberNumber) trainingMemberNumber.textContent = updates.inspectorId ? `MEMBER ${updates.inspectorId}` : "MEMBER NUMBER NOT SAVED";
       if (trainingTranscriptLink) trainingTranscriptLink.href = updates.nachiTranscriptUrl || "https://www.nachi.org/my/education/transcript";
+      renderOfficialInterNachiRecord(currentProfile);
       publishCompanySession();
       publishSpectoraSchedule();
     } catch (error) {

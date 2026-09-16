@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="216">
+  <meta name="app-build" content="217">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Office">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -93,7 +93,8 @@
     .admin-inbox-compose textarea { min-height:74px; }
     .admin-inbox-compose .primary { color:#11186a; background:#fff; }
     .training-admin-list { display:grid; gap:12px; }
-    .training-admin-card { display:grid; grid-template-columns:minmax(210px,1.2fr) minmax(140px,.7fr) minmax(180px,1fr) auto; gap:14px; align-items:center; padding:15px; background:#fff; border:1px solid var(--line); border-radius:14px; }
+    .training-admin-card { display:grid; gap:14px; padding:17px; background:#fff; border:1px solid var(--line); border-radius:14px; }
+    .training-admin-summary { display:grid; grid-template-columns:minmax(210px,1.1fr) minmax(140px,.65fr) minmax(260px,1.2fr); gap:14px; align-items:center; }
     .training-admin-card strong,.training-admin-card span,.training-admin-card small { display:block; }
     .training-admin-card strong { color:var(--navy); font-size:12px; }
     .training-admin-card span { margin-top:3px; color:var(--muted); font-size:9px; }
@@ -101,6 +102,21 @@
     .training-admin-card a { display:inline-flex; min-height:36px; align-items:center; justify-content:center; padding:0 11px; color:var(--blue); background:#edf5fb; border:1px solid #cbdff0; border-radius:9px; font-size:9px; font-weight:900; text-decoration:none; }
     .training-profile-connect { display:block; width:100%; padding:9px 11px; color:inherit; background:#f1f7fc; border:1px solid #cbdff0; border-radius:10px; text-align:left; cursor:pointer; }
     .training-profile-connect:hover,.training-profile-connect:focus-visible { background:#e5f1fa; border-color:var(--blue); outline:3px solid rgba(39,117,185,.13); outline-offset:2px; }
+    .training-credential-control { display:grid; grid-template-columns:minmax(130px,.7fr) minmax(130px,.7fr) auto; gap:8px; align-items:end; }
+    .training-credential-control label,.training-assignment-form label { display:grid; gap:5px; color:#5c6683; font-size:9px; font-weight:850; }
+    .training-credential-control select,.training-assignment-form select,.training-assignment-form input,.training-assignment-form textarea { width:100%; min-height:38px; padding:8px 10px; color:var(--navy); background:#fff; border:1px solid var(--line); border-radius:9px; font:inherit; }
+    .training-admin-card button { min-height:38px; padding:0 12px; color:#fff; background:var(--navy); border:0; border-radius:9px; font-size:9px; font-weight:900; }
+    .training-admin-card button.secondary { color:var(--blue); background:#edf5fb; border:1px solid #cbdff0; }
+    .training-assignment-manager { padding-top:13px; border-top:1px solid var(--line); }
+    .training-assignment-manager h4 { margin:0 0 9px; color:var(--navy); font-size:12px; }
+    .training-assignment-form { display:grid; grid-template-columns:minmax(220px,1fr) 150px minmax(220px,1fr) auto; gap:8px; align-items:end; }
+    .training-assignment-list { display:grid; gap:7px; margin-top:10px; }
+    .training-assignment-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:center; padding:10px 11px; background:#f6f8fc; border:1px solid #e0e5ed; border-radius:10px; }
+    .training-assignment-row strong { font-size:10px; }
+    .training-assignment-row p { margin:3px 0 0; color:var(--muted); font-size:9px; }
+    .training-assignment-actions { display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; }
+    .training-assignment-status { display:inline-flex !important; margin:0 0 0 6px !important; padding:4px 7px; color:#6d5824 !important; background:#fbf2d7; border-radius:999px; font-size:8px !important; font-weight:900; text-transform:uppercase; }
+    .training-assignment-status.approved { color:#276a55 !important; background:#e1f2eb; }
     .mpi-plan-marker { display:grid; width:34px; height:34px; place-items:center; color:#fff; background:#11186a; border:3px solid #f0c94f; border-radius:50%; box-shadow:0 5px 14px rgba(17,24,106,.28); font-size:12px; font-weight:950; }
     .mpi-candidate-marker { display:grid; width:40px; height:40px; place-items:center; color:#11186a; background:#f4cc4d; border:4px solid #fff; border-radius:50% 50% 50% 8px; box-shadow:0 7px 18px rgba(17,24,106,.34); font-size:18px; font-weight:950; transform:rotate(-45deg); }
     .mpi-candidate-marker > span { transform:rotate(45deg); }
@@ -590,7 +606,8 @@
       .person-controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .person-controls [data-person-end-address] { grid-column:1/-1; }
       .job-time-panel { grid-template-columns:repeat(2,minmax(0,1fr)); }
-      .training-admin-card { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .training-admin-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .training-assignment-form { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
 
     @media (max-width:760px) {
@@ -626,7 +643,7 @@
       .inspector-row { grid-template-columns:1fr 1fr; }
       .person-controls { grid-template-columns:1fr; }
       .person-controls [data-person-end-address] { grid-column:auto; }
-      .training-admin-card { grid-template-columns:1fr; }
+      .training-admin-summary,.training-credential-control,.training-assignment-form,.training-assignment-row { grid-template-columns:1fr; }
       .job-line-summary { grid-template-columns:58px minmax(0,1fr) 16px; }
       .job-line-summary .status-badge { grid-column:1/-1; width:max-content; }
       .job-time-panel,.lab-time-row { grid-template-columns:1fr; }
@@ -970,8 +987,8 @@
       .equipment-document-dialog .facts,.equipment-document-dialog .signatures { grid-template-columns:1fr; }
     }
   </style>
-  <link rel="stylesheet" href="./mpi-app-theme.css?build=216">
-  <link rel="stylesheet" href="./mpi-office-workbench.css?build=216">
+  <link rel="stylesheet" href="./mpi-app-theme.css?build=217">
+  <link rel="stylesheet" href="./mpi-office-workbench.css?build=217">
 </head>
 <body class="mpi-office-ui office-workbench">
   <script>if (new URLSearchParams(location.search).get("field") === "1") document.body.classList.add("field-equipment-console");</script>
@@ -1032,7 +1049,7 @@
         <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Messages</span><span class="nav-count" id="adminReplyCount"></span></button>
         <button type="button" data-admin-view="equipment"><svg class="app-icon"><use href="#icon-briefcase"></use></svg><span>Equipment</span></button>
         <button type="button" data-admin-view="people"><svg class="app-icon"><use href="#icon-users"></use></svg><span>Team</span></button>
-        <div class="office-nav-footer"><span>Michigan Property Inspections</span><small>Office Console · Build 216</small></div>
+        <div class="office-nav-footer"><span>Michigan Property Inspections</span><small>Office Console · Build 217</small></div>
       </nav>
 
       <section class="console-view active" data-admin-panel="operations">
@@ -1187,9 +1204,9 @@
       <section class="console-view" data-admin-panel="people">
         <div class="panel content-panel office-team-content">
           <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><div><h2>Your team</h2><p>Open a person to manage their contact details and access.</p></div></div></div>
-          <div class="office-team-tabs" role="tablist" aria-label="Team records"><button id="officeTeamTab" type="button" role="tab" aria-selected="true" aria-controls="officeTeamAccounts" data-office-team-tab="accounts">Team</button><button id="officeTrainingTab" type="button" role="tab" aria-selected="false" aria-controls="officeTeamQualifications" data-office-team-tab="qualifications">Qualifications</button></div>
+          <div class="office-team-tabs" role="tablist" aria-label="Team records"><button id="officeTeamTab" type="button" role="tab" aria-selected="true" aria-controls="officeTeamAccounts" data-office-team-tab="accounts">Team</button><button id="officeTrainingTab" type="button" role="tab" aria-selected="false" aria-controls="officeTeamQualifications" data-office-team-tab="qualifications">Training &amp; credentials</button></div>
           <section id="officeTeamAccounts" role="tabpanel" aria-labelledby="officeTeamTab" data-office-team-pane="accounts"><div class="people-list" id="adminPeopleList"><div class="empty">No company accounts have signed in yet.</div></div><p class="office-team-security">Each person uses their own account. Open a profile to review access; original work and audit records are preserved.</p></section>
-          <section id="officeTeamQualifications" role="tabpanel" aria-labelledby="officeTrainingTab" data-office-team-pane="qualifications" hidden><p class="ops-sub">Official InterNACHI records are connected from My Profile. MPI never stores an InterNACHI password.</p><div class="training-admin-list" id="adminTrainingList"><div class="empty">Waiting for team profiles.</div></div></section>
+          <section id="officeTeamQualifications" role="tabpanel" aria-labelledby="officeTrainingTab" data-office-team-pane="qualifications" hidden><p class="ops-sub">Confirm only CPI or CMI for professional credentials. Assign and approve MPI company training here; inspectors see only the items assigned to them.</p><div class="training-admin-list" id="adminTrainingList"><div class="empty">Waiting for team profiles.</div></div></section>
         </div>
       </section>
     </section>
@@ -1211,15 +1228,15 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-office-navigation.js?build=216"></script>
-  <script src="./mpi-shared.js?build=216"></script>
-  <script src="./mpi-equipment-images.js?build=216"></script>
-  <script src="./mpi-equipment.js?build=216"></script>
-  <script src="./mpi-planning.js?build=216"></script>
-  <script src="./mpi-owner-view.js?build=216"></script>
-  <script src="./mpi-office-setup-policy.js?build=216"></script>
-  <script src="./mpi-office-diagnostics.js?build=216"></script>
-  <script src="./admin.js?build=216"></script>
-  <script src="./mpi-equipment-admin.js?build=216"></script>
+  <script src="./mpi-office-navigation.js?build=217"></script>
+  <script src="./mpi-shared.js?build=217"></script>
+  <script src="./mpi-equipment-images.js?build=217"></script>
+  <script src="./mpi-equipment.js?build=217"></script>
+  <script src="./mpi-planning.js?build=217"></script>
+  <script src="./mpi-owner-view.js?build=217"></script>
+  <script src="./mpi-office-setup-policy.js?build=217"></script>
+  <script src="./mpi-office-diagnostics.js?build=217"></script>
+  <script src="./admin.js?build=217"></script>
+  <script src="./mpi-equipment-admin.js?build=217"></script>
 </body>
 </html>

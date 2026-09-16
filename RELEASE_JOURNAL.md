@@ -1,5 +1,13 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 217 — Managed Training & CPI/CMI Control
+
+- Replaced automatic InterNACHI transcript/qualification pulling with a focused CPI or CMI confirmation controlled by MPI management.
+- Replaced the phone-local refresher wall and manual progress emails with centrally assigned MPI training.
+- Inspectors now see only their assigned training and can start it or submit it for management review.
+- Office Qualifications now assigns training, shows live status, approves or returns submissions, and removes obsolete assignments without deleting history.
+- Preserved existing local refresher and onboarding completion data while removing it from the active inspector training workflow.
+
 ## Build 216 — Direct Qualification Connection
 
 - Makes **Awaiting profile connection** an actionable control in Team → Qualifications.
