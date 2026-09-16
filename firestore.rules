@@ -228,6 +228,29 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys()
               .hasOnly(["attachments", "active", "uploadedAt", "uploadError"])
           )
+          || (
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(["reactions"])
+            && request.resource.data.reactions is map
+            && (
+              (
+                !("reactions" in resource.data)
+                && request.resource.data.reactions.keys().hasOnly([request.auth.uid])
+              )
+              || (
+                resource.data.reactions is map
+                && request.resource.data.reactions.diff(resource.data.reactions).affectedKeys().hasOnly([request.auth.uid])
+              )
+            )
+            && (
+              !(request.auth.uid in request.resource.data.reactions)
+              || (
+                request.resource.data.reactions[request.auth.uid] is map
+                && request.resource.data.reactions[request.auth.uid].keys().hasOnly(["value", "updatedAtClient"])
+                && request.resource.data.reactions[request.auth.uid].value in ["👍", "👎", "‼️", "❓", "😂"]
+                && request.resource.data.reactions[request.auth.uid].updatedAtClient is string
+              )
+            )
+          )
         );
       allow delete: if false;
 

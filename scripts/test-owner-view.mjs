@@ -55,10 +55,10 @@ try {
   await page.goto(`http://127.0.0.1:${server.address().port}/admin.html?preview=1`);
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Detroit" });
   const profiles = [
-    { id: "kevin", email: "kev@michiganpropertyinspections.com", name: "Kevin Cave", role: "owner", active: true, inspectorId: "NACHI24060423" },
+    { id: "kevin", email: "kev@michiganpropertyinspections.com", name: "Kevin Cave", role: "owner", active: true, inspectorId: "NACHI24060423", spectoraScheduleDays: [{ date: today, jobs: [{ id: "kevin-job", propertyAddress: "100 Main St, Brighton, MI 48116", scheduledStart: `${today}T09:00:00-04:00`, scheduledEnd: `${today}T11:00:00-04:00`, status: "scheduled" }] }], operationsCurrent: { date: today, liveStatus: "CLOCKED OUT", jobs: [] } },
     { id: "brooke", email: "admin@michiganpropertyinspections.com", name: "Brooke", role: "admin", active: true },
     { id: "adrienne", email: "adrienne@michiganpropertyinspections.com", name: "Adrienne Cave", role: "owner", active: true },
-    { id: "cory", email: "cory@michiganpropertyinspections.com", name: "Cory Leese", role: "inspector", active: true, inspectorId: "NACHI26090138", notificationDevice: { token: "DO-NOT-COPY" }, operationsCurrent: { date: today, liveStatus: "CLOCKED OUT", jobs: [], timeClock: { hoursWorkedStartedAt: `${today}T09:00:00-04:00`, sessions: [{ clockedInAt: `${today}T09:00:00-04:00`, clockedOutAt: `${today}T12:00:00-04:00`, startSource: "nachi-training" }] } } },
+    { id: "cory", email: "cory@michiganpropertyinspections.com", name: "Cory Leese", role: "inspector", active: true, inspectorId: "NACHI26090138", notificationDevice: { token: "DO-NOT-COPY" }, spectoraScheduleDays: [{ date: today, jobs: [{ id: "cory-job", propertyAddress: "200 Main St, Canton, MI 48187", scheduledStart: `${today}T13:00:00-04:00`, scheduledEnd: `${today}T15:00:00-04:00`, status: "scheduled" }] }], operationsCurrent: { date: today, liveStatus: "CLOCKED OUT", jobs: [], timeClock: { hoursWorkedStartedAt: `${today}T09:00:00-04:00`, sessions: [{ clockedInAt: `${today}T09:00:00-04:00`, clockedOutAt: `${today}T12:00:00-04:00`, startSource: "nachi-training" }] } } },
     { id: "jason", email: "", name: "Jason Chamarro", role: "subcontractor", active: true }
   ];
   profiles[0].fieldRequests = [{ id: "safety-glasses", type: "PPE or safety equipment", item: "Replacement safety glasses", details: "Please replace my scratched safety glasses.", status: "in-progress", requestedAt: `${today}T09:00:00-04:00`, assignedAdmin: profiles[1].email, managementNote: "Order placed; awaiting delivery.", reviewedAt: `${today}T10:00:00-04:00` }];
@@ -148,7 +148,15 @@ try {
         assert.equal(brand.background, "rgb(17, 24, 106)");
         assert.equal(brand.alignment, "left");
         assert.ok(brand.fits, "Updated service copy fits inside the compact banner at every supported viewport");
-        assert.equal(await office.locator(".office-planning-drawer[open]").count(), 0, "Planning controls are available without cluttering the live view");
+        assert.equal(await office.locator("#adminLiveJobSelect").isVisible(), true, "The map has one clear scheduled-job selector");
+        assert.equal(await office.locator("#adminLiveJobSelect option").count(), 4, "The selector contains all-jobs plus each synchronized job for the date");
+        assert.match((await office.locator("#adminLiveJobSelect").textContent()), /Kevin Cave.*Cory Leese/s, "Job choices identify the assigned inspector");
+        assert.equal(await office.locator("#adminLiveLocationAllPlans").isVisible(), true, "The map has one Show all jobs action");
+        assert.equal(await office.locator("#adminLiveLocationRefresh").isVisible(), false, "Refresh is automatic and does not add another permanent map button");
+        assert.equal(await office.locator("#adminLiveLocationHistory").isVisible(), false, "Recorded-route internals do not clutter the planning toolbar");
+        assert.equal(await office.locator("#adminLiveLocationList").isVisible(), false, "Field status cards are not duplicated inside the job map");
+        assert.equal(await office.locator(".office-planning-drawer").isVisible(), true, "The possible-job planner is a clear permanent area");
+        assert.equal(await office.locator(".office-planning-drawer[open]").count(), 0, "The planner no longer depends on a collapsible technical drawer");
         assert.equal(await office.locator("a[aria-label='Return to Inspector App']").isVisible(), false, "Brooke and Adrienne never receive Inspector View");
         if (viewport.width === 1280) {
           await office.evaluate(() => window.MPI_OFFICE_SETUP.show(false));
@@ -351,6 +359,7 @@ try {
     assert.ok(frameBox.y + frameBox.height < dockBox.y, "The entire handover viewport must fit above the phone menu, including modal submission controls");
     if (process.env.MPI_VISUAL_QA) await page.screenshot({ path: `/tmp/mpi-build200-visuals/equipment-${viewport.width}.png` });
   }
+  await handover.locator("#adminEquipmentToolbag > summary").click();
   await handover.locator("[data-select-equipment-issue]").first().check();
   await page.evaluate(() => window.testEquipmentNext({ ...window.testEquipmentSnapshot, metadata: { fromCache: true, hasPendingWrites: false } }));
   assert.equal(await handover.locator("#adminCreateEquipmentAcknowledgment").isDisabled(), true);

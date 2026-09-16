@@ -867,6 +867,21 @@
     return [String(firstUid || "").trim(), String(secondUid || "").trim()].filter(Boolean).sort().join("__");
   }
 
+  const directReactionValues = Object.freeze(["👍", "👎", "‼️", "❓", "😂"]);
+
+  async function setDirectMessageReaction(user, messageId, reaction, currentReaction = "") {
+    const id = String(messageId || "").trim();
+    const value = String(reaction || "");
+    if (!user?.uid || !id || !directReactionValues.includes(value)) throw new Error("This reaction is not available.");
+    await boundedMessageRequest(user.getIdToken());
+    const field = new window.firebase.firestore.FieldPath("reactions", user.uid);
+    const next = currentReaction === value
+      ? window.firebase.firestore.FieldValue.delete()
+      : { value, updatedAtClient: new Date().toISOString() };
+    await boundedMessageRequest(db.collection("teamMessages").doc(id).update(field, next));
+    return currentReaction === value ? "" : value;
+  }
+
   async function sendDirectMessage(user, profile, target, message, files = []) {
     const signature = JSON.stringify([user?.uid, target?.id || target?.userId, String(message || "").trim(), [...files].map(file => [file.name, file.size, file.lastModified])]);
     if (directSends.has(signature)) return directSends.get(signature);
@@ -917,6 +932,7 @@
       attachments: [],
       readBy: [user.uid],
       deliveredTo: [],
+      reactions: {},
       active: selected.length === 0,
       createdAt: serverTimestamp(),
       createdAtClient: attempt.createdAtClient
@@ -1672,6 +1688,8 @@
     replyToUpdate,
     sendFieldMessage,
     sendDirectMessage,
+    directReactionValues,
+    setDirectMessageReaction,
     messageFailure,
     messagingHealth,
     watchDirectMessages,

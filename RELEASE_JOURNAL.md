@@ -1,5 +1,18 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 214 — Resolved Attention, Clock State and Message Polish
+
+- Makes the Office **Needs attention** total open the exact review items and clear as location, workday, safety, or diagnostic items are resolved.
+- Treats a completed day as authoritative so a stale local clock session cannot continue showing **Hours running** after final Clock Off.
+- Adds iPhone-style press-and-hold reactions to private messages while keeping each reaction inside the existing one-to-one conversation.
+- Separates outgoing field records into a dedicated **Sent** folder instead of showing them as received conversations.
+- Places each employee's issuable equipment inside one compact, expandable **Tool bag**.
+- Moves Brooke's resolved message-access request out of the active list while preserving its completed audit history.
+
+### Validation record
+
+- Passed the full web/native validation suite, including messaging receipts, completed-day locks, field Tool Bag handover, appointment integrity, Michigan-time reporting, and native background-route checks.
+
 ## Build 213 — Appointment, Time and Workday Approval Integrity
 
 - Groups Spectora service rows by property and scheduled start so one appointment appears once, while retaining every source ID and service.

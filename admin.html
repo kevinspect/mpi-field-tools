@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="213">
+  <meta name="app-build" content="214">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Office">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -968,8 +968,8 @@
       .equipment-document-dialog .facts,.equipment-document-dialog .signatures { grid-template-columns:1fr; }
     }
   </style>
-  <link rel="stylesheet" href="./mpi-app-theme.css?build=213">
-  <link rel="stylesheet" href="./mpi-office-workbench.css?build=213">
+  <link rel="stylesheet" href="./mpi-app-theme.css?build=214">
+  <link rel="stylesheet" href="./mpi-office-workbench.css?build=214">
 </head>
 <body class="mpi-office-ui office-workbench">
   <script>if (new URLSearchParams(location.search).get("field") === "1") document.body.classList.add("field-equipment-console");</script>
@@ -1030,7 +1030,7 @@
         <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Messages</span><span class="nav-count" id="adminReplyCount"></span></button>
         <button type="button" data-admin-view="equipment"><svg class="app-icon"><use href="#icon-briefcase"></use></svg><span>Equipment</span></button>
         <button type="button" data-admin-view="people"><svg class="app-icon"><use href="#icon-users"></use></svg><span>Team</span></button>
-        <div class="office-nav-footer"><span>Michigan Property Inspections</span><small>Office Console · Build 213</small></div>
+        <div class="office-nav-footer"><span>Michigan Property Inspections</span><small>Office Console · Build 214</small></div>
       </nav>
 
       <section class="console-view active" data-admin-panel="operations">
@@ -1040,8 +1040,9 @@
         <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><span>Inspectors working</span></div><strong id="statWorking">0</strong></article>
         <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-briefcase"></use></svg></span><span>Jobs completed</span></div><strong id="statJobs">0</strong></article>
         <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-clock"></use></svg></span><span id="statHoursLabel">Hours today</span></div><strong id="statHours">0:00</strong></article>
-        <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-alert"></use></svg></span><span>Needs attention</span></div><strong id="statAlerts">0</strong></article>
+        <button class="panel stat attention-stat" id="adminAttentionToggle" type="button" aria-expanded="false" aria-controls="adminAttentionPanel"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-alert"></use></svg></span><span>Needs attention</span></div><strong id="statAlerts">0</strong><span class="attention-stat-hint">View issues</span></button>
       </div>
+          <section class="attention-panel" id="adminAttentionPanel" aria-live="polite" hidden><div class="attention-panel-head"><div><h3>Items requiring attention</h3><p>Open an item to review it. The count clears as each item is resolved.</p></div><button class="secondary compact" id="adminAttentionClose" type="button">Close</button></div><div class="attention-list" id="adminAttentionList"></div></section>
           <div class="operations-toolbar">
             <div><p class="ops-eyebrow">Reporting period</p><div class="range-picker" id="adminRangePicker" role="group" aria-label="Reporting period"><button class="active" type="button" data-range="today">Today</button><button type="button" data-range="yesterday">Yesterday</button><button type="button" data-range="week">This week</button></div></div>
             <div class="field"><label for="adminInspectorSelector">Inspector view</label><select id="adminInspectorSelector"><option value="all">All inspectors</option></select></div>
@@ -1148,7 +1149,7 @@
               <form class="admin-inbox-compose" id="adminInboxComposeForm"><div><h3>New private message</h3><p>Choose one recipient. This will not broadcast to the rest of the team.</p></div><div class="form-grid"><div class="field"><label for="adminInboxComposeRecipient">To</label><select id="adminInboxComposeRecipient" required><option value="">Choose team member</option></select></div><div class="field"><label for="adminInboxComposeText">Message</label><textarea id="adminInboxComposeText" maxlength="1200" required placeholder="Write a private MPI message"></textarea></div><div class="field wide"><label for="adminInboxComposeFiles">Photos or PDF (optional)</label><input id="adminInboxComposeFiles" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple></div></div><div class="form-actions"><button class="primary" id="adminInboxComposeSend" type="submit"><svg class="app-icon"><use href="#icon-send"></use></svg><span>Send private message</span></button><span class="status" id="adminInboxComposeStatus"></span></div></form>
             </details>
             <section class="admin-inbox-block admin-conversation-list"><div class="admin-inbox-list-heading"><h3>Conversations</h3><span id="adminInboxSummary">Connecting…</span></div><div class="office-reply-list" id="adminUnifiedInboxList"><div class="empty">Connecting to the MPI inbox…</div></div></section>
-            <details class="admin-inbox-block admin-update-archive"><summary><div class="admin-inbox-title"><h3>Company updates</h3><span id="adminSentSummary">Published update history</span></div></summary><div class="admin-sent-direct-list" id="adminSentMessagesList" hidden></div><div class="update-list" id="adminUpdatesList"><div class="empty">No office updates have been published.</div></div></details>
+            <details class="admin-inbox-block admin-update-archive"><summary><div class="admin-inbox-title"><h3>Sent</h3><span id="adminSentSummary">Sent messages and company updates</span></div></summary><div class="admin-sent-direct-list" id="adminSentMessagesList"></div><div class="update-list" id="adminUpdatesList"><div class="empty">No company updates have been sent.</div></div></details>
           </div>
           <section class="admin-inbox-conversation" id="adminInboxConversation" aria-live="polite" hidden></section>
         </div>
@@ -1159,7 +1160,7 @@
           <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-briefcase"></use></svg></span><div><h2>MPI Equipment &amp; Issued Tools</h2><p>Prepare equipment for handover, record what is actually issued, and preserve every signed acknowledgment.</p></div></div></div>
           <div class="equipment-summary-grid" id="adminEquipmentSummary"><div class="empty">Equipment records are loading.</div></div>
           <div class="equipment-toolbar"><label>Employee<select id="adminEquipmentEmployee"><option>Loading field team…</option></select></label><div class="equipment-toolbar-action"><button class="primary" id="adminCreateEquipmentAcknowledgment" type="button" disabled>Create acknowledgment</button><span class="equipment-selection-status" id="adminEquipmentSelectionStatus">Select the tools being handed over today.</span></div></div>
-          <div class="equipment-record-list" id="adminEquipmentList"><div class="empty">Choose an employee to view equipment records.</div></div>
+          <details class="equipment-toolbag" id="adminEquipmentToolbag"><summary><div><strong>Tool bag</strong><span id="adminEquipmentToolbagSummary">Choose an employee to view available and issued tools.</span></div></summary><div class="equipment-record-list" id="adminEquipmentList"><div class="empty">Choose an employee to view equipment records.</div></div></details>
           <details class="equipment-add-panel">
             <summary>Add another tool</summary>
             <form id="adminAddEquipmentForm">
@@ -1208,15 +1209,15 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-office-navigation.js?build=213"></script>
-  <script src="./mpi-shared.js?build=213"></script>
-  <script src="./mpi-equipment-images.js?build=213"></script>
-  <script src="./mpi-equipment.js?build=213"></script>
-  <script src="./mpi-planning.js?build=213"></script>
-  <script src="./mpi-owner-view.js?build=213"></script>
-  <script src="./mpi-office-setup-policy.js?build=213"></script>
-  <script src="./mpi-office-diagnostics.js?build=213"></script>
-  <script src="./admin.js?build=213"></script>
-  <script src="./mpi-equipment-admin.js?build=213"></script>
+  <script src="./mpi-office-navigation.js?build=214"></script>
+  <script src="./mpi-shared.js?build=214"></script>
+  <script src="./mpi-equipment-images.js?build=214"></script>
+  <script src="./mpi-equipment.js?build=214"></script>
+  <script src="./mpi-planning.js?build=214"></script>
+  <script src="./mpi-owner-view.js?build=214"></script>
+  <script src="./mpi-office-setup-policy.js?build=214"></script>
+  <script src="./mpi-office-diagnostics.js?build=214"></script>
+  <script src="./admin.js?build=214"></script>
+  <script src="./mpi-equipment-admin.js?build=214"></script>
 </body>
 </html>

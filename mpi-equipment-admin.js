@@ -9,6 +9,7 @@
   const summary = document.getElementById("adminEquipmentSummary");
   const employeeSelect = document.getElementById("adminEquipmentEmployee");
   const list = document.getElementById("adminEquipmentList");
+  const toolbagSummary = document.getElementById("adminEquipmentToolbagSummary");
   const history = document.getElementById("adminEquipmentHistory");
   const createAcknowledgment = document.getElementById("adminCreateEquipmentAcknowledgment");
   const selectionStatus = document.getElementById("adminEquipmentSelectionStatus");
@@ -123,6 +124,11 @@
   function renderAssignments() {
     const records = currentEmployeeAssignments();
     selectedPendingAssignments();
+    if (toolbagSummary) {
+      const issued = records.filter(record => record.status === "Issued").length;
+      const available = records.filter(record => record.status === "Not Issued").length;
+      toolbagSummary.textContent = `${records.length} items · ${issued} issued · ${available} available to issue`;
+    }
     list.innerHTML = records.length ? records.map(record => {
       const guide = equipment.byId(record.toolId);
       return `<article class="equipment-record-card" data-equipment-assignment="${escapeHtml(record.id)}">

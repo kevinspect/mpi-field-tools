@@ -75,6 +75,10 @@
   const commentUsageProgress = document.getElementById("commentUsageProgress");
   const commentUsageNote = document.getElementById("commentUsageNote");
   const operationsSummary = document.getElementById("adminOperationsSummary");
+  const attentionToggle = document.getElementById("adminAttentionToggle");
+  const attentionPanel = document.getElementById("adminAttentionPanel");
+  const attentionList = document.getElementById("adminAttentionList");
+  const attentionClose = document.getElementById("adminAttentionClose");
   const requestCount = document.getElementById("adminRequestCount");
   const requestList = document.getElementById("adminRequestList");
   const requestStatusFilter = document.getElementById("adminRequestStatusFilter");
@@ -165,6 +169,7 @@
   let fieldMessages = [];
   let directMessages = [];
   let activeInboxPersonId = "";
+  let adminReactionPressTimer = 0;
   let directMessageListenerReady = false;
   let fieldMessageListenerReady = false;
   let knownFieldMessageIds = new Set();
@@ -563,7 +568,7 @@
 
   function adminInboxItems() {
     const currentUid = currentUser?.uid || "";
-    const fieldItems = fieldMessages.map(message => {
+    const fieldItems = fieldMessages.filter(message => message.senderUid !== currentUid).map(message => {
       const safety = message.kind === "safety-alert";
       const coc = message.kind === "lab-coc";
       return {
@@ -661,8 +666,13 @@
 
   function renderAdminSentMessages() {
     if (!sentMessagesList) return;
-    const sent = directMessages
+    const sentDirect = directMessages
       .filter(message => message.senderUid === currentUser?.uid)
+      .map(message => ({ ...message, sentKind: "direct", recipientName: message.targetName || message.targetEmail || "MPI Team Member" }));
+    const sentField = fieldMessages
+      .filter(message => message.senderUid === currentUser?.uid)
+      .map(message => ({ ...message, sentKind: "field", recipientName: "MPI Office" }));
+    const sent = [...sentDirect, ...sentField]
       .sort((left, right) => (asDate(right.createdAt || right.createdAtClient)?.getTime() || 0) - (asDate(left.createdAt || left.createdAtClient)?.getTime() || 0))
       .slice(0, 50);
     if (sentMessagesSummary) {
@@ -671,8 +681,9 @@
     }
     sentMessagesList.innerHTML = sent.length ? sent.map(message => {
       const files = message.attachments?.length ? `${message.attachments.length} attachment${message.attachments.length === 1 ? "" : "s"}` : "";
-      const state = directDeliveryState(message);
-      return `<button class="office-reply-card" type="button" data-admin-sent-person="${escapeHtml(message.targetUid || "")}"><div><strong>To ${escapeHtml(message.targetName || message.targetEmail || "MPI Team Member")}</strong><span class="admin-inbox-type">Private message</span>${deliveryStateHtml(state)}</div><div><span>${escapeHtml(message.message || "Attachment sent")}</span><small>${escapeHtml(files)}</small></div><time>${escapeHtml(formatDateTime(message.createdAt || message.createdAtClient))}</time></button>`;
+      const state = message.sentKind === "direct" ? directDeliveryState(message) : (message.readBy || []).some(uid => uid !== currentUser?.uid) ? "read" : "sent";
+      const type = message.sentKind === "direct" ? "Private message" : message.kind === "safety-alert" ? "Safety alert" : message.kind === "lab-coc" ? "Chain of Custody" : "Message to office";
+      return `<button class="office-reply-card" type="button" ${message.sentKind === "direct" ? `data-admin-sent-person="${escapeHtml(message.targetUid || "")}"` : ""}><div><strong>To ${escapeHtml(message.recipientName)}</strong><span class="admin-inbox-type">${escapeHtml(type)}</span>${deliveryStateHtml(state)}</div><div><span>${escapeHtml(message.message || "Attachment sent")}</span><small>${escapeHtml(files)}</small></div><time>${escapeHtml(formatDateTime(message.createdAt || message.createdAtClient))}</time></button>`;
     }).join("") : '<div class="empty">No private messages have been sent from this account.</div>';
   }
 
@@ -2478,7 +2489,21 @@
   }
 
   function meaningfulAlerts(person, day) {
-    const alerts = Array.isArray(day?.alerts) ? day.alerts.slice() : [];
+    const dayReview = workdayReviewState(person, day);
+    const reviewedArrivalIds = new Set((day?.jobs || []).map(job => {
+      const evidence = job?.arrivalLocation;
+      const eventId = String(evidence?.arrivalEventId || `${job?.id || ""}|${job?.arrivedAt || ""}`);
+      return arrivalReviewHistory(person, eventId).at(-1)?.decision === "approved" ? eventId : "";
+    }).filter(Boolean));
+    const alerts = dayReview.decision === "approved" ? [] : (Array.isArray(day?.alerts) ? day.alerts.filter(alert => {
+      if (!/arrival location requires management review/i.test(String(alert || ""))) return true;
+      return (day?.jobs || []).some(job => {
+        const evidence = job?.arrivalLocation;
+        if (evidence?.verificationStatus !== "arrival-location-review-required") return false;
+        const eventId = String(evidence.arrivalEventId || `${job.id}|${job.arrivedAt || ""}`);
+        return !reviewedArrivalIds.has(eventId);
+      });
+    }) : []);
     (day?.jobs || []).forEach(job => {
       const evidence = job.arrivalLocation;
       if (evidence?.verificationStatus !== "arrival-location-review-required") return;
@@ -2486,14 +2511,43 @@
       if (!reviewed) alerts.push(`${job.property || "Inspection appointment"}: arrival location requires management review.`);
     });
     if (day?.readiness && ["denied", "default"].includes(day.readiness.notificationPermission)) alerts.push("Important notification permissions are not fully enabled.");
-    operationDays(person).filter(item => rangeDateKeys("week").includes(item.date)).forEach(item => {
-      workedTimeAuditForDay(person, item).issues.forEach(issue => alerts.push(`${formatDate(item.date)}: ${issue.message}`));
-    });
-    if (weeklyMinutes(person) >= 38 * 60) alerts.push("Weekly hours are approaching the configured 40-hour review point.");
-    const dayReview = workdayReviewState(person, day);
+    if (dayReview.decision !== "approved") workedTimeAuditForDay(person, day).issues.forEach(issue => alerts.push(`${formatDate(day.date)}: ${issue.message}`));
     if (dayReview.decision === "pending") alerts.push("Completed workday hours are awaiting Admin approval.");
     if (dayReview.decision === "questioned") alerts.push("Workday hours have been questioned and require follow-up.");
     return [...new Set(alerts)].slice(0, 10);
+  }
+
+  function operationAttentionItems() {
+    const workflow = operativePeople().flatMap(person => {
+      const day = latestDay(person);
+      if (!day) return [];
+      return meaningfulAlerts(person, day).map((message, index) => ({
+        id: `workflow-${person.id}-${day.date}-${index}`,
+        kind: "workflow",
+        personId: person.id,
+        date: day.date,
+        name: person.name || person.email || "MPI field user",
+        message
+      }));
+    });
+    const safety = unreadSafetyAlerts().map(item => ({
+      id: `safety-${item.id}`,
+      kind: "safety",
+      name: item.senderName || item.senderEmail || "MPI field user",
+      message: item.title || item.safety?.noticeType || "Safety alert requires acknowledgement"
+    }));
+    const diagnostics = allDiagnosticReports().filter(item => item.report.status !== "RESOLVED").map(item => ({
+      id: `diagnostic-${item.ownerId}-${item.report.id || "report"}`,
+      kind: "diagnostic",
+      name: item.ownerName || "App issue",
+      message: item.report.summary || item.report.title || "App diagnostic report requires review"
+    }));
+    return [...safety, ...workflow, ...diagnostics];
+  }
+
+  function renderAttentionPanel(items = operationAttentionItems()) {
+    if (!attentionList) return;
+    attentionList.innerHTML = items.length ? items.map(item => `<button class="attention-item" type="button" data-attention-kind="${escapeHtml(item.kind)}" data-attention-person="${escapeHtml(item.personId || "")}" data-attention-date="${escapeHtml(item.date || "")}" data-attention-message="${escapeHtml(item.message || "")}"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.message)}</span><b>OPEN ›</b></button>`).join("") : '<div class="clear-item">✓ All attention items are resolved.</div>';
   }
 
   function showView(name) {
@@ -3064,7 +3118,9 @@
     const totalMinutes = days.reduce((total, item) => total + selectedDays(item.person).reduce((sum, day) => sum + workedMinutes(item.person, day), 0), 0);
     statHoursLabel.textContent = currentRange === "week" ? "Hours this week" : currentRange === "yesterday" ? "Hours yesterday" : "Hours today";
     stats.hours.textContent = `${Math.floor(totalMinutes / 60)}:${String(totalMinutes % 60).padStart(2, "0")}`;
-    stats.alerts.textContent = String(days.reduce((total, item) => total + meaningfulAlerts(item.person, item.day).length, 0) + unreadSafetyAlerts().length + allDiagnosticReports().filter(item => item.report.status !== "RESOLVED").length);
+    const attentionItems = operationAttentionItems();
+    stats.alerts.textContent = String(attentionItems.length);
+    renderAttentionPanel(attentionItems);
     renderCommentUsageAllowance();
   }
 
@@ -3206,6 +3262,48 @@
     return directMessages.filter(message => message.conversationId === conversationId);
   }
 
+  function directMessageReactionHtml(message) {
+    const allowed = shared.directReactionValues || ["👍", "👎", "‼️", "❓", "😂"];
+    const currentUid = currentUser?.uid || "";
+    const entries = Object.entries(message?.reactions || {}).filter(([, reaction]) => allowed.includes(reaction?.value));
+    const summary = allowed.map(value => ({ value, count: entries.filter(([, reaction]) => reaction.value === value).length, mine: message?.reactions?.[currentUid]?.value === value })).filter(item => item.count);
+    const current = String(message?.reactions?.[currentUid]?.value || "");
+    return `${summary.length ? `<div class="message-reaction-summary">${summary.map(item => `<span class="${item.mine ? "mine" : ""}">${item.value}${item.count > 1 ? ` ${item.count}` : ""}</span>`).join("")}</div>` : ""}<div class="message-reaction-picker" role="menu" aria-label="React to this message">${allowed.map(value => `<button type="button" role="menuitem" data-direct-reaction="${value}" data-current-reaction="${escapeHtml(current)}" data-message-id="${escapeHtml(message.id || "")}" aria-label="React ${value}">${value}</button>`).join("")}</div>`;
+  }
+
+  function closeAdminReactionPickers(except = null) {
+    document.querySelectorAll("[data-react-message].reaction-open").forEach(article => {
+      if (article !== except) article.classList.remove("reaction-open");
+    });
+  }
+
+  function openAdminReactionPicker(article) {
+    if (!article) return;
+    closeAdminReactionPickers(article);
+    article.classList.add("reaction-open");
+  }
+
+  async function chooseAdminDirectReaction(button) {
+    const messageId = button?.dataset.messageId || "";
+    const reaction = button?.dataset.directReaction || "";
+    const currentReaction = button?.dataset.currentReaction || "";
+    if (!currentUser || !messageId || !reaction) return;
+    button.disabled = true;
+    try {
+      const next = await shared.setDirectMessageReaction(currentUser, messageId, reaction, currentReaction);
+      directMessages = directMessages.map(message => {
+        if (message.id !== messageId) return message;
+        const reactions = { ...(message.reactions || {}) };
+        if (next) reactions[currentUser.uid] = { value: next, updatedAtClient: new Date().toISOString() };
+        else delete reactions[currentUser.uid];
+        return { ...message, reactions };
+      });
+      if (activeInboxPersonId) refreshAdminInboxConversation();
+    } catch (_) {
+      button.disabled = false;
+    }
+  }
+
   function messageHistoryHtml(person) {
     const privateMessages = messagesFor(person).map(message => ({ direction: message.senderUid === currentUser?.uid ? "office" : "field", timestamp: message.createdAt || message.createdAtClient, message, direct: true }));
     const legacyOffice = updates.filter(update => update.type === "message" && update.createdBy === currentUser?.uid && (String(update.targetUid || "") === String(person.id || "") || (person.email && shared.normalizeEmail(update.targetEmail) === shared.normalizeEmail(person.email)))).map(message => ({ direction: "office", timestamp: message.createdAt, message }));
@@ -3221,7 +3319,7 @@
       const message = item.message;
       if (item.direct) {
         const delivery = item.direction === "office" ? deliveryStateHtml(directDeliveryState(message)) : "";
-        return `<article class="${item.direction}"><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || "MPI Team Member")}</strong><p>${escapeHtml(message.message || "Attachment sent")}</p>${delivery}${directAttachmentsHtml(message)}${item.direction === "field" ? `<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}" data-direct-message="true">CREATE TO-DO</button>` : ""}</article>`;
+        return `<article class="${item.direction}" data-react-message="${escapeHtml(message.id || "")}" tabindex="0"><strong>${escapeHtml(formatDateTime(item.timestamp))} · ${escapeHtml(message.senderName || "MPI Team Member")}</strong><p>${escapeHtml(message.message || "Attachment sent")}</p>${delivery}${directAttachmentsHtml(message)}${item.direction === "field" ? `<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}" data-direct-message="true">CREATE TO-DO</button>` : ""}${directMessageReactionHtml(message)}</article>`;
       }
       if (item.receipt) return `<article class="field"><strong>${escapeHtml(formatDateTime(item.timestamp))}</strong><p>${escapeHtml(message.message || "Inspector replied")}</p>${fieldAttachmentsHtml(message)}</article>`;
       if (item.direction === "field") return `<article class="field"><strong>${escapeHtml(formatDateTime(item.timestamp))}</strong><p>${escapeHtml(message.message || "Photos sent to MPI Office")}</p>${fieldAttachmentsHtml(message)}${message.kind === "lab-coc" ? "" : `<button class="message-todo" type="button" data-create-message-todo="${escapeHtml(message.id || "")}" data-message-person="${escapeHtml(person.id)}">CREATE TO-DO</button>`}</article>`;
@@ -4223,6 +4321,68 @@
   window.MPI_OFFICE_SETUP = Object.freeze({ show: showOfficeSetupIntro, verify: verifyOfficeSetup, environment: officeSetupEnvironment });
 
   tabButtons.forEach(button => button.addEventListener("click", () => showView(button.dataset.adminView)));
+  document.addEventListener("pointerdown", event => {
+    const article = event.target.closest("[data-react-message]");
+    if (!article || event.target.closest("button,a,input,textarea")) return;
+    clearTimeout(adminReactionPressTimer);
+    adminReactionPressTimer = window.setTimeout(() => openAdminReactionPicker(article), 480);
+  });
+  ["pointerup", "pointercancel", "pointermove"].forEach(name => document.addEventListener(name, () => clearTimeout(adminReactionPressTimer), { passive: true }));
+  document.addEventListener("contextmenu", event => {
+    const article = event.target.closest("[data-react-message]");
+    if (!article) return;
+    event.preventDefault();
+    openAdminReactionPicker(article);
+  });
+  document.addEventListener("click", event => {
+    const reaction = event.target.closest("[data-direct-reaction]");
+    if (reaction) {
+      event.stopPropagation();
+      chooseAdminDirectReaction(reaction);
+      return;
+    }
+    if (!event.target.closest("[data-react-message]")) closeAdminReactionPickers();
+  });
+  attentionToggle?.addEventListener("click", () => {
+    const open = attentionPanel?.hidden !== false;
+    if (attentionPanel) attentionPanel.hidden = !open;
+    attentionToggle.setAttribute("aria-expanded", String(open));
+    if (open) attentionPanel?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+  attentionClose?.addEventListener("click", () => {
+    if (attentionPanel) attentionPanel.hidden = true;
+    attentionToggle?.setAttribute("aria-expanded", "false");
+    attentionToggle?.focus();
+  });
+  attentionList?.addEventListener("click", event => {
+    const item = event.target.closest("[data-attention-kind]");
+    if (!item) return;
+    if (item.dataset.attentionKind === "safety") {
+      safetyAlertCenter?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    if (item.dataset.attentionKind === "diagnostic") {
+      showView("settings");
+      document.getElementById("adminDiagnosticHistory")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    const personId = item.dataset.attentionPerson || "";
+    const person = people.find(entry => entry.id === personId);
+    if (!person) return;
+    selectedInspectorId = personId;
+    selectedOperationDate = item.dataset.attentionDate || "";
+    inspectorSelector.value = personId;
+    renderOperations();
+    window.requestAnimationFrame(() => {
+      const message = item.dataset.attentionMessage || "";
+      const target = /workday hours|approval/i.test(message)
+        ? inspectorDetail?.querySelector(".workday-review-card")
+        : /arrival location/i.test(message)
+          ? inspectorDetail?.querySelector(".arrival-review")
+          : inspectorDetail?.querySelector(".alert-list");
+      (target || inspectorDetail)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  });
   dashboard.addEventListener("change", event => {
     const input = event.target.closest("[data-chat-files]");
     if (!input) return;
