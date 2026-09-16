@@ -960,43 +960,69 @@
     return date && !Number.isNaN(date.getTime()) ? date : null;
   }
 
+  const MPI_BUSINESS_TIME_ZONE = "America/Detroit";
+
+  function businessDateParts(value = new Date(), includeTime = false) {
+    const options = { timeZone: MPI_BUSINESS_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" };
+    if (includeTime) Object.assign(options, { hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
+    return Object.fromEntries(new Intl.DateTimeFormat("en-US", options).formatToParts(value).filter(part => part.type !== "literal").map(part => [part.type, part.value]));
+  }
+
   function dateKey(date = new Date()) {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    const parts = businessDateParts(date);
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  }
+
+  function shiftDateKey(value, days) {
+    const [year, month, day] = String(value || "").split("-").map(Number);
+    const shifted = new Date(Date.UTC(year, month - 1, day + Number(days || 0), 12));
+    return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, "0")}-${String(shifted.getUTCDate()).padStart(2, "0")}`;
+  }
+
+  function businessLocalDateTimeToIso(value) {
+    const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
+    if (!match) return asDate(value)?.toISOString() || "";
+    const desired = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]), Number(match[5]), Number(match[6] || 0));
+    let candidate = desired;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const parts = businessDateParts(new Date(candidate), true);
+      const represented = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute), Number(parts.second));
+      candidate += desired - represented;
+    }
+    return new Date(candidate).toISOString();
+  }
+
+  function businessLocalDateTimeValue(value, fallback = new Date()) {
+    const parts = businessDateParts(asDate(value) || fallback, true);
+    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
   }
 
   function rangeDateKeys(range = currentRange) {
-    const today = new Date();
-    today.setHours(12, 0, 0, 0);
-    if (range === "today") return [dateKey(today)];
-    if (range === "yesterday") {
-      today.setDate(today.getDate() - 1);
-      return [dateKey(today)];
-    }
-    const day = today.getDay() || 7;
-    today.setDate(today.getDate() - day + 1);
-    return Array.from({ length: 7 }, (_, index) => {
-      const value = new Date(today);
-      value.setDate(today.getDate() + index);
-      return dateKey(value);
-    }).filter(key => key <= dateKey());
+    const today = dateKey();
+    if (range === "today") return [today];
+    if (range === "yesterday") return [shiftDateKey(today, -1)];
+    const [year, month, dayOfMonth] = today.split("-").map(Number);
+    const weekday = new Date(Date.UTC(year, month - 1, dayOfMonth, 12)).getUTCDay() || 7;
+    const monday = shiftDateKey(today, -weekday + 1);
+    return Array.from({ length: 7 }, (_, index) => shiftDateKey(monday, index)).filter(key => key <= today);
   }
 
   function formatDate(value) {
     if (!value) return "No due date";
-    const date = value?.toDate?.() || new Date(`${value}T12:00:00`);
+    const date = value?.toDate?.() || new Date(/^\d{4}-\d{2}-\d{2}$/.test(String(value)) ? `${value}T12:00:00Z` : value);
     if (Number.isNaN(date.getTime())) return String(value);
-    return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(date);
+    return new Intl.DateTimeFormat("en-US", { timeZone: MPI_BUSINESS_TIME_ZONE, month: "short", day: "numeric", year: "numeric" }).format(date);
   }
 
   function formatDateTime(value) {
     const date = asDate(value);
     if (!date) return "Just now";
-    return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
+    return new Intl.DateTimeFormat("en-US", { timeZone: MPI_BUSINESS_TIME_ZONE, month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "shortGeneric" }).format(date);
   }
 
   function formatTime(value) {
     const date = asDate(value);
-    return date ? date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "—";
+    return date ? `${new Intl.DateTimeFormat("en-US", { timeZone: MPI_BUSINESS_TIME_ZONE, hour: "numeric", minute: "2-digit" }).format(date)} ET` : "—";
   }
 
   function formatMinutes(value) {
@@ -1038,7 +1064,7 @@
     if (minutes < 60) return `Updated ${minutes} min ago`;
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return `Updated ${hours} hr${hours === 1 ? "" : "s"} ago`;
-    return `Updated ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+    return `Updated ${new Intl.DateTimeFormat("en-US", { timeZone: MPI_BUSINESS_TIME_ZONE, month: "short", day: "numeric" }).format(date)}`;
   }
 
   function driveTimeForDay(day, person = null) {
@@ -1462,7 +1488,7 @@
       liveLocationAllPlansVisible = false;
       liveLocationRouteLastLoadedAt = Date.now();
       if (!points.length) {
-        if (liveLocationRouteStatus) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> has no uploaded GPS route or verified workflow locations for ${escapeHtml(new Date(`${selectedDate}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }))}.`;
+        if (liveLocationRouteStatus) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> has no uploaded GPS route or verified workflow locations for ${escapeHtml(formatDate(selectedDate))}.`;
         return;
       }
       const latLngs = points.map(point => [point.latitude, point.longitude]);
@@ -1488,10 +1514,8 @@
 
   function scheduleDayFor(person, selectedDate) {
     const spectoraDay = (Array.isArray(person?.spectoraScheduleDays) ? person.spectoraScheduleDays : []).find(day => day?.date === selectedDate);
-    if (spectoraDay) return {
-      date: selectedDate,
-      source: "Spectora · read only",
-      jobs: (Array.isArray(spectoraDay.jobs) ? spectoraDay.jobs : []).filter(job => !/cancel|delete/i.test(String(job?.status || ""))).map(job => ({
+    if (spectoraDay) {
+      const jobs = (Array.isArray(spectoraDay.jobs) ? spectoraDay.jobs : []).filter(job => !/cancel|delete/i.test(String(job?.status || ""))).map(job => ({
         id: String(job?.id || job?.spectoraJobId || ""),
         spectoraJobId: String(job?.spectoraJobId || job?.id || ""),
         property: String(job?.property || job?.propertyAddress || job?.address || ""),
@@ -1506,9 +1530,15 @@
         latitude: job?.latitude === null || job?.latitude === "" || !Number.isFinite(Number(job?.latitude)) ? null : Number(job.latitude),
         longitude: job?.longitude === null || job?.longitude === "" || !Number.isFinite(Number(job?.longitude)) ? null : Number(job.longitude),
         matchedAddress: String(job?.matchedAddress || ""),
-        services: Array.isArray(job?.services) ? job.services.map(String) : String(job?.services || "").split(",").map(value => value.trim()).filter(Boolean)
-      }))
-    };
+        services: Array.isArray(job?.services) ? job.services.map(String) : String(job?.services || "").split(",").map(value => value.trim()).filter(Boolean),
+        status: String(job?.status || "scheduled")
+      }));
+      return {
+      date: selectedDate,
+      source: "Spectora · read only",
+        jobs: shared.mergeOperationsJobs ? shared.mergeOperationsJobs([], jobs) : jobs
+      };
+    }
     const syncedDay = operationDays(person).find(day => day?.date === selectedDate);
     return syncedDay ? { ...syncedDay, source: String(syncedDay.scheduleSource || "Inspector schedule sync") } : null;
   }
@@ -2213,7 +2243,7 @@
 
   function effectiveTimeClockFor(person, day) {
     if (!day?.timeClock) return null;
-    const effective = shared.effectiveTimeClock
+    let effective = shared.effectiveTimeClock
       ? shared.effectiveTimeClock(day.timeClock, day.date, person?.adminCorrections || [])
       : day.timeClock;
     if (!effective?.sessions?.length) return effective;
@@ -2223,25 +2253,52 @@
       .find(job => effectiveActionTime(person, day, "Arrived", job.id));
     const arrivalAdjustment = firstArrivedJob ? latestActionCorrection(person, day, "Arrived", firstArrivedJob.id) : null;
     const explicitStart = effective.startAdjustment;
-    if (!arrivalAdjustment?.correctedValue || (explicitStart && String(explicitStart.correctedAt || "") >= String(arrivalAdjustment.correctedAt || ""))) return effective;
-    const sessions = effective.sessions.map(session => ({ ...session }));
-    const firstPaid = Number.isInteger(effective.paidSessionIndexes?.[0])
-      ? effective.paidSessionIndexes[0]
-      : sessions.findIndex(session => session?.clockedInAt && !["morning-readiness", "activity-only"].includes(String(session.startSource || "legacy-manual-clock")));
-    if (firstPaid < 0) return effective;
-    if (String(sessions[firstPaid]?.startSource || "").toLowerCase() === "nachi-training") return effective;
-    sessions[firstPaid].clockedInAt = arrivalAdjustment.correctedValue;
-    return { ...effective, sessions, hoursWorkedStartedAt: arrivalAdjustment.correctedValue, effectiveHoursWorkedStartedAt: arrivalAdjustment.correctedValue, startAdjustment: arrivalAdjustment };
+    if (arrivalAdjustment?.correctedValue && !(explicitStart && String(explicitStart.correctedAt || "") >= String(arrivalAdjustment.correctedAt || ""))) {
+      const sessions = effective.sessions.map(session => ({ ...session }));
+      const firstPaid = Number.isInteger(effective.paidSessionIndexes?.[0])
+        ? effective.paidSessionIndexes[0]
+        : sessions.findIndex(session => session?.clockedInAt && !["morning-readiness", "activity-only"].includes(String(session.startSource || "legacy-manual-clock")));
+      if (firstPaid >= 0 && String(sessions[firstPaid]?.startSource || "").toLowerCase() !== "nachi-training") {
+        sessions[firstPaid].clockedInAt = arrivalAdjustment.correctedValue;
+        effective = { ...effective, sessions, hoursWorkedStartedAt: arrivalAdjustment.correctedValue, effectiveHoursWorkedStartedAt: arrivalAdjustment.correctedValue, startAdjustment: arrivalAdjustment };
+      }
+    }
+    const finalRecordedClockOut = latestRecordedClockOut(day);
+    const finalRecordedMs = asDate(finalRecordedClockOut)?.getTime() || 0;
+    const effectiveClockOutMs = asDate(effective.effectiveClockedOutAt)?.getTime() || 0;
+    const closed = String(day?.liveStatus || "").toUpperCase() === "CLOCKED OUT" || Boolean(day?.dayComplete?.completedAt)
+      || (day?.activity || []).some(item => item?.action === "Clocked off");
+    if (closed && !effective.endAdjustment && finalRecordedMs > effectiveClockOutMs) {
+      const sessions = effective.sessions.map(session => ({ ...session }));
+      const paidIndexes = Array.isArray(effective.paidSessionIndexes) ? effective.paidSessionIndexes : [];
+      const finalPaid = paidIndexes.at(-1);
+      if (Number.isInteger(finalPaid) && finalRecordedMs > (asDate(sessions[finalPaid]?.clockedInAt)?.getTime() || 0)) {
+        sessions[finalPaid].clockedOutAt = finalRecordedClockOut;
+        effective = { ...effective, sessions, effectiveClockedOutAt: finalRecordedClockOut, finalClockOutRecovered: true };
+      }
+    }
+    return effective;
+  }
+
+  function latestRecordedClockOut(day) {
+    const explicitValues = [];
+    const addExplicit = value => { if (asDate(value)) explicitValues.push(String(value)); };
+    (day?.timeClock?.sessions || []).forEach(session => addExplicit(session?.clockedOutAt));
+    addExplicit(day?.timeClock?.effectiveClockedOutAt);
+    addExplicit(day?.timeClock?.finalClockOffReconciled?.clockedOutAt);
+    (day?.activity || []).filter(item => item?.action === "Clocked off" || item?.action === "Final clock off restored")
+      .forEach(item => addExplicit(item?.data?.clockedOutAt || item?.timestamp));
+    (day?.dayComplete?.timeClockBackup?.sessions || []).forEach(session => addExplicit(session?.clockedOutAt));
+    if (explicitValues.length) {
+      return explicitValues.sort((left, right) => (asDate(left)?.getTime() || 0) - (asDate(right)?.getTime() || 0)).at(-1) || "";
+    }
+    return asDate(day?.dayComplete?.completedAt) ? String(day.dayComplete.completedAt) : "";
   }
 
   function effectiveClockOut(person, day) {
     const effective = effectiveTimeClockFor(person, day);
     if (effective?.effectiveClockedOutAt) return effective.effectiveClockedOutAt;
-    const sessions = day?.timeClock?.sessions || [];
-    const savedClockOut = sessions.at(-1)?.clockedOutAt;
-    if (savedClockOut) return savedClockOut;
-    const activityClockOut = (day?.activity || []).filter(item => item.action === "Clocked off").at(-1);
-    return activityClockOut?.data?.clockedOutAt || activityClockOut?.timestamp || day?.dayComplete?.completedAt || "";
+    return latestRecordedClockOut(day);
   }
 
   function workedTimeAuditForDay(person, day) {
@@ -2249,7 +2306,7 @@
     const allowOpen = day.date === dateKey()
       && day.liveStatus !== "CLOCKED OUT"
       && !day.dayComplete?.completedAt;
-    return shared.workedTimeAudit(day.timeClock, day.date, person?.adminCorrections || [], Date.now(), {
+    return shared.workedTimeAudit(effectiveTimeClockFor(person, day), day.date, [], Date.now(), {
       allowOpen,
       fallbackEnd: effectiveClockOut(person, day)
     });
@@ -2270,12 +2327,46 @@
     return operationDays(person).filter(day => rangeDateKeys("week").includes(day.date)).reduce((total, day) => total + workedMinutes(person, day), 0);
   }
 
+  function workdayReviewRevision(person, day) {
+    if (!day?.date) return "";
+    const corrections = correctionsFor(person, day).map(item => `${item.id || ""}|${item.correctedAt || ""}|${item.correctedValue || ""}`).sort();
+    const jobs = (day.jobs || []).map(job => `${job.id || ""}|${job.status || ""}|${job.arrivedAt || ""}|${job.inspectionStartedAt || ""}|${job.completedAt || ""}`).sort();
+    const clock = effectiveTimeClockFor(person, day);
+    const sessions = (clock?.sessions || []).map(session => `${session.clockedInAt || ""}|${session.clockedOutAt || ""}|${session.excludedFromPayroll ? "excluded" : "paid"}`);
+    const drive = driveTimeForDay(day, person) || {};
+    const source = JSON.stringify({ date: day.date, jobs, sessions, corrections, drive: [drive.morningMinutes, drive.betweenJobMinutes, drive.labMinutes, drive.finalMinutes, drive.totalMinutes] });
+    let hash = 2166136261;
+    for (let index = 0; index < source.length; index += 1) hash = Math.imul(hash ^ source.charCodeAt(index), 16777619);
+    return `day-${day.date}-${(hash >>> 0).toString(16)}`;
+  }
+
+  function workdayReviewHistory(person, day) {
+    return (Array.isArray(person?.workdayReviews) ? person.workdayReviews : [])
+      .filter(item => item?.date === day?.date)
+      .sort((left, right) => String(left.reviewedAt || "").localeCompare(String(right.reviewedAt || "")));
+  }
+
+  function workdayReviewState(person, day) {
+    const closed = operationDayIsClosed(day);
+    const revision = workdayReviewRevision(person, day);
+    const history = workdayReviewHistory(person, day);
+    const latest = history.at(-1) || null;
+    if (!closed) return { decision: "in-progress", label: "DAY IN PROGRESS", revision, latest, current: false };
+    if (latest?.revision === revision && ["approved", "questioned"].includes(latest.decision)) {
+      return { decision: latest.decision, label: latest.decision === "approved" ? "APPROVED" : "QUESTIONED", revision, latest, current: true };
+    }
+    return { decision: "pending", label: latest ? "RE-APPROVAL REQUIRED" : "AWAITING APPROVAL", revision, latest, current: false };
+  }
+
   function weeklyDayBreakdownHtml(person, metric = "hours") {
     const week = operationDays(person).filter(day => rangeDateKeys("week").includes(day.date)).sort((left, right) => String(left.date).localeCompare(String(right.date)));
     return `<details class="ops-breakdown"><summary>View daily breakdown</summary><div class="fact-list">${week.length ? week.map(day => {
       const minutes = metric === "drive" ? Number(driveTimeForDay(day, person)?.totalMinutes) || 0 : workedMinutes(person, day);
       const issues = metric === "hours" ? workedTimeAuditForDay(person, day).issues : [];
-      return `<button class="fact daily-breakdown-row${day.date === selectedOperationDate ? " selected" : ""}" type="button" data-open-operation-day="${escapeHtml(day.date)}"><span>${escapeHtml(new Date(`${day.date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }))}${issues.length ? `<small>Needs time correction</small>` : ""}</span><strong>${issues.length ? "REVIEW" : formatMinutes(minutes)}</strong></button>`;
+      const review = metric === "hours" ? workdayReviewState(person, day) : null;
+      const reviewCopy = review ? `<small>${escapeHtml(review.label)}</small>` : "";
+      const dayLabel = new Intl.DateTimeFormat("en-US", { timeZone: MPI_BUSINESS_TIME_ZONE, weekday: "short", month: "short", day: "numeric" }).format(new Date(`${day.date}T12:00:00Z`));
+      return `<button class="fact daily-breakdown-row${day.date === selectedOperationDate ? " selected" : ""}" type="button" data-open-operation-day="${escapeHtml(day.date)}"><span>${escapeHtml(dayLabel)}${issues.length ? `<small>Needs time correction</small>` : reviewCopy}</span><strong>${issues.length ? "REVIEW" : formatMinutes(minutes)}</strong></button>`;
     }).join("") : '<div class="empty">No recorded days this week.</div>'}</div></details>`;
   }
 
@@ -2288,7 +2379,7 @@
 
   function jobCounts(day) {
     const jobs = day?.jobs || [];
-    return { complete: jobs.filter(job => job.status === "completed").length, total: jobs.length };
+    return { complete: jobs.filter(job => ["completed", "complete", "job complete"].includes(String(job?.status || "").toLowerCase())).length, total: jobs.length };
   }
 
   function operationDayIsClosed(day) {
@@ -2329,11 +2420,8 @@
       return matchesJob && /^\d{2}:\d{2}$/.test(String(item?.data?.etaTime || ""));
     }).at(-1);
     if (etaEvent?.data?.etaTime) {
-      const [hours, minutes] = etaEvent.data.etaTime.split(":").map(Number);
-      const base = asDate(etaEvent.timestamp) || asDate(job?.onMyWayAt) || new Date(`${day?.date || dateKey()}T12:00:00`);
-      const eta = new Date(base);
-      eta.setHours(hours, minutes, 0, 0);
-      return { date: eta, source: "inspector ETA" };
+      const eta = asDate(businessLocalDateTimeToIso(`${day?.date || dateKey()}T${etaEvent.data.etaTime}`));
+      if (eta) return { date: eta, source: "inspector ETA" };
     }
     const departed = asDate(job?.onMyWayAt);
     const driveMinutes = Math.max(0, Number(job?.estimatedDriveMinutes) || 0);
@@ -2402,6 +2490,9 @@
       workedTimeAuditForDay(person, item).issues.forEach(issue => alerts.push(`${formatDate(item.date)}: ${issue.message}`));
     });
     if (weeklyMinutes(person) >= 38 * 60) alerts.push("Weekly hours are approaching the configured 40-hour review point.");
+    const dayReview = workdayReviewState(person, day);
+    if (dayReview.decision === "pending") alerts.push("Completed workday hours are awaiting Admin approval.");
+    if (dayReview.decision === "questioned") alerts.push("Workday hours have been questioned and require follow-up.");
     return [...new Set(alerts)].slice(0, 10);
   }
 
@@ -3366,6 +3457,74 @@
     }
   }
 
+  function workdayReviewHtml(person, day) {
+    if (!day?.date) return "";
+    const review = workdayReviewState(person, day);
+    const latest = review.latest;
+    const counts = jobCounts(day);
+    const drive = driveTimeForDay(day, person);
+    const tone = review.decision === "approved" ? "neutral" : review.decision === "questioned" ? "alert" : review.decision === "pending" ? "waiting" : "";
+    const previous = latest
+      ? `<p class="ops-sub">Last reviewed by ${escapeHtml(latest.reviewedByName || latest.reviewedByEmail || "MPI Admin")} · ${escapeHtml(formatDateTime(latest.reviewedAt))}${latest.note ? ` · ${escapeHtml(latest.note)}` : ""}</p>`
+      : '<p class="ops-sub">No Admin decision has been recorded for this day.</p>';
+    const controls = review.decision === "in-progress" ? '<p class="ops-sub">Approval unlocks after the inspector completes Clock Off.</p>' : `
+      <label class="field">Approval or question note<textarea data-workday-review-note maxlength="500" placeholder="Optional for approval. Required when questioning the day."></textarea></label>
+      <div class="quick-messages"><button type="button" data-workday-review="approved">APPROVE WORKDAY</button><button type="button" data-workday-review="questioned">QUESTION WORKDAY</button></div>
+      <span class="status" data-workday-review-status>Review includes the effective Hours Worked, Drive Time, unique jobs and final Clock Off shown here.</span>`;
+    return `<article class="ops-card full workday-review-card ${escapeHtml(review.decision)}" data-workday-review-revision="${escapeHtml(review.revision)}">
+      <div class="workday-review-heading"><div><p class="ops-eyebrow">Required Admin review</p><h3>Workday Approval</h3></div><span class="status-badge ${tone}">${escapeHtml(review.label)}</span></div>
+      <div class="workday-review-totals"><div><span>Effective hours</span><strong>${formatMinutes(workedMinutes(person, day))}</strong></div><div><span>Drive time</span><strong>${formatMinutes(drive?.totalMinutes)}</strong></div><div><span>Jobs</span><strong>${counts.complete} / ${counts.total}</strong></div><div><span>Final Clock Off</span><strong>${escapeHtml(formatTime(effectiveClockOut(person, day)))}</strong></div></div>
+      ${previous}${controls}
+    </article>`;
+  }
+
+  async function saveWorkdayReview(button) {
+    const person = people.find(item => item.id === selectedInspectorId);
+    const day = selectedOperationDay(person);
+    const card = button.closest("[data-workday-review-revision]");
+    const status = card?.querySelector("[data-workday-review-status]");
+    const decision = button.dataset.workdayReview;
+    const note = card?.querySelector("[data-workday-review-note]")?.value.trim().slice(0, 500) || "";
+    if (!person || !day || !card || !["approved", "questioned"].includes(decision)) return;
+    if (!operationDayIsClosed(day)) {
+      if (status) { status.textContent = "The inspector must complete Clock Off before the day can be approved."; status.className = "status error"; }
+      return;
+    }
+    if (decision === "questioned" && !note) {
+      status.textContent = "Add the reason the workday is being questioned.";
+      status.className = "status error";
+      return;
+    }
+    button.disabled = true;
+    const counts = jobCounts(day);
+    const drive = driveTimeForDay(day, person);
+    const review = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      date: day.date,
+      revision: workdayReviewRevision(person, day),
+      decision,
+      note,
+      effectiveWorkedMinutes: workedMinutes(person, day),
+      driveMinutes: Number(drive?.totalMinutes) || 0,
+      completedJobs: counts.complete,
+      totalJobs: counts.total,
+      effectiveClockedOutAt: effectiveClockOut(person, day),
+      reviewedAt: new Date().toISOString(),
+      reviewedById: currentUser.uid,
+      reviewedByEmail: shared.normalizeEmail(currentUser.email),
+      reviewedByName: currentProfile.name || currentUser.displayName || "MPI Admin"
+    };
+    try {
+      await shared.db.collection("users").doc(person.id).update({ workdayReviews: shared.arrayUnion(review), workdayReviewsUpdatedAt: shared.serverTimestamp() });
+      person.workdayReviews = [...(Array.isArray(person.workdayReviews) ? person.workdayReviews : []), review];
+      renderInspectorDetail(person);
+    } catch (error) {
+      button.disabled = false;
+      status.textContent = error.message || "The workday review could not be saved.";
+      status.className = "status error";
+    }
+  }
+
   function prefillArrivalTimeAdjustment(button) {
     const card = button.closest("[data-arrival-event-id]");
     const form = document.getElementById("adminCorrectionForm");
@@ -3373,15 +3532,13 @@
     if (!card || !form || !date) return;
     form.querySelector("#adminCorrectionAction").value = "Hours Worked start";
     form.querySelector("#adminCorrectionJob").value = card.dataset.arrivalJobId || "";
-    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-    form.querySelector("#adminCorrectionValue").value = local;
+    form.querySelector("#adminCorrectionValue").value = businessLocalDateTimeValue(date);
     form.querySelector("#adminCorrectionReason").focus();
     form.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   function localDateTimeValue(value, fallback = new Date()) {
-    const date = asDate(value) || fallback;
-    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    return businessLocalDateTimeValue(value, fallback);
   }
 
   function prefillJobTimeAdjustment(button) {
@@ -3440,6 +3597,7 @@
       <div class="ops-grid">
         <article class="ops-card span-6"><p class="ops-eyebrow">Current job</p><strong class="ops-primary">${escapeHtml(current?.property || "No job currently open")}</strong><p class="ops-sub">${current ? `Scheduled ${formatTime(current.scheduledStart)} · ${escapeHtml(current.arrivalPerformance || "Arrival not recorded")} · ${escapeHtml(String(current.status || "scheduled").replace(/-/g, " "))}` : "The inspector is not inside an active job workflow."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Arrived</span><strong>${escapeHtml(formatTime(currentArrivedAt))}</strong></div><div class="fact"><span>Inspection started</span><strong>${escapeHtml(formatTime(currentStartedAt))}</strong></div><div class="fact"><span>Time at property</span><strong>${timeAtProperty}</strong></div></div></article>
         <article class="ops-card span-6"><p class="ops-eyebrow">Next appointment</p><strong class="ops-primary">${escapeHtml(next?.property || "No remaining appointment")}</strong><p class="ops-sub">${next ? `${formatTime(next.scheduledStart)} · ${escapeHtml(next.arrivalPerformance || "On schedule")}` : "The scheduled job list is complete."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Estimated drive</span><strong>${current?.departurePlan?.estimatedDriveMinutes ? `${current.departurePlan.estimatedDriveMinutes} min` : "—"}</strong></div><div class="fact"><span>Required departure</span><strong>${escapeHtml(formatTime(current?.departurePlan?.leaveBy))}</strong></div><div class="fact"><span>Schedule status</span><strong>${alerts.some(item => /late|affect next/i.test(item)) ? "ATTENTION REQUIRED" : "ON SCHEDULE"}</strong></div></div></article>
+        ${workdayReviewHtml(person, day)}
         <article class="ops-card"><p class="ops-eyebrow">${currentRange === "week" ? "Hours worked this week" : currentRange === "yesterday" ? "Hours worked yesterday" : "Hours worked today"}</p><strong class="ops-primary">${formatMinutes(hours)}</strong><p class="ops-sub">${currentRange === "week" ? `${days.length} recorded day${days.length === 1 ? "" : "s"} included · selected day ${formatDate(day?.date)}` : `Started ${formatTime(effectiveHoursStart)} · ${clockOut ? `Frozen at ${formatTime(clockOut)}` : activityCanRun ? "Running now" : "Not started"}${timeAdjusted ? " · Management adjusted" : ""}`}</p>${timeAudit.issues.length ? `<div class="alert-item" style="margin-top:12px">${escapeHtml(timeAudit.issues.map(item => item.message).join(" "))}</div>` : ""}</article>
         <article class="ops-card"><p class="ops-eyebrow">Activity window</p><strong class="ops-primary">${formatMinutes(activityMinutes)}</strong><p class="ops-sub">Morning readiness ${formatTime(activityStart)} · End ${formatTime(clockOut)}</p></article>
         <article class="ops-card"><p class="ops-eyebrow">Weekly hours</p><strong class="ops-primary">${formatMinutes(weekly)}</strong><p class="ops-sub">Current Monday-to-today total${weekly >= 38 * 60 ? " · Review threshold approaching" : ""}. Open a day below to inspect or correct its source times.</p>${weeklyDayBreakdownHtml(person, "hours")}</article>
@@ -3454,7 +3612,7 @@
         <article class="ops-card"><h3>Morning Readiness</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${day?.readiness ? "Complete" : "Not recorded"}</strong></div><div class="fact"><span>Original time</span><strong>${formatTime(originalReadiness)}</strong></div>${readinessCorrection ? `<div class="fact"><span>Admin-adjusted time</span><strong>${formatTime(readinessCorrection.correctedValue)}</strong></div><div class="fact"><span>Effective activity start</span><strong>${formatTime(effectiveReadiness)}</strong></div><div class="fact"><span>Changed by</span><strong>${escapeHtml(readinessCorrection.correctedByName || readinessCorrection.correctedByEmail || "MPI Admin")}</strong></div><div class="fact"><span>Changed</span><strong>${escapeHtml(formatDateTime(readinessCorrection.correctedAt))}</strong></div><div class="fact"><span>Reason</span><strong>${escapeHtml(readinessCorrection.reason || "—")}</strong></div>` : `<div class="fact"><span>Effective activity start</span><strong>${formatTime(effectiveReadiness)}</strong></div>`}<div class="fact"><span>Important notifications</span><strong>${escapeHtml(day?.readiness?.notificationPermission === "granted" ? "Enabled" : day?.readiness?.notificationPermission || "Unknown")}</strong></div></div></article>
         <article class="ops-card span-6"><h3>Lab Activity &amp; Chain of Custody</h3>${labHtml(person, day)}</article>
         <article class="ops-card"><h3>End-of-Day Status</h3><div class="fact-list"><div class="fact"><span>Status</span><strong>${escapeHtml(eodStatus)}</strong></div><div class="fact"><span>Clock out</span><strong>${formatTime(clockOut)}</strong></div><div class="fact"><span>Last recorded location</span><strong>${locationLink}</strong></div><div class="fact"><span>Equipment check</span><strong>${day?.dayComplete?.equipment?.length ? "Complete" : "Pending"}</strong></div></div><p class="ops-sub">Installed company phones provide background workday route points. Verified workflow locations remain part of the saved historical route. Never treat a stale location as live.</p></article>
-        <article class="ops-card span-6"><h3>Admin Corrections</h3><p class="ops-sub">Corrections are appended to the audit trail. Original records are never deleted or overwritten.</p><form class="compact-form" id="adminCorrectionForm" data-person-id="${escapeHtml(person.id)}"><div class="two-col"><div class="field"><label for="adminCorrectionAction">Missed / incorrect action</label><select id="adminCorrectionAction" required>${correctionActions.map(action => `<option value="${escapeHtml(action)}">${escapeHtml(action)}</option>`).join("")}</select></div><div class="field"><label for="adminCorrectionJob">Job</label><select id="adminCorrectionJob"><option value="">No specific job</option>${jobOptions}</select></div></div><div class="field"><label for="adminCorrectionValue">Correct date and time</label><input id="adminCorrectionValue" type="datetime-local" required></div><div class="field"><label for="adminCorrectionReason">Reason for correction</label><textarea id="adminCorrectionReason" maxlength="500" required placeholder="Explain why management is adding this correction."></textarea></div><button class="primary" type="submit">ADD AUDITABLE CORRECTION</button><span class="status" id="adminCorrectionStatus"></span></form><h3 style="margin-top:20px">Correction History</h3><div class="correction-history">${correctionHistoryHtml(person, day)}</div></article>
+        <article class="ops-card span-6"><h3>Admin Corrections</h3><p class="ops-sub">Corrections are appended to the audit trail. Original records are never deleted or overwritten. All entered times use Michigan Eastern Time.</p><form class="compact-form" id="adminCorrectionForm" data-person-id="${escapeHtml(person.id)}"><div class="two-col"><div class="field"><label for="adminCorrectionAction">Missed / incorrect action</label><select id="adminCorrectionAction" required>${correctionActions.map(action => `<option value="${escapeHtml(action)}">${escapeHtml(action)}</option>`).join("")}</select></div><div class="field"><label for="adminCorrectionJob">Job</label><select id="adminCorrectionJob"><option value="">No specific job</option>${jobOptions}</select></div></div><div class="field"><label for="adminCorrectionValue">Correct date and time (Michigan ET)</label><input id="adminCorrectionValue" type="datetime-local" required></div><div class="field"><label for="adminCorrectionReason">Reason for correction</label><textarea id="adminCorrectionReason" maxlength="500" required placeholder="Explain why management is adding this correction."></textarea></div><button class="primary" type="submit">ADD AUDITABLE CORRECTION</button><span class="status" id="adminCorrectionStatus"></span></form><h3 style="margin-top:20px">Correction History</h3><div class="correction-history">${correctionHistoryHtml(person, day)}</div></article>
       </div>`;
     teamOverview.hidden = true;
     inspectorDetail.hidden = false;
@@ -3977,7 +4135,7 @@
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       date: day.date, targetAction: action, targetEventId: original?.id || "", jobId,
       property: job?.property || original?.property || "", originalValue,
-      correctedValue: new Date(correctedValue).toISOString(), reason, correctedAt: new Date().toISOString(),
+      correctedValue: businessLocalDateTimeToIso(correctedValue), reason, correctedAt: new Date().toISOString(),
       correctedById: currentUser.uid, correctedByEmail: shared.normalizeEmail(currentUser.email),
       correctedByName: currentProfile.name || currentUser.displayName || "MPI Admin"
     };
@@ -4255,12 +4413,8 @@
   });
   if (liveRouteDate) {
     liveRouteDate.value = dateKey();
-    const routeDateMinimum = new Date();
-    routeDateMinimum.setDate(routeDateMinimum.getDate() - 90);
-    const routeDateMaximum = new Date();
-    routeDateMaximum.setDate(routeDateMaximum.getDate() + 120);
-    liveRouteDate.min = dateKey(routeDateMinimum);
-    liveRouteDate.max = dateKey(routeDateMaximum);
+    liveRouteDate.min = shiftDateKey(dateKey(), -90);
+    liveRouteDate.max = shiftDateKey(dateKey(), 120);
     liveRouteDate.addEventListener("change", () => {
       showAllLiveLocations();
     });
@@ -4361,6 +4515,11 @@
     const arrivalReview = event.target.closest("[data-arrival-review]");
     if (arrivalReview) {
       saveArrivalLocationReview(arrivalReview);
+      return;
+    }
+    const workdayReview = event.target.closest("[data-workday-review]");
+    if (workdayReview) {
+      saveWorkdayReview(workdayReview);
       return;
     }
     const arrivalAdjust = event.target.closest("[data-arrival-adjust]");

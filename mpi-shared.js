@@ -319,7 +319,10 @@
   function localDateKeyForTimestamp(value) {
     const parsed = new Date(timestampMilliseconds(value));
     if (!Number.isFinite(parsed.getTime())) return "";
-    return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`;
+    const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Detroit", year: "numeric", month: "2-digit", day: "2-digit"
+    }).formatToParts(parsed).filter(part => part.type !== "literal").map(part => [part.type, part.value]));
+    return `${parts.year}-${parts.month}-${parts.day}`;
   }
 
   function workedTimeAudit(timeClock, date, adjustments = [], endTime = Date.now(), options = {}) {
@@ -1296,8 +1299,42 @@
     return merged;
   }
 
+  function operationsJobAddress(job = {}) {
+    return String(job.property || job.propertyAddress || job.location || job.address || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
+
+  function operationsJobStart(job = {}) {
+    const value = job.scheduledStart || job.start?.dateTime || job.start?.date || "";
+    const milliseconds = timestampMilliseconds(value);
+    return Number.isFinite(milliseconds) ? new Date(Math.floor(milliseconds / 60000) * 60000).toISOString() : String(value || "");
+  }
+
   function operationsJobKey(job = {}) {
-    return String(job.id || `${job.property || "job"}|${job.scheduledStart || ""}`);
+    const address = operationsJobAddress(job);
+    const start = operationsJobStart(job);
+    // Spectora can return one row per service. An appointment is the property
+    // and scheduled start, not the individual service-row identifier.
+    return address && start ? `${address}|${start}` : String(job.id || job.spectoraJobId || `${address || "job"}|${start}`);
+  }
+
+  function operationsJobIds(job = {}) {
+    return [...new Set([
+      job.id,
+      job.calendarEventId,
+      job.spectoraJobId,
+      ...(Array.isArray(job.sourceJobIds) ? job.sourceJobIds : [])
+    ].map(value => String(value || "").trim()).filter(Boolean))];
+  }
+
+  function mergedOperationsValues(left, right, fields) {
+    return [...new Set(fields.flatMap(field => {
+      const value = left?.[field];
+      const next = right?.[field];
+      return [value, next].flatMap(item => Array.isArray(item) ? item : String(item || "").split(","));
+    }).map(value => String(value || "").trim()).filter(Boolean))];
   }
 
   function mergeOperationsJobs(previous = [], incoming = []) {
@@ -1310,11 +1347,19 @@
         jobs.set(key, { ...job });
         return;
       }
-      const merged = mergeOperationsObject(existing, job);
       const rank = status => ({ scheduled: 1, "on my way": 2, arrived: 3, started: 4, "in progress": 4, completed: 5 }[String(status || "").toLowerCase()] || 0);
-      if (rank(existing.status) > rank(job.status)) merged.status = existing.status;
+      const preferred = rank(job.status) >= rank(existing.status) ? job : existing;
+      const merged = mergeOperationsObject(existing, job);
+      merged.id = String(preferred.id || preferred.spectoraJobId || existing.id || job.id || "");
+      merged.calendarEventId = String(preferred.calendarEventId || merged.calendarEventId || "");
+      merged.spectoraJobId = String(preferred.spectoraJobId || merged.spectoraJobId || "");
+      merged.status = preferred.status || merged.status;
+      merged.sourceJobIds = [...new Set([...operationsJobIds(existing), ...operationsJobIds(job)])];
+      merged.services = mergedOperationsValues(existing, job, ["services", "serviceNames"]);
+      merged.serviceNames = [...merged.services];
+      merged.serviceCodes = mergedOperationsValues(existing, job, ["serviceCodes"]);
       ["onMyWayAt", "arrivedAt", "inspectionStartedAt", "completedAt"].forEach(field => {
-        merged[field] = String(job[field] || existing[field] || "");
+        merged[field] = String(preferred[field] || job[field] || existing[field] || "");
       });
       jobs.set(key, merged);
     });
@@ -1412,8 +1457,13 @@
   function mergeOperationsDay(previous = {}, incoming = {}) {
     if (!previous?.date || !incoming?.date) {
       const initial = previous?.date ? previous : incoming;
-      const state = currentWorkflowStatus(initial || {});
-      return { ...(initial || {}), currentWorkflowStatus: state, liveStatus: state.value };
+      const normalized = {
+        ...(initial || {}),
+        jobs: mergeOperationsJobs([], initial?.jobs),
+        activity: mergeOperationsActivity([], initial?.activity)
+      };
+      const state = currentWorkflowStatus(normalized);
+      return { ...normalized, currentWorkflowStatus: state, liveStatus: state.value };
     }
     const previousStrength = operationsDayStrength(previous);
     const incomingStrength = operationsDayStrength(incoming);
@@ -1650,6 +1700,7 @@
     currentWorkflowStatus,
     canonicalWorkflowStatus,
     teamQualification,
+    mergeOperationsJobs,
     mergeOperationsDay
   };
 })();

@@ -1,5 +1,17 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 213 — Appointment, Time and Workday Approval Integrity
+
+- Groups Spectora service rows by property and scheduled start so one appointment appears once, while retaining every source ID and service.
+- Uses the latest confirmed final Clock Off for Hours Worked and Activity Window instead of an earlier test clock-out.
+- Adds mandatory completed-workday review with **Approve Workday** and **Question Workday**, an append-only audit record, and automatic re-approval when effective times or corrections change.
+- Shows Office Console dates and times in Michigan Eastern Time and interprets Admin correction entries in Michigan time, regardless of the admin's physical time zone.
+- Applies the unique-appointment identity consistently to the field app, completion ledger, Office detail, job counts and Spectora map planning.
+
+### Validation record
+
+- Verified duplicate Spectora service rows collapse to one completed appointment, all service IDs still resolve completion, final Clock Off recovery recalculates paid time, workday decisions persist with reviewed totals, and Michigan-time conversion remains correct outside Michigan.
+
 ## Build 212 — Final Clock-Off Reconciliation
 
 - Keeps the premature-clock-off repair one-time only so it cannot clear a later genuine final Clock Off.

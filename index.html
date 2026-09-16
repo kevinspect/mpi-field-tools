@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="212">
+  <meta name="app-build" content="213">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5915,7 +5915,7 @@
     .field-inbox-thread-files { padding-left:43px; color:#8e8e93; font-size:7.5px; }
     .field-compose-card { border-radius:18px; }
   </style>
-  <link rel="stylesheet" href="./mpi-app-theme.css?build=212">
+  <link rel="stylesheet" href="./mpi-app-theme.css?build=213">
 </head>
 <body class="mpi-field-ui">
   <section class="mpi-access-choice" id="mpiAccessChoice" role="dialog" aria-modal="true" aria-labelledby="mpiAccessChoiceTitle" hidden>
@@ -8640,7 +8640,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 212</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 213</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8780,16 +8780,16 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=212"></script>
-  <script src="./mpi-shared.js?build=212"></script>
-  <script src="./mpi-equipment.js?build=212"></script>
-  <script src="./mpi-office-navigation.js?build=212"></script>
-  <script src="./mpi-owner-view.js?build=212"></script>
-  <script src="./mpi-tool-bag.js?build=212"></script>
-  <script src="./mpi-field-sync.js?build=212"></script>
-  <script src="./mpi-subcontractor.js?build=212"></script>
-  <script src="./mpi-comment-policy.js?build=212"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=212"></script>
+  <script src="./mpi-native-bridge.js?build=213"></script>
+  <script src="./mpi-shared.js?build=213"></script>
+  <script src="./mpi-equipment.js?build=213"></script>
+  <script src="./mpi-office-navigation.js?build=213"></script>
+  <script src="./mpi-owner-view.js?build=213"></script>
+  <script src="./mpi-tool-bag.js?build=213"></script>
+  <script src="./mpi-field-sync.js?build=213"></script>
+  <script src="./mpi-subcontractor.js?build=213"></script>
+  <script src="./mpi-comment-policy.js?build=213"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=213"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -14537,9 +14537,30 @@
       }
 
       function workflowRoutableScheduleJobs(jobs) {
-        return (Array.isArray(jobs) ? jobs : [])
-          .map(job => ({ ...job, location: String(job?.location || job?.propertyAddress || "").trim() }))
-          .filter(job => Boolean(job.location));
+        const appointments = new Map();
+        const statusRank = value => ({ scheduled: 1, "on my way": 2, arrived: 3, started: 4, "in progress": 4, completed: 5, complete: 5 }[String(value || "").toLowerCase()] || 0);
+        (Array.isArray(jobs) ? jobs : []).forEach(source => {
+          const job = { ...source, location: String(source?.location || source?.propertyAddress || source?.property || "").trim() };
+          if (!job.location) return;
+          const scheduled = String(job?.scheduledStart || job?.start?.dateTime || job?.start?.date || "");
+          const scheduledMs = new Date(scheduled).getTime();
+          const startKey = Number.isFinite(scheduledMs) ? new Date(Math.floor(scheduledMs / 60000) * 60000).toISOString() : scheduled;
+          const addressKey = job.location.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+          const key = addressKey && startKey ? `${addressKey}|${startKey}` : String(job.id || job.spectoraJobId || appointments.size);
+          const existing = appointments.get(key);
+          if (!existing) {
+            appointments.set(key, { ...job, sourceJobIds: [...new Set([job.id, job.calendarEventId, job.spectoraJobId, ...(Array.isArray(job.sourceJobIds) ? job.sourceJobIds : [])].map(value => String(value || "").trim()).filter(Boolean))] });
+            return;
+          }
+          const preferred = statusRank(job.status) >= statusRank(existing.status) ? job : existing;
+          const combined = { ...existing, ...job, id: String(preferred.id || existing.id || job.id || ""), status: preferred.status || existing.status || job.status || "" };
+          combined.sourceJobIds = [...new Set([existing.id, job.id, existing.calendarEventId, job.calendarEventId, existing.spectoraJobId, job.spectoraJobId, ...(existing.sourceJobIds || []), ...(job.sourceJobIds || [])].map(value => String(value || "").trim()).filter(Boolean))];
+          ["serviceNames", "serviceCodes", "jobNotes"].forEach(field => {
+            combined[field] = [...new Set([...(Array.isArray(existing[field]) ? existing[field] : []), ...(Array.isArray(job[field]) ? job[field] : [])].map(String).filter(Boolean))];
+          });
+          appointments.set(key, combined);
+        });
+        return [...appointments.values()].sort((left, right) => scheduleJobTimestamp(left, "start") - scheduleJobTimestamp(right, "start"));
       }
 
       function renderTodayJobs(jobs, calendarName, { cached = false } = {}) {
@@ -14864,7 +14885,7 @@
           const prior = JSON.parse(localStorage.getItem(CALENDAR_CACHE_KEY) || "null");
           if (prior?.date === requestedDate && Array.isArray(prior.jobs)) priorJobs = prior.jobs;
         } catch (_) {}
-        return (Array.isArray(day?.jobs) ? day.jobs : []).filter(job => !/cancel|delete/i.test(String(job?.status || ""))).map(job => {
+        return workflowRoutableScheduleJobs((Array.isArray(day?.jobs) ? day.jobs : []).filter(job => !/cancel|delete/i.test(String(job?.status || ""))).map(job => {
           const spectoraJobId = String(job?.spectoraJobId || job?.id || "").trim();
           const previous = priorJobs.find(item => spectoraJobId && String(item?.spectoraJobId || "") === spectoraJobId);
           const services = Array.isArray(job?.services) ? job.services.map(String).filter(Boolean) : String(job?.services || "").split(",").map(value => value.trim()).filter(Boolean);
@@ -14891,7 +14912,7 @@
             scheduleSource: "spectora-read-only",
             estimatedDriveMinutes: Math.max(0, Number(job?.estimatedDriveMinutes) || 0)
           };
-        }).filter(job => job.spectoraJobId && job.location && scheduleJobTimestamp(job, "start"));
+        }).filter(job => job.spectoraJobId && job.location && scheduleJobTimestamp(job, "start")));
       }
 
       function applySpectoraSchedule(days, { announce = false } = {}) {
@@ -16120,16 +16141,18 @@
         }
         if (!activity.length && dayComplete?.completedAt && ["console-synced", "sent"].includes(dayComplete.emailStatus)) return null;
         const compactJobs = jobs.map(job => {
-          const jobEvents = activity.filter(item => String(item.calendarEventId || item.jobId || "") === String(job.id || ""));
+          const jobIdentifiers = new Set(workflowJobIdentifiers(job));
+          const jobEvents = activity.filter(item => jobIdentifiers.has(String(item.calendarEventId || item.jobId || "")));
           const eventAt = action => jobEvents.find(item => item.action === action)?.timestamp || "";
           const arrivalLocationEvent = jobEvents.filter(item => ["Arrival location verified", "Arrival location review required"].includes(item.action)).at(-1);
           const arrivalEvent = jobEvents.find(item => item.action === "Arrived");
           const etaEvent = jobEvents.filter(item => /^\d{2}:\d{2}$/.test(String(item?.data?.etaTime || ""))).at(-1);
-          const isActive = String(active?.calendarEventId || "") === String(job.id || "");
+          const isActive = workflowJobIdentifiers(active).some(id => jobIdentifiers.has(id));
           const arrivedAt = eventAt("Arrived");
           const performance = arrivedAt ? workflowArrivalPerformance(arrivedAt, job.start?.dateTime || job.start?.date || job.scheduledStart) : null;
           return {
             id: String(job.id || ""),
+            sourceJobIds: [...jobIdentifiers],
             property: String(job.location || job.summary || "Inspection appointment"),
             scheduledStart: String(job.start?.dateTime || job.start?.date || job.scheduledStart || ""),
             scheduledEnd: String(job.end?.dateTime || job.end?.date || job.scheduledEnd || ""),
@@ -16147,7 +16170,8 @@
             departurePlan: isActive && active?.departurePlan ? { ...active.departurePlan } : null
           };
         });
-        const activeCompactCandidate = compactJobs.find(job => job.id === String(active?.calendarEventId || "")) || null;
+        const activeIdentifiers = new Set(workflowJobIdentifiers(active));
+        const activeCompactCandidate = compactJobs.find(job => workflowJobIdentifiers(job).some(id => activeIdentifiers.has(id))) || null;
         const activeCompact = dayComplete?.completedAt ? null : activeCompactCandidate;
         const nextJob = dayComplete?.completedAt
           ? null
@@ -16926,8 +16950,7 @@
       function workflowFinalTravelNeedsClockOff() {
         const activeClock = Boolean(workflowActiveClockSession());
         const jobs = workflowScheduleJobs();
-        const completed = workflowCompletedEventIds();
-        const allJobsComplete = jobs.length > 0 && jobs.every(job => completed.has(job.id));
+        const allJobsComplete = jobs.length > 0 && jobs.every(job => workflowJobIsComplete(job));
         const remainingJobs = workflowClockOffRemainingJobs(jobs);
         const training = loadWorkflowNachiTraining();
         const trainingDayComplete = Boolean(isCoryWorkflowUser() && training && !training.active && training.sessions.length && !workflowNextScheduledJob(jobs));
@@ -16966,8 +16989,7 @@
                 : "Complete Morning Readiness to begin the working-day activity record.";
         workflowHoursPending.hidden = !readiness || hoursStarted;
         const jobs = workflowScheduleJobs();
-        const completed = workflowCompletedEventIds();
-        const allJobsComplete = jobs.length > 0 && jobs.every(job => completed.has(job.id));
+        const allJobsComplete = jobs.length > 0 && jobs.every(job => workflowJobIsComplete(job));
         const remainingJobs = workflowClockOffRemainingJobs(jobs);
         const training = loadWorkflowNachiTraining();
         const trainingDayComplete = Boolean(isCoryWorkflowUser() && training && !training.active && training.sessions.length && !workflowNextScheduledJob(jobs));
@@ -17041,8 +17063,7 @@
         const active = workflowActiveClockSession(record);
         if (!record || !active) return;
         const jobs = workflowScheduleJobs();
-        const completed = workflowCompletedEventIds();
-        const allJobsComplete = jobs.length > 0 && jobs.every(job => completed.has(job.id));
+        const allJobsComplete = jobs.length > 0 && jobs.every(job => workflowJobIsComplete(job));
         const remainingJobs = workflowClockOffRemainingJobs(jobs);
         if (remainingJobs.length) {
           renderWorkflowTodayJobs(jobs);
@@ -17255,7 +17276,7 @@
       }
 
       function workflowJobIdentifiers(job) {
-        return [...new Set([job?.id, job?.calendarEventId, job?.spectoraJobId]
+        return [...new Set([job?.id, job?.calendarEventId, job?.spectoraJobId, ...(Array.isArray(job?.sourceJobIds) ? job.sourceJobIds : [])]
           .flatMap(value => {
             const id = String(value || "").trim();
             if (!id) return [];
@@ -17466,8 +17487,7 @@
       function ensureWorkflowFinalReturnState() {
         let record = normalizeWorkflowLabStop();
         const jobs = workflowScheduleJobs();
-        const completed = workflowCompletedEventIds();
-        const allJobsComplete = jobs.length > 0 && jobs.every(job => completed.has(job.id));
+        const allJobsComplete = jobs.length > 0 && jobs.every(job => workflowJobIsComplete(job));
         const dayComplete = workflowDayCompleteRecord();
         if (record || !allJobsComplete || dayComplete?.completedAt || loadActiveJob()?.property) return record;
         const clock = loadWorkflowTimeClock();

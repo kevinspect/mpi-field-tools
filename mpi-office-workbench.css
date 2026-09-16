@@ -137,6 +137,15 @@ body.office-workbench .office-diagnosis-list p { grid-column: 1 / -1; margin: 0;
 body.office-workbench .office-check-status { font-size: 10px; color: #28765e; background: #eaf6ef; border-radius: 6px; padding: 4px 7px; }
 body.office-workbench .office-check-status[data-state='attention'] { color: #925d0d; background: #fff3d9; }
 body.office-workbench .office-check-status[data-state='deferred'] { color: #65708a; background: #f0f2f7; }
+body.office-workbench .workday-review-card { border-left: 4px solid #d3a822; }
+body.office-workbench .workday-review-card.approved { border-left-color: #28765e; background: #fbfefc; }
+body.office-workbench .workday-review-card.questioned { border-left-color: #b54848; background: #fffdfd; }
+body.office-workbench .workday-review-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+body.office-workbench .workday-review-heading h3 { margin: 2px 0 0; }
+body.office-workbench .workday-review-totals { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin: 16px 0; }
+body.office-workbench .workday-review-totals > div { display: grid; gap: 4px; padding: 12px 14px; border: 1px solid #e2e5ef; border-radius: 12px; background: #f7f8fc; }
+body.office-workbench .workday-review-totals span { color: #68738a; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+body.office-workbench .workday-review-totals strong { color: #11186a; font-size: 18px; }
 @media (min-width: 761px) {
   body.office-workbench .topbar { height: 66px; min-height: 66px; padding: 0 22px; position: sticky; top: 0; z-index: 1000; }
   body.office-workbench .top-actions a[aria-label='Return to Inspector App'] { display: none; }
@@ -190,4 +199,5 @@ body.office-workbench .office-check-status[data-state='deferred'] { color: #6570
   body.office-workbench .person-main { padding: 14px; }
   body.office-workbench .person-editor { padding: 16px 14px; }
   body.office-workbench .person-controls { grid-template-columns: minmax(0,1fr); }
+  body.office-workbench .workday-review-totals { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
