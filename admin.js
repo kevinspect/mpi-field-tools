@@ -7,6 +7,7 @@
   const signInButton = document.getElementById("adminSignIn");
   const signOutButton = document.getElementById("adminSignOut");
   const authStatus = document.getElementById("adminAuthStatus");
+  document.getElementById("adminRetryConnection")?.addEventListener("click", () => window.location.reload());
   const accountPill = document.getElementById("adminAccountPill");
   const accountName = document.getElementById("adminAccountName");
   const accountEmail = document.getElementById("adminAccountEmail");
@@ -559,6 +560,7 @@
   }
 
   function renderAdminUnifiedInbox() {
+    window.MPI_OWNER_VIEW?.setData({ people, updates, fieldMessages, directMessages });
     if (!unifiedInboxList) return;
     const items = adminInboxItems();
     const unread = items.filter(item => item.unread).length;
@@ -2292,6 +2294,7 @@
   }
 
   function renderPeople() {
+    window.MPI_OWNER_VIEW?.setData({ people, updates, fieldMessages, directMessages });
     renderTargetOptions();
     renderInspectorSelector();
     if (inboxComposeRecipient) {
@@ -4216,9 +4219,13 @@
   shared.watchSession(({ user, profile, error }) => {
     currentUser = user;
     currentProfile = profile;
-    if (user && profile?.active !== false) shared.requestSpectoraScheduleRefresh?.().catch(() => false);
+    window.MPI_OWNER_VIEW?.setContext(user, profile);
+    const fieldEquipmentOnly = new URL(window.location.href).searchParams.get("field") === "1";
+    if (user && profile?.active !== false && !fieldEquipmentOnly) shared.requestSpectoraScheduleRefresh?.().catch(() => false);
     readReplyKeys = new Set(Array.isArray(profile?.officeReplyReadKeys) ? profile.officeReplyReadKeys : []);
     authStatus.textContent = error?.message || "";
+    const retryConnection = document.getElementById("adminRetryConnection");
+    if (retryConnection) retryConnection.hidden = !user || !error;
     if (!user || !profile || !shared.isAdminRole(profile)) {
       dashboard.hidden = true;
       accountPill.hidden = true;
@@ -4241,12 +4248,16 @@
     accountName.textContent = profile.name || user.displayName || "MPI Owner";
     accountEmail.textContent = user.email || "";
     accountInitial.textContent = (profile.name || user.displayName || "K").trim().charAt(0).toUpperCase();
-    startAdminData();
+    if (!fieldEquipmentOnly) startAdminData();
     if (!initialAdminViewApplied) {
-      showView(new URL(window.location.href).searchParams.get("view") === "inbox" ? "updates" : "operations");
+      const requestedView = new URL(window.location.href).searchParams.get("view");
+      showView(requestedView === "equipment" ? "equipment" : requestedView === "inbox" ? "updates" : "operations");
       initialAdminViewApplied = true;
     }
-    maybeStartAdminOnboarding();
-    if (window.Notification?.permission === "granted") enableOfficeAlerts(null, false);
+    if (!fieldEquipmentOnly) maybeStartAdminOnboarding();
+    if (!fieldEquipmentOnly && window.Notification?.permission === "granted") enableOfficeAlerts(null, false);
+  });
+  window.addEventListener("mpi-office-map-ready", () => {
+    if (currentUser && shared.isAdminRole(currentProfile)) renderLiveLocationMap();
   });
 })();

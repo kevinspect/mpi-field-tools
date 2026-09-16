@@ -519,12 +519,14 @@
     });
     unsubscribeAssignments = shared.db.collection("equipmentAssignments").onSnapshot(snapshot => {
       assignments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      window.MPI_OWNER_VIEW?.setEquipmentData({ assignments, acknowledgments });
       assignmentSnapshotReady = true;
       renderAll();
       ensureCoryAssignments();
     }, error => { list.innerHTML = `<div class="empty">${escapeHtml(error?.message || "Equipment records could not be loaded.")}</div>`; });
     unsubscribeAcknowledgments = shared.db.collection("equipmentAcknowledgments").onSnapshot(snapshot => {
       acknowledgments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      window.MPI_OWNER_VIEW?.setEquipmentData({ assignments, acknowledgments });
       renderAll();
     });
   }

@@ -789,7 +789,7 @@
       .inspector-row > :nth-child(5),.inspector-row > :nth-child(6) { display:block; }
     }
 
-    /* Build 197 — iPhone-style office Messages */
+    /* Build 198 — iPhone-style office Messages */
     [data-admin-panel="updates"] .content-panel { background:#f2f2f7; }
     .admin-compose-block { margin-bottom:12px; border:0; background:transparent; }
     .admin-compose-block > summary { width:max-content; min-height:42px; margin-left:auto; padding:0 14px; color:#087cff; background:#fff; border:1px solid #d9d9dd; border-radius:21px; }
@@ -953,6 +953,14 @@
   </style>
 </head>
 <body>
+  <script>if (new URLSearchParams(location.search).get("field") === "1") document.body.classList.add("field-equipment-console");</script>
+  <style>
+    .field-equipment-console .topbar,.field-equipment-console .hero,.field-equipment-console .tabbar,.field-equipment-console #adminOperationsSummary,.field-equipment-console #commentUsagePanel{display:none!important}
+    .field-equipment-console .shell{padding:0;max-width:none;margin:0}
+    .field-equipment-console .dashboard{display:block}
+    .field-equipment-console .workspace-panel{margin:0}
+    .field-equipment-console #adminEquipmentDashboard{padding:14px;box-shadow:none;border:0}
+  </style>
   <svg class="icon-library" aria-hidden="true">
     <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
     <symbol id="icon-clipboard" viewBox="0 0 24 24"><path d="M9 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m8 13 2 2 5-5"/></symbol>
@@ -988,6 +996,7 @@
       <p>Sign in with your approved Michigan Property Inspections Google account. Inspectors cannot open this management console.</p>
       <button class="primary" id="adminSignIn" type="button"><svg class="app-icon"><use href="#icon-shield"></use></svg><span>SIGN IN WITH MPI GOOGLE ACCOUNT</span></button>
       <p class="status" id="adminAuthStatus"></p>
+      <button class="secondary" id="adminRetryConnection" type="button" hidden>TRY OFFICE CONNECTION AGAIN</button>
     </section>
 
     <section class="dashboard" id="adminDashboard" hidden>
@@ -1154,14 +1163,13 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.js"></script>
-  <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
-  <script src="./mpi-shared.js?build=197"></script>
-  <script src="./mpi-equipment-images.js?build=197"></script>
-  <script src="./mpi-equipment.js?build=197"></script>
-  <script src="./mpi-planning.js?build=197"></script>
-  <script src="./admin.js?build=197"></script>
-  <script src="./mpi-equipment-admin.js?build=197"></script>
+  <script src="./mpi-office-navigation.js?build=198"></script>
+  <script src="./mpi-shared.js?build=198"></script>
+  <script src="./mpi-equipment-images.js?build=198"></script>
+  <script src="./mpi-equipment.js?build=198"></script>
+  <script src="./mpi-planning.js?build=198"></script>
+  <script src="./mpi-owner-view.js?build=198"></script>
+  <script src="./admin.js?build=198"></script>
+  <script src="./mpi-equipment-admin.js?build=198"></script>
 </body>
 </html>

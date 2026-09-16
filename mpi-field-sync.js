@@ -286,11 +286,8 @@
     }, 120);
   });
 
-  [officeConsoleCard, settingsAdminLink].forEach(link => link?.addEventListener("click", event => {
-    if (!window.MPI_NATIVE?.isNative) return;
-    event.preventDefault();
-    window.location.assign("./admin.html");
-  }));
+  // All Office links, including the prominent header button, share the safe
+  // local-page navigation handler in mpi-office-navigation.js.
 
   function savedPushToken() {
     try { return String(localStorage.getItem("mpiPushTokenV1") || "").trim(); }
@@ -992,6 +989,8 @@
   }
 
   function renderSession(user, profile, error) {
+    window.MPI_OWNER_VIEW?.setContext(user, profile);
+    window.MPI_TOOL_BAG?.setContext(user, profile);
     currentUser = user;
     currentProfile = profile;
     if (spectoraRefreshInterval) {

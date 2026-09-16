@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="197">
+  <meta name="app-build" content="198">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5859,7 +5859,7 @@
       .issued-tools-list { grid-template-columns: 1fr; padding: 10px; }
     }
 
-    /* Build 197 — iPhone-style Messages */
+    /* Build 198 — iPhone-style Messages */
     #inbox { background:#f2f2f7; }
     .field-inbox-header { padding:4px 4px 0; }
     .field-inbox-header .field-section-heading h2 { font-size:30px; letter-spacing:-.035em; }
@@ -8637,7 +8637,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 197</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 198</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8777,12 +8777,15 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=197"></script>
-  <script src="./mpi-shared.js?build=197"></script>
-  <script src="./mpi-equipment.js?build=197"></script>
-  <script src="./mpi-field-sync.js?build=197"></script>
-  <script src="./mpi-subcontractor.js?build=197"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=197"></script>
+  <script src="./mpi-native-bridge.js?build=198"></script>
+  <script src="./mpi-shared.js?build=198"></script>
+  <script src="./mpi-equipment.js?build=198"></script>
+  <script src="./mpi-office-navigation.js?build=198"></script>
+  <script src="./mpi-owner-view.js?build=198"></script>
+  <script src="./mpi-tool-bag.js?build=198"></script>
+  <script src="./mpi-field-sync.js?build=198"></script>
+  <script src="./mpi-subcontractor.js?build=198"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=198"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -8804,6 +8807,8 @@
         "damage-report": "Damaged Item Notice",
         "equipment-record": "Equipment Photo Record",
         "tool-guides": "Company Tool Guides",
+        "tool-bag": "My Tool Bag",
+        "issue-equipment": "Issue Equipment",
         "sop-guide": "Field Procedures",
         "training-center": "Training Center",
         "profile": "My Profile",
@@ -8821,9 +8826,9 @@
       const activeJobContextProperty = document.getElementById("activeJobContextProperty");
       const activeJobContextInspector = document.getElementById("activeJobContextInspector");
       const bottomNavLinks = [...document.querySelectorAll("[data-bottom-screen]")];
-      const toolScreens = new Set(["field-tools", "age-finder", "comment-builder", "damage-report", "equipment-record", "tool-guides", "sop-guide"]);
+      const toolScreens = new Set(["field-tools", "age-finder", "comment-builder", "damage-report", "equipment-record", "tool-guides", "tool-bag", "issue-equipment", "sop-guide"]);
       const contactScreens = new Set(["contact-mpi", "office-updates", "team-messages", "safety-notice", "requests-feedback"]);
-      const subcontractorScreens = new Set(["subcontractor-home", "comment-builder", "age-finder", "damage-report", "office-updates", "profile"]);
+      const subcontractorScreens = new Set(["subcontractor-home", "comment-builder", "age-finder", "damage-report", "office-updates", "profile", "tool-bag"]);
 
       function updateJobContextBanner(activeScreen, job) {
         if (job === undefined) {
@@ -22930,6 +22935,8 @@
       function watchIssuedTools(session = window.MPI_COMPANY_SESSION) {
         unsubscribeIssuedTools?.();
         unsubscribeIssuedTools = null;
+        // Tool Bag owns the lazy, user-bound equipment subscription now.
+        if (window.MPI_TOOL_BAG) return;
         renderIssuedTools();
         if (!session?.userId || !window.MPI_SHARED?.available) return;
         const isCory = /^cory leese$/i.test(String(session.inspectorName || "").trim());

@@ -36,6 +36,10 @@ async function assertText(label, path, predicate, failureDetail) {
 for (const file of [
   "scripts/test-event-sync.mjs",
   "mpi-native-bridge.js",
+  "mpi-office-navigation.js",
+  "mpi-owner-view.js",
+  "mpi-tool-bag.js",
+  "scripts/test-owner-view.mjs",
   "mpi-shared.js",
   "mpi-field-sync.js",
   "mpi-subcontractor.js",
@@ -53,6 +57,8 @@ for (const file of [
   run(`JavaScript syntax — ${file}`, process.execPath, ["--check", file]);
 }
 run("Event-based syncing and cross-device receipts", process.execPath, ["scripts/test-event-sync.mjs"], { quiet: false });
+run("Owner-only read-only previews and field Tool Bag", process.execPath, ["scripts/test-owner-view.mjs"], { quiet: false });
+await assertText("Native Office does not wait for external map scripts", "native-web/admin.html", source => source.includes("./vendor/leaflet.css") && source.includes("./vendor/maplibre-gl.css") && source.includes("mpi-office-navigation.js") && !/<script[^>]+src="https:\/\/unpkg/.test(source), "Native Office still blocks on a remote map library");
 
 const temporaryDirectory = await mkdtemp(join(tmpdir(), "mpi-native-verify-"));
 try {

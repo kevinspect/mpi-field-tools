@@ -452,12 +452,20 @@
   async function ensureProfile(user) {
     if (!user || !isCompanyEmail(user.email)) throw new Error("Use an approved MPI company account.");
     const ref = db.collection("users").doc(user.uid);
-    const snapshot = await ref.get();
+    // Opening another local page must not wait indefinitely for an offline read
+    // or a last-seen write. Access still comes from the real authenticated account.
+    let profileReadTimer;
+    const snapshot = await Promise.race([
+      ref.get(),
+      new Promise((_, reject) => {
+        profileReadTimer = setTimeout(() => reject(Object.assign(new Error("The company connection is taking too long. Retry when connected."), { code: "unavailable" })), 12000);
+      })
+    ]).finally(() => clearTimeout(profileReadTimer));
     const inspectorNumber = knownInspectorNumber({ email: user.email, name: user.displayName });
     const approvedEndAddress = knownApprovedEndAddress({ email: user.email, name: snapshot.exists ? snapshot.data()?.name : user.displayName });
     if (!snapshot.exists) {
       const owner = isOwnerEmail(user.email);
-      await ref.set({
+      const created = {
         name: user.displayName || normalizeEmail(user.email).split("@")[0],
         email: normalizeEmail(user.email),
         photoURL: String(user.photoURL || "").slice(0, 1000),
@@ -468,22 +476,24 @@
         active: true,
         createdAt: serverTimestamp(),
         lastSeenAt: serverTimestamp()
-      });
+      };
+      await ref.set(created);
+      return { id: user.uid, ...created };
     } else {
+      const saved = snapshot.data();
       const savedInspectorNumber = String(snapshot.data().inspectorId || inspectorNumber || "").trim();
       const savedApprovedEndAddress = String(snapshot.data().approvedEndAddress || approvedEndAddress || "").trim();
-      await ref.set({
-        name: snapshot.data().name || user.displayName || "MPI Team Member",
-        email: normalizeEmail(user.email),
-        photoURL: String(user.photoURL || snapshot.data().photoURL || "").slice(0, 1000),
-        ...(savedInspectorNumber ? { inspectorId: savedInspectorNumber } : {}),
-        ...(savedApprovedEndAddress ? { approvedEndAddress: savedApprovedEndAddress } : {}),
-        ...(teamQualification({ email: user.email }) ? { qualification: teamQualification({ email: user.email }) } : {}),
-        lastSeenAt: serverTimestamp()
-      }, { merge: true });
+      const missing = {
+        ...(!saved.name ? { name: user.displayName || "MPI Team Member" } : {}),
+        ...(!saved.email ? { email: normalizeEmail(user.email) } : {}),
+        ...(!saved.photoURL && user.photoURL ? { photoURL: String(user.photoURL).slice(0, 1000) } : {}),
+        ...(!saved.inspectorId && savedInspectorNumber ? { inspectorId: savedInspectorNumber } : {}),
+        ...(!saved.approvedEndAddress && savedApprovedEndAddress ? { approvedEndAddress: savedApprovedEndAddress } : {}),
+        ...(!saved.qualification && teamQualification({ email: user.email }) ? { qualification: teamQualification({ email: user.email }) } : {})
+      };
+      if (Object.keys(missing).length && saved.active !== false) ref.set(missing, { merge: true }).catch(() => false);
+      return { id: snapshot.id || user.uid, ...saved, ...missing };
     }
-    const current = await ref.get();
-    return { id: current.id, ...current.data() };
   }
 
   function watchSession(callback) {
