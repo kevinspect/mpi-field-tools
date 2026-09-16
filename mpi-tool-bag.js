@@ -6,6 +6,9 @@
   const css = document.createElement("style");
   css.textContent = '.tool-bag-overlay{position:fixed;inset:80px 0 88px;z-index:500;background:#f5f7fb;overflow:auto;padding:16px}.tool-bag-overlay[hidden]{display:none}.tool-bag-head{display:flex;gap:12px;align-items:center;position:sticky;top:-16px;background:#f5f7fb;padding:12px 0;z-index:1}.tool-bag-head h2{margin:0;flex:1;font:700 22px system-ui;color:#11186a}.tool-bag-overlay button,.tool-bag-overlay a{min-height:44px;padding:10px 14px;border-radius:12px;font:600 14px system-ui}.tool-bag-overlay button{background:#11186a;color:#fff;border:0}.tool-bag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}.tool-bag-card,.tool-bag-guide{background:white;border:1px solid #dbe3ee;border-radius:18px;padding:18px;color:#11186a}.tool-bag-card img{width:100%;height:130px;object-fit:contain}.tool-bag-card h3{font:700 17px system-ui}.tool-bag-card p,.tool-bag-guide li,.tool-bag-guide p{font:14px/1.6 system-ui;color:#586681}.tool-bag-card button{width:100%}.tool-bag-guide h3{font:700 20px system-ui}.tool-bag-guide h4{margin:22px 0 8px}.tool-bag-guide a{display:inline-block;color:#2768a9}.tool-bag-issue-frame{width:100%;height:calc(100dvh - 245px);border:0;border-radius:16px;background:white}';
   document.head.append(css);
+  const issueLayout = document.createElement("style");
+  issueLayout.textContent = ".tool-bag-overlay.is-issuing{display:flex;flex-direction:column;overflow:hidden}.tool-bag-overlay.is-issuing .tool-bag-head,.tool-bag-overlay.is-issuing #toolBagStatus{flex-shrink:0}.tool-bag-overlay.is-issuing #toolBagStatus{margin:8px 0 12px;font:13px/1.4 system-ui}.tool-bag-overlay.is-issuing #toolBagContent{position:relative;flex:1;min-height:0}.tool-bag-overlay.is-issuing .tool-bag-issue-frame{position:absolute;inset:0;display:block;width:100%;height:100%;min-height:0}";
+  document.head.append(issueLayout);
   const screen = document.createElement("section"); screen.className = "tool-bag-overlay"; screen.hidden = true; screen.setAttribute("aria-label", "My tool bag");
   screen.innerHTML = '<header class="tool-bag-head"><button type="button" data-bag-back>Back</button><h2>My Tool Bag</h2><button type="button" id="fieldIssueEquipment" hidden>Issue equipment</button></header><p id="toolBagStatus"></p><div id="toolBagContent"></div>';
   document.body.append(screen);
@@ -54,6 +57,7 @@
     if (location.hash === "#tool-guides" && !new URLSearchParams(location.search).has("tool")) { location.hash = "#tool-bag"; return; }
     const showing = location.hash === "#tool-bag" || location.hash === "#issue-equipment";
     screen.hidden = !showing;
+    screen.classList.toggle("is-issuing", showing && location.hash === "#issue-equipment" && canIssue());
     if (!showing) { stop?.(); stop = null; loadedUid = ""; content.replaceChildren(); returnHash = location.hash || "#home"; return; }
     issue.hidden = !canIssue();
     if (location.hash === "#issue-equipment" && canIssue()) {

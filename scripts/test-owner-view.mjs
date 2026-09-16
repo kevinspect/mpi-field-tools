@@ -174,6 +174,9 @@ try {
   for (const viewport of [{ width: 1280, height: 800 }, { width: 393, height: 852 }]) {
     await page.setViewportSize(viewport);
     await auditControls(handover, `Field equipment ${viewport.width}`);
+    const frameBox = await page.locator(".tool-bag-issue-frame").boundingBox();
+    const dockBox = await page.locator(".app-bottom-nav").boundingBox();
+    assert.ok(frameBox.y + frameBox.height < dockBox.y, "The entire handover viewport must fit above the phone menu, including modal submission controls");
     if (process.env.MPI_VISUAL_QA) await page.screenshot({ path: `/tmp/mpi-build200-visuals/equipment-${viewport.width}.png` });
   }
   await handover.locator("[data-select-equipment-issue]").first().check();
