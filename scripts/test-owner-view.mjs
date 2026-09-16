@@ -4,10 +4,20 @@ import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
 import { resolve, extname } from "node:path";
 import { createRequire } from "node:module";
+import vm from "node:vm";
 
 const require = createRequire(import.meta.url);
 const { chromium } = require("/Users/kevincave/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright");
 const root = fileURLToPath(new URL("../", import.meta.url));
+let nativeClick, assigned = "";
+vm.runInNewContext(await readFile(new URL("../mpi-office-navigation.js", import.meta.url), "utf8"), {
+  URL, setTimeout: () => 1, clearTimeout() {},
+  document: { addEventListener: (_, callback) => { nativeClick = callback; }, getElementById: () => null, createElement: () => ({ setAttribute() {}, style: {} }), body: { append() {} } },
+  window: { MPI_NATIVE: { isNative: true }, location: { href: "capacitor://localhost/index.html#home", origin: "capacitor://localhost", assign: value => { assigned = value; } }, addEventListener() {} }
+});
+nativeClick({ target: { closest: () => ({ id: "mpiAdminReturn" }) }, preventDefault() {} });
+assert.equal(assigned, "capacitor://localhost/admin.html");
+console.log("PASS Native custom-scheme navigation does not confuse URL.origin with WKWebView's app origin.");
 const server = createServer(async (request, response) => {
   try {
     const path = resolve(root, "." + new URL(request.url, "http://localhost").pathname.replace(/\/$/, "/index.html"));

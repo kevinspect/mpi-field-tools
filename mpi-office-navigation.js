@@ -7,7 +7,10 @@
     event.preventDefault();
     const office = link.id !== "";
     const destination = new URL(office ? "./admin.html" : "./index.html?office=1#home", window.location.href);
-    if (destination.origin !== window.location.origin) return;
+    // URL.origin can be "null" for capacitor: while WKWebView reports the
+    // custom app origin. Compare the actual scheme and host instead.
+    const current = new URL(window.location.href);
+    if (destination.protocol !== current.protocol || destination.host !== current.host) return;
     const notice = document.createElement("div");
     notice.setAttribute("role", "status");
     notice.style.cssText = "position:fixed;inset:auto 12px 100px;padding:18px;z-index:100000;border-radius:16px;background:#11186a;color:white;box-shadow:0 6px 30px #0003";
