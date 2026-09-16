@@ -6,6 +6,7 @@
   const dashboard = document.getElementById("adminDashboard");
   const signInButton = document.getElementById("adminSignIn");
   const signOutButton = document.getElementById("adminSignOut");
+  const settingsButton = document.getElementById("adminOpenSettings");
   const authStatus = document.getElementById("adminAuthStatus");
   document.getElementById("adminRetryConnection")?.addEventListener("click", () => window.location.reload());
   const accountPill = document.getElementById("adminAccountPill");
@@ -2243,11 +2244,16 @@
   }
 
   function showView(name) {
+    if (name === "diagnostics") {
+      name = "settings";
+      const history = document.getElementById("adminDiagnosticHistory");
+      if (history) history.open = true;
+    }
     currentAdminView = name;
     const headings = {
       operations: ["Operations", "Your field team, locations and daily progress."],
       requests: ["Requests", "Keep equipment orders and office follow-ups moving."],
-      diagnostics: ["App issues", "Review, investigate and resolve field reports."],
+      settings: ["Settings", "Device preferences, self-diagnosis and diagnostic history."],
       publish: ["Send to field", "Share an update, instruction or document with your team."],
       updates: ["Messages", "Private conversations, attachments and read receipts."],
       equipment: ["Equipment", "Issue tools and keep each handover accountable."],
@@ -4319,6 +4325,7 @@
   shared.watchSession(({ user, profile, error }) => {
     currentUser = user;
     currentProfile = profile;
+    window.MPI_OFFICE_DIAGNOSTICS?.setContext(user, profile);
     window.MPI_OWNER_VIEW?.setContext(user, profile);
     const fieldEquipmentOnly = new URL(window.location.href).searchParams.get("field") === "1";
     if (user && profile?.active !== false && !fieldEquipmentOnly) shared.requestSpectoraScheduleRefresh?.().catch(() => false);
@@ -4327,6 +4334,7 @@
     const retryConnection = document.getElementById("adminRetryConnection");
     if (retryConnection) retryConnection.hidden = !user || !error;
     if (!user || !profile || !shared.isAdminRole(profile)) {
+      if (settingsButton) settingsButton.hidden = true;
       dashboard.hidden = true;
       accountPill.hidden = true;
       signOutButton.hidden = !user;
@@ -4343,6 +4351,7 @@
     commentUsagePanel.hidden = !isPrimaryOwner();
     authCard.hidden = true;
     dashboard.hidden = false;
+    if (settingsButton) settingsButton.hidden = fieldEquipmentOnly;
     accountPill.hidden = false;
     signOutButton.hidden = false;
     accountName.textContent = profile.name || user.displayName || "MPI Owner";
@@ -4351,7 +4360,7 @@
     if (!fieldEquipmentOnly) startAdminData();
     if (!initialAdminViewApplied) {
       const requestedView = new URL(window.location.href).searchParams.get("view");
-      showView(requestedView === "equipment" ? "equipment" : requestedView === "inbox" ? "updates" : "operations");
+      showView(requestedView === "equipment" ? "equipment" : requestedView === "inbox" ? "updates" : requestedView === "settings" || requestedView === "diagnostics" ? requestedView : "operations");
       initialAdminViewApplied = true;
     }
     if (!fieldEquipmentOnly) maybeStartAdminOnboarding();

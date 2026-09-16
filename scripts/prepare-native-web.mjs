@@ -9,6 +9,7 @@ const assets = [
   "admin.html",
   "mpi-app-theme.css",
   "mpi-office-workbench.css",
+  "mpi-office-diagnostics.js",
   "admin.js",
   "mpi-planning.js",
   "mpi-shared.js",

@@ -6,7 +6,9 @@ body.office-workbench .console-view { grid-column: 1; }
 body.office-workbench .section-head { margin: 0 0 18px; }
 body.office-workbench .section-head h2 { font-size: 18px; }
 body.office-workbench .section-head p { max-width: 680px; }
-body.office-workbench .office-welcome { min-height: 120px; display: flex; align-items: center; padding: 22px 26px; margin-bottom: 16px; color: white; border-radius: 18px; background: linear-gradient(90deg,#11186a 3%,#11186af2 36%,#11186a3d 100%),url('./brand-assets/mpi-website-header.jpg') center 53% / cover; overflow: hidden; }
+body.office-workbench .office-welcome { position: relative; min-height: 156px; display: flex; align-items: center; padding: 22px 26px; margin-bottom: 16px; color: white; border-radius: 18px; background: #11186a; overflow: hidden; }
+body.office-workbench .office-welcome-photo { position: absolute; inset: 0 0 0 auto; width: 58%; height: 100%; object-fit: cover; object-position: center; mask-image: linear-gradient(90deg,transparent,#000 28%); -webkit-mask-image: linear-gradient(90deg,transparent,#000 28%); }
+body.office-workbench .office-welcome > div { position: relative; max-width: 49%; }
 body.office-workbench .office-welcome span { color: #efd17b; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; }
 body.office-workbench .office-welcome h2 { margin: 7px 0 5px; font-size: clamp(20px,2vw,28px); font-weight: 650; letter-spacing: -.035em; color: white; }
 body.office-workbench .office-welcome p { margin: 0; color: #e1e5f5; font-size: 12px; }
@@ -113,6 +115,27 @@ body.office-workbench .training-admin-list { max-width: 1050px; }
 body.office-workbench .training-admin-card { background: white; border-radius: 16px; border: 1px solid #e2e5ef; }
 body.office-workbench .office-nav-footer { display: none; }
 body.office-workbench [hidden] { display: none !important; }
+body.office-workbench .office-settings-content { max-width: 1050px; }
+body.office-workbench .office-settings-card { padding: 20px; margin: 0 0 14px; border: 1px solid #e2e5ef; border-radius: 16px; background: white; }
+body.office-workbench .office-settings-card h2 { margin: 0; color: #11186a; font-size: 16px; }
+body.office-workbench .office-settings-card p { margin: 6px 0 0; color: #65708a; font-size: 12px; line-height: 1.6; }
+body.office-workbench .office-settings-row { display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+body.office-workbench .office-settings-card .office-diagnosis-note { margin-top: 14px; font-size: 11px; }
+body.office-workbench .office-diagnostic-history > summary { display: flex; justify-content: space-between; gap: 16px; align-items: center; cursor: pointer; list-style: none; min-height: 44px; }
+body.office-workbench .office-diagnostic-history > summary::-webkit-details-marker { display: none; }
+body.office-workbench .office-diagnostic-history > summary::after { content: '⌄'; color: #65708a; font-size: 20px; }
+body.office-workbench .office-diagnostic-history[open] > summary::after { content: '⌃'; }
+body.office-workbench .office-diagnostic-history .nav-count { margin-left: auto; }
+body.office-workbench .office-diagnostic-history .operations-toolbar { margin: 20px 0 14px; }
+body.office-workbench .office-diagnosis-result { margin-top: 20px; padding-top: 18px; border-top: 1px solid #e8eaf2; }
+body.office-workbench .office-diagnosis-result h3 { font-size: 14px; margin: 0; color: #11186a; }
+body.office-workbench .office-diagnosis-list { margin: 14px 0 0; padding: 0; list-style: none; }
+body.office-workbench .office-diagnosis-list li { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 6px 14px; padding: 12px 0; border-top: 1px solid #eef0f5; }
+body.office-workbench .office-diagnosis-list strong { font-size: 12px; }
+body.office-workbench .office-diagnosis-list p { grid-column: 1 / -1; margin: 0; font-size: 11px; }
+body.office-workbench .office-check-status { font-size: 10px; color: #28765e; background: #eaf6ef; border-radius: 6px; padding: 4px 7px; }
+body.office-workbench .office-check-status[data-state='attention'] { color: #925d0d; background: #fff3d9; }
+body.office-workbench .office-check-status[data-state='deferred'] { color: #65708a; background: #f0f2f7; }
 @media (min-width: 761px) {
   body.office-workbench .topbar { height: 66px; min-height: 66px; padding: 0 22px; position: sticky; top: 0; z-index: 1000; }
   body.office-workbench .top-actions a[aria-label='Return to Inspector App'] { display: none; }
@@ -142,8 +165,14 @@ body.office-workbench [hidden] { display: none !important; }
   body.office-workbench .office-live-team .inspector-row { grid-template-columns: repeat(4,minmax(0,1fr)); }
 }
 @media (max-width: 760px) {
+  body.office-workbench #adminOpenSettings { display: inline-flex; min-height: 44px; min-width: 44px; padding: 9px; }
+  body.office-workbench #adminOpenSettings > span { display: none; }
+  body.office-workbench .top-actions a[aria-label='Return to Inspector App'] { min-height: 44px; min-width: 44px; padding: 9px; }
+  body.office-workbench .top-actions a[aria-label='Return to Inspector App'] > span { display: none; }
   body.office-workbench .console-view { grid-column: 1; }
   body.office-workbench .office-welcome { min-height: 104px; padding: 18px; }
+  body.office-workbench .office-welcome-photo { width: 48%; opacity: .45; }
+  body.office-workbench .office-welcome > div { max-width: 75%; }
   body.office-workbench .office-welcome p { max-width: 220px; line-height: 1.5; }
   body.office-workbench .stat-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   body.office-workbench .stat { min-height: 86px; padding: 15px; }

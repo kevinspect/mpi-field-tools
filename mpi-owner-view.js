@@ -43,7 +43,7 @@
   function script(source) { return `<script>${source.replace(/<\/script/gi, "<\\/script")}<\/script>`; }
   async function getSources() {
     if (sources) return sources;
-    const names = ["index.html", "admin.html", "mpi-app-theme.css", "mpi-office-workbench.css", "mpi-shared.js", "mpi-planning.js", "mpi-equipment.js", "mpi-equipment-admin.js", "mpi-tool-bag.js", "mpi-field-sync.js", "mpi-subcontractor.js", "admin.js"];
+    const names = ["index.html", "admin.html", "mpi-app-theme.css", "mpi-office-workbench.css", "mpi-office-diagnostics.js", "mpi-shared.js", "mpi-planning.js", "mpi-equipment.js", "mpi-equipment-admin.js", "mpi-tool-bag.js", "mpi-field-sync.js", "mpi-subcontractor.js", "admin.js"];
     sources = Promise.all(names.map(async name => {
       const response = await fetch(new URL(name, location.href), { signal: AbortSignal.timeout(15000) });
       if (!response.ok) throw new Error("Preview files could not load.");
@@ -150,7 +150,7 @@
     const csp = parsed.createElement("meta"); csp.httpEquiv = "Content-Security-Policy";
     csp.content = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: https: capacitor:; connect-src 'none'; frame-src 'none'; form-action 'none'; font-src data:; worker-src 'none'"; parsed.head.prepend(csp);
     parsed.body.insertAdjacentHTML("afterbegin", script(`(${sandboxRuntime.toString()})(${serialize(seed)});`) + script(files["mpi-shared.js"]) + script(`window.MPI_SHARED.watchSession = callback => { queueMicrotask(() => callback({ user: window.MPI_SHARED.auth.currentUser, profile: ${serialize(seed.person)}, error: null })); return () => {}; }; window.MPI_SHARED.requestSpectoraScheduleRefresh = async () => false; window.MPI_SHARED.watchDirectMessages = (_, callback) => { queueMicrotask(() => callback(${serialize(seed.directMessages)}, null)); return () => {}; }; window.MPI_SHARED.watchUpdates = (_, __, callback) => { queueMicrotask(() => callback(${serialize(seed.updates.filter(update => update.audience === "all" || update.targetUid === seed.person.id))})); return () => {}; };`));
-    const js = [files["mpi-equipment.js"], files["mpi-planning.js"], ...(page === "office" ? [] : [files["mpi-tool-bag.js"]]), ...inline, files[page === "office" ? "admin.js" : "mpi-field-sync.js"]];
+    const js = [files["mpi-equipment.js"], files["mpi-planning.js"], ...(page === "office" ? [files["mpi-office-diagnostics.js"]] : [files["mpi-tool-bag.js"]]), ...inline, files[page === "office" ? "admin.js" : "mpi-field-sync.js"]];
     if (page === "office") js.push(files["mpi-equipment-admin.js"]);
     if (page !== "office" && seed.person.role === "subcontractor") js.push(files["mpi-subcontractor.js"]);
     parsed.body.insertAdjacentHTML("beforeend", js.map(script).join(""));

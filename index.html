@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="204">
+  <meta name="app-build" content="205">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5915,7 +5915,7 @@
     .field-inbox-thread-files { padding-left:43px; color:#8e8e93; font-size:7.5px; }
     .field-compose-card { border-radius:18px; }
   </style>
-  <link rel="stylesheet" href="./mpi-app-theme.css?build=204">
+  <link rel="stylesheet" href="./mpi-app-theme.css?build=205">
 </head>
 <body class="mpi-field-ui">
   <section class="mpi-access-choice" id="mpiAccessChoice" role="dialog" aria-modal="true" aria-labelledby="mpiAccessChoiceTitle" hidden>
@@ -8640,14 +8640,14 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 204</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 205</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
-          <h2 id="appDiagnosticsTitle">App Diagnostics / Fix App Issue</h2>
+          <h2 id="appDiagnosticsTitle">Self-diagnosis</h2>
           <p>Checks common connection, sign-in, job, Hours Worked, location, notification, synchronization, and Comment Builder problems. Safe recoverable issues may be retried; your jobs, timestamps, hours, and offline records are never deleted.</p>
           <div class="app-diagnostics-actions">
-            <button id="runAppDiagnosticsBtn" type="button">RUN APP CHECK</button>
+            <button id="runAppDiagnosticsBtn" type="button">Run self-diagnosis</button>
             <button class="secondary" id="sendAppDiagnosticBtn" type="button" hidden>SEND DIAGNOSTIC TO OFFICE</button>
           </div>
           <div class="app-diagnostics-result" id="appDiagnosticsResult" role="status" aria-live="polite" hidden><strong id="appDiagnosticsResultTitle"></strong><span id="appDiagnosticsResultBody"></span></div>
@@ -8780,15 +8780,15 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=204"></script>
-  <script src="./mpi-shared.js?build=204"></script>
-  <script src="./mpi-equipment.js?build=204"></script>
-  <script src="./mpi-office-navigation.js?build=204"></script>
-  <script src="./mpi-owner-view.js?build=204"></script>
-  <script src="./mpi-tool-bag.js?build=204"></script>
-  <script src="./mpi-field-sync.js?build=204"></script>
-  <script src="./mpi-subcontractor.js?build=204"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=204"></script>
+  <script src="./mpi-native-bridge.js?build=205"></script>
+  <script src="./mpi-shared.js?build=205"></script>
+  <script src="./mpi-equipment.js?build=205"></script>
+  <script src="./mpi-office-navigation.js?build=205"></script>
+  <script src="./mpi-owner-view.js?build=205"></script>
+  <script src="./mpi-tool-bag.js?build=205"></script>
+  <script src="./mpi-field-sync.js?build=205"></script>
+  <script src="./mpi-subcontractor.js?build=205"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=205"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -15964,7 +15964,7 @@
         renderAppDiagnosticResult(latestAppDiagnosticReport);
         appDiagnosticsStatus.textContent = "No jobs, timestamps, Hours Worked, offline actions, or admin corrections were deleted or reset.";
         runAppDiagnosticsBtn.disabled = false;
-        runAppDiagnosticsBtn.textContent = "RUN APP CHECK AGAIN";
+        runAppDiagnosticsBtn.textContent = "Run self-diagnosis again";
       }
 
       async function runAppDiagnostics() {
@@ -16003,7 +16003,7 @@
           appDiagnosticsStatus.textContent = "The issue report is ready to send to the office. No field records were changed.";
         } finally {
           runAppDiagnosticsBtn.disabled = false;
-          runAppDiagnosticsBtn.textContent = "RUN APP CHECK AGAIN";
+          runAppDiagnosticsBtn.textContent = "Run self-diagnosis again";
         }
       }
 

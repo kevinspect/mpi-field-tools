@@ -38,6 +38,8 @@ for (const file of [
   "mpi-native-bridge.js",
   "mpi-office-navigation.js",
   "mpi-owner-view.js",
+  "mpi-office-diagnostics.js",
+  "scripts/test-office-diagnostics.mjs",
   "mpi-tool-bag.js",
   "scripts/test-owner-view.mjs",
   "mpi-shared.js",
@@ -57,6 +59,7 @@ for (const file of [
   run(`JavaScript syntax — ${file}`, process.execPath, ["--check", file]);
 }
 run("Event-based syncing and cross-device receipts", process.execPath, ["scripts/test-event-sync.mjs"], { quiet: false });
+run("On-demand office self-diagnosis", process.execPath, ["scripts/test-office-diagnostics.mjs"], { quiet: false });
 run("Owner-only read-only previews and field Tool Bag", process.execPath, ["scripts/test-owner-view.mjs"], { quiet: false });
 await assertText("Native Office does not wait for external map scripts", "native-web/admin.html", source => source.includes("./vendor/leaflet.css") && source.includes("./vendor/maplibre-gl.css") && source.includes("mpi-office-navigation.js") && !/<script[^>]+src="https:\/\/unpkg/.test(source), "Native Office still blocks on a remote map library");
 

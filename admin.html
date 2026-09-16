@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
+  <meta name="app-build" content="205">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Office">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -961,8 +962,8 @@
       .equipment-document-dialog .facts,.equipment-document-dialog .signatures { grid-template-columns:1fr; }
     }
   </style>
-  <link rel="stylesheet" href="./mpi-app-theme.css?build=204">
-  <link rel="stylesheet" href="./mpi-office-workbench.css?build=204">
+  <link rel="stylesheet" href="./mpi-app-theme.css?build=205">
+  <link rel="stylesheet" href="./mpi-office-workbench.css?build=205">
 </head>
 <body class="mpi-office-ui office-workbench">
   <script>if (new URLSearchParams(location.search).get("field") === "1") document.body.classList.add("field-equipment-console");</script>
@@ -992,10 +993,11 @@
     <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
     <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></symbol>
     <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><path d="m9 3-.6 2.4-2 .9-2.3-.6-2 3.5 1.7 1.8v2l-1.7 1.8 2 3.5 2.3-.6 2 .9L9 21h6l.6-2.4 2-.9 2.3.6 2-3.5-1.7-1.8v-2l1.7-1.8-2-3.5-2.3.6-2-.9L15 3Z"/><circle cx="12" cy="12" r="3"/></symbol>
   </svg>
   <header class="topbar">
     <div class="brand"><img src="./mpi-logo.png" alt=""><div><strong>Michigan Property Inspections</strong><span>Office Console</span></div></div>
-    <div class="top-actions"><button class="new-update-action" type="button" data-admin-view="publish"><svg class="app-icon"><use href="#icon-plus"></use></svg><span>Send update</span></button><a href="./?office=1#home" aria-label="Return to Inspector App"><svg class="app-icon"><use href="#icon-phone"></use></svg><span>Inspector app</span></a><button id="adminSignOut" type="button" hidden><svg class="app-icon"><use href="#icon-logout"></use></svg><span>Sign out</span></button></div>
+    <div class="top-actions"><button class="new-update-action" type="button" data-admin-view="publish"><svg class="app-icon"><use href="#icon-plus"></use></svg><span>Send update</span></button><a href="./?office=1#home" aria-label="Return to Inspector App"><svg class="app-icon"><use href="#icon-phone"></use></svg><span>Inspector app</span></a><button id="adminOpenSettings" data-admin-view="settings" type="button" aria-label="Open settings" hidden><svg class="app-icon"><use href="#icon-settings"></use></svg><span>Settings</span></button><button id="adminSignOut" type="button" hidden><svg class="app-icon"><use href="#icon-logout"></use></svg><span>Sign out</span></button></div>
   </header>
 
   <main class="shell">
@@ -1018,17 +1020,16 @@
         <div class="nav-heading">MPI workspace</div>
         <button class="active" type="button" data-admin-view="operations"><svg class="app-icon"><use href="#icon-grid"></use></svg><span>Operations</span></button>
         <button type="button" data-admin-view="requests"><svg class="app-icon"><use href="#icon-clipboard"></use></svg><span>Requests</span><span class="nav-count" id="adminRequestCount"></span></button>
-        <button type="button" data-admin-view="diagnostics"><svg class="app-icon"><use href="#icon-alert"></use></svg><span>App issues</span><span class="nav-count" id="adminDiagnosticCount"></span></button>
         <button type="button" data-admin-view="publish"><svg class="app-icon"><use href="#icon-send"></use></svg><span>Send to field</span></button>
         <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Messages</span><span class="nav-count" id="adminReplyCount"></span></button>
         <button type="button" data-admin-view="equipment"><svg class="app-icon"><use href="#icon-briefcase"></use></svg><span>Equipment</span></button>
         <button type="button" data-admin-view="people"><svg class="app-icon"><use href="#icon-users"></use></svg><span>Team</span></button>
-        <div class="office-nav-footer"><span>Michigan Property Inspections</span><small>Office Console · Build 204</small></div>
+        <div class="office-nav-footer"><span>Michigan Property Inspections</span><small>Office Console · Build 205</small></div>
       </nav>
 
       <section class="console-view active" data-admin-panel="operations">
         <div class="panel content-panel office-operations-content">
-          <section class="office-welcome" aria-label="Michigan Property Inspections"><div><span>Michigan Property Inspections</span><h2>Your field team, connected.</h2><p>One workspace. Every operative. Every working day.</p></div></section>
+          <section class="office-welcome" aria-label="Michigan Property Inspections"><img class="office-welcome-photo" src="./brand-assets/mpi-website-header.jpg" alt="" aria-hidden="true"><div><span>Michigan Property Inspections</span><h2>Your field team, connected.</h2><p>One workspace. Every operative. Every working day.</p></div></section>
       <div class="stat-grid" id="adminOperationsSummary">
         <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><span>Inspectors working</span></div><strong id="statWorking">0</strong></article>
         <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-briefcase"></use></svg></span><span>Jobs completed</span></div><strong id="statJobs">0</strong></article>
@@ -1090,14 +1091,17 @@
         </div>
       </section>
 
-      <section class="console-view" data-admin-panel="diagnostics">
-        <div class="panel content-panel">
-          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-alert"></use></svg></span><div><h2>App Issues / Diagnostics</h2><p>Field app checks sent by inspectors. Review the summary, investigate the technical detail when needed, and keep each report accountable through resolution.</p></div></div></div>
+      <section class="console-view" data-admin-panel="settings">
+        <div class="panel content-panel office-settings-content">
+          <section class="office-settings-card" aria-labelledby="officeSelfDiagnosisTitle"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-shield"></use></svg></span><div><h2 id="officeSelfDiagnosisTitle">Self-diagnosis</h2><p>Check this console’s connection, sign-in, messaging, notifications and saved data.</p></div></div></div><button class="primary" id="adminRunSelfDiagnosis" type="button">Run self-diagnosis</button><p class="office-diagnosis-note">Runs only when selected. No test messages are sent and no jobs, hours or history are reset.</p><section class="office-diagnosis-result" id="adminSelfDiagnosisResult" aria-live="polite" hidden></section></section>
+          <section class="office-settings-card" aria-labelledby="officeNotificationSettingsTitle"><div class="office-settings-row"><div><h2 id="officeNotificationSettingsTitle">Notifications</h2><p>Allow office messages and safety alerts on this device.</p></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>Enable office alerts</span></button></div></section>
+          <details class="office-settings-card office-diagnostic-history" id="adminDiagnosticHistory"><summary><div><h2>Diagnostic history</h2><p>Saved reports from field users and their review status.</p></div><span class="nav-count" id="adminDiagnosticCount"></span></summary>
           <div class="operations-toolbar">
             <div><p class="ops-eyebrow">Issue queue</p><p class="sync-note" id="adminDiagnosticSummary">No diagnostic reports have been submitted.</p></div>
             <div class="field"><label for="adminDiagnosticStatusFilter">Status</label><select id="adminDiagnosticStatusFilter"><option value="active">New &amp; investigating</option><option value="NEW">New</option><option value="INVESTIGATING">Investigating</option><option value="RESOLVED">Resolved</option><option value="all">All reports</option></select></div>
           </div>
           <div class="diagnostic-list" id="adminDiagnosticList"><div class="empty">No app diagnostics have been submitted.</div></div>
+          </details>
         </div>
       </section>
 
@@ -1192,13 +1196,14 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-office-navigation.js?build=204"></script>
-  <script src="./mpi-shared.js?build=204"></script>
-  <script src="./mpi-equipment-images.js?build=204"></script>
-  <script src="./mpi-equipment.js?build=204"></script>
-  <script src="./mpi-planning.js?build=204"></script>
-  <script src="./mpi-owner-view.js?build=204"></script>
-  <script src="./admin.js?build=204"></script>
-  <script src="./mpi-equipment-admin.js?build=204"></script>
+  <script src="./mpi-office-navigation.js?build=205"></script>
+  <script src="./mpi-shared.js?build=205"></script>
+  <script src="./mpi-equipment-images.js?build=205"></script>
+  <script src="./mpi-equipment.js?build=205"></script>
+  <script src="./mpi-planning.js?build=205"></script>
+  <script src="./mpi-owner-view.js?build=205"></script>
+  <script src="./mpi-office-diagnostics.js?build=205"></script>
+  <script src="./admin.js?build=205"></script>
+  <script src="./mpi-equipment-admin.js?build=205"></script>
 </body>
 </html>

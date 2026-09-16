@@ -63,6 +63,7 @@ try {
   ];
   profiles[0].fieldRequests = [{ id: "safety-glasses", type: "PPE or safety equipment", item: "Replacement safety glasses", details: "Please replace my scratched safety glasses.", status: "in-progress", requestedAt: `${today}T09:00:00-04:00`, assignedAdmin: profiles[1].email, managementNote: "Order placed; awaiting delivery.", reviewedAt: `${today}T10:00:00-04:00` }];
   profiles[1].fieldRequests = [{ id: "client-credit", type: "Office follow-up", item: "Sewer scope credit", details: "Confirm the client credit following the cancelled sewer scope.", status: "waiting", requestedAt: `${today}T11:00:00-04:00`, assignedAdmin: profiles[0].email, managementNote: "Waiting for confirmation from accounting.", reviewedAt: `${today}T11:05:00-04:00` }];
+  profiles[3].appDiagnostics = [{ id: "preserved-diagnostic", status: "INVESTIGATING", createdAt: `${today}T10:00:00-04:00`, summary: "Existing connection report" }];
   const messages = {
     directMessages: [{ id: "private-message", conversationId: "brooke__kevin", participantIds: ["brooke", "kevin"], senderUid: "kevin", senderName: "Kevin Cave", targetUid: "brooke", targetName: "Brooke", message: "Thank you. Please confirm when the replacement arrives.", createdAtClient: `${today}T14:00:00-04:00`, active: true, readBy: ["kevin", "brooke"] }],
     fieldMessages: [
@@ -123,6 +124,8 @@ try {
   for (const viewport of [{ width: 1280, height: 800 }, { width: 820, height: 900 }, { width: 393, height: 852 }]) {
     await page.setViewportSize(viewport);
     const views = await office.locator(".tabbar [data-admin-view]").evaluateAll(buttons => [...new Set(buttons.map(button => button.dataset.adminView))]);
+    assert.equal(views.length, 6, "App issues no longer occupies a main workspace section");
+    assert.equal(await office.locator("[data-admin-view='diagnostics']").count(), 0);
     for (const view of views) {
       await office.locator(`.tabbar [data-admin-view='${view}']`).click();
       assert.equal(await office.locator(".tabbar [aria-current='page']").count(), 1, "Exactly one current app section is announced");
@@ -220,6 +223,7 @@ try {
           snapshot = snapshot.replace(/<base[^>]*>/i, '<base href="https://mpi-layout.test/">');
           // Embed the unchanged local brand assets for this isolated visual capture.
           snapshot = snapshot.replaceAll("url('./brand-assets/mpi-website-header.jpg')", `url('data:image/jpeg;base64,${(await readFile(resolve(root,'brand-assets/mpi-website-header.jpg'))).toString('base64')}')`)
+            .replaceAll('src="./brand-assets/mpi-website-header.jpg"', `src="data:image/jpeg;base64,${(await readFile(resolve(root,'brand-assets/mpi-website-header.jpg'))).toString('base64')}"`)
             .replaceAll('src="./mpi-logo.png"', `src="data:image/png;base64,${(await readFile(resolve(root,'mpi-logo.png'))).toString('base64')}"`);
           await staticPage.setContent(snapshot);
           await staticPage.screenshot({ path: `/tmp/mpi-build200-visuals/workbench-${view}.png`, fullPage: true });
@@ -227,6 +231,18 @@ try {
         }
       }
     }
+    assert.equal(await office.locator("#adminOpenSettings").isVisible(), true, `Settings must remain accessible at ${viewport.width}px`);
+    await office.locator("#adminOpenSettings").click();
+    assert.equal(await office.locator("[data-admin-panel='settings']").isVisible(), true);
+    assert.equal(await office.locator("#adminOpenSettings").getAttribute("aria-current"), "page");
+    assert.equal(await office.locator(".tabbar [aria-current='page']").count(), 0);
+    assert.equal(await office.locator("#adminRunSelfDiagnosis").isDisabled(), true, "View As is read-only and cannot start live service checks");
+    assert.equal(await office.locator("#adminDiagnosticHistory[open]").count(), 0, "Diagnostic history is initially tucked away");
+    await office.locator("#adminDiagnosticHistory > summary").click();
+    assert.equal(await office.locator("[data-diagnostic-status]").count(), 1, "Existing saved reports remain reviewable");
+    await auditControls(office, `Office ${viewport.width} Settings`);
+    if (process.env.MPI_VISUAL_QA) await page.screenshot({ path: `/tmp/mpi-build200-visuals/office-${viewport.width}-settings.png` });
+    await office.locator("#adminDiagnosticHistory > summary").click();
   }
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.selectOption("#ownerViewUser", "jason");
