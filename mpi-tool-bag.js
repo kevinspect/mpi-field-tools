@@ -1,6 +1,7 @@
 (function () {
   "use strict";
   let user = null, profile = null, stop = null, loadedUid = "", records = [], returnHash = "#tools";
+  const officeSubscribers = new Set();
   const escape = value => String(value || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const css = document.createElement("style");
   css.textContent = '.tool-bag-overlay{position:fixed;inset:80px 0 88px;z-index:500;background:#f5f7fb;overflow:auto;padding:16px}.tool-bag-overlay[hidden]{display:none}.tool-bag-head{display:flex;gap:12px;align-items:center;position:sticky;top:-16px;background:#f5f7fb;padding:12px 0;z-index:1}.tool-bag-head h2{margin:0;flex:1;font:700 22px system-ui;color:#11186a}.tool-bag-overlay button,.tool-bag-overlay a{min-height:44px;padding:10px 14px;border-radius:12px;font:600 14px system-ui}.tool-bag-overlay button{background:#11186a;color:#fff;border:0}.tool-bag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}.tool-bag-card,.tool-bag-guide{background:white;border:1px solid #dbe3ee;border-radius:18px;padding:18px;color:#11186a}.tool-bag-card img{width:100%;height:130px;object-fit:contain}.tool-bag-card h3{font:700 17px system-ui}.tool-bag-card p,.tool-bag-guide li,.tool-bag-guide p{font:14px/1.6 system-ui;color:#586681}.tool-bag-card button{width:100%}.tool-bag-guide h3{font:700 20px system-ui}.tool-bag-guide h4{margin:22px 0 8px}.tool-bag-guide a{display:inline-block;color:#2768a9}.tool-bag-issue-frame{width:100%;height:calc(100dvh - 245px);border:0;border-radius:16px;background:white}';
@@ -72,8 +73,26 @@
   });
   window.addEventListener("hashchange", route);
   window.MPI_TOOL_BAG = Object.freeze({ setContext(nextUser, nextProfile) {
-    if (user?.uid !== nextUser?.uid) { stop?.(); stop = null; records = []; loadedUid = ""; content.replaceChildren(); }
-    user = nextUser; profile = nextProfile; issue.hidden = !canIssue(); if (issueShortcut) issueShortcut.hidden = !canIssue(); route();
+    const changed = user?.uid !== nextUser?.uid;
+    user = nextUser; profile = nextProfile;
+    officeSubscribers.forEach(notify => notify());
+    if (changed) { stop?.(); stop = null; records = []; loadedUid = ""; content.replaceChildren(); }
+    issue.hidden = !canIssue(); if (issueShortcut) issueShortcut.hidden = !canIssue();
+    route();
+  }, officeSession(childWindow) {
+    const trusted = () => canIssue() && location.hash === "#issue-equipment" && content.querySelector(".tool-bag-issue-frame")?.contentWindow === childWindow;
+    if (!trusted()) return null;
+    // The handover is another view of the SAME verified owner session, not an
+    // account switch. Do not start another Firebase instance or profile read.
+    return { shared: window.MPI_SHARED, watchSession(callback) {
+      const notify = () => callback(trusted() ? { user, profile, error: null } : { user: null, profile: null, error: null });
+      officeSubscribers.add(notify);
+      const stopAuth = window.MPI_SHARED.auth.onAuthStateChanged(notify);
+      const unsubscribe = () => { officeSubscribers.delete(notify); stopAuth(); };
+      childWindow.addEventListener("pagehide", unsubscribe, { once: true });
+      queueMicrotask(notify);
+      return unsubscribe;
+    } };
   } });
   document.querySelectorAll('a[href="#tool-guides"]').forEach(link => { link.href = "#tool-bag"; const label = link.querySelector("strong"); if (label) label.textContent = "My Tool Bag"; else link.textContent = "My Tool Bag & User Guides"; });
   route();

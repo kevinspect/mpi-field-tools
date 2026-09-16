@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdir } from "node:fs/promises";
 import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
 import { resolve, extname } from "node:path";
@@ -7,7 +7,7 @@ import { createRequire } from "node:module";
 import vm from "node:vm";
 
 const require = createRequire(import.meta.url);
-const { chromium } = require("/Users/kevincave/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright");
+const { chromium, webkit } = require("/Users/kevincave/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright");
 const root = fileURLToPath(new URL("../", import.meta.url));
 let nativeClick, assigned = "";
 vm.runInNewContext(await readFile(new URL("../mpi-office-navigation.js", import.meta.url), "utf8"), {
@@ -27,10 +27,23 @@ const server = createServer(async (request, response) => {
   } catch (_) { response.writeHead(404); response.end(); }
 });
 await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
-const browser = await chromium.launch({ executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: true });
+const browser = process.env.MPI_TEST_WEBKIT
+  ? await webkit.launch({ headless: true })
+  : await chromium.launch({ executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: true });
 const page = await browser.newPage();
 page.setDefaultTimeout(10000);
 const errors = [], external = [];
+async function auditControls(surface, label) {
+  const clipped = await surface.evaluate(() => [...document.querySelectorAll("button,a[role=button],.app-bottom-nav a")].filter(button => {
+    const box = button.getBoundingClientRect(), style = getComputedStyle(button);
+    return box.width && box.height && style.visibility !== "hidden" && (button.scrollWidth > button.clientWidth + 2 || button.scrollHeight > button.clientHeight + 2);
+  }).map(button => ({ id: button.id, text: button.textContent.trim().slice(0, 80), width: button.clientWidth, contentWidth: button.scrollWidth, height: button.clientHeight, contentHeight: button.scrollHeight })));
+  assert.deepEqual(clipped, [], `${label}: button labels must stay inside their controls`);
+  const overflow = await surface.evaluate(() => ({ width: innerWidth, pageWidth: document.documentElement.scrollWidth, items: [...document.querySelectorAll("body *")].filter(node => {
+    const box = node.getBoundingClientRect(); return box.width && box.right > innerWidth + 1;
+  }).slice(0, 8).map(node => ({ tag: node.tagName, id: node.id, class: node.className, right: node.getBoundingClientRect().right })) }));
+  assert.ok(overflow.pageWidth <= overflow.width + 1, `${label}: no horizontal page overflow: ${JSON.stringify(overflow)}`);
+}
 page.on("pageerror", error => errors.push(error.message));
 const sdk = `(() => {const q={where(){return this},orderBy(){return this},limit(){return this},onSnapshot(){return()=>{}},get:async()=>({docs:[]}),doc:()=>({get:async()=>({exists:false}),onSnapshot:()=>()=>{},set:async()=>{throw Error('Unexpected write')}})};const db={collection:()=>q,collectionGroup:()=>q,enablePersistence:async()=>{}};const auth={currentUser:null,setPersistence:async()=>{},onAuthStateChanged:cb=>{queueMicrotask(()=>cb(null));return()=>{}}};const af=()=>auth;af.Auth={Persistence:{LOCAL:'local'}};const ff=()=>db;ff.FieldValue={serverTimestamp:()=>new Date().toISOString(),arrayUnion:(...x)=>x};window.firebase={apps:[{}],app:()=>({auth:af,firestore:ff}),initializeApp(){},auth:af,firestore:ff};})();`;
 await page.route("https://**/*", route => {
@@ -60,6 +73,23 @@ try {
   await page.waitForFunction(() => document.querySelector(".owner-view-frame").srcdoc.includes("Cory Leese"));
   const frame = page.frames().find(frame => frame.parentFrame());
   await frame.waitForSelector(".app-bottom-nav");
+  for (const viewport of [{ width: 1280, height: 800 }, { width: 393, height: 852 }, { width: 430, height: 932 }]) {
+    await page.setViewportSize(viewport);
+    const dock = await frame.locator(".app-bottom-nav").boundingBox();
+    const toolbar = await page.locator(".owner-view-toolbar").boundingBox();
+    assert.ok(dock && dock.y >= toolbar.y + toolbar.height - 1 && dock.y + dock.height <= viewport.height + 1,
+      `Cory's menu must fit below the preview toolbar and inside ${viewport.width} × ${viewport.height}: ${JSON.stringify({ dock, toolbar })}`);
+    for (const route of ["home", "job-companion", "inbox", "field-tools", "training-center"]) {
+      await frame.locator(`.app-bottom-nav a[href='#${route}']`).click();
+      await frame.waitForFunction(route => location.hash === `#${route}`, route);
+      await auditControls(frame, `Cory ${viewport.width} ${route}`);
+      if (process.env.MPI_VISUAL_QA && [393, 1280].includes(viewport.width)) {
+        await mkdir("/tmp/mpi-build200-visuals", { recursive: true });
+        await page.screenshot({ path: `/tmp/mpi-build200-visuals/cory-${viewport.width}-${route}.png` });
+      }
+    }
+  }
+  await page.setViewportSize({ width: 1280, height: 800 });
   assert.equal(await frame.evaluate(() => window.MPI_COMPANY_SESSION.userId), "cory");
   assert.equal(await frame.evaluate(() => window.MPI_SHARED.auth.currentUser.uid), "cory");
   assert.equal(await page.evaluate(() => window.MPI_SHARED.auth.currentUser.uid), "kevin");
@@ -75,6 +105,16 @@ try {
   assert.equal(await office.locator("#commentUsagePanel").isVisible(), false);
   assert.equal(await office.locator("#adminAccountName").textContent(), "Brooke");
   assert.equal(await office.locator("#adminPublishButton").isDisabled(), true);
+  for (const viewport of [{ width: 1280, height: 800 }, { width: 393, height: 852 }]) {
+    await page.setViewportSize(viewport);
+    const views = await office.locator(".tabbar [data-admin-view]").evaluateAll(buttons => [...new Set(buttons.map(button => button.dataset.adminView))]);
+    for (const view of views) {
+      await office.locator(`.tabbar [data-admin-view='${view}']`).click();
+      await auditControls(office, `Office ${viewport.width} ${view}`);
+      if (process.env.MPI_VISUAL_QA) await page.screenshot({ path: `/tmp/mpi-build200-visuals/office-${viewport.width}-${view}.png` });
+    }
+  }
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.selectOption("#ownerViewUser", "jason");
   await page.waitForFunction(() => document.querySelector(".owner-view-frame").srcdoc.includes('"id":"jason"'));
   const subcontractor = page.frames().find(frame => frame.parentFrame());
@@ -94,12 +134,23 @@ try {
   await page.evaluate(profiles => {
     window.testProfiles = profiles;
     window.MPI_SHARED.auth.currentUser = { uid: "kevin", email: profiles[0].email };
-    const q = { where: () => q, onSnapshot: callback => { queueMicrotask(() => callback({ docs: [
-      { id: "kevin_gfci", data: () => ({ employeeId: "kevin", toolId: "gfci-tester", toolName: "Digital GFCI receptacle tester", status: "Issued", active: true }) },
-      { id: "kevin_pending", data: () => ({ employeeId: "kevin", toolId: "inspection-tote", toolName: "Pending tote", status: "Not Issued", active: true }) },
-      { id: "cory_gfci", data: () => ({ employeeId: "cory", toolId: "gfci-tester", toolName: "Cory's tool", status: "Issued", active: true }) }
-    ] })); return () => {}; } };
-    window.MPI_SHARED.db = { collection: () => q };
+    const fixtures = { users: profiles, equipmentAssignments: [
+      { id: "kevin_gfci", employeeId: "kevin", toolId: "gfci-tester", toolName: "Digital GFCI receptacle tester", status: "Issued", active: true },
+      { id: "kevin_pending", employeeId: "kevin", toolId: "inspection-tote", toolName: "Pending tote", status: "Not Issued", active: true },
+      ...window.MPI_EQUIPMENT.tools.map(tool => ({ id: `cory_${tool.id}`, employeeId: "cory", toolId: tool.id, toolName: tool.title, brandModel: tool.model, status: "Not Issued", active: true }))
+    ], equipmentAcknowledgments: [] };
+    window.testProfileReads = 0;
+    const query = name => {
+      const q = { where: () => q, orderBy: () => q, onSnapshot: (options, callback) => {
+        if (typeof options === "function") callback = options;
+        const snapshot = { docs: (fixtures[name] || []).map(item => ({ id: item.id, data: () => item })), metadata: { fromCache: false, hasPendingWrites: false } };
+        if (name === "equipmentAssignments") { window.testEquipmentNext = callback; window.testEquipmentSnapshot = snapshot; }
+        queueMicrotask(() => callback(snapshot));
+        return () => {};
+      }, doc: () => ({ get: () => { window.testProfileReads++; throw Error("A second office profile read must not be required"); } }) };
+      return q;
+    };
+    window.MPI_SHARED.db = { collection: query };
     window.MPI_TOOL_BAG.setContext(window.MPI_SHARED.auth.currentUser, profiles[0]);
     location.hash = "#tool-bag";
   }, profiles);
@@ -113,9 +164,47 @@ try {
   await page.click("#fieldIssueEquipment");
   await page.waitForSelector(".tool-bag-issue-frame");
   assert.match(await page.locator(".tool-bag-issue-frame").getAttribute("src"), /view=equipment&field=1/);
+  const handover = await page.locator(".tool-bag-issue-frame").contentFrame().locator("body").elementHandle().then(handle => handle.ownerFrame());
+  await handover.waitForSelector("#adminDashboard:not([hidden]) [data-admin-panel='equipment'].active");
+  assert.equal(await handover.locator("#adminAuthCard").isVisible(), false);
+  assert.equal(await handover.evaluate(() => window.MPI_SHARED.auth === parent.MPI_SHARED.auth && window.MPI_SHARED.db === parent.MPI_SHARED.db), true);
+  assert.equal(await page.evaluate(() => window.testProfileReads), 0);
+  assert.equal(await page.evaluate(() => window.MPI_TOOL_BAG.officeSession({})), null);
+  await handover.selectOption("#adminEquipmentEmployee", "cory");
+  for (const viewport of [{ width: 1280, height: 800 }, { width: 393, height: 852 }]) {
+    await page.setViewportSize(viewport);
+    await auditControls(handover, `Field equipment ${viewport.width}`);
+    if (process.env.MPI_VISUAL_QA) await page.screenshot({ path: `/tmp/mpi-build200-visuals/equipment-${viewport.width}.png` });
+  }
+  await handover.locator("[data-select-equipment-issue]").first().check();
+  await page.evaluate(() => window.testEquipmentNext({ ...window.testEquipmentSnapshot, metadata: { fromCache: true, hasPendingWrites: false } }));
+  assert.equal(await handover.locator("#adminCreateEquipmentAcknowledgment").isDisabled(), true);
+  await page.evaluate(() => window.testEquipmentNext(window.testEquipmentSnapshot));
+  assert.equal(await handover.locator("#adminCreateEquipmentAcknowledgment").isDisabled(), false, "Server metadata confirmation must unlock the handover without another sign-in or lost selection");
+  await handover.click("#adminCreateEquipmentAcknowledgment");
+  await handover.waitForSelector("#equipmentAcknowledgmentDialog[open]");
+  assert.equal(await handover.locator("[data-ack-item]").count(), 1);
+  assert.equal(await handover.locator("input[name='employeeName']").inputValue(), "Cory Leese");
+  assert.equal(await handover.locator("input[name='witnessName']").inputValue(), "Kevin Cave");
+  await auditControls(handover, "Phone handover acknowledgment");
+  await handover.locator("[data-ack-item] input[type=radio]").first().check();
+  await handover.click("#submitEquipmentAcknowledgment");
+  assert.match(await handover.locator("#equipmentAcknowledgmentStatus").textContent(), /employee signature is required/i);
+  await handover.locator("[data-close-equipment-dialog]").click();
+  await page.evaluate(() => {
+    const child = document.querySelector(".tool-bag-issue-frame").contentWindow;
+    window.testOfficeStop = window.MPI_TOOL_BAG.officeSession(child).watchSession(session => { window.testOfficeUid = session.user?.uid || ""; });
+  });
+  await page.waitForFunction(() => window.testOfficeUid === "kevin");
   await page.evaluate(profiles => { window.MPI_SHARED.auth.currentUser = { uid: "cory", email: profiles[3].email }; window.MPI_TOOL_BAG.setContext(window.MPI_SHARED.auth.currentUser, profiles[3]); location.hash = "#tool-bag"; }, profiles);
+  assert.equal(await page.evaluate(() => window.testOfficeUid), "");
+  await page.evaluate(() => window.testOfficeStop());
   assert.equal(await page.locator("#fieldIssueEquipment").isVisible(), false);
   assert.equal(await page.locator("a.home-tool-card[href='#issue-equipment']").isVisible(), false);
+  await page.evaluate(() => { const toast = document.getElementById("toast"); toast.textContent = "Equipment saved. Your handover records are ready."; toast.classList.add("show"); });
+  const toastBox = await page.locator("#toast").boundingBox();
+  const dockBox = await page.locator(".app-bottom-nav").boundingBox();
+  assert.ok(toastBox.y + toastBox.height < dockBox.y, "Status messages must not cover the bottom navigation");
   console.log("PASS User-bound Tool Bag filters unissued/other employees' items, opens model-specific guides, and owner field handover reuses Office equipment workflow.");
   await page.evaluate(() => { window.MPI_NATIVE = { isNative: true }; document.getElementById("mpiAdminReturn").hidden = false; localStorage.setItem("mpiTestWorkday", "preserved"); });
   await page.click("#mpiAdminReturn");

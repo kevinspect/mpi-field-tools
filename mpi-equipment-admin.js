@@ -34,6 +34,7 @@
   let unsubscribeAcknowledgments = null;
   let bootstrapInFlight = false;
   let assignmentSnapshotReady = false;
+  let equipmentLoadTimer = null;
   const selectedAssignmentIds = new Set();
 
   function escapeHtml(value) {
@@ -83,7 +84,7 @@
 
   function renderEquipmentSelectionState() {
     const selected = selectedPendingAssignments();
-    createAcknowledgment.disabled = selected.length === 0;
+    createAcknowledgment.disabled = !assignmentSnapshotReady || selected.length === 0;
     createAcknowledgment.textContent = selected.length ? `CREATE ACKNOWLEDGMENT (${selected.length})` : "CREATE ACKNOWLEDGMENT";
     if (selectionStatus) selectionStatus.textContent = selected.length
       ? `${selected.length} tool${selected.length === 1 ? "" : "s"} selected. The form will include only these items.`
@@ -407,7 +408,7 @@
     }
     const employeeSignature = employeePad.value();
     if (!employeeSignature) {
-      status.textContent = "Cory's employee signature is required before submission.";
+      status.textContent = "The employee signature is required before submission.";
       document.getElementById("equipmentEmployeeSignature").scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
@@ -511,24 +512,35 @@
 
   function startData() {
     unsubscribePeople?.(); unsubscribeAssignments?.(); unsubscribeAcknowledgments?.();
+    clearTimeout(equipmentLoadTimer);
     assignmentSnapshotReady = false;
+    renderEquipmentSelectionState();
+    const delayed = () => {
+      clearTimeout(equipmentLoadTimer);
+      if (selectionStatus) selectionStatus.textContent = "Equipment sync is delayed. Existing handovers are unchanged. Reopen Equipment when the company connection returns.";
+      if (!assignments.length) list.innerHTML = '<div class="empty">Equipment could not finish syncing. You can return to My Tool Bag without changing any records.</div>';
+    };
+    equipmentLoadTimer = setTimeout(delayed, 12000);
     unsubscribePeople = shared.db.collection("users").orderBy("name").onSnapshot(snapshot => {
       people = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       renderAll();
       ensureCoryAssignments();
-    });
-    unsubscribeAssignments = shared.db.collection("equipmentAssignments").onSnapshot(snapshot => {
+    }, delayed);
+    unsubscribeAssignments = shared.db.collection("equipmentAssignments").onSnapshot({ includeMetadataChanges: true }, snapshot => {
       assignments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       window.MPI_OWNER_VIEW?.setEquipmentData({ assignments, acknowledgments });
-      assignmentSnapshotReady = true;
+      // A partial/offline cache must not initialize or correct the stock list,
+      // or authorize a new handover as if every server record had been loaded.
+      assignmentSnapshotReady = !snapshot.metadata?.fromCache && !snapshot.metadata?.hasPendingWrites;
+      if (assignmentSnapshotReady) clearTimeout(equipmentLoadTimer);
       renderAll();
       ensureCoryAssignments();
-    }, error => { list.innerHTML = `<div class="empty">${escapeHtml(error?.message || "Equipment records could not be loaded.")}</div>`; });
+    }, () => { assignmentSnapshotReady = false; renderEquipmentSelectionState(); delayed(); });
     unsubscribeAcknowledgments = shared.db.collection("equipmentAcknowledgments").onSnapshot(snapshot => {
       acknowledgments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       window.MPI_OWNER_VIEW?.setEquipmentData({ assignments, acknowledgments });
       renderAll();
-    });
+    }, delayed);
   }
 
   summary.addEventListener("click", event => {
@@ -583,6 +595,7 @@
     currentUser = user;
     currentProfile = profile;
     if (!user || !profile || !shared.isAdminRole(profile)) {
+      clearTimeout(equipmentLoadTimer);
       unsubscribePeople?.(); unsubscribeAssignments?.(); unsubscribeAcknowledgments?.();
       people = []; assignments = []; acknowledgments = [];
       return;

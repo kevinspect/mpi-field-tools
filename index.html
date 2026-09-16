@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="199">
+  <meta name="app-build" content="200">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -2875,13 +2875,15 @@
 
     .toast {
       position: fixed;
-      z-index: 20;
+      z-index: 1002;
       left: 50%;
-      bottom: max(22px, env(safe-area-inset-bottom));
+      bottom: calc(92px + env(safe-area-inset-bottom));
+      max-width: calc(100% - 32px);
       padding: 11px 16px;
       color: #fff;
-      background: var(--ink);
-      border-radius: 999px;
+      background: #11186a;
+      border-radius: 14px;
+      text-align: center;
       box-shadow: 0 12px 30px rgba(0,0,0,.2);
       font-size: 12px;
       font-weight: 750;
@@ -8637,7 +8639,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 199</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 200</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8777,15 +8779,15 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=199"></script>
-  <script src="./mpi-shared.js?build=199"></script>
-  <script src="./mpi-equipment.js?build=199"></script>
-  <script src="./mpi-office-navigation.js?build=199"></script>
-  <script src="./mpi-owner-view.js?build=199"></script>
-  <script src="./mpi-tool-bag.js?build=199"></script>
-  <script src="./mpi-field-sync.js?build=199"></script>
-  <script src="./mpi-subcontractor.js?build=199"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=199"></script>
+  <script src="./mpi-native-bridge.js?build=200"></script>
+  <script src="./mpi-shared.js?build=200"></script>
+  <script src="./mpi-equipment.js?build=200"></script>
+  <script src="./mpi-office-navigation.js?build=200"></script>
+  <script src="./mpi-owner-view.js?build=200"></script>
+  <script src="./mpi-tool-bag.js?build=200"></script>
+  <script src="./mpi-field-sync.js?build=200"></script>
+  <script src="./mpi-subcontractor.js?build=200"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=200"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {

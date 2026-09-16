@@ -1,6 +1,23 @@
 (function () {
   "use strict";
 
+  // Field handover must retain the parent's already verified owner identity.
+  // WKWebView may not restore a second Firebase sign-in inside an iframe.
+  // No persisted role, query parameter or preview identity grants this access:
+  // the parent checks the exact live equipment frame and actual authenticated UID.
+  try {
+    if (!window.MPI_OWNER_PREVIEW && window.parent !== window && new URLSearchParams(window.location.search).get("field") === "1") {
+      const session = window.parent.MPI_TOOL_BAG?.officeSession(window);
+      if (session?.shared?.available) {
+        window.MPI_SHARED = Object.assign(Object.create(session.shared), {
+          watchSession: session.watchSession,
+          completeRedirectSignIn: async () => null
+        });
+        return;
+      }
+    }
+  } catch (_) { /* A standalone or untrusted frame must verify its own sign-in. */ }
+
   const MPI_FIREBASE_CONFIG = {
     apiKey: "AIzaSyBH37lEcQdExd0JRTRWCYlZHWNevIJrmPk",
     authDomain: "mpi-field-notifications.firebaseapp.com",

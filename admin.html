@@ -218,7 +218,8 @@
     .person-role-badge { display:inline-flex; min-height:21px; align-items:center; margin-bottom:6px; padding:3px 7px; color:#46506f; background:#edf1f7; border-radius:999px; font-size:8px; font-weight:950; letter-spacing:.06em; text-transform:uppercase; }
     .person-role-badge.subcontractor { color:#fff; background:var(--blue); }
     .person-role-badge.owner,.person-role-badge.admin { color:#6d4c00; background:#fff1c5; }
-    .person-controls { display:grid; grid-template-columns:minmax(130px,.7fr) minmax(130px,.7fr) minmax(220px,1.35fr) minmax(120px,.65fr) minmax(96px,.45fr); gap:8px; align-items:center; min-width:0; }
+    .person-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; align-items:center; min-width:0; }
+    .person-controls [data-person-end-address] { grid-column:1/-1; }
     .person-controls input,.person-controls select { width:100%; min-width:0; min-height:40px; padding:0 9px; border:1px solid var(--line); border-radius:9px; }
     .inspector-identity { display:grid; grid-template-columns:48px minmax(0,1fr); align-items:center; gap:11px; min-width:0; }
     .inspector-avatar { position:relative; display:grid; width:48px; height:48px; place-items:center; overflow:hidden; color:#fff; background:linear-gradient(145deg,#11186a,#2f75b5); border:2px solid #d5af4c; border-radius:50%; flex:0 0 auto; font-size:12px; font-weight:950; }
@@ -526,6 +527,9 @@
     .hero h1 { color:var(--navy); font-size:clamp(30px,4.2vw,44px); }
     .hero p:last-child { max-width:none; margin-top:8px; color:var(--muted); font-size:15px; }
     .account-pill { padding:9px 12px; border:1px solid var(--line); box-shadow:0 7px 22px rgba(17,24,106,.08); }
+    .account-pill { max-width:100%;min-width:0; }
+    .account-pill>div { min-width:0; }
+    .account-pill small { overflow-wrap:anywhere; }
     .panel { box-shadow:0 8px 24px rgba(17,24,106,.065); }
     .primary,.secondary { display:inline-flex; align-items:center; justify-content:center; gap:8px; }
     .dashboard { display:grid; grid-template-columns:216px minmax(0,1fr); gap:15px 18px; align-items:start; }
@@ -778,9 +782,15 @@
         box-shadow:0 15px 36px rgba(8,13,62,.3);
       }
       .tabbar button { min-height:57px; gap:3px; padding:4px 1px; border-radius:11px; font-size:8px; }
+      .tabbar button span:not(.nav-count) { min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.25; }
       .tabbar button .app-icon { width:18px; height:18px; }
       .tabbar button.active { color:var(--mpi-navy-900); background:#fff; box-shadow:none; }
       .tabbar button.active .app-icon { color:var(--mpi-blue-600); }
+      .live-location-head { display:grid;grid-template-columns:minmax(0,1fr); }
+      .live-location-head>div,.live-location-actions,.live-location-layout>div { min-width:0; }
+      .live-location-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .live-location-actions .secondary { white-space:normal;height:auto;padding:10px; }
+      .live-location-planner,.live-location-layout { grid-template-columns:minmax(0,1fr); }
       .content-panel { padding:15px; }
       .section-head { gap:9px; }
       .section-head h2 { font-size:21px; }
@@ -960,6 +970,8 @@
     .field-equipment-console .dashboard{display:block}
     .field-equipment-console .workspace-panel{margin:0}
     .field-equipment-console #adminEquipmentDashboard{padding:14px;box-shadow:none;border:0}
+    .field-equipment-console .equipment-toolbar-action{width:100%;min-width:0;justify-items:stretch}
+    .field-equipment-console .equipment-toolbar button{width:100%;height:auto;min-height:44px;white-space:normal;padding:12px;font-size:12px}
   </style>
   <svg class="icon-library" aria-hidden="true">
     <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
@@ -1163,13 +1175,13 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-office-navigation.js?build=199"></script>
-  <script src="./mpi-shared.js?build=199"></script>
-  <script src="./mpi-equipment-images.js?build=199"></script>
-  <script src="./mpi-equipment.js?build=199"></script>
-  <script src="./mpi-planning.js?build=199"></script>
-  <script src="./mpi-owner-view.js?build=199"></script>
-  <script src="./admin.js?build=199"></script>
-  <script src="./mpi-equipment-admin.js?build=199"></script>
+  <script src="./mpi-office-navigation.js?build=200"></script>
+  <script src="./mpi-shared.js?build=200"></script>
+  <script src="./mpi-equipment-images.js?build=200"></script>
+  <script src="./mpi-equipment.js?build=200"></script>
+  <script src="./mpi-planning.js?build=200"></script>
+  <script src="./mpi-owner-view.js?build=200"></script>
+  <script src="./admin.js?build=200"></script>
+  <script src="./mpi-equipment-admin.js?build=200"></script>
 </body>
 </html>
