@@ -53,6 +53,7 @@
   const liveLocationAllPlans = document.getElementById("adminLiveLocationAllPlans");
   const liveLocationShowAll = document.getElementById("adminLiveLocationShowAll");
   const liveRouteDate = document.getElementById("adminLiveRouteDate");
+  const liveJobSelect = document.getElementById("adminLiveJobSelect");
   const liveCandidateAddress = document.getElementById("adminLiveCandidateAddress");
   const liveCandidatePin = document.getElementById("adminLiveCandidatePin");
   const planningInspector = document.getElementById("adminPlanningInspector");
@@ -201,6 +202,7 @@
   let liveLocationPlanVisible = false;
   let liveLocationAllPlansVisible = false;
   let liveLocationRouteVisible = false;
+  let selectedMapJobValue = "";
   let liveLocationRouteLoading = false;
   let liveLocationRouteLastLoadedAt = 0;
   const historicalRoutePointCache = new Map();
@@ -1233,7 +1235,7 @@
     if (allPlansShowing) liveLocationAllPlansVisible = true;
     if (liveLocationAllPlans) {
       liveLocationAllPlans.disabled = !hasPeople || !hasSchedule || liveLocationRouteLoading;
-      liveLocationAllPlans.textContent = liveLocationRouteLoading ? "Loading…" : "Job plans";
+      liveLocationAllPlans.textContent = liveLocationRouteLoading ? "Loading…" : "Show all jobs";
       liveLocationAllPlans.setAttribute("aria-pressed", String(allPlansShowing));
     }
     if (liveLocationPlan) {
@@ -1247,8 +1249,8 @@
     }
     liveLocationShowAll?.setAttribute("aria-pressed", String(!liveLocationRouteVisible && !allPlansShowing && !liveLocationPlanVisible));
     if (!liveLocationRouteStatus) return;
-    if (!person && !liveLocationRouteStatus.dataset.result) liveLocationRouteStatus.textContent = "All inspectors selected. Choose a date, then show every inspector's jobs. Tap one inspector to see that person's plan or actual route.";
-    else if (person && !liveLocationRouteVisible && !liveLocationRouteLoading) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> selected. Choose a date, then show the Spectora job plan or actual route.`;
+    if (!person && !liveLocationRouteStatus.dataset.result) liveLocationRouteStatus.textContent = "Choose a date, then show all jobs or select one scheduled job.";
+    else if (person && !liveLocationRouteVisible && !liveLocationRouteLoading) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> selected. Choose one of their scheduled jobs above.`;
   }
 
   function routePerson({ preferSchedule = false } = {}) {
@@ -1271,6 +1273,7 @@
 
   function renderLiveLocationMap() {
     renderPlanningControls();
+    renderMapJobSelector();
     if (!liveLocationPanel || !liveLocationList) return;
     const values = liveLocationValues();
     const spectoraDays = liveLocationPeople().reduce((total, person) => total + (Array.isArray(person?.spectoraScheduleDays) ? person.spectoraScheduleDays.length : 0), 0);
@@ -1599,6 +1602,62 @@
     }).filter(plan => plan.jobs.length);
   }
 
+  function mapJobValue(personId, jobId) {
+    return JSON.stringify([String(personId || ""), String(jobId || "")]);
+  }
+
+  function parseMapJobValue(value) {
+    try {
+      const parsed = JSON.parse(String(value || ""));
+      return Array.isArray(parsed) && parsed.length === 2 ? { personId: String(parsed[0] || ""), jobId: String(parsed[1] || "") } : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function applyMapJobSelectionToPlanner(value = selectedMapJobValue) {
+    if (!planningInspector || !planningOrigin) return;
+    if (value === "all") {
+      renderPlanningControls();
+      planningInspector.value = "all";
+      renderPlanningControls();
+      planningOrigin.value = "auto";
+      return;
+    }
+    const selection = parseMapJobValue(value);
+    if (!selection) {
+      planningInspector.value = "";
+      renderPlanningControls();
+      return;
+    }
+    renderPlanningControls();
+    planningInspector.value = selection.personId;
+    renderPlanningControls();
+    if ([...planningOrigin.options].some(option => option.value === selection.jobId)) planningOrigin.value = selection.jobId;
+  }
+
+  function renderMapJobSelector() {
+    if (!liveJobSelect) return;
+    const selectedDate = liveRouteDate?.value || dateKey();
+    const plans = allSchedulePlansForDate(selectedDate);
+    const options = plans.map(plan => {
+      const label = canonicalTeamName(plan.person);
+      const jobs = plan.jobs.map((job, index) => {
+        const jobId = String(job.id || job.spectoraJobId || `${selectedDate}-${index + 1}`);
+        const value = mapJobValue(plan.person.id, jobId);
+        return `<option value="${escapeHtml(value)}">${escapeHtml(`${formatTime(job.scheduledStart)} · ${label} · ${scheduleAddress(job)}`)}</option>`;
+      }).join("");
+      return `<optgroup label="${escapeHtml(label)}">${jobs}</optgroup>`;
+    }).join("");
+    const markup = `<option value="">${plans.length ? "Choose a scheduled job" : "No synchronized jobs on this date"}</option><option value="all"${plans.length ? "" : " disabled"}>All jobs · compare inspectors</option>${options}`;
+    if (liveJobSelect.innerHTML !== markup) liveJobSelect.innerHTML = markup;
+    const values = [...liveJobSelect.options].map(option => option.value);
+    if (!values.includes(selectedMapJobValue)) selectedMapJobValue = "";
+    liveJobSelect.value = selectedMapJobValue;
+    applyMapJobSelectionToPlanner(selectedMapJobValue);
+    if (liveCandidatePin) liveCandidatePin.disabled = !selectedMapJobValue || liveLocationRouteLoading;
+  }
+
   function nextScheduleDateOnOrAfter(selectedDate = dateKey()) {
     const minimum = String(selectedDate || dateKey());
     return liveLocationPeople()
@@ -1830,7 +1889,13 @@
 
   planningInspector?.addEventListener("change", () => { planningOrigin.innerHTML = ""; invalidatePlanningResult(); renderPlanningControls(); });
   planningOrigin?.addEventListener("change", invalidatePlanningResult);
-  liveRouteDate?.addEventListener("change", () => { planningOrigin.innerHTML = ""; invalidatePlanningResult(); renderPlanningControls(); });
+  liveRouteDate?.addEventListener("change", () => {
+    selectedMapJobValue = "";
+    planningOrigin.innerHTML = "";
+    invalidatePlanningResult();
+    renderPlanningControls();
+    renderMapJobSelector();
+  });
   liveCandidateAddress?.addEventListener("input", () => {
     selectedPlanningAddress = null;
     invalidatePlanningResult();
@@ -1875,9 +1940,9 @@
     if (event.key === "Escape") { planningSuggestions.hidden = true; liveCandidateAddress.setAttribute("aria-expanded", "false"); }
   });
 
-  async function loadPlannedScheduleRoute() {
+  async function loadPlannedScheduleRoute({ force = false } = {}) {
     if (liveLocationRouteLoading) return;
-    if (liveLocationPlanVisible && !liveLocationAllPlansVisible) {
+    if (liveLocationPlanVisible && !liveLocationAllPlansVisible && !force) {
       hideHistoricalRoute({ keepSelection: true });
       return;
     }
@@ -1945,6 +2010,33 @@
     const map = ensureLiveLocationMap();
     frameAllLiveLocations(map);
     renderLiveLocationMap();
+  }
+
+  async function showSelectedMapJob() {
+    selectedMapJobValue = String(liveJobSelect?.value || "");
+    applyMapJobSelectionToPlanner(selectedMapJobValue);
+    invalidatePlanningResult();
+    if (!selectedMapJobValue) {
+      hideHistoricalRoute({ keepSelection: false });
+      return;
+    }
+    if (selectedMapJobValue === "all") {
+      await loadAllPlannedScheduleRoutes({ force: true });
+      selectedMapJobValue = "all";
+      renderMapJobSelector();
+      return;
+    }
+    const selection = parseMapJobValue(selectedMapJobValue);
+    if (!selection) return;
+    selectedLiveLocationPersonId = selection.personId;
+    await loadPlannedScheduleRoute({ force: true });
+    selectedMapJobValue = mapJobValue(selection.personId, selection.jobId);
+    renderMapJobSelector();
+    const stop = liveLocationPlannedStops.find(item => String(item.job?.id || item.job?.spectoraJobId || "") === selection.jobId);
+    if (!stop?.coordinates || !liveLocationMap) return;
+    liveLocationMap.setView([stop.coordinates.latitude, stop.coordinates.longitude], 14);
+    liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(scheduleAddress(stop.job))}</strong> · ${escapeHtml(canonicalTeamName(stop.person))} · ${escapeHtml(formatTime(stop.job.scheduledStart))}. This planning view is read only.`;
+    liveLocationRouteStatus.dataset.result = "success";
   }
 
   async function requestLiveLocationRefresh() {
@@ -4170,21 +4262,22 @@
     liveRouteDate.min = dateKey(routeDateMinimum);
     liveRouteDate.max = dateKey(routeDateMaximum);
     liveRouteDate.addEventListener("change", () => {
-      if (liveLocationRouteVisible) {
-        const showingPlan = liveLocationPlanVisible;
-        const showingAllPlans = liveLocationAllPlansVisible;
-        liveLocationRouteVisible = false;
-        liveLocationPlanVisible = false;
-        liveLocationAllPlansVisible = false;
-        liveLocationRouteLayer?.clearLayers();
-        (showingAllPlans ? loadAllPlannedScheduleRoutes({ force: true }) : showingPlan ? loadPlannedScheduleRoute() : loadHistoricalRoute()).catch(() => false);
-      }
+      showAllLiveLocations();
     });
   }
   liveLocationRefresh?.addEventListener("click", requestLiveLocationRefresh);
   liveLocationHistory?.addEventListener("click", () => loadHistoricalRoute().catch(() => false));
   liveLocationPlan?.addEventListener("click", () => loadPlannedScheduleRoute().catch(() => false));
-  liveLocationAllPlans?.addEventListener("click", () => loadAllPlannedScheduleRoutes().catch(() => false));
+  liveLocationAllPlans?.addEventListener("click", () => {
+    selectedMapJobValue = "all";
+    applyMapJobSelectionToPlanner(selectedMapJobValue);
+    renderMapJobSelector();
+    loadAllPlannedScheduleRoutes({ force: true }).then(() => {
+      selectedMapJobValue = "all";
+      renderMapJobSelector();
+    }).catch(() => false);
+  });
+  liveJobSelect?.addEventListener("change", () => showSelectedMapJob().catch(() => false));
   liveCandidatePin?.addEventListener("click", () => dropPlanningCandidatePin().catch(() => false));
   liveCandidateAddress?.addEventListener("keydown", event => {
     if (event.key !== "Enter") return;

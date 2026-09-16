@@ -1,5 +1,18 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 211 — Simplified Job Map and Clock-Off Safeguard
+
+- Replaced the Office map's permanent Live, Job Plans, Actual Route, Update Now, and duplicated inspector controls with one clear date, one scheduled-job selector, and one **Show all jobs** action.
+- Made the possible-job planner a visible, focused area that uses the selected scheduled job as its travel starting point; **All jobs** compares the field team without exposing additional technical controls.
+- Removed the duplicated field-status card list from the map while preserving live markers, synchronized read-only Spectora schedules, route calculations, and the Team status area.
+- Disabled Clock Off whenever any non-cancelled scheduled job remains and added a second action-time guard so stale screen state cannot bypass the rule.
+- Added an auditable repair for the September 16 premature Clock Off: the original 11:22 timestamp remains in correction history, duplicate recovery sessions are excluded from payroll totals, and Hours Worked is restored as one continuous session through later jobs.
+
+### Validation record
+
+- Verified the simplified map at desktop, tablet, and phone widths in Chromium and WebKit with no clipped controls or horizontal overflow.
+- Verified scheduled-job selection, all-job visibility, read-only planning, continuous paid time, one-time correction behavior, preserved audit data, and Clock Off blocking while later work remains.
+
 ## Build 194 — Correct Equipment Images and iPhone-Style Messages
 
 - Replaced the rechargeable light with the exact Milwaukee REDLITHIUM USB light shown by MPI and replaced the well kit with the correct Inspector Outlet Well Inspection Pump Flow Gauge Set.

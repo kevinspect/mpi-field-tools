@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="210">
+  <meta name="app-build" content="211">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Office">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -968,8 +968,8 @@
       .equipment-document-dialog .facts,.equipment-document-dialog .signatures { grid-template-columns:1fr; }
     }
   </style>
-  <link rel="stylesheet" href="./mpi-app-theme.css?build=210">
-  <link rel="stylesheet" href="./mpi-office-workbench.css?build=210">
+  <link rel="stylesheet" href="./mpi-app-theme.css?build=211">
+  <link rel="stylesheet" href="./mpi-office-workbench.css?build=211">
 </head>
 <body class="mpi-office-ui office-workbench">
   <script>if (new URLSearchParams(location.search).get("field") === "1") document.body.classList.add("field-equipment-console");</script>
@@ -1030,7 +1030,7 @@
         <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Messages</span><span class="nav-count" id="adminReplyCount"></span></button>
         <button type="button" data-admin-view="equipment"><svg class="app-icon"><use href="#icon-briefcase"></use></svg><span>Equipment</span></button>
         <button type="button" data-admin-view="people"><svg class="app-icon"><use href="#icon-users"></use></svg><span>Team</span></button>
-        <div class="office-nav-footer"><span>Michigan Property Inspections</span><small>Office Console · Build 210</small></div>
+        <div class="office-nav-footer"><span>Michigan Property Inspections</span><small>Office Console · Build 211</small></div>
       </nav>
 
       <section class="console-view active" data-admin-panel="operations">
@@ -1055,18 +1055,23 @@
           </section>
           <div class="office-operations-grid">
             <section class="live-location-panel" id="adminLiveLocationPanel" aria-labelledby="adminLiveLocationTitle">
-              <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Field map</h3><p>Live locations and read-only job planning.</p></div><button class="secondary" id="adminLiveLocationRefresh" type="button">Update now</button></div>
-              <div class="office-map-toolbar"><div class="office-map-modes" role="group" aria-label="Map views"><button class="secondary" id="adminLiveLocationShowAll" type="button">Live</button><button class="secondary" id="adminLiveLocationAllPlans" type="button" disabled>Job plans</button><button class="secondary" id="adminLiveLocationHistory" type="button" disabled>Actual route</button></div><input id="adminLiveRouteDate" type="date" aria-label="Map date"></div>
+              <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Job map</h3><p>Choose a date, view scheduled jobs, or plan a possible job.</p></div></div>
+              <div class="office-map-toolbar office-map-simple-controls">
+                <div class="field office-map-date"><label for="adminLiveRouteDate">Date</label><input id="adminLiveRouteDate" type="date" aria-label="Map date"></div>
+                <div class="field office-map-job"><label for="adminLiveJobSelect">Select a job</label><select id="adminLiveJobSelect"><option value="">Choose a scheduled job</option></select></div>
+                <button class="primary" id="adminLiveLocationAllPlans" type="button" disabled>Show all jobs</button>
+              </div>
+              <div class="office-map-legacy-controls" hidden aria-hidden="true"><button id="adminLiveLocationRefresh" type="button">Update now</button><button id="adminLiveLocationShowAll" type="button">Live</button><button id="adminLiveLocationHistory" type="button" disabled>Actual route</button><button id="adminLiveLocationPlan" type="button" disabled>Selected inspector’s jobs</button></div>
               <span class="live-location-status" id="adminLiveLocationStatus">Waiting for active field devices.</span>
               <div class="live-location-map" id="adminLiveLocationMap" aria-label="Map of current inspector locations and read-only job plans"></div>
-              <p class="live-location-route-note" id="adminLiveLocationRouteStatus">Choose a date and show all future jobs, or select an operative for an individual route.</p>
-              <div class="live-location-list" id="adminLiveLocationList"><div class="empty">Waiting for inspector locations.</div></div>
-              <details class="office-planning-drawer"><summary><svg class="app-icon"><use href="#icon-plus"></use></svg><span>Plan a possible job</span></summary>
-                <div class="office-planning-body"><div class="live-location-planner"><div class="planning-address-field"><input id="adminLiveCandidateAddress" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="adminPlanningSuggestions" maxlength="180" aria-label="Possible new job address" placeholder="Start typing a Michigan job address"><div class="planning-address-results" id="adminPlanningSuggestions" role="listbox" hidden></div></div><button class="primary" id="adminLiveCandidatePin" type="button">Calculate travel</button></div>
-                <div class="planning-controls"><div class="field"><label for="adminPlanningInspector">Planning inspector</label><select id="adminPlanningInspector"><option value="">Select an inspector</option><option value="all">All inspectors</option></select></div><div class="field"><label for="adminPlanningOrigin">From scheduled/current job</label><select id="adminPlanningOrigin"><option value="">Select an inspector first</option></select></div></div>
-                <button class="secondary" id="adminLiveLocationPlan" type="button" disabled>Selected inspector’s jobs</button>
+              <p class="live-location-route-note" id="adminLiveLocationRouteStatus">Choose a date, then show all jobs or select one scheduled job.</p>
+              <div class="live-location-list" id="adminLiveLocationList" hidden aria-hidden="true"><div class="empty">Waiting for inspector locations.</div></div>
+              <section class="office-planning-drawer" aria-labelledby="adminPlanningTitle">
+                <div class="office-planning-heading"><svg class="app-icon" aria-hidden="true"><use href="#icon-plus"></use></svg><div><h4 id="adminPlanningTitle">Plan a possible job</h4><p>Select a scheduled job above, then enter the possible Michigan address.</p></div></div>
+                <div class="office-planning-body"><div class="live-location-planner"><div class="planning-address-field"><input id="adminLiveCandidateAddress" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="adminPlanningSuggestions" maxlength="180" aria-label="Possible new job address" placeholder="Possible Michigan job address"><div class="planning-address-results" id="adminPlanningSuggestions" role="listbox" hidden></div></div><button class="primary" id="adminLiveCandidatePin" type="button" disabled>Calculate travel</button></div>
+                <div class="planning-controls" hidden aria-hidden="true"><div class="field"><label for="adminPlanningInspector">Planning inspector</label><select id="adminPlanningInspector"><option value="">Select an inspector</option><option value="all">All inspectors</option></select></div><div class="field"><label for="adminPlanningOrigin">From scheduled/current job</label><select id="adminPlanningOrigin"><option value="">Select an inspector first</option></select></div></div>
                 <p class="spectora-readonly-note" id="adminSpectoraScheduleStatus"><strong>SPECTORA · READ ONLY</strong><span>No appointments or calendar data can be changed here.</span></p></div>
-              </details>
+              </section>
               <section class="planning-result" id="adminPlanningResult" aria-live="polite" hidden></section>
             </section>
             <div class="team-overview office-live-team" id="adminTeamOverview"><div class="empty">No inspector activity has synced yet.</div></div>
@@ -1203,15 +1208,15 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-office-navigation.js?build=210"></script>
-  <script src="./mpi-shared.js?build=210"></script>
-  <script src="./mpi-equipment-images.js?build=210"></script>
-  <script src="./mpi-equipment.js?build=210"></script>
-  <script src="./mpi-planning.js?build=210"></script>
-  <script src="./mpi-owner-view.js?build=210"></script>
-  <script src="./mpi-office-setup-policy.js?build=210"></script>
-  <script src="./mpi-office-diagnostics.js?build=210"></script>
-  <script src="./admin.js?build=210"></script>
-  <script src="./mpi-equipment-admin.js?build=210"></script>
+  <script src="./mpi-office-navigation.js?build=211"></script>
+  <script src="./mpi-shared.js?build=211"></script>
+  <script src="./mpi-equipment-images.js?build=211"></script>
+  <script src="./mpi-equipment.js?build=211"></script>
+  <script src="./mpi-planning.js?build=211"></script>
+  <script src="./mpi-owner-view.js?build=211"></script>
+  <script src="./mpi-office-setup-policy.js?build=211"></script>
+  <script src="./mpi-office-diagnostics.js?build=211"></script>
+  <script src="./admin.js?build=211"></script>
+  <script src="./mpi-equipment-admin.js?build=211"></script>
 </body>
 </html>

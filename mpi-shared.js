@@ -226,7 +226,7 @@
   }
 
   function isPaidHoursSession(session, index, sessions, timeClock) {
-    if (!session?.clockedInAt) return false;
+    if (!session?.clockedInAt || session?.excludedFromPayroll === true) return false;
     const source = String(session.startSource || "").trim();
     if (["morning-readiness", "activity-only"].includes(source)) return false;
     if (source && source !== "legacy-manual-clock") return true;
@@ -267,6 +267,50 @@
     if (Number.isFinite(Number(value?.seconds))) return Number(value.seconds) * 1000 + Math.floor(Number(value.nanoseconds || 0) / 1000000);
     const parsed = new Date(value);
     return Number.isFinite(parsed.getTime()) ? parsed.getTime() : NaN;
+  }
+
+  function repairPrematureClockOff(timeClock, jobs = [], date = "") {
+    if (!timeClock || !Array.isArray(timeClock.sessions)) return { record: timeClock, repaired: false };
+    const record = { ...timeClock, sessions: timeClock.sessions.map(session => ({ ...session })) };
+    const repairs = Array.isArray(timeClock.prematureClockOffRepairs) ? timeClock.prematureClockOffRepairs.map(item => ({ ...item })) : [];
+    const repairedEnds = new Set(repairs.map(item => String(item.originalClockedOutAt || "")));
+    const paidIndexes = record.sessions.map((session, index) => isPaidHoursSession(session, index, record.sessions, record) ? index : -1).filter(index => index >= 0);
+    const scheduledStarts = (Array.isArray(jobs) ? jobs : [])
+      .filter(job => !/cancel|delete/i.test(String(job?.status || job?.completionStatus || "")))
+      .map(job => timestampMilliseconds(job?.scheduledStart || job?.start?.dateTime || job?.start?.date || ""))
+      .filter(value => Number.isFinite(value) && (!date || localDateKeyForTimestamp(value) === String(date)));
+    const candidateIndex = paidIndexes.find((index, paidPosition) => {
+      const session = record.sessions[index];
+      const clockedOut = timestampMilliseconds(session.clockedOutAt);
+      if (!Number.isFinite(clockedOut) || repairedEnds.has(String(session.clockedOutAt || ""))) return false;
+      const laterSession = paidIndexes.slice(paidPosition + 1).some(laterIndex => timestampMilliseconds(record.sessions[laterIndex].clockedInAt) > clockedOut);
+      const laterScheduledJob = scheduledStarts.some(start => start > clockedOut + 60 * 1000);
+      return laterSession || laterScheduledJob;
+    });
+    if (!Number.isInteger(candidateIndex)) return { record: timeClock, repaired: false };
+    const originalSession = { ...record.sessions[candidateIndex] };
+    const followingIndexes = paidIndexes.filter(index => index > candidateIndex);
+    const finalIndex = followingIndexes.at(-1);
+    const finalSession = Number.isInteger(finalIndex) ? record.sessions[finalIndex] : null;
+    const repair = {
+      id: `premature-clock-off-${String(originalSession.clockedOutAt || "").replace(/[^0-9]/g, "")}`,
+      correctedAt: new Date().toISOString(),
+      originalClockedOutAt: String(originalSession.clockedOutAt || ""),
+      originalClockOutLocation: originalSession.clockOutLocation || null,
+      reason: "Clock Off was selected while a later scheduled job remained",
+      mergedSessionStarts: followingIndexes.map(index => String(record.sessions[index]?.clockedInAt || "")).filter(Boolean)
+    };
+    record.sessions[candidateIndex].prematureClockOut = { ...repair };
+    record.sessions[candidateIndex].clockedOutAt = String(finalSession?.clockedOutAt || "");
+    record.sessions[candidateIndex].clockOutLocation = finalSession?.clockOutLocation || null;
+    followingIndexes.forEach(index => {
+      record.sessions[index].excludedFromPayroll = true;
+      record.sessions[index].excludedReason = "Merged into the continuous session restored after a premature Clock Off";
+      record.sessions[index].originalStartSource ||= String(record.sessions[index].startSource || "");
+    });
+    repairs.push(repair);
+    record.prematureClockOffRepairs = repairs.slice(-20);
+    return { record, repaired: true, repair };
   }
 
   function localDateKeyForTimestamp(value) {
@@ -1555,6 +1599,7 @@
     timeAdjustmentsForDate,
     latestTimeAdjustment,
     effectiveTimeClock,
+    repairPrematureClockOff,
     workedTimeAudit,
     workedMilliseconds,
     isCompanyEmail,
