@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="214">
+  <meta name="app-build" content="215">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Office">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -968,8 +968,8 @@
       .equipment-document-dialog .facts,.equipment-document-dialog .signatures { grid-template-columns:1fr; }
     }
   </style>
-  <link rel="stylesheet" href="./mpi-app-theme.css?build=214">
-  <link rel="stylesheet" href="./mpi-office-workbench.css?build=214">
+  <link rel="stylesheet" href="./mpi-app-theme.css?build=215">
+  <link rel="stylesheet" href="./mpi-office-workbench.css?build=215">
 </head>
 <body class="mpi-office-ui office-workbench">
   <script>if (new URLSearchParams(location.search).get("field") === "1") document.body.classList.add("field-equipment-console");</script>
@@ -1002,14 +1002,14 @@
     <symbol id="icon-settings" viewBox="0 0 24 24"><path d="m9 3-.6 2.4-2 .9-2.3-.6-2 3.5 1.7 1.8v2l-1.7 1.8 2 3.5 2.3-.6 2 .9L9 21h6l.6-2.4 2-.9 2.3.6 2-3.5-1.7-1.8v-2l1.7-1.8-2-3.5-2.3.6-2-.9L15 3Z"/><circle cx="12" cy="12" r="3"/></symbol>
   </svg>
   <header class="topbar">
-    <div class="brand"><img src="./mpi-logo.png" alt=""><div><strong>Michigan Property Inspections</strong><span>Office Console</span></div></div>
+    <button class="brand" id="adminBrandHome" type="button" aria-label="Return to Operations home"><img src="./mpi-logo.png" alt=""><span><strong>Michigan Property Inspections</strong><span>Office Console</span></span></button>
     <div class="top-actions"><button class="new-update-action" type="button" data-admin-view="publish"><svg class="app-icon"><use href="#icon-plus"></use></svg><span>Send update</span></button><a href="./?office=1#home" aria-label="Return to Inspector App"><svg class="app-icon"><use href="#icon-phone"></use></svg><span>Inspector app</span></a><button id="adminOpenSettings" data-admin-view="settings" type="button" aria-label="Open settings" hidden><svg class="app-icon"><use href="#icon-settings"></use></svg><span>Settings</span></button><button id="adminSignOut" type="button" hidden><svg class="app-icon"><use href="#icon-logout"></use></svg><span>Sign out</span></button></div>
   </header>
 
   <main class="shell">
     <section class="hero">
       <div><p class="eyebrow">Owner and office administration</p><h1 id="adminWorkspaceTitle">Office Console</h1><p id="adminWorkspaceSubtitle">The MPI team, connected.</p></div>
-      <div class="account-pill" id="adminAccountPill" hidden><span class="account-avatar" id="adminInitial">K</span><div><strong id="adminAccountName">Owner</strong><small id="adminAccountEmail"></small></div></div>
+      <button class="account-pill" id="adminAccountPill" type="button" aria-label="Open my profile" hidden><span class="account-avatar" id="adminInitial">K</span><span><strong id="adminAccountName">Owner</strong><small id="adminAccountEmail"></small></span></button>
     </section>
 
     <section class="panel auth-card" id="adminAuthCard">
@@ -1030,7 +1030,7 @@
         <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Messages</span><span class="nav-count" id="adminReplyCount"></span></button>
         <button type="button" data-admin-view="equipment"><svg class="app-icon"><use href="#icon-briefcase"></use></svg><span>Equipment</span></button>
         <button type="button" data-admin-view="people"><svg class="app-icon"><use href="#icon-users"></use></svg><span>Team</span></button>
-        <div class="office-nav-footer"><span>Michigan Property Inspections</span><small>Office Console · Build 214</small></div>
+        <div class="office-nav-footer"><span>Michigan Property Inspections</span><small>Office Console · Build 215</small></div>
       </nav>
 
       <section class="console-view active" data-admin-panel="operations">
@@ -1209,15 +1209,15 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-office-navigation.js?build=214"></script>
-  <script src="./mpi-shared.js?build=214"></script>
-  <script src="./mpi-equipment-images.js?build=214"></script>
-  <script src="./mpi-equipment.js?build=214"></script>
-  <script src="./mpi-planning.js?build=214"></script>
-  <script src="./mpi-owner-view.js?build=214"></script>
-  <script src="./mpi-office-setup-policy.js?build=214"></script>
-  <script src="./mpi-office-diagnostics.js?build=214"></script>
-  <script src="./admin.js?build=214"></script>
-  <script src="./mpi-equipment-admin.js?build=214"></script>
+  <script src="./mpi-office-navigation.js?build=215"></script>
+  <script src="./mpi-shared.js?build=215"></script>
+  <script src="./mpi-equipment-images.js?build=215"></script>
+  <script src="./mpi-equipment.js?build=215"></script>
+  <script src="./mpi-planning.js?build=215"></script>
+  <script src="./mpi-owner-view.js?build=215"></script>
+  <script src="./mpi-office-setup-policy.js?build=215"></script>
+  <script src="./mpi-office-diagnostics.js?build=215"></script>
+  <script src="./admin.js?build=215"></script>
+  <script src="./mpi-equipment-admin.js?build=215"></script>
 </body>
 </html>

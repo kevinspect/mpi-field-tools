@@ -54,6 +54,7 @@ body.mpi-office-ui .topbar,
 body.mpi-field-ui .topbar { background: var(--ui-navy); border-bottom: 1px solid #c5a14a; box-shadow: 0 2px 8px #101b5210; }
 body.mpi-office-ui .topbar { min-height: 66px; padding: 9px 24px; background: linear-gradient(115deg, #101653, #11186a 62%, #202977); }
 body.mpi-office-ui .brand { gap: 10px; }
+body.mpi-office-ui button.brand { padding: 0; color: #fff; background: transparent; border: 0; text-align: left; cursor: pointer; }
 body.mpi-office-ui .brand img { width: 42px; height: 42px; }
 body.mpi-office-ui .brand strong { font-size: 14px; font-weight: 650; letter-spacing: -.02em; }
 body.mpi-office-ui .brand span { font-size: 10px; letter-spacing: .08em; font-weight: 600; }
@@ -68,6 +69,8 @@ body.mpi-office-ui .hero .eyebrow { display: none; }
 body.mpi-office-ui .hero h1 { font-size: 32px; line-height: 1.15; letter-spacing: -.045em; font-weight: 700; color: var(--ui-navy); }
 body.mpi-office-ui .hero p:last-child { margin-top: 7px; color: var(--ui-secondary); font-size: 13px; }
 body.mpi-office-ui .account-pill { padding: 7px 11px 7px 7px; border-radius: 999px; box-shadow: 0 2px 8px #11186a04; border: 1px solid var(--ui-line); background: #ffffffb8; }
+body.mpi-office-ui button.account-pill { color: inherit; text-align: left; cursor: pointer; }
+body.mpi-office-ui button.account-pill > span:last-child { min-width: 0; }
 body.mpi-office-ui .account-pill strong { font-size: 13px; font-weight: 650; }
 body.mpi-office-ui .account-pill small { font-size: 11px; }
 body.mpi-office-ui .dashboard { grid-template-columns: 204px minmax(0,1fr); gap: 18px 24px; }

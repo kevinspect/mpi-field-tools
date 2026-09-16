@@ -1,5 +1,17 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 215 — Reliable Header Navigation
+
+- Makes the MPI logo an explicit Home/Operations control in both the installed field app and Office Console instead of relying only on browser hash behavior.
+- Restores the top-right profile control: the field app opens My Profile, while the Office Console opens the signed-in administrator's Team profile.
+- Keeps the same controls working inside the native iPhone shell, normal browser, and owner read-only preview.
+- Adds an unobtrusive **App up to date** status and a blocking required-update screen when a newer published build is detected.
+- Corrects the iPhone notification status so the free development build reports **Local alerts ready** instead of repeatedly retrying an APNs connection that requires TestFlight/App Store signing.
+
+### Validation record
+
+- Verified the logo returns to Home/Operations and the profile control opens the correct profile surface at phone and desktop sizes.
+
 ## Build 214 — Resolved Attention, Clock State and Message Polish
 
 - Makes the Office **Needs attention** total open the exact review items and clear as location, workday, safety, or diagnostic items are resolved.

@@ -8,6 +8,7 @@
   const signInButton = document.getElementById("adminSignIn");
   const signOutButton = document.getElementById("adminSignOut");
   const settingsButton = document.getElementById("adminOpenSettings");
+  const brandHomeButton = document.getElementById("adminBrandHome");
   const inspectorAppLink = document.querySelector('a[aria-label="Return to Inspector App"]');
   const authStatus = document.getElementById("adminAuthStatus");
   document.getElementById("adminRetryConnection")?.addEventListener("click", () => window.location.reload());
@@ -4321,6 +4322,23 @@
   window.MPI_OFFICE_SETUP = Object.freeze({ show: showOfficeSetupIntro, verify: verifyOfficeSetup, environment: officeSetupEnvironment });
 
   tabButtons.forEach(button => button.addEventListener("click", () => showView(button.dataset.adminView)));
+  brandHomeButton?.addEventListener("click", () => {
+    showView("operations");
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  });
+  accountPill?.addEventListener("click", () => {
+    if (!currentUser) return;
+    showView("people");
+    document.querySelector('[data-office-team-tab="accounts"]')?.click();
+    window.requestAnimationFrame(() => {
+      const card = [...peopleList.querySelectorAll("[data-person-id]")].find(item => item.dataset.personId === currentUser.uid);
+      if (!card) return;
+      card.open = true;
+      const profile = card.querySelector(".person-profile-details");
+      if (profile) profile.open = true;
+      card.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
   document.addEventListener("pointerdown", event => {
     const article = event.target.closest("[data-react-message]");
     if (!article || event.target.closest("button,a,input,textarea")) return;

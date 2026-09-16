@@ -85,6 +85,11 @@ try {
   const frame = await (await page.locator(".owner-view-frame").elementHandle()).contentFrame();
   await frame.waitForFunction(() => window.MPI_COMPANY_SESSION?.userId === "cory");
   await frame.waitForSelector(".app-bottom-nav");
+  await frame.locator(".brand").click();
+  await frame.waitForFunction(() => location.hash === "#home" && !document.querySelector("#home").hidden);
+  await frame.locator("#topProfileLink").click();
+  await frame.waitForFunction(() => location.hash === "#profile" && !document.querySelector("#profile").hidden && !document.querySelector("#mpiProfileCard").hidden);
+  console.log("PASS Field header logo opens Home and the profile avatar opens My Profile.");
   for (const viewport of [{ width: 1280, height: 800 }, { width: 393, height: 852 }, { width: 430, height: 932 }]) {
     await page.setViewportSize(viewport);
     const dock = await frame.locator(".app-bottom-nav").boundingBox();
@@ -121,6 +126,13 @@ try {
   assert.equal(await office.locator("#commentUsagePanel").isVisible(), false);
   assert.equal(await office.locator("#adminAccountName").textContent(), "Brooke");
   assert.equal(await office.locator("#adminPublishButton").isDisabled(), true);
+  await office.locator("[data-admin-view='requests']").click();
+  await office.locator("#adminBrandHome").click();
+  assert.equal(await office.locator("[data-admin-panel='operations']").evaluate(node => node.classList.contains("active")), true);
+  await office.locator("#adminAccountPill").click();
+  assert.equal(await office.locator("[data-admin-panel='people']").evaluate(node => node.classList.contains("active")), true);
+  await office.waitForSelector("[data-person-id='brooke'][open]");
+  console.log("PASS Office header logo opens Operations and the account control opens the signed-in profile.");
   for (const viewport of [{ width: 1280, height: 800 }, { width: 820, height: 900 }, { width: 393, height: 852 }]) {
     await page.setViewportSize(viewport);
     const views = await office.locator(".tabbar [data-admin-view]").evaluateAll(buttons => [...new Set(buttons.map(button => button.dataset.adminView))]);

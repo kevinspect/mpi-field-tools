@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="214">
+  <meta name="app-build" content="215">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -491,6 +491,9 @@
     .home-version-row button { min-height: 42px; padding: 9px 12px; color: #fff; background: #11186a; border: 2px solid #fff; border-radius: 9px; font-size: 10.5px; font-weight: 900; box-shadow: 0 3px 10px rgba(0,0,0,.22); }
     .home-version-row button:hover,
     .home-version-row button:focus-visible { background: #254f9a; outline: 3px solid rgba(255,255,255,.28); outline-offset: 2px; }
+    .home-version-state { color: #2d8667; font-style: normal; font-weight: 850; }
+    .home-version-state.checking { color: inherit; font-weight: 700; }
+    .home-version-state.update-required { color: #a7352d; }
 
     .home-search {
       position: relative;
@@ -513,26 +516,30 @@
 
     .app-update-notice {
       position: fixed;
-      z-index: 30;
-      right: max(18px, env(safe-area-inset-right));
-      bottom: max(18px, env(safe-area-inset-bottom));
+      z-index: 1000;
+      inset: 0;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 360px);
       align-items: center;
-      gap: 16px;
-      width: min(430px, calc(100vw - 36px));
-      padding: 16px;
+      justify-content: center;
+      align-content: center;
+      gap: 18px;
+      width: auto;
+      padding: max(28px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
       color: #fff;
-      background: #11186a;
-      border: 1px solid rgba(180,135,32,.85);
-      border-radius: 14px;
-      box-shadow: 0 18px 50px rgba(17,24,106,.34);
+      background: rgba(5, 9, 58, .92);
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      text-align: center;
+      backdrop-filter: blur(12px);
     }
-    .app-update-notice strong { display: block; font-size: 13px; }
-    .app-update-notice span { display: block; margin-top: 4px; color: rgba(255,255,255,.72); font-size: 10.5px; line-height: 1.4; }
-    .app-update-notice button { min-height: 44px; padding: 9px 13px; color: #fff; background: #11186a; border: 2px solid #fff; border-radius: 9px; font-size: 10.5px; font-weight: 950; }
+    .app-update-notice > div { padding: 24px 22px; background: #11186a; border: 1px solid rgba(180,135,32,.85); border-radius: 20px; box-shadow: 0 22px 60px rgba(0,0,0,.35); }
+    .app-update-notice strong { display: block; font-size: 20px; line-height: 1.2; }
+    .app-update-notice span { display: block; margin-top: 9px; color: rgba(255,255,255,.76); font-size: 12px; line-height: 1.5; }
+    .app-update-notice button { min-height: 52px; padding: 11px 18px; color: #11186a; background: #d1a33a; border: 0; border-radius: 13px; font-size: 12px; font-weight: 950; box-shadow: 0 8px 22px rgba(0,0,0,.22); }
     .app-update-notice button:hover,
-    .app-update-notice button:focus-visible { background: #254f9a; outline: 3px solid rgba(255,255,255,.28); outline-offset: 2px; }
+    .app-update-notice button:focus-visible { background: #e0b74b; outline: 3px solid rgba(255,255,255,.28); outline-offset: 2px; }
     .app-update-notice button:disabled { color: rgba(255,255,255,.62); background: #4f557d; border-color: rgba(255,255,255,.42); cursor: not-allowed; }
 
     .hero {
@@ -5915,7 +5922,7 @@
     .field-inbox-thread-files { padding-left:43px; color:#8e8e93; font-size:7.5px; }
     .field-compose-card { border-radius:18px; }
   </style>
-  <link rel="stylesheet" href="./mpi-app-theme.css?build=214">
+  <link rel="stylesheet" href="./mpi-app-theme.css?build=215">
 </head>
 <body class="mpi-field-ui">
   <section class="mpi-access-choice" id="mpiAccessChoice" role="dialog" aria-modal="true" aria-labelledby="mpiAccessChoiceTitle" hidden>
@@ -6003,7 +6010,7 @@
       <a href="#comment-builder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4Z"/><path d="M8 8h8M8 12h5"/></svg><span><strong>Comment Creator</strong><small>Build a defect comment</small></span></a>
     </nav>
     <a class="home-office-link" id="officeConsoleCard" href="./admin.html" hidden>Open Office Console</a>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">197</strong></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">215</strong> · <em class="home-version-state checking" id="homeAppVersionStatus">Checking…</em></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -8640,7 +8647,8 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 214</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 215</span></div>
+          <div class="settings-status"><strong>App version</strong><span id="settingsAppVersionStatus">Checking…</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8663,7 +8671,7 @@
             <div class="phone-setup-list">
               <div class="phone-setup-item"><div><strong>MPI app added to the Home Screen</strong><small>Open from the MPI icon for the full app and iPhone notifications.</small></div><span class="phone-setup-detected" id="phoneSetupInstalled">Check needed</span></div>
               <div class="phone-setup-item"><div><strong>Offline access saved</strong><small>Reconnect once and open the app so the current build can be stored on this phone.</small></div><span class="phone-setup-detected" id="phoneSetupOffline">Check needed</span></div>
-              <div class="phone-setup-item"><div><strong>MPI notifications enabled</strong><small>Company push messages can arrive when the app is closed.</small></div><span class="phone-setup-detected" id="phoneSetupNotifications">Check needed</span></div>
+              <div class="phone-setup-item"><div><strong>MPI phone alerts enabled</strong><small>Local alarms work in the test app. Remote company push activates with the signed TestFlight/App Store release.</small></div><span class="phone-setup-detected" id="phoneSetupNotifications">Check needed</span></div>
               <div class="phone-setup-item"><div><strong>Inspector name remembered</strong><small>Open My Day once so MPI forms can use the correct inspector name.</small></div><span class="phone-setup-detected" id="phoneSetupInspector">Check needed</span></div>
             </div>
             <div class="phone-setup-actions">
@@ -8771,8 +8779,8 @@
   </nav>
 
   <div class="toast" id="toast" role="status">Copied</div>
-  <aside class="app-update-notice" id="appUpdateNotice" role="status" aria-live="polite" hidden>
-    <div><strong>A newer MPI Field Tools update is ready.</strong><span id="appUpdateMessage">Reload when you have finished any unsent form.</span></div>
+  <aside class="app-update-notice" id="appUpdateNotice" role="dialog" aria-modal="true" aria-labelledby="appUpdateTitle" aria-describedby="appUpdateMessage" hidden>
+    <div><strong id="appUpdateTitle">MPI Field Tools must be updated.</strong><span id="appUpdateMessage">Load the required update to continue.</span></div>
     <button id="loadAppUpdateBtn" type="button">Load update</button>
   </aside>
 
@@ -8780,16 +8788,16 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=214"></script>
-  <script src="./mpi-shared.js?build=214"></script>
-  <script src="./mpi-equipment.js?build=214"></script>
-  <script src="./mpi-office-navigation.js?build=214"></script>
-  <script src="./mpi-owner-view.js?build=214"></script>
-  <script src="./mpi-tool-bag.js?build=214"></script>
-  <script src="./mpi-field-sync.js?build=214"></script>
-  <script src="./mpi-subcontractor.js?build=214"></script>
-  <script src="./mpi-comment-policy.js?build=214"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=214"></script>
+  <script src="./mpi-native-bridge.js?build=215"></script>
+  <script src="./mpi-shared.js?build=215"></script>
+  <script src="./mpi-equipment.js?build=215"></script>
+  <script src="./mpi-office-navigation.js?build=215"></script>
+  <script src="./mpi-owner-view.js?build=215"></script>
+  <script src="./mpi-tool-bag.js?build=215"></script>
+  <script src="./mpi-field-sync.js?build=215"></script>
+  <script src="./mpi-subcontractor.js?build=215"></script>
+  <script src="./mpi-comment-policy.js?build=215"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=215"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -8913,6 +8921,19 @@
         if (resetScroll && screenChanged) window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       }
 
+      function openHeaderRoute(event, fallbackRoute) {
+        event.preventDefault();
+        const link = event.currentTarget;
+        const destination = String(link?.getAttribute?.("href") || fallbackRoute || "#home");
+        const route = destination.startsWith("#") ? destination : fallbackRoute;
+        if (!route) return;
+        if (window.location.hash === route) renderAppScreen({ resetScroll: true });
+        else window.location.hash = route;
+      }
+
+      document.querySelector(".topbar > .brand")?.addEventListener("click", event => openHeaderRoute(event, "#home"));
+      document.getElementById("topProfileLink")?.addEventListener("click", event => openHeaderRoute(event, "#profile"));
+
       window.addEventListener("hashchange", () => renderAppScreen({ resetScroll: true }));
       window.addEventListener("mpi-company-session-ready", () => renderAppScreen({ resetScroll: false }));
       renderAppScreen({ resetScroll: false });
@@ -9010,92 +9031,9 @@
             "Siding and Exterior Trim",
             "Exterior Wall Flashing",
             "Brick and Masonry Veneer",
-            "Exterior Penetrations and Utility Openings",
-            "Eaves, Soffits and Fascia",
-            "Decks, Balconies, Porches and Steps",
-            "Exterior Faucets and Hose Bibbs",
-            "Exterior Doors",
-            "Exterior Windows",
-            "Window Wells",
-            "Service-Entrance Conductors",
-            "Electric Meter and Base",
-            "Main Fuel Supply Shut-Off Valve",
-            "Gutters and Downspouts",
-            "Walkways and Driveways",
-            "GFCIs and Electrical",
-            "Site, Grading, Drainage and Vegetation",
-            "AC Condenser",
-            "Exhaust Hoods",
-            "Split A/C Unit",
-            "Fence"
-          ]
-        },
-        {
-          "section": "Roof",
-          "items": [
-            "General",
-            "Roof Coverings - General",
-            "Asphalt Shingles",
-            "Metal Roofing",
-            "Low-Slope and Membrane Roofing",
-            "Flue Gas Vent Pipes",
-            "Chimneys and Roof Penetrations",
-            "Plumbing Vent Pipes",
-            "Skylight",
-            "Gutters and Downspouts"
-          ]
-        },
-        {
-          "section": "Entryway, Stairs and Landing",
-          "items": [
-            "General",
-            "Windows",
-            "Doors",
-            "Floors, Walls and Ceilings",
-            "HVAC Supply Registers",
-            "Thermostat Controls",
-            "Lighting, Switches and Receptacles",
-            "OPTIONAL - Fireplace (Wood-Burning or Gas)"
-          ]
-        },
-        {
-          "section": "Living Room",
-          "items": [
-     
-... 736839 bytes omitted ...
-endAppDiagnosticBtn.hidden = false;
-      }
-
-      async function runAppDiagnosticsCore() {
-        if (!runAppDiagnosticsBtn) return;
-        runAppDiagnosticsBtn.disabled = true;
-        runAppDiagnosticsBtn.textContent = "CHECKING APP…";
-        sendAppDiagnosticBtn.disabled = false;
-        sendAppDiagnosticBtn.textContent = "SEND DIAGNOSTIC TO OFFICE";
-        sendAppDiagnosticBtn.hidden = true;
-        appDiagnosticsStatus.textContent = "Checking connection, account, job workflow, Hours Worked, location, notifications, and saved field data…";
-        appDiagnosticsResult.hidden = true;
-        const issues = [];
-        const repairs = [];
-        const addIssue = (code, label, detail = "") => issues.push({ code, label, detail: String(detail || "").slice(0, 240) });
-        const online = navigator.onLine;
-        const server = await appDiagnosticServerStatus();
-        if (!online) addIssue("offline", "This phone is currently offline.");
-        else if (server.status !== "connected") addIssue("server", "The app server could not be reached.", server.status);
-        if (server.build && server.build > CURRENT_APP_BUILD) addIssue("update", `A newer app build is available (Build ${server.build}).`);
-
-        const session = window.MPI_COMPANY_SESSION || null;
-        if (!session?.userId) addIssue("authentication", "The MPI company account is not signed in.");
-        const messaging = window.MPI_SHARED?.messagingHealth ? await window.MPI_SHARED.messagingHealth() : { status: "failed", backend: "unavailable" };
-        if (messaging.status !== "healthy") addIssue("messaging", "MESSAGING – FAILED", messaging.referenceId || `${messaging.backend} · listener ${messaging.listener || "unavailable"} · ${messaging.pending || 0} pending`);
-
-        let sync = appDiagnosticSyncCounts();
-        if ((sync.pending || sync.failed) && online && session?.userId) {
-          const synced = await syncWorkflowOperationsNow();
-          if (synced) repairs.push("Pending field records synchronized with the Office Console.");
-          sync = appDiagnosticSyncCounts();
-        }
-        if (sync.pending) addIssue("pending-sync", `${sync.pending} saved field ${sync.pending === 1 ? "record is" : "records are"} waiting to synchronize.`);
+            "Exterior Pen
+... 741060 bytes omitted ...
+"records are"} waiting to synchronize.`);
         if (sync.failed) addIssue("failed-sync", `${sync.failed} field ${sync.failed === 1 ? "record has" : "records have"} a failed synchronization status.`);
 
         const readiness = workflowReadinessRecord();
@@ -15582,16 +15520,13 @@ endAppDiagnosticBtn.hidden = false;
       }
 
       async function checkForAppUpdate(manual = false) {
-        if (window.MPI_NATIVE?.isNative) {
-          appUpdateNotice.hidden = true;
-          if (manual) showToast(`Installed app build ${CURRENT_APP_BUILD} is current. Future releases arrive through TestFlight or the App Store.`);
-          return;
-        }
         if (location.protocol === "file:") {
+          setAppVersionState("Update check available after publish", "checking");
           if (manual) showToast("Update checks start after the app is published");
           return;
         }
         if (!navigator.onLine) {
+          setAppVersionState("Offline · check pending", "checking");
           if (manual) showToast("Reconnect to check for updates");
           return;
         }
@@ -15602,34 +15537,59 @@ endAppDiagnosticBtn.hidden = false;
           checkForUpdatesBtn.textContent = "Checking…";
         }
         try {
-          const response = await fetch(`./version.json?check=${Date.now()}`, { cache: "no-store" });
+          setAppVersionState("Checking…", "checking");
+          const versionUrl = window.MPI_NATIVE?.isNative
+            ? `https://kevinspect.github.io/mpi-field-tools/version.json?check=${Date.now()}`
+            : `./version.json?check=${Date.now()}`;
+          const response = await fetch(versionUrl, { cache: "no-store" });
           if (!response.ok) throw new Error("Version check failed");
           const data = await response.json();
-          const available = Number(data.build || 0);
+          const available = Number(window.MPI_NATIVE?.isNative ? (data.nativeBuild || data.build || 0) : (data.build || 0));
           if (!Number.isFinite(available) || available < 1) throw new Error("Invalid version response");
           latestAvailableBuild = available;
           if (available > CURRENT_APP_BUILD) {
-            appUpdateMessage.textContent = `Build ${available} is available. Finish any unsent form, then load the update.`;
-            loadAppUpdateBtn.textContent = `Load Build ${available}`;
+            setAppVersionState(`Update required · Build ${available}`, "update-required");
+            appUpdateMessage.textContent = window.MPI_NATIVE?.isNative
+              ? `Build ${available} is required. Update this iPhone through the MPI TestFlight release before continuing.`
+              : `Build ${available} is required. Your saved records will remain in place while the app reloads.`;
+            loadAppUpdateBtn.textContent = window.MPI_NATIVE?.isNative ? "Open TestFlight" : `Load Build ${available}`;
+            loadAppUpdateBtn.dataset.updateUrl = String(data.iosUpdateUrl || "https://testflight.apple.com/");
             appUpdateNotice.hidden = false;
             try { (await navigator.serviceWorker?.getRegistration())?.update(); } catch (_) {}
             if (manual) showToast(`Build ${available} is ready`);
           } else {
             appUpdateNotice.hidden = true;
+            setAppVersionState("App up to date", "current");
             if (manual) showToast(`Build ${CURRENT_APP_BUILD} is current`);
           }
-        } catch (_) {
+        } catch (error) {
+          setAppVersionState("Update check unavailable", "checking");
           if (manual) showToast("The update check could not finish");
+          console.warn("MPI update check failed", error);
         } finally {
           checkForUpdatesBtn.disabled = false;
           checkForUpdatesBtn.textContent = "Check for updates";
         }
       }
 
+      function setAppVersionState(label, state = "") {
+        settingsAppVersionStatus.textContent = label;
+        homeAppVersionStatus.textContent = label;
+        homeAppVersionStatus.className = `home-version-state${state ? ` ${state}` : ""}`;
+      }
+
       async function loadLatestAppUpdate() {
         if (window.MPI_NATIVE?.isNative) {
-          appUpdateNotice.hidden = true;
-          showToast("Installed app updates arrive through TestFlight or the App Store");
+          const updateUrl = String(loadAppUpdateBtn.dataset.updateUrl || "https://testflight.apple.com/");
+          loadAppUpdateBtn.disabled = true;
+          loadAppUpdateBtn.textContent = "Opening TestFlight…";
+          try {
+            await window.MPI_NATIVE.openWebPage(updateUrl);
+          } catch (_) {
+            loadAppUpdateBtn.disabled = false;
+            loadAppUpdateBtn.textContent = "Open TestFlight";
+            showToast("Open TestFlight on this iPhone to install the MPI update");
+          }
           return;
         }
         const targetBuild = latestAvailableBuild || CURRENT_APP_BUILD;
@@ -15668,11 +15628,8 @@ endAppDiagnosticBtn.hidden = false;
       function initializeAppUpdates() {
         appBuildNumber.textContent = String(CURRENT_APP_BUILD);
         settingsInstalledBuild.textContent = `Build ${CURRENT_APP_BUILD}`;
-        if (window.MPI_NATIVE?.isNative) {
-          appUpdateNotice.hidden = true;
-          checkForUpdatesBtn.textContent = "Check installed version";
-          return;
-        }
+        setAppVersionState("Checking…", "checking");
+        if (window.MPI_NATIVE?.isNative) checkForUpdatesBtn.textContent = "Check installed version";
         setTimeout(() => checkForAppUpdate(false), 1200);
       }
 
@@ -15737,6 +15694,16 @@ endAppDiagnosticBtn.hidden = false;
         renderPhoneSetup();
       }
 
+      function setNativeLocalAlertsReady() {
+        try { localStorage.setItem("mpiLocalAlertsReadyV1", "true"); } catch (_) {}
+        setFieldAlarmReady(true);
+        setPushState("Local alerts ready", "enabled");
+        enablePushBtn.hidden = true;
+        enablePushBtn.disabled = false;
+        pushSetupHelp.textContent = "iPhone notification permission is on and local alarm tests work. Remote company push cannot connect in this no-cost development build; it activates with the signed TestFlight/App Store release.";
+        renderPhoneSetup();
+      }
+
       async function initializeMessagingClient() {
         if (!window.firebase?.initializeApp || !window.firebase?.messaging) throw new Error("Firebase messaging did not load");
         if (!window.firebase.apps.length) window.firebase.initializeApp(FIREBASE_CONFIG);
@@ -15752,6 +15719,7 @@ endAppDiagnosticBtn.hidden = false;
 
       async function enablePushNotifications() {
         if (window.MPI_NATIVE?.isNative) {
+          enablePushBtn.hidden = false;
           enablePushBtn.disabled = true;
           enablePushBtn.textContent = "Enabling notifications…";
           try {
@@ -15766,12 +15734,17 @@ endAppDiagnosticBtn.hidden = false;
             let permission = { receive: "prompt" };
             try { permission = await window.MPI_NATIVE.pushPermission(); } catch (_) {}
             const permissionBlocked = permission.receive === "denied";
-            setPushState(permissionBlocked ? "Blocked in iPhone settings" : "Permission on · reconnecting push", "blocked");
-            pushSetupHelp.textContent = permissionBlocked
-              ? "Allow notifications for MPI Field Tools in iPhone Settings, then return here and try again."
-              : error?.message || "Notifications are allowed. Reopen MPI Field Tools and try enabling once more.";
-            enablePushBtn.disabled = false;
-            enablePushBtn.textContent = "Try enabling again";
+            if (!permissionBlocked && permission.receive === "granted") {
+              setNativeLocalAlertsReady();
+              showToast("Local MPI alerts are ready on this iPhone");
+            } else {
+              try { localStorage.removeItem("mpiLocalAlertsReadyV1"); } catch (_) {}
+              setPushState("Blocked in iPhone settings", "blocked");
+              pushSetupHelp.textContent = "Allow notifications for MPI Field Tools in iPhone Settings, then return here and tap Enable again.";
+              enablePushBtn.hidden = false;
+              enablePushBtn.disabled = false;
+              enablePushBtn.textContent = "Enable MPI notifications";
+            }
           }
           return;
         }
@@ -15830,8 +15803,11 @@ endAppDiagnosticBtn.hidden = false;
             revealPushToken(savedToken);
             setPushState("Enabled on this iPhone", "enabled");
             enablePushBtn.textContent = "Notifications enabled ✓";
+            enablePushBtn.hidden = false;
           } else if (permission.receive === "denied") {
+            try { localStorage.removeItem("mpiLocalAlertsReadyV1"); } catch (_) {}
             setPushState("Blocked in iPhone settings", "blocked");
+            enablePushBtn.hidden = false;
           } else if (permission.receive === "granted") {
             setPushState("Permission on · connecting push");
             enablePushBtn.textContent = "Connecting notifications…";
@@ -15843,13 +15819,12 @@ endAppDiagnosticBtn.hidden = false;
               pushSetupHelp.textContent = "MPI messages and field alarms are enabled for this installed app.";
               setFieldAlarmReady(true);
             } catch (error) {
-              setPushState("Permission on · push needs attention", "blocked");
-              enablePushBtn.disabled = false;
-              enablePushBtn.textContent = "Retry notification connection";
-              pushSetupHelp.textContent = error?.message || "Notifications are allowed. Reopen MPI Field Tools and retry the connection.";
+              setNativeLocalAlertsReady();
+              console.info("MPI remote push is unavailable in this installed build", error);
             }
           } else {
             setPushState("Tap to enable on this iPhone");
+            enablePushBtn.hidden = false;
           }
           return;
         }

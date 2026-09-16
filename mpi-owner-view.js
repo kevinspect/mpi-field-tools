@@ -101,7 +101,7 @@
     window.MPI_COMPANY_SESSION = { userId: selected.id, role: selected.role, active: true, inspectorName: selected.name, inspectorEmail: selected.email || "", inspectorId: selected.inspectorId || "", phone: selected.phone || "", assignedVehicle: selected.assignedVehicle || "", approvedEndAddress: selected.approvedEndAddress || "", adminCorrections: selected.adminCorrections || [], subcontractorOnly: selected.role === "subcontractor" };
     window.MPI_SPECTORA_SCHEDULE_DAYS = selected.spectoraScheduleDays || [];
     // Navigation is available; workflow mutations and external navigation are not.
-    const canBrowse = target => target.closest("[data-admin-view], [data-office-team-tab], [data-open-inspector], [data-open-office], [data-inbox-open-thread], [data-admin-inbox-kind], [data-close-admin-conversation], #fieldInboxThreadBack, [data-open-team-profile], [data-bag-guide], [data-bag-list], [data-bag-back], .app-bottom-nav a, a[href^='#'], [data-owner-preview-browse]");
+    const canBrowse = target => target.closest("#adminBrandHome, #adminAccountPill, [data-admin-view], [data-office-team-tab], [data-open-inspector], [data-open-office], [data-inbox-open-thread], [data-admin-inbox-kind], [data-close-admin-conversation], #fieldInboxThreadBack, [data-open-team-profile], [data-bag-guide], [data-bag-list], [data-bag-back], .app-bottom-nav a, a[href^='#'], [data-owner-preview-browse]");
     document.addEventListener("click", event => {
       const anchor = event.target.closest("a[href^='#']");
       if (anchor) { event.preventDefault(); location.hash = anchor.getAttribute("href"); }
