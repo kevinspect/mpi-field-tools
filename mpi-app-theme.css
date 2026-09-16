@@ -243,6 +243,8 @@ body.mpi-office-ui .training-admin-card strong { font-size: 14px; font-weight: 6
 body.mpi-office-ui .training-admin-card span { font-size: 11px; }
 body.mpi-office-ui .training-admin-card small { font-size: 11px; line-height: 1.45; }
 body.mpi-office-ui .training-admin-card a { min-height: 40px; font-size: 12px; font-weight: 600; }
+body.mpi-office-ui .training-profile-connect strong { font-size: 14px; font-weight: 650; }
+body.mpi-office-ui .training-profile-connect span { color: var(--ui-blue); font-size: 11px; font-weight: 600; }
 body.mpi-office-ui :is(.equipment-add-panel,.equipment-history-card) summary { font-size: 13px; font-weight: 600; }
 body.mpi-office-ui :is(.equipment-summary-card > small,.equipment-summary-card i,.equipment-summary-card b,.equipment-record-card .equipment-handover-note) { font-size: 11px; line-height: 1.5; }
 body.mpi-office-ui .check { padding: 14px 16px; border-radius: 13px; background: #f5f5fa; font-size: 13px; line-height: 1.5; }

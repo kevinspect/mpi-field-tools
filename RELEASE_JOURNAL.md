@@ -1,5 +1,15 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 216 — Direct Qualification Connection
+
+- Makes **Awaiting profile connection** an actionable control in Team → Qualifications.
+- Opens the selected team member's exact professional-profile connection field, while the signed-in user's own record opens directly in My Profile.
+- Keeps InterNACHI credentials read-only and stores only the official record link—never an InterNACHI password.
+
+### Validation record
+
+- Verified an awaiting qualification opens the matching team profile, expands the professional details and focuses the InterNACHI record field.
+
 ## Build 215 — Reliable Header Navigation
 
 - Makes the MPI logo an explicit Home/Operations control in both the installed field app and Office Console instead of relying only on browser hash behavior.

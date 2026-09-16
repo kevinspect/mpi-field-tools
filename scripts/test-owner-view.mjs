@@ -133,6 +133,12 @@ try {
   assert.equal(await office.locator("[data-admin-panel='people']").evaluate(node => node.classList.contains("active")), true);
   await office.waitForSelector("[data-person-id='brooke'][open]");
   console.log("PASS Office header logo opens Operations and the account control opens the signed-in profile.");
+  await office.locator("[data-office-team-tab='qualifications']").click();
+  await office.locator("[data-connect-training-profile='cory']").click();
+  assert.equal(await office.locator("[data-office-team-tab='accounts']").getAttribute("aria-selected"), "true");
+  await office.waitForSelector("[data-person-id='cory'][open] .person-profile-details[open]");
+  assert.equal(await office.locator("[data-person-id='cory'] [data-person-transcript-url]").isVisible(), true);
+  console.log("PASS Awaiting qualification connection opens the matching team profile and connection field.");
   for (const viewport of [{ width: 1280, height: 800 }, { width: 820, height: 900 }, { width: 393, height: 852 }]) {
     await page.setViewportSize(viewport);
     const views = await office.locator(".tabbar [data-admin-view]").evaluateAll(buttons => [...new Set(buttons.map(button => button.dataset.adminView))]);

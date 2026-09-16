@@ -2625,8 +2625,34 @@
     trainingList.innerHTML = records.length ? records.map(person => {
       const recordUrl = /^https:\/\//i.test(String(person.nachiTranscriptUrl || "")) ? person.nachiTranscriptUrl : "";
       const memberNumber = String(person.inspectorId || "").trim();
-      return `<article class="training-admin-card"><div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(canonicalTeamName(person))}</strong><span>${escapeHtml(teamRoleLabel(person.role))}</span></div></div><div><small>InterNACHI / inspector number</small><strong>${escapeHtml(memberNumber || "Not supplied")}</strong></div><div><small>Official education record</small><strong>${recordUrl ? "Connected by team member" : "Awaiting profile connection"}</strong><span>MPI stores the link only — never their InterNACHI password.</span></div>${recordUrl ? `<a href="${escapeHtml(recordUrl)}" target="_blank" rel="noopener">OPEN OFFICIAL RECORD</a>` : '<small>Team member can add this from My Profile.</small>'}</article>`;
+      const connection = recordUrl
+        ? `<div><small>Official education record</small><strong>Connected by team member</strong><span>MPI stores the link only — never their InterNACHI password.</span></div><a href="${escapeHtml(recordUrl)}" target="_blank" rel="noopener">OPEN OFFICIAL RECORD</a>`
+        : `<button class="training-profile-connect" type="button" data-connect-training-profile="${escapeHtml(person.id)}" aria-label="Open ${escapeHtml(canonicalTeamName(person))}'s profile connection"><small>Official education record</small><strong>Awaiting profile connection</strong><span>Open the relevant profile field to connect this record →</span></button><small>Team member can also add this from My Profile.</small>`;
+      return `<article class="training-admin-card"><div class="inspector-identity">${avatarHtml(person)}<div><strong>${escapeHtml(canonicalTeamName(person))}</strong><span>${escapeHtml(teamRoleLabel(person.role))}</span></div></div><div><small>InterNACHI / inspector number</small><strong>${escapeHtml(memberNumber || "Not supplied")}</strong></div>${connection}</article>`;
     }).join("") : '<div class="empty">No active team profiles are available.</div>';
+  }
+
+  function openTrainingProfileConnection(personId) {
+    const person = people.find(item => item.id === personId);
+    if (!person) return;
+    if (person.id === currentUser?.uid) {
+      const profileUrl = new URL("./", window.location.href);
+      profileUrl.searchParams.set("office", "1");
+      profileUrl.hash = "profile";
+      window.location.assign(profileUrl.href);
+      return;
+    }
+    showView("people");
+    document.querySelector('[data-office-team-tab="accounts"]')?.click();
+    const card = [...peopleList.querySelectorAll("[data-person-id]")].find(item => item.dataset.personId === person.id);
+    if (!card) return;
+    card.open = true;
+    peopleList.querySelectorAll(".person-card[open]").forEach(item => { if (item !== card) item.open = false; });
+    const profileDetails = card.querySelector(".person-profile-details");
+    if (profileDetails) profileDetails.open = true;
+    const connectionField = card.querySelector("[data-person-transcript-url]");
+    connectionField?.focus({ preventScroll: true });
+    card.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function renderPeople() {
@@ -4564,6 +4590,10 @@
     document.querySelectorAll("[data-office-team-tab]").forEach(tab => tab.setAttribute("aria-selected", String(tab.dataset.officeTeamTab === selected)));
     document.querySelectorAll("[data-office-team-pane]").forEach(pane => { pane.hidden = pane.dataset.officeTeamPane !== selected; });
   }));
+  trainingList?.addEventListener("click", event => {
+    const connect = event.target.closest("[data-connect-training-profile]");
+    if (connect) openTrainingProfileConnection(connect.dataset.connectTrainingProfile);
+  });
   peopleList.addEventListener("click", event => {
     const copy = event.target.closest("[data-copy-subcontractor-link]");
     if (copy) copySubcontractorLink(copy);
