@@ -1,0 +1,162 @@
+/* Office-only workbench. The field app retains its existing design. */
+body.office-workbench { background: #f4f5f9; }
+body.office-workbench .content-panel { padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+body.office-workbench .dashboard { gap: 0; }
+body.office-workbench .console-view { grid-column: 1; }
+body.office-workbench .section-head { margin: 0 0 18px; }
+body.office-workbench .section-head h2 { font-size: 18px; }
+body.office-workbench .section-head p { max-width: 680px; }
+body.office-workbench .office-welcome { min-height: 120px; display: flex; align-items: center; padding: 22px 26px; margin-bottom: 16px; color: white; border-radius: 18px; background: linear-gradient(90deg,#11186a 3%,#11186af2 36%,#11186a3d 100%),url('./brand-assets/mpi-website-header.jpg') center 53% / cover; overflow: hidden; }
+body.office-workbench .office-welcome span { color: #efd17b; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; }
+body.office-workbench .office-welcome h2 { margin: 7px 0 5px; font-size: clamp(20px,2vw,28px); font-weight: 650; letter-spacing: -.035em; color: white; }
+body.office-workbench .office-welcome p { margin: 0; color: #e1e5f5; font-size: 12px; }
+body.office-workbench .stat-grid { grid-column: 1; grid-template-columns: repeat(4,minmax(0,1fr)); margin-bottom: 22px; background: white; border: 1px solid #e5e7ef; border-radius: 16px; box-shadow: none; }
+body.office-workbench .stat { min-height: 80px; padding: 16px 18px; }
+body.office-workbench .stat-title { padding-right: 20px; }
+body.office-workbench .stat-title > span:last-child { font-size: 11px; color: #65708a; }
+body.office-workbench .stat-icon { right: 15px; top: 15px; }
+body.office-workbench .stat strong { font-size: 24px; margin-top: 7px; }
+body.office-workbench .operations-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 0; margin: 0; background: transparent; border: 0; }
+body.office-workbench .operations-toolbar .ops-eyebrow { display: none; }
+body.office-workbench .operations-toolbar .field { width: 240px; }
+body.office-workbench .range-picker { padding: 3px; background: #e8eaf2; border-radius: 11px; }
+body.office-workbench .range-picker button { padding: 8px 15px; border: 0; min-height: 38px; border-radius: 8px; background: transparent; }
+body.office-workbench .range-picker button.active { color: white; background: #11186a; box-shadow: 0 1px 4px #11186a22; }
+body.office-workbench #adminOperationsSync { margin: 9px 0 16px; }
+body.office-workbench .office-operations-grid { display: grid; grid-template-columns: minmax(0,1fr); gap: 18px; align-items: start; }
+body.office-workbench .live-location-panel { margin: 0; padding: 18px; background: white; border: 1px solid #e2e5ef; border-radius: 18px; }
+body.office-workbench .live-location-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+body.office-workbench .live-location-head h3 { color: #11186a; font-size: 17px; }
+body.office-workbench .live-location-head p { font-size: 11px; }
+body.office-workbench .live-location-head .secondary { min-height: 38px; padding: 8px 12px; font-size: 12px; }
+body.office-workbench .office-map-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin: 16px 0 9px; }
+body.office-workbench .office-map-modes { display: flex; gap: 4px; }
+body.office-workbench .office-map-modes .secondary { min-height: 36px; padding: 8px 10px; font-size: 11px; background: #f3f4f8; }
+body.office-workbench .office-map-modes .secondary[aria-pressed=true] { color: white; background: #11186a; border-color: #11186a; }
+body.office-workbench #adminLiveRouteDate { min-width: 0; width: 140px; height: 38px; padding: 8px; border: 1px solid #d8dce8; border-radius: 9px; background: white; color: #11186a; font: 12px system-ui; }
+body.office-workbench .live-location-status { display: block; text-align: left; max-width: none; font-size: 10px; margin: 0 0 10px; }
+body.office-workbench .live-location-map { height: 370px; border: 0; border-radius: 12px; }
+body.office-workbench .live-location-list { margin-top: 12px; gap: 5px; }
+body.office-workbench .live-location-person { min-height: 48px; padding: 8px 10px; border: 0; background: #f8f9fc; border-radius: 9px; grid-template-columns: 12px minmax(0,1fr) auto; }
+body.office-workbench .live-location-person strong { font-size: 12px; }
+body.office-workbench .live-location-person span { font-size: 10px; }
+body.office-workbench .live-location-person b { font-size: 8px; max-width: 125px; }
+body.office-workbench .office-planning-drawer { border-top: 1px solid #e8eaf1; margin-top: 14px; padding-top: 5px; }
+body.office-workbench .office-planning-drawer > summary { display: flex; gap: 8px; align-items: center; min-height: 40px; color: #11186a; cursor: pointer; font-size: 12px; list-style: none; }
+body.office-workbench .office-planning-drawer > summary::-webkit-details-marker { display: none; }
+body.office-workbench .office-planning-drawer > summary::after { content: '⌄'; margin-left: auto; }
+body.office-workbench .office-planning-drawer[open] > summary::after { content: '⌃'; }
+body.office-workbench .office-planning-drawer .app-icon { width: 16px; height: 16px; }
+body.office-workbench .office-planning-body { display: grid; gap: 12px; padding-top: 8px; }
+body.office-workbench .live-location-planner { grid-template-columns: minmax(0,1fr) auto; min-width: 0; }
+body.office-workbench .live-location-planner input { min-height: 44px; width: 100%; padding: 11px 12px; border: 1px solid #d3dce8; border-radius: 9px; font: 13px system-ui; }
+body.office-workbench .planning-controls { margin: 0; padding: 0; background: transparent; grid-template-columns: repeat(2,minmax(0,1fr)); }
+body.office-workbench .spectora-readonly-note { margin: 0; }
+body.office-workbench .office-live-team { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+body.office-workbench .office-live-team .team-group-title { order: -1; margin: 0; padding: 4px 2px 0; font-size: 14px; letter-spacing: 0; text-transform: none; color: #11186a; }
+body.office-workbench .office-live-team .inspector-row { order: 1; position: relative; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px 8px; padding: 18px; margin: 0; background: white; border-radius: 16px; border: 1px solid #e2e5ef; border-left: 3px solid #2775b9; }
+body.office-workbench .office-live-team .inspector-row.subcontractor-row { border-left-color: #c89b27; }
+body.office-workbench .office-live-team .inspector-row.has-alert { border-left-color: #bd4940; }
+body.office-workbench .office-live-team .inspector-row > .inspector-identity { grid-column: 1/-1; padding-right: 12px; }
+body.office-workbench .office-live-team .inspector-row > div:nth-child(2) { grid-column: 1/-1; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
+body.office-workbench .office-live-team .inspector-row > div:nth-child(2) small { margin: 0; font-size: 10px; line-height: 1.4; }
+body.office-workbench .office-live-team .inspector-identity strong { font-size: 14px; }
+body.office-workbench .office-live-team .inspector-identity small { font-size: 11px; }
+body.office-workbench .office-live-team .inspector-avatar { width: 40px; height: 40px; flex-basis: 40px; }
+body.office-workbench .office-live-team .row-metric { align-self: start; padding-top: 9px; border-top: 1px solid #edf0f5; }
+body.office-workbench .office-live-team .row-metric span { font-size: 9px; line-height: 1.35; text-transform: none; letter-spacing: 0; }
+body.office-workbench .office-live-team .row-metric b { margin-top: 4px; font-size: 12px; line-height: 1.4; }
+body.office-workbench .office-live-team .row-open { position: absolute; right: 16px; top: 28px; font-size: 20px; }
+body.office-workbench .office-live-team .cory-hours-card { order: 0; margin: 0; padding: 16px; grid-template-columns: minmax(0,1fr) minmax(0,.8fr); gap: 12px; border-radius: 16px; border-width: 1px; }
+body.office-workbench .cory-hours-card span { font-size: 9px; line-height: 1.4; letter-spacing: .035em; }
+body.office-workbench .cory-hours-card strong { font-size: 23px; }
+body.office-workbench .cory-hours-card small { font-size: 10px; line-height: 1.5; }
+body.office-workbench .comment-usage-panel { grid-column: 1; padding: 16px 18px; margin-top: 22px; border-radius: 14px; background: #eeeff6; box-shadow: none; }
+body.office-workbench .comment-usage-copy h2 { font-size: 13px; }
+body.office-workbench .comment-usage-copy p { font-size: 10px; }
+body.office-workbench .comment-usage-metric { padding: 0; background: transparent; border: 0; }
+body.office-workbench .comment-usage-metric strong { font-size: 20px; }
+body.office-workbench #adminRequestFilters { grid-template-columns: repeat(3,minmax(0,1fr)); padding: 16px; border: 1px solid #e2e5ef; background: white; border-radius: 16px; }
+body.office-workbench :is(.request-admin-card,.diagnostic-card,.update-card,.equipment-record-card,.equipment-add-panel,.admin-inbox-block) { background: white; border-color: #e2e5ef; box-shadow: none; border-radius: 16px; }
+body.office-workbench #adminUpdateForm { max-width: 1000px; padding: 24px; background: white; border: 1px solid #e2e5ef; border-radius: 18px; }
+body.office-workbench [data-admin-panel=updates] .content-panel { max-width: 1150px; }
+body.office-workbench #adminInboxMailbox { background: transparent; border: 0; }
+body.office-workbench .admin-message-avatar { border: 1px solid #dfe3ef; background: #edf0f8; color: #11186a; }
+body.office-workbench .admin-inbox-conversation { background: white; border: 1px solid #e2e5ef; border-radius: 18px; overflow: hidden; }
+body.office-workbench .office-team-tabs { display: inline-flex; padding: 3px; gap: 4px; margin-bottom: 22px; border-radius: 11px; background: #e8eaf2; }
+body.office-workbench .office-team-tabs button { padding: 9px 18px; min-height: 40px; border: 0; border-radius: 8px; color: #606980; background: transparent; font: 600 13px system-ui; cursor: pointer; }
+body.office-workbench .office-team-tabs button[aria-selected=true] { background: white; color: #11186a; box-shadow: 0 1px 5px #11186a12; }
+body.office-workbench .people-list { gap: 0; max-width: 1050px; }
+body.office-workbench .office-people-group { margin: 0 0 22px; padding: 0; }
+body.office-workbench .office-people-group h3 { margin: 0 0 10px 4px; color: #68738a; font-size: 12px; font-weight: 600; }
+body.office-workbench .office-people-group h3 span { margin-left: 8px; color: #8f98aa; font-weight: 400; }
+body.office-workbench .office-people-list { overflow: hidden; background: white; border: 1px solid #e2e5ef; border-radius: 16px; }
+body.office-workbench details.person-card { display: block; padding: 0; border: 0; border-radius: 0; background: white; }
+body.office-workbench details.person-card + details.person-card { border-top: 1px solid #edf0f5; }
+body.office-workbench .person-main { display: flex; align-items: center; gap: 12px; min-height: 88px; padding: 16px 20px; margin: 0; cursor: pointer; list-style: none; }
+body.office-workbench .person-main::-webkit-details-marker { display: none; }
+body.office-workbench .person-main::after { content: '›'; margin-left: auto; color: #969fb3; font-size: 22px; }
+body.office-workbench .person-card[open] > .person-main { background: #f7f8fc; }
+body.office-workbench .person-card[open] > .person-main::after { transform: rotate(90deg); }
+body.office-workbench .person-main > div { min-width: 0; }
+body.office-workbench .person-main strong { margin: 2px 0; color: #11186a; font-size: 15px; }
+body.office-workbench .person-main small { font-size: 11px; }
+body.office-workbench .person-role-badge { font-size: 9px; line-height: 1.4; padding: 2px 7px; }
+body.office-workbench .person-editor { padding: 18px 20px 22px; border-top: 1px solid #e8eaf1; }
+body.office-workbench .person-controls { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+body.office-workbench .person-controls > label:not(.check) { display: grid; gap: 5px; color: #65708a; font-size: 11px; }
+body.office-workbench .person-profile-details { margin-top: 16px; }
+body.office-workbench .person-profile-details > summary { min-height: 40px; font-size: 12px; }
+body.office-workbench .subcontractor-access-actions { margin-top: 16px; flex-wrap: wrap; }
+body.office-workbench .office-team-security { color: #7b8499; font-size: 11px; max-width: 850px; line-height: 1.6; }
+body.office-workbench .training-admin-list { max-width: 1050px; }
+body.office-workbench .training-admin-card { background: white; border-radius: 16px; border: 1px solid #e2e5ef; }
+body.office-workbench .office-nav-footer { display: none; }
+body.office-workbench [hidden] { display: none !important; }
+@media (min-width: 761px) {
+  body.office-workbench .topbar { height: 66px; min-height: 66px; padding: 0 22px; position: sticky; top: 0; z-index: 1000; }
+  body.office-workbench .top-actions a[aria-label='Return to Inspector App'] { display: none; }
+  body.office-workbench .shell { width: calc(100% - 212px); max-width: none; margin: 0 0 0 212px; padding: 22px 26px 50px; }
+  body.office-workbench:has(#adminDashboard[hidden]) .shell { width: calc(100% - 48px); max-width: 1100px; margin: 0 auto; }
+  body.office-workbench .hero { margin-bottom: 22px; }
+  body.office-workbench .hero h1 { font-size: 28px; }
+  body.office-workbench .office-operations-content > .operations-toolbar { display: grid; grid-template-columns: minmax(0,1fr) 210px auto; align-items: end; }
+  body.office-workbench .office-operations-content > .operations-toolbar .field { width: 100%; }
+  body.office-workbench .dashboard { grid-template-columns: minmax(0,1fr); }
+  body.office-workbench .tabbar { position: fixed; inset: 66px auto 0 0; width: 212px; height: auto; padding: 18px 12px; display: flex; flex-direction: column; overflow-y: auto; border-radius: 0; border: 0; border-right: 1px solid #ffffff1a; background: #111653; box-shadow: none; }
+  body.office-workbench .tabbar button { flex-shrink: 0; width: 100%; min-height: 48px; }
+  body.office-workbench .tabbar .nav-heading { padding: 10px 12px 18px; }
+  body.office-workbench .office-nav-footer { display: grid; gap: 5px; margin-top: auto; padding: 26px 12px 4px; color: #aaaed0; font-size: 9px; line-height: 1.5; }
+  body.office-workbench .office-nav-footer small { color: #7d83af; font-size: 9px; }
+  body.office-workbench.field-equipment-console .shell { width: 100%; margin: 0; padding: 0; }
+}
+@media (min-width: 1100px) {
+  body.office-workbench .office-operations-grid { grid-template-columns: minmax(0,1.6fr) minmax(315px,1fr); }
+  body.office-workbench .office-operations-grid:has(#adminTeamOverview[hidden]) { grid-template-columns: minmax(0,1fr); }
+  body.office-workbench .live-location-map { height: 390px; }
+}
+@media (max-width: 1099px) and (min-width: 761px) {
+  body.office-workbench .shell { padding: 20px; }
+  body.office-workbench .office-operations-content > .operations-toolbar { display: flex; }
+  body.office-workbench .office-operations-content > .operations-toolbar .field { width: 210px; }
+  body.office-workbench .office-live-team .inspector-row { grid-template-columns: repeat(4,minmax(0,1fr)); }
+}
+@media (max-width: 760px) {
+  body.office-workbench .console-view { grid-column: 1; }
+  body.office-workbench .office-welcome { min-height: 104px; padding: 18px; }
+  body.office-workbench .office-welcome p { max-width: 220px; line-height: 1.5; }
+  body.office-workbench .stat-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  body.office-workbench .stat { min-height: 86px; padding: 15px; }
+  body.office-workbench .operations-toolbar .field { width: 100%; }
+  body.office-workbench .live-location-panel { padding: 14px; }
+  body.office-workbench .live-location-head { display: flex; }
+  body.office-workbench .office-map-toolbar { align-items: stretch; }
+  body.office-workbench .office-map-modes { flex-wrap: wrap; }
+  body.office-workbench .live-location-map { height: 310px; }
+  body.office-workbench .live-location-planner,.office-workbench .planning-controls { grid-template-columns: minmax(0,1fr); }
+  body.office-workbench #adminRequestFilters { grid-template-columns: repeat(2,minmax(0,1fr)); padding: 12px; gap: 12px; }
+  body.office-workbench #adminUpdateForm { padding: 16px; }
+  body.office-workbench .person-main { padding: 14px; }
+  body.office-workbench .person-editor { padding: 16px 14px; }
+  body.office-workbench .person-controls { grid-template-columns: minmax(0,1fr); }
+}

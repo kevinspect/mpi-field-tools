@@ -1162,16 +1162,19 @@
     if (allPlansShowing) liveLocationAllPlansVisible = true;
     if (liveLocationAllPlans) {
       liveLocationAllPlans.disabled = !hasPeople || !hasSchedule || liveLocationRouteLoading;
-      liveLocationAllPlans.textContent = liveLocationRouteLoading ? "LOADING…" : allPlansShowing ? "HIDE ALL INSPECTORS' JOBS" : "SHOW ALL INSPECTORS' JOBS";
+      liveLocationAllPlans.textContent = liveLocationRouteLoading ? "Loading…" : "Job plans";
+      liveLocationAllPlans.setAttribute("aria-pressed", String(allPlansShowing));
     }
     if (liveLocationPlan) {
       liveLocationPlan.disabled = !person || liveLocationRouteLoading;
-      liveLocationPlan.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationPlanVisible && !liveLocationAllPlansVisible ? "HIDE SELECTED INSPECTOR'S JOBS" : "SHOW SELECTED INSPECTOR'S JOBS";
+      liveLocationPlan.textContent = liveLocationRouteLoading ? "Loading…" : liveLocationPlanVisible && !liveLocationAllPlansVisible ? "Hide selected jobs" : "Selected inspector’s jobs";
     }
     if (liveLocationHistory) {
       liveLocationHistory.disabled = !person || liveLocationRouteLoading;
-      liveLocationHistory.textContent = liveLocationRouteLoading ? "LOADING…" : liveLocationRouteVisible && !liveLocationPlanVisible && !liveLocationAllPlansVisible ? "HIDE ACTUAL ROUTE" : "SHOW ACTUAL ROUTE";
+      liveLocationHistory.textContent = liveLocationRouteLoading ? "Loading…" : "Actual route";
+      liveLocationHistory.setAttribute("aria-pressed", String(liveLocationRouteVisible && !liveLocationPlanVisible && !liveLocationAllPlansVisible));
     }
+    liveLocationShowAll?.setAttribute("aria-pressed", String(!liveLocationRouteVisible && !allPlansShowing && !liveLocationPlanVisible));
     if (!liveLocationRouteStatus) return;
     if (!person && !liveLocationRouteStatus.dataset.result) liveLocationRouteStatus.textContent = "All inspectors selected. Choose a date, then show every inspector's jobs. Tap one inspector to see that person's plan or actual route.";
     else if (person && !liveLocationRouteVisible && !liveLocationRouteLoading) liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(canonicalTeamName(person))}</strong> selected. Choose a date, then show the Spectora job plan or actual route.`;
@@ -2304,7 +2307,7 @@
 
   function renderTrainingProfiles() {
     if (!trainingList) return;
-    const records = people.filter(person => person.active !== false);
+    const records = people.filter(person => person.active !== false && (person.inspectorId || person.nachiTranscriptUrl || person.role === "inspector"));
     trainingList.innerHTML = records.length ? records.map(person => {
       const recordUrl = /^https:\/\//i.test(String(person.nachiTranscriptUrl || "")) ? person.nachiTranscriptUrl : "";
       const memberNumber = String(person.inspectorId || "").trim();
@@ -2323,9 +2326,17 @@
       if (recipients.some(person => person.id === selectedRecipient)) inboxComposeRecipient.value = selectedRecipient;
     }
     const accountPeople = [...people.filter(person => person.role !== "subcontractor"), ...preferredSubcontractors()];
-    peopleList.innerHTML = accountPeople.length ? accountPeople.map(person => `
-      <article class="person-card" data-person-id="${escapeHtml(person.id)}">
-        <div class="person-main inspector-identity">${avatarHtml(person)}<div><span class="person-role-badge ${escapeHtml(String(person.role || "inspector").toLowerCase())}">${escapeHtml(teamRoleLabel(person.role))}</span><strong>${escapeHtml(person.name || "MPI Team Member")}</strong><small>${escapeHtml(person.email || "Secure company phone access")}</small><small>${person.role === "subcontractor" ? "External field partner" : person.inspectorId ? `Inspector number: ${escapeHtml(person.inspectorId)}` : "Inspector number not assigned"}</small></div></div>
+    const openId = peopleList.querySelector('.person-card[open]')?.dataset.personId || '';
+    const activeField = peopleList.contains(document.activeElement) ? document.activeElement : null;
+    const activePersonId = activeField?.closest('[data-person-id]')?.dataset.personId;
+    const activeAttribute = activeField ? [...activeField.attributes].find(item => item.name.startsWith('data-person-') && item.name !== 'data-person-id')?.name : '';
+    const activeValue = activeField?.type === 'checkbox' ? activeField.checked : activeField?.value;
+    const selection = activeField && typeof activeField.selectionStart === 'number' ? [activeField.selectionStart,activeField.selectionEnd] : null;
+    const expandedContactId = activeField?.closest('.person-profile-details[open]') ? activePersonId : '';
+    const personCard = person => `
+      <details class="person-card" data-person-id="${escapeHtml(person.id)}" ${person.id === openId ? "open" : ""}>
+        <summary class="person-main inspector-identity">${avatarHtml(person)}<div><span class="person-role-badge ${escapeHtml(String(person.role || 'inspector').toLowerCase())}">${escapeHtml(teamRoleLabel(person.role))}</span><strong>${escapeHtml(canonicalTeamName(person))}</strong><small>${escapeHtml(person.email || 'Secure subcontractor access')}</small></div></summary>
+        <div class="person-editor">
         <div class="person-controls">
           <input data-person-inspector-id aria-label="Inspector number for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.inspectorId || "")}" maxlength="40" placeholder="Inspector number" ${person.role === "owner" ? "disabled" : ""}>
           <input data-person-phone aria-label="Phone number for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.phone || "")}" maxlength="30" placeholder="Phone number" ${person.role === "owner" ? "disabled" : ""}>
@@ -2338,9 +2349,28 @@
           </select>
           <label class="check" style="padding:8px"><input data-person-active type="checkbox" ${person.active !== false ? "checked" : ""} ${person.role === "owner" ? "disabled" : ""}><span>Active</span></label>
         </div>
-        <details class="person-profile-details"><summary>Contact, emergency &amp; professional profile</summary><div class="person-controls"><input data-person-job-title aria-label="Job title for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.jobTitle || "")}" maxlength="80" placeholder="Job title" ${person.role === "owner" ? "disabled" : ""}><input data-person-personal-address aria-label="Personal address for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.personalAddress || "")}" maxlength="180" placeholder="Personal address" ${person.role === "owner" ? "disabled" : ""}><input data-person-emergency-name aria-label="Emergency contact for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.emergencyContactName || "")}" maxlength="80" placeholder="Emergency contact" ${person.role === "owner" ? "disabled" : ""}><input data-person-emergency-phone aria-label="Emergency phone for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.emergencyContactPhone || "")}" maxlength="30" placeholder="Emergency phone" ${person.role === "owner" ? "disabled" : ""}><input data-person-transcript-url aria-label="InterNACHI record link for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.nachiTranscriptUrl || "")}" maxlength="500" placeholder="InterNACHI transcript / education URL" ${person.role === "owner" ? "disabled" : ""}>${person.nachiTranscriptUrl ? `<a class="secondary" href="${escapeHtml(person.nachiTranscriptUrl)}" target="_blank" rel="noopener">OPEN TRAINING RECORD</a>` : ""}</div></details>
+        <details class="person-profile-details" ${person.id === expandedContactId ? "open" : ""}><summary>Contact, emergency &amp; professional profile</summary><div class="person-controls"><input data-person-job-title aria-label="Job title for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.jobTitle || "")}" maxlength="80" placeholder="Job title" ${person.role === "owner" ? "disabled" : ""}><input data-person-personal-address aria-label="Personal address for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.personalAddress || "")}" maxlength="180" placeholder="Personal address" ${person.role === "owner" ? "disabled" : ""}><input data-person-emergency-name aria-label="Emergency contact for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.emergencyContactName || "")}" maxlength="80" placeholder="Emergency contact" ${person.role === "owner" ? "disabled" : ""}><input data-person-emergency-phone aria-label="Emergency phone for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.emergencyContactPhone || "")}" maxlength="30" placeholder="Emergency phone" ${person.role === "owner" ? "disabled" : ""}><input data-person-transcript-url aria-label="InterNACHI record link for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.nachiTranscriptUrl || "")}" maxlength="500" placeholder="InterNACHI transcript / education URL" ${person.role === "owner" ? "disabled" : ""}>${person.nachiTranscriptUrl ? `<a class="secondary" href="${escapeHtml(person.nachiTranscriptUrl)}" target="_blank" rel="noopener">OPEN TRAINING RECORD</a>` : ""}</div></details>
         ${person.role === "subcontractor" ? `<div class="subcontractor-access-actions"><button class="secondary" type="button" data-copy-subcontractor-link="${escapeHtml(person.id)}">COPY APP ACTIVATION LINK</button><button class="danger" type="button" data-revoke-subcontractor="${escapeHtml(person.id)}">REVOKE SUBCONTRACTOR ACCESS</button><span class="status" data-subcontractor-access-status></span></div>` : ""}
-      </article>`).join("") : '<div class="empty">No company accounts have signed in yet.</div>';
+        </div>
+      </details>`;
+    const isField = person => person.role === 'inspector' || person.role === 'subcontractor' || Boolean(person.inspectorId) || shared.normalizeEmail(person.email) === 'kev@michiganpropertyinspections.com';
+    const groups = [['Field team', accountPeople.filter(isField)], ['Office team', accountPeople.filter(person => !isField(person))]];
+    peopleList.innerHTML = accountPeople.length ? groups.filter(([,members]) => members.length).map(([label,members]) => `<section class="office-people-group"><h3>${label}<span>${members.length} members</span></h3><div class="office-people-list">${members.map(personCard).join('')}</div></section>`).join('') : '<div class="empty">No company accounts have signed in yet.</div>';
+    // Restore only the actively edited field; unrelated incoming profile updates stay authoritative.
+    if (activeAttribute && activePersonId) {
+      const card = [...peopleList.querySelectorAll('[data-person-id]')].find(node => node.dataset.personId === activePersonId);
+      const field = card?.querySelector('[' + activeAttribute + ']');
+      if (field) {
+        if (field.type === 'checkbox') field.checked = activeValue; else field.value = activeValue;
+        field.focus({ preventScroll: true });
+        if (selection) field.setSelectionRange(...selection);
+      }
+    }
+    peopleList.querySelectorAll('.person-controls input:not([type=checkbox]),.person-controls select').forEach(field => {
+      const label = document.createElement('label');
+      const name = field.placeholder || (field.hasAttribute('data-person-role') ? 'Access role' : field.getAttribute('aria-label'));
+      label.append(document.createTextNode(name)); field.before(label); label.append(field);
+    });
     renderTrainingProfiles();
     renderOperations();
     renderSubcontractors();
@@ -4014,6 +4044,16 @@
     sendInspectorMessage(formElement);
   });
   peopleList.addEventListener("change", updatePerson);
+  peopleList.addEventListener("toggle", event => {
+    const opened = event.target;
+    if (!opened.matches?.(".person-card[open]")) return;
+    peopleList.querySelectorAll(".person-card[open]").forEach(card => { if (card !== opened) card.open = false; });
+  }, true);
+  document.querySelectorAll("[data-office-team-tab]").forEach(button => button.addEventListener("click", () => {
+    const selected = button.dataset.officeTeamTab;
+    document.querySelectorAll("[data-office-team-tab]").forEach(tab => tab.setAttribute("aria-selected", String(tab.dataset.officeTeamTab === selected)));
+    document.querySelectorAll("[data-office-team-pane]").forEach(pane => { pane.hidden = pane.dataset.officeTeamPane !== selected; });
+  }));
   peopleList.addEventListener("click", event => {
     const copy = event.target.closest("[data-copy-subcontractor-link]");
     if (copy) copySubcontractorLink(copy);

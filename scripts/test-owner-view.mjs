@@ -116,10 +116,11 @@ try {
   const office = await (await page.locator(".owner-view-frame").elementHandle()).contentFrame();
   await office.waitForFunction(() => window.MPI_COMPANY_SESSION?.userId === "brooke" && document.body.classList.contains("mpi-office-ui"));
   await office.waitForSelector("#adminDashboard:not([hidden])");
+  assert.equal(await office.locator("main").evaluate(node => [...node.childNodes].filter(child => child.nodeType === 3).every(child => !child.textContent.trim())), true, "No stray markup is rendered as page text");
   assert.equal(await office.locator("#commentUsagePanel").isVisible(), false);
   assert.equal(await office.locator("#adminAccountName").textContent(), "Brooke");
   assert.equal(await office.locator("#adminPublishButton").isDisabled(), true);
-  for (const viewport of [{ width: 1280, height: 800 }, { width: 393, height: 852 }]) {
+  for (const viewport of [{ width: 1280, height: 800 }, { width: 820, height: 900 }, { width: 393, height: 852 }]) {
     await page.setViewportSize(viewport);
     const views = await office.locator(".tabbar [data-admin-view]").evaluateAll(buttons => [...new Set(buttons.map(button => button.dataset.adminView))]);
     for (const view of views) {
@@ -131,6 +132,30 @@ try {
       assert.equal(await office.locator("body").evaluate(node => getComputedStyle(node).getPropertyValue("--ui-gold").trim()), "#c89b27", "The native-inspired finish preserves MPI gold");
       if (view === "operations") {
         assert.equal(await office.locator("#adminRangePicker [aria-pressed='true']").count(), 1, "Reporting period has one selected segment");
+        assert.equal(await office.locator(".office-welcome").isVisible(), true);
+        assert.equal(await office.locator(".office-planning-drawer[open]").count(), 0, "Planning controls are available without cluttering the live view");
+        assert.equal(await office.locator("a[aria-label='Return to Inspector App']").isVisible(), viewport.width < 761, "Inspector app link is removed from desktop admins, retained for phone return navigation");
+        if (viewport.width >= 1100) {
+          const map = await office.locator("#adminLiveLocationPanel").boundingBox();
+          const team = await office.locator("#adminTeamOverview").boundingBox();
+          assert.ok(map.x + map.width <= team.x + 1, "Map and live team share a row in the desktop workbench");
+        }
+      }
+      if (view === "people") {
+        assert.equal(await office.locator(".person-card").count(), 5, "One profile per team member");
+        assert.equal(await office.locator(".office-people-group").count(), 2, "Separate field and office groups");
+        assert.equal(await office.locator("#adminTrainingList").isVisible(), false, "Qualifications no longer duplicate profiles on the main Team screen");
+        await office.locator("[data-person-id='brooke'] > summary").click();
+        await office.locator("[data-person-id='cory'] > summary").click();
+        await office.waitForFunction(() => document.querySelectorAll('.person-card[open]').length === 1);
+        assert.equal(await office.locator("[data-person-id='cory'][open]").count(), 1);
+        await auditControls(office, `Office ${viewport.width} opened Team profile`);
+        await office.locator("[data-person-id='cory'] > summary").click();
+        await office.locator("[data-office-team-tab='qualifications']").click();
+        assert.equal(await office.locator("#adminPeopleList").isVisible(), false);
+        assert.equal(await office.locator(".training-admin-card").count(), 2, "Only relevant inspector training records appear");
+        await auditControls(office, `Office ${viewport.width} Qualifications`);
+        await office.locator("[data-office-team-tab='accounts']").click();
       }
       if (view === "requests") {
         assert.equal(await office.locator(".request-admin-card").count(), 2);
@@ -168,6 +193,38 @@ try {
         await office.evaluate(() => scrollTo(0,0));
         await page.screenshot({ path: `/tmp/mpi-build200-visuals/office-${viewport.width}-${view}.png` });
         if (viewport.width === 1280) await office.locator("body").screenshot({ path: `/tmp/mpi-build200-visuals/desktop-${view}.png` });
+        if (viewport.width === 1280) {
+          // Inspect the actual rendered layout outside the preview's shorter iframe.
+          // This static fixture cannot run scripts, authenticate, or access production.
+          const staticContext = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 1280, height: 1000 } });
+          await staticContext.route("**/*", async route => {
+            const url = new URL(route.request().url());
+            if (url.hostname !== "mpi-layout.test") return route.abort();
+            const path = resolve(root, "." + url.pathname);
+            if (!path.startsWith(root + "/")) return route.abort();
+            try { await route.fulfill({ body: await readFile(path), contentType: ({ ".png": "image/png", ".jpg": "image/jpeg", ".css": "text/css" })[extname(path)] || "application/octet-stream" }); }
+            catch (_) { await route.abort(); }
+          });
+          const staticPage = await staticContext.newPage();
+          let snapshot = await office.evaluate(() => {
+            const copy = document.documentElement.cloneNode(true);
+            const originals = [...document.querySelectorAll('input,textarea,select')];
+            [...copy.querySelectorAll('input,textarea,select')].forEach((node,index) => {
+              const original = originals[index];
+              if (node.tagName === 'INPUT') { node.setAttribute('value',original.value); node.toggleAttribute('checked',original.checked); }
+              if (node.tagName === 'TEXTAREA') node.textContent = original.value;
+              if (node.tagName === 'SELECT') [...node.options].forEach((option,i) => option.toggleAttribute('selected',original.options[i].selected));
+            });
+            return '<!doctype html>' + copy.outerHTML;
+          });
+          snapshot = snapshot.replace(/<base[^>]*>/i, '<base href="https://mpi-layout.test/">');
+          // Embed the unchanged local brand assets for this isolated visual capture.
+          snapshot = snapshot.replaceAll("url('./brand-assets/mpi-website-header.jpg')", `url('data:image/jpeg;base64,${(await readFile(resolve(root,'brand-assets/mpi-website-header.jpg'))).toString('base64')}')`)
+            .replaceAll('src="./mpi-logo.png"', `src="data:image/png;base64,${(await readFile(resolve(root,'mpi-logo.png'))).toString('base64')}"`);
+          await staticPage.setContent(snapshot);
+          await staticPage.screenshot({ path: `/tmp/mpi-build200-visuals/workbench-${view}.png`, fullPage: true });
+          await staticContext.close();
+        }
       }
     }
   }
@@ -273,6 +330,9 @@ try {
   await page.click("#mpiAdminReturn");
   await page.waitForURL("**/admin.html");
   assert.equal(await page.evaluate(() => localStorage.getItem("mpiTestWorkday")), "preserved");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  assert.equal(await page.locator("a[aria-label='Return to Inspector App']").isVisible(), false);
+  await page.setViewportSize({ width: 393, height: 852 });
   assert.equal(await page.locator("a[aria-label='Return to Inspector App']").isVisible(), true);
   await page.evaluate(() => { window.MPI_NATIVE = { isNative: true }; });
   await page.click("a[aria-label='Return to Inspector App']");

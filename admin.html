@@ -961,9 +961,10 @@
       .equipment-document-dialog .facts,.equipment-document-dialog .signatures { grid-template-columns:1fr; }
     }
   </style>
-  <link rel="stylesheet" href="./mpi-app-theme.css?build=203">
+  <link rel="stylesheet" href="./mpi-app-theme.css?build=204">
+  <link rel="stylesheet" href="./mpi-office-workbench.css?build=204">
 </head>
-<body class="mpi-office-ui">
+<body class="mpi-office-ui office-workbench">
   <script>if (new URLSearchParams(location.search).get("field") === "1") document.body.classList.add("field-equipment-console");</script>
   <style>
     .field-equipment-console .topbar,.field-equipment-console .hero,.field-equipment-console .tabbar,.field-equipment-console #adminOperationsSummary,.field-equipment-console #commentUsagePanel{display:none!important}
@@ -993,7 +994,7 @@
     <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   </svg>
   <header class="topbar">
-    <div class="brand"><img src="./mpi-logo.png" alt=""><div><strong>Michigan Property Inspections</strong><span>Inspector Operations</span></div></div>
+    <div class="brand"><img src="./mpi-logo.png" alt=""><div><strong>Michigan Property Inspections</strong><span>Office Console</span></div></div>
     <div class="top-actions"><button class="new-update-action" type="button" data-admin-view="publish"><svg class="app-icon"><use href="#icon-plus"></use></svg><span>Send update</span></button><a href="./?office=1#home" aria-label="Return to Inspector App"><svg class="app-icon"><use href="#icon-phone"></use></svg><span>Inspector app</span></a><button id="adminSignOut" type="button" hidden><svg class="app-icon"><use href="#icon-logout"></use></svg><span>Sign out</span></button></div>
   </header>
 
@@ -1013,23 +1014,8 @@
     </section>
 
     <section class="dashboard" id="adminDashboard" hidden>
-      <div class="stat-grid" id="adminOperationsSummary">
-        <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><span>Inspectors working</span></div><strong id="statWorking">0</strong></article>
-        <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-briefcase"></use></svg></span><span>Jobs completed</span></div><strong id="statJobs">0</strong></article>
-        <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-clock"></use></svg></span><span id="statHoursLabel">Hours today</span></div><strong id="statHours">0:00</strong></article>
-        <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-alert"></use></svg></span><span>Needs attention</span></div><strong id="statAlerts">0</strong></article>
-      </div>
-
-      <section class="panel comment-usage-panel" id="commentUsagePanel" aria-labelledby="commentUsageTitle" hidden>
-        <div class="comment-usage-copy"><h2 id="commentUsageTitle">MPI Comment Builder allowance</h2><p id="commentUsageNote">Approximate company usage recorded by signed-in Field Tools devices. Google’s exact free quota is dynamic; this counter does not enable billing.</p></div>
-        <div class="comment-usage-metric"><span>Used this month</span><strong id="commentUsageUsed">0</strong></div>
-        <div class="comment-usage-metric"><span>Approx. remaining</span><strong id="commentUsageRemaining">400</strong></div>
-        <div class="comment-usage-metric"><span>Status</span><strong id="commentUsageStatus">Healthy</strong></div>
-        <div class="comment-usage-progress" aria-hidden="true"><span id="commentUsageProgress"></span></div>
-      </section>
-
       <nav class="panel tabbar" aria-label="Office Console sections">
-        <div class="nav-heading">Workspace</div>
+        <div class="nav-heading">MPI workspace</div>
         <button class="active" type="button" data-admin-view="operations"><svg class="app-icon"><use href="#icon-grid"></use></svg><span>Operations</span></button>
         <button type="button" data-admin-view="requests"><svg class="app-icon"><use href="#icon-clipboard"></use></svg><span>Requests</span><span class="nav-count" id="adminRequestCount"></span></button>
         <button type="button" data-admin-view="diagnostics"><svg class="app-icon"><use href="#icon-alert"></use></svg><span>App issues</span><span class="nav-count" id="adminDiagnosticCount"></span></button>
@@ -1037,14 +1023,22 @@
         <button type="button" data-admin-view="updates"><svg class="app-icon"><use href="#icon-inbox"></use></svg><span>Messages</span><span class="nav-count" id="adminReplyCount"></span></button>
         <button type="button" data-admin-view="equipment"><svg class="app-icon"><use href="#icon-briefcase"></use></svg><span>Equipment</span></button>
         <button type="button" data-admin-view="people"><svg class="app-icon"><use href="#icon-users"></use></svg><span>Team</span></button>
+        <div class="office-nav-footer"><span>Michigan Property Inspections</span><small>Office Console · Build 204</small></div>
       </nav>
 
       <section class="console-view active" data-admin-panel="operations">
-        <div class="panel content-panel">
-          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-activity"></use></svg></span><div><h2>Live Field Team</h2><p>Inspectors and subcontractors together, with each person’s current status at a glance.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>Enable office alerts</span></button></div>
+        <div class="panel content-panel office-operations-content">
+          <section class="office-welcome" aria-label="Michigan Property Inspections"><div><span>Michigan Property Inspections</span><h2>Your field team, connected.</h2><p>One workspace. Every operative. Every working day.</p></div></section>
+      <div class="stat-grid" id="adminOperationsSummary">
+        <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><span>Inspectors working</span></div><strong id="statWorking">0</strong></article>
+        <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-briefcase"></use></svg></span><span>Jobs completed</span></div><strong id="statJobs">0</strong></article>
+        <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-clock"></use></svg></span><span id="statHoursLabel">Hours today</span></div><strong id="statHours">0:00</strong></article>
+        <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-alert"></use></svg></span><span>Needs attention</span></div><strong id="statAlerts">0</strong></article>
+      </div>
           <div class="operations-toolbar">
             <div><p class="ops-eyebrow">Reporting period</p><div class="range-picker" id="adminRangePicker" role="group" aria-label="Reporting period"><button class="active" type="button" data-range="today">Today</button><button type="button" data-range="yesterday">Yesterday</button><button type="button" data-range="week">This week</button></div></div>
             <div class="field"><label for="adminInspectorSelector">Inspector view</label><select id="adminInspectorSelector"><option value="all">All inspectors</option></select></div>
+            <button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>Enable office alerts</span></button>
           </div>
           <p class="sync-note" id="adminOperationsSync">Waiting for inspector devices to sync.</p>
           <p class="status error" id="adminSyncNotice" role="status" hidden></p>
@@ -1052,15 +1046,32 @@
             <div class="safety-alert-head"><h3 id="adminSafetyAlertsTitle"><svg class="app-icon"><use href="#icon-alert"></use></svg> Safety Alerts</h3><span id="adminSafetyAlertCount">0</span></div>
             <div id="adminSafetyAlertList"></div>
           </section>
-          <section class="live-location-panel" id="adminLiveLocationPanel" aria-labelledby="adminLiveLocationTitle">
-            <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Live Inspector &amp; Schedule Map</h3><p>Choose a date to compare every inspector's read-only appointment plan, or select one inspector to open their planned or actual route.</p></div><div class="live-location-actions"><span class="live-location-status" id="adminLiveLocationStatus">Waiting for active field devices.</span><input id="adminLiveRouteDate" type="date" aria-label="Map date"><button class="secondary" id="adminLiveLocationAllPlans" type="button" disabled>All inspectors’ jobs</button><button class="secondary" id="adminLiveLocationPlan" type="button" disabled>Selected inspector’s jobs</button><button class="secondary" id="adminLiveLocationHistory" type="button" disabled>Actual route</button><button class="secondary" id="adminLiveLocationShowAll" type="button">Live locations</button><button class="secondary" id="adminLiveLocationRefresh" type="button">Update now</button><div class="live-location-planner"><div class="planning-address-field"><input id="adminLiveCandidateAddress" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="adminPlanningSuggestions" maxlength="180" aria-label="Possible new job address" placeholder="Start typing a Michigan job address"><div class="planning-address-results" id="adminPlanningSuggestions" role="listbox" hidden></div></div><button class="primary" id="adminLiveCandidatePin" type="button">Calculate travel</button></div></div></div>
-            <div class="planning-controls"><div class="field"><label for="adminPlanningInspector">Planning inspector</label><select id="adminPlanningInspector"><option value="">Select an inspector</option><option value="all">All inspectors</option></select></div><div class="field"><label for="adminPlanningOrigin">From scheduled/current job</label><select id="adminPlanningOrigin"><option value="">Select an inspector first</option></select></div></div>
-            <section class="planning-result" id="adminPlanningResult" aria-live="polite" hidden></section>
-            <p class="spectora-readonly-note" id="adminSpectoraScheduleStatus"><strong>SPECTORA · READ ONLY</strong><span>The planner may display synchronized appointment data but cannot change anything in Spectora.</span></p>
-            <div class="live-location-layout"><div><div class="live-location-map" id="adminLiveLocationMap" aria-label="Map of current inspector locations and read-only job plans"></div><p class="live-location-route-note" id="adminLiveLocationRouteStatus">Choose a date and show all future jobs, or select an operative for an individual route.</p></div><div class="live-location-list" id="adminLiveLocationList"><div class="empty">Waiting for inspector locations.</div></div></div>
-          </section>
-          <div class="team-overview" id="adminTeamOverview"><div class="empty">No inspector activity has synced yet.</div></div>
+          <div class="office-operations-grid">
+            <section class="live-location-panel" id="adminLiveLocationPanel" aria-labelledby="adminLiveLocationTitle">
+              <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Field map</h3><p>Live locations and read-only job planning.</p></div><button class="secondary" id="adminLiveLocationRefresh" type="button">Update now</button></div>
+              <div class="office-map-toolbar"><div class="office-map-modes" role="group" aria-label="Map views"><button class="secondary" id="adminLiveLocationShowAll" type="button">Live</button><button class="secondary" id="adminLiveLocationAllPlans" type="button" disabled>Job plans</button><button class="secondary" id="adminLiveLocationHistory" type="button" disabled>Actual route</button></div><input id="adminLiveRouteDate" type="date" aria-label="Map date"></div>
+              <span class="live-location-status" id="adminLiveLocationStatus">Waiting for active field devices.</span>
+              <div class="live-location-map" id="adminLiveLocationMap" aria-label="Map of current inspector locations and read-only job plans"></div>
+              <p class="live-location-route-note" id="adminLiveLocationRouteStatus">Choose a date and show all future jobs, or select an operative for an individual route.</p>
+              <div class="live-location-list" id="adminLiveLocationList"><div class="empty">Waiting for inspector locations.</div></div>
+              <details class="office-planning-drawer"><summary><svg class="app-icon"><use href="#icon-plus"></use></svg><span>Plan a possible job</span></summary>
+                <div class="office-planning-body"><div class="live-location-planner"><div class="planning-address-field"><input id="adminLiveCandidateAddress" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="adminPlanningSuggestions" maxlength="180" aria-label="Possible new job address" placeholder="Start typing a Michigan job address"><div class="planning-address-results" id="adminPlanningSuggestions" role="listbox" hidden></div></div><button class="primary" id="adminLiveCandidatePin" type="button">Calculate travel</button></div>
+                <div class="planning-controls"><div class="field"><label for="adminPlanningInspector">Planning inspector</label><select id="adminPlanningInspector"><option value="">Select an inspector</option><option value="all">All inspectors</option></select></div><div class="field"><label for="adminPlanningOrigin">From scheduled/current job</label><select id="adminPlanningOrigin"><option value="">Select an inspector first</option></select></div></div>
+                <button class="secondary" id="adminLiveLocationPlan" type="button" disabled>Selected inspector’s jobs</button>
+                <p class="spectora-readonly-note" id="adminSpectoraScheduleStatus"><strong>SPECTORA · READ ONLY</strong><span>No appointments or calendar data can be changed here.</span></p></div>
+              </details>
+              <section class="planning-result" id="adminPlanningResult" aria-live="polite" hidden></section>
+            </section>
+            <div class="team-overview office-live-team" id="adminTeamOverview"><div class="empty">No inspector activity has synced yet.</div></div>
+          </div>
           <div class="detail-shell" id="adminInspectorDetail" hidden></div>
+      <section class="panel comment-usage-panel" id="commentUsagePanel" aria-labelledby="commentUsageTitle" hidden>
+        <div class="comment-usage-copy"><h2 id="commentUsageTitle">MPI Comment Builder allowance</h2><p id="commentUsageNote">Approximate company usage recorded by signed-in Field Tools devices. Google’s exact free quota is dynamic; this counter does not enable billing.</p></div>
+        <div class="comment-usage-metric"><span>Used this month</span><strong id="commentUsageUsed">0</strong></div>
+        <div class="comment-usage-metric"><span>Approx. remaining</span><strong id="commentUsageRemaining">400</strong></div>
+        <div class="comment-usage-metric"><span>Status</span><strong id="commentUsageStatus">Healthy</strong></div>
+        <div class="comment-usage-progress" aria-hidden="true"><span id="commentUsageProgress"></span></div>
+      </section>
         </div>
       </section>
 
@@ -1155,7 +1166,12 @@
       </section>
 
       <section class="console-view" data-admin-panel="people">
-        <div class="panel content-panel"><div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><div><h2>Team Accounts</h2><p>Manage company identity, contact details, access, and official training records.</p></div></div></div><div class="notice">For security, every person signs in with their own Michigan Property Inspections Google account. The app stays signed in on an approved company phone until that person signs out.</div><h3 style="margin:20px 0 10px;color:var(--navy)">Training &amp; Qualifications</h3><p class="ops-sub">Official InterNACHI education records are connected by each user from My Profile. MPI never stores an InterNACHI password.</p><div class="training-admin-list" id="adminTrainingList"><div class="empty">Waiting for team profiles.</div></div><h3 style="margin:22px 0 10px;color:var(--navy)">Account &amp; Profile Management</h3><div class="people-list" id="adminPeopleList"><div class="empty">No company accounts have signed in yet.</div></div></div>
+        <div class="panel content-panel office-team-content">
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-users"></use></svg></span><div><h2>Your team</h2><p>Open a person to manage their contact details and access.</p></div></div></div>
+          <div class="office-team-tabs" role="tablist" aria-label="Team records"><button id="officeTeamTab" type="button" role="tab" aria-selected="true" aria-controls="officeTeamAccounts" data-office-team-tab="accounts">Team</button><button id="officeTrainingTab" type="button" role="tab" aria-selected="false" aria-controls="officeTeamQualifications" data-office-team-tab="qualifications">Qualifications</button></div>
+          <section id="officeTeamAccounts" role="tabpanel" aria-labelledby="officeTeamTab" data-office-team-pane="accounts"><div class="people-list" id="adminPeopleList"><div class="empty">No company accounts have signed in yet.</div></div><p class="office-team-security">Each person uses their own account. Open a profile to review access; original work and audit records are preserved.</p></section>
+          <section id="officeTeamQualifications" role="tabpanel" aria-labelledby="officeTrainingTab" data-office-team-pane="qualifications" hidden><p class="ops-sub">Official InterNACHI records are connected from My Profile. MPI never stores an InterNACHI password.</p><div class="training-admin-list" id="adminTrainingList"><div class="empty">Waiting for team profiles.</div></div></section>
+        </div>
       </section>
     </section>
   </main>
@@ -1176,13 +1192,13 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-office-navigation.js?build=203"></script>
-  <script src="./mpi-shared.js?build=203"></script>
-  <script src="./mpi-equipment-images.js?build=203"></script>
-  <script src="./mpi-equipment.js?build=203"></script>
-  <script src="./mpi-planning.js?build=203"></script>
-  <script src="./mpi-owner-view.js?build=203"></script>
-  <script src="./admin.js?build=203"></script>
-  <script src="./mpi-equipment-admin.js?build=203"></script>
+  <script src="./mpi-office-navigation.js?build=204"></script>
+  <script src="./mpi-shared.js?build=204"></script>
+  <script src="./mpi-equipment-images.js?build=204"></script>
+  <script src="./mpi-equipment.js?build=204"></script>
+  <script src="./mpi-planning.js?build=204"></script>
+  <script src="./mpi-owner-view.js?build=204"></script>
+  <script src="./admin.js?build=204"></script>
+  <script src="./mpi-equipment-admin.js?build=204"></script>
 </body>
 </html>

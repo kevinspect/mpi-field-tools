@@ -8,6 +8,7 @@ const assets = [
   "index.html",
   "admin.html",
   "mpi-app-theme.css",
+  "mpi-office-workbench.css",
   "admin.js",
   "mpi-planning.js",
   "mpi-shared.js",
@@ -44,6 +45,7 @@ for (const asset of assets) {
   await cp(join(root, asset), join(output, asset));
 }
 await cp(join(root, "equipment-images"), join(output, "equipment-images"), { recursive: true });
+await cp(join(root, "brand-assets"), join(output, "brand-assets"), { recursive: true });
 await mkdir(join(output, "vendor"), { recursive: true });
 for (const asset of firebaseAssets) {
   await cp(join(root, "node_modules", "firebase", asset), join(output, "vendor", asset));

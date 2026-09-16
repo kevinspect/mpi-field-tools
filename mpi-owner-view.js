@@ -43,7 +43,7 @@
   function script(source) { return `<script>${source.replace(/<\/script/gi, "<\\/script")}<\/script>`; }
   async function getSources() {
     if (sources) return sources;
-    const names = ["index.html", "admin.html", "mpi-app-theme.css", "mpi-shared.js", "mpi-planning.js", "mpi-equipment.js", "mpi-equipment-admin.js", "mpi-tool-bag.js", "mpi-field-sync.js", "mpi-subcontractor.js", "admin.js"];
+    const names = ["index.html", "admin.html", "mpi-app-theme.css", "mpi-office-workbench.css", "mpi-shared.js", "mpi-planning.js", "mpi-equipment.js", "mpi-equipment-admin.js", "mpi-tool-bag.js", "mpi-field-sync.js", "mpi-subcontractor.js", "admin.js"];
     sources = Promise.all(names.map(async name => {
       const response = await fetch(new URL(name, location.href), { signal: AbortSignal.timeout(15000) });
       if (!response.ok) throw new Error("Preview files could not load.");
@@ -101,7 +101,7 @@
     window.MPI_COMPANY_SESSION = { userId: selected.id, role: selected.role, active: true, inspectorName: selected.name, inspectorEmail: selected.email || "", inspectorId: selected.inspectorId || "", phone: selected.phone || "", assignedVehicle: selected.assignedVehicle || "", approvedEndAddress: selected.approvedEndAddress || "", adminCorrections: selected.adminCorrections || [], subcontractorOnly: selected.role === "subcontractor" };
     window.MPI_SPECTORA_SCHEDULE_DAYS = selected.spectoraScheduleDays || [];
     // Navigation is available; workflow mutations and external navigation are not.
-    const canBrowse = target => target.closest("[data-admin-view], [data-open-inspector], [data-open-office], [data-inbox-open-thread], [data-admin-inbox-kind], [data-close-admin-conversation], #fieldInboxThreadBack, [data-open-team-profile], [data-bag-guide], [data-bag-list], [data-bag-back], .app-bottom-nav a, a[href^='#'], [data-owner-preview-browse]");
+    const canBrowse = target => target.closest("[data-admin-view], [data-office-team-tab], [data-open-inspector], [data-open-office], [data-inbox-open-thread], [data-admin-inbox-kind], [data-close-admin-conversation], #fieldInboxThreadBack, [data-open-team-profile], [data-bag-guide], [data-bag-list], [data-bag-back], .app-bottom-nav a, a[href^='#'], [data-owner-preview-browse]");
     document.addEventListener("click", event => {
       const anchor = event.target.closest("a[href^='#']");
       if (anchor) { event.preventDefault(); location.hash = anchor.getAttribute("href"); }
@@ -143,8 +143,8 @@
     parsed.querySelectorAll("script,link[rel=manifest],meta[http-equiv='Content-Security-Policy']").forEach(node => node.remove());
     // The preview uses the same theme without permitting network access inside
     // its opaque read-only sandbox.
-    parsed.querySelectorAll('link[href*="mpi-app-theme.css"]').forEach(node => node.remove());
-    const theme = parsed.createElement("style"); theme.textContent = files["mpi-app-theme.css"];
+    parsed.querySelectorAll('link[href*="mpi-app-theme.css"],link[href*="mpi-office-workbench.css"]').forEach(node => node.remove());
+    const theme = parsed.createElement("style"); theme.textContent = files["mpi-app-theme.css"] + (page === "office" ? files["mpi-office-workbench.css"] : "");
     parsed.head.append(theme);
     const base = parsed.createElement("base"); base.href = new URL("./", location.href).href; parsed.head.prepend(base);
     const csp = parsed.createElement("meta"); csp.httpEquiv = "Content-Security-Policy";
