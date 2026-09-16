@@ -136,6 +136,17 @@ try {
       if (view === "operations") {
         assert.equal(await office.locator("#adminRangePicker [aria-pressed='true']").count(), 1, "Reporting period has one selected segment");
         assert.equal(await office.locator(".office-welcome").isVisible(), true);
+        assert.equal(await office.locator(".office-welcome h2").textContent(), "Full Service Home Inspections & Commercial Inspections");
+        assert.equal(await office.locator(".office-welcome p").textContent(), "Everything You Need Under One Roof!");
+        const brand = await office.locator(".office-welcome").evaluate(node => {
+          const photo = node.querySelector('img'), copy = node.querySelector('div'), box = node.getBoundingClientRect(), picture = photo.getBoundingClientRect(), text = copy.getBoundingClientRect(), style = getComputedStyle(photo);
+          return { width: box.width, imageWidth: picture.width, mask: style.maskImage, opacity: style.opacity, centreDifference: Math.abs(text.x + text.width / 2 - box.x - box.width / 2), fits: text.top >= box.top && text.bottom <= box.bottom, alignment: getComputedStyle(node).textAlign };
+        });
+        assert.ok(Math.abs(brand.imageWidth - brand.width) < 1, "Company house photograph spans the entire banner");
+        assert.equal(brand.mask, "none", "No extra blue fade obscures the website photograph");
+        assert.equal(brand.opacity, "1");
+        assert.equal(brand.alignment, "center");
+        assert.ok(brand.centreDifference < 1 && brand.fits, "Website copy is centred and fits at every supported viewport");
         assert.equal(await office.locator(".office-planning-drawer[open]").count(), 0, "Planning controls are available without cluttering the live view");
         assert.equal(await office.locator("a[aria-label='Return to Inspector App']").isVisible(), viewport.width < 761, "Inspector app link is removed from desktop admins, retained for phone return navigation");
         if (viewport.width >= 1100) {
