@@ -337,17 +337,17 @@
   async function enableOfficeAlerts(button = null, requestPermission = true) {
     if (!currentUser || !currentProfile || !shared.isAdminRole(currentProfile)) return false;
     if (!("Notification" in window) || !("serviceWorker" in navigator) || !window.firebase?.messaging) {
-      setOfficeAlertButtonState("ALERTS NOT SUPPORTED");
+      setOfficeAlertButtonState("Alerts not supported");
       return false;
     }
     if (requestPermission) {
       button && (button.disabled = true);
-      setOfficeAlertButtonState("ENABLING ALERTS…", true);
+      setOfficeAlertButtonState("Enabling alerts…", true);
     }
     try {
       const permission = Notification.permission === "granted" ? "granted" : requestPermission ? await Notification.requestPermission() : Notification.permission;
       if (permission !== "granted") {
-        setOfficeAlertButtonState(permission === "denied" ? "ALLOW ALERTS IN SETTINGS" : "ENABLE OFFICE ALERTS");
+        setOfficeAlertButtonState(permission === "denied" ? "Allow alerts in settings" : "Enable office alerts");
         return false;
       }
       const registration = await navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" });
@@ -368,10 +368,10 @@
         officeNotificationDevice: { token, enabled: true, app: "MPI Office Console", updatedAt: shared.serverTimestamp() }
       }, { merge: true });
       currentProfile.officeNotificationDevice = { token, enabled: true };
-      setOfficeAlertButtonState("OFFICE ALERTS ENABLED", true);
+      setOfficeAlertButtonState("Office alerts enabled", true);
       return true;
     } catch (error) {
-      setOfficeAlertButtonState("TRY OFFICE ALERTS AGAIN");
+      setOfficeAlertButtonState("Try office alerts again");
       console.warn("MPI office alert setup failed", error);
       return false;
     } finally {
@@ -2241,7 +2241,26 @@
 
   function showView(name) {
     currentAdminView = name;
-    tabButtons.forEach(button => button.classList.toggle("active", button.dataset.adminView === name));
+    const headings = {
+      operations: ["Operations", "Your field team, locations and daily progress."],
+      requests: ["Requests", "Keep equipment orders and office follow-ups moving."],
+      diagnostics: ["App issues", "Review, investigate and resolve field reports."],
+      publish: ["Send to field", "Share an update, instruction or document with your team."],
+      updates: ["Messages", "Private conversations, attachments and read receipts."],
+      equipment: ["Equipment", "Issue tools and keep each handover accountable."],
+      people: ["Team", "Your field and office team, together."]
+    };
+    const heading = headings[name] || ["Office Console", "The MPI team, connected."];
+    const title = document.getElementById("adminWorkspaceTitle");
+    const subtitle = document.getElementById("adminWorkspaceSubtitle");
+    if (title) title.textContent = heading[0];
+    if (subtitle) subtitle.textContent = heading[1];
+    tabButtons.forEach(button => {
+      const selected = button.dataset.adminView === name;
+      button.classList.toggle("active", selected);
+      if (selected) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
+    });
     panels.forEach(panel => panel.classList.toggle("active", panel.dataset.adminPanel === name));
     if (operationsSummary) operationsSummary.hidden = name !== "operations";
     if (commentUsagePanel) commentUsagePanel.hidden = name !== "operations" || !isPrimaryOwner();
@@ -3247,7 +3266,11 @@
   function renderOperations() {
     const preserveCorrectionDraft = selectedInspectorId !== "all" && correctionDraftIsActive();
     renderOperationsStats();
-    rangePicker.querySelectorAll("button").forEach(button => button.classList.toggle("active", button.dataset.range === currentRange));
+    rangePicker.querySelectorAll("button").forEach(button => {
+      const selected = button.dataset.range === currentRange;
+      button.classList.toggle("active", selected);
+      button.setAttribute("aria-pressed", String(selected));
+    });
     const syncDates = operativePeople().map(person => asDate(person.operationsUpdatedAt)).filter(Boolean);
     const latest = syncDates.sort((a, b) => b - a)[0];
     operationsSync.textContent = latest ? `Latest device sync ${formatDateTime(latest)}` : "Waiting for inspector devices to sync.";
@@ -3833,7 +3856,7 @@
     if (status) status.textContent = "Opening notification permission…";
     const enabled = await enableOfficeAlerts(button, true);
     button.disabled = enabled;
-    button.textContent = enabled ? "OFFICE ALERTS ENABLED" : "TRY OFFICE ALERTS AGAIN";
+    button.textContent = enabled ? "Office alerts enabled" : "Try office alerts again";
     if (status) status.textContent = enabled ? "Alerts are enabled on this device." : "Alerts were not enabled. Check the device notification settings, then try again.";
   });
 

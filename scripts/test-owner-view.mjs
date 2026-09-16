@@ -124,6 +124,14 @@ try {
     const views = await office.locator(".tabbar [data-admin-view]").evaluateAll(buttons => [...new Set(buttons.map(button => button.dataset.adminView))]);
     for (const view of views) {
       await office.locator(`.tabbar [data-admin-view='${view}']`).click();
+      assert.equal(await office.locator(".tabbar [aria-current='page']").count(), 1, "Exactly one current app section is announced");
+      const sectionName = (await office.locator(`.tabbar [data-admin-view='${view}'] > span`).first().textContent()).trim();
+      assert.equal((await office.locator("#adminWorkspaceTitle").textContent()).toLowerCase(), sectionName.toLowerCase(), "The app navigation title follows the active section");
+      assert.equal(await office.locator("body").evaluate(node => getComputedStyle(node).getPropertyValue("--ui-navy").trim()), "#11186a", "The native-inspired finish preserves MPI navy");
+      assert.equal(await office.locator("body").evaluate(node => getComputedStyle(node).getPropertyValue("--ui-gold").trim()), "#c89b27", "The native-inspired finish preserves MPI gold");
+      if (view === "operations") {
+        assert.equal(await office.locator("#adminRangePicker [aria-pressed='true']").count(), 1, "Reporting period has one selected segment");
+      }
       if (view === "requests") {
         assert.equal(await office.locator(".request-admin-card").count(), 2);
         assert.equal(await office.locator(".request-editor[open]").count(), 0, "Request queue opens with summaries, not a wall of editors");
@@ -159,6 +167,7 @@ try {
       if (process.env.MPI_VISUAL_QA) {
         await office.evaluate(() => scrollTo(0,0));
         await page.screenshot({ path: `/tmp/mpi-build200-visuals/office-${viewport.width}-${view}.png` });
+        if (viewport.width === 1280) await office.locator("body").screenshot({ path: `/tmp/mpi-build200-visuals/desktop-${view}.png` });
       }
     }
   }

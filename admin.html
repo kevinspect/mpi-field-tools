@@ -961,7 +961,7 @@
       .equipment-document-dialog .facts,.equipment-document-dialog .signatures { grid-template-columns:1fr; }
     }
   </style>
-  <link rel="stylesheet" href="./mpi-app-theme.css?build=202">
+  <link rel="stylesheet" href="./mpi-app-theme.css?build=203">
 </head>
 <body class="mpi-office-ui">
   <script>if (new URLSearchParams(location.search).get("field") === "1") document.body.classList.add("field-equipment-console");</script>
@@ -999,7 +999,7 @@
 
   <main class="shell">
     <section class="hero">
-      <div><p class="eyebrow">Owner and office administration</p><h1>Office Console</h1><p>Live operations, requests, company updates and inspector records in one workspace.</p></div>
+      <div><p class="eyebrow">Owner and office administration</p><h1 id="adminWorkspaceTitle">Office Console</h1><p id="adminWorkspaceSubtitle">The MPI team, connected.</p></div>
       <div class="account-pill" id="adminAccountPill" hidden><span class="account-avatar" id="adminInitial">K</span><div><strong id="adminAccountName">Owner</strong><small id="adminAccountEmail"></small></div></div>
     </section>
 
@@ -1007,7 +1007,7 @@
       <img src="./mpi-logo.png" alt="Michigan Property Inspections">
       <h2>Office access</h2>
       <p>Sign in with your approved Michigan Property Inspections Google account. Inspectors cannot open this management console.</p>
-      <button class="primary" id="adminSignIn" type="button"><svg class="app-icon"><use href="#icon-shield"></use></svg><span>SIGN IN WITH MPI GOOGLE ACCOUNT</span></button>
+      <button class="primary" id="adminSignIn" type="button"><svg class="app-icon"><use href="#icon-shield"></use></svg><span>Sign in with MPI Google account</span></button>
       <p class="status" id="adminAuthStatus"></p>
       <button class="secondary" id="adminRetryConnection" type="button" hidden>TRY OFFICE CONNECTION AGAIN</button>
     </section>
@@ -1041,9 +1041,9 @@
 
       <section class="console-view active" data-admin-panel="operations">
         <div class="panel content-panel">
-          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-activity"></use></svg></span><div><h2>Live Field Team</h2><p>Inspectors and subcontractors together, with each person’s current status at a glance.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE OFFICE ALERTS</span></button></div>
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-activity"></use></svg></span><div><h2>Live Field Team</h2><p>Inspectors and subcontractors together, with each person’s current status at a glance.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>Enable office alerts</span></button></div>
           <div class="operations-toolbar">
-            <div><p class="ops-eyebrow">Reporting period</p><div class="range-picker" id="adminRangePicker"><button class="active" type="button" data-range="today">Today</button><button type="button" data-range="yesterday">Yesterday</button><button type="button" data-range="week">This week</button></div></div>
+            <div><p class="ops-eyebrow">Reporting period</p><div class="range-picker" id="adminRangePicker" role="group" aria-label="Reporting period"><button class="active" type="button" data-range="today">Today</button><button type="button" data-range="yesterday">Yesterday</button><button type="button" data-range="week">This week</button></div></div>
             <div class="field"><label for="adminInspectorSelector">Inspector view</label><select id="adminInspectorSelector"><option value="all">All inspectors</option></select></div>
           </div>
           <p class="sync-note" id="adminOperationsSync">Waiting for inspector devices to sync.</p>
@@ -1053,7 +1053,7 @@
             <div id="adminSafetyAlertList"></div>
           </section>
           <section class="live-location-panel" id="adminLiveLocationPanel" aria-labelledby="adminLiveLocationTitle">
-            <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Live Inspector &amp; Schedule Map</h3><p>Choose a date to compare every inspector's read-only appointment plan, or select one inspector to open their planned or actual route.</p></div><div class="live-location-actions"><span class="live-location-status" id="adminLiveLocationStatus">Waiting for active field devices.</span><input id="adminLiveRouteDate" type="date" aria-label="Map date"><button class="secondary" id="adminLiveLocationAllPlans" type="button" disabled>SHOW ALL INSPECTORS' JOBS</button><button class="secondary" id="adminLiveLocationPlan" type="button" disabled>SHOW SELECTED INSPECTOR'S JOBS</button><button class="secondary" id="adminLiveLocationHistory" type="button" disabled>SHOW ACTUAL ROUTE</button><button class="secondary" id="adminLiveLocationShowAll" type="button">LIVE LOCATIONS</button><button class="secondary" id="adminLiveLocationRefresh" type="button">UPDATE NOW</button><div class="live-location-planner"><div class="planning-address-field"><input id="adminLiveCandidateAddress" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="adminPlanningSuggestions" maxlength="180" aria-label="Possible new job address" placeholder="Start typing a Michigan job address"><div class="planning-address-results" id="adminPlanningSuggestions" role="listbox" hidden></div></div><button class="primary" id="adminLiveCandidatePin" type="button">CALCULATE TRAVEL</button></div></div></div>
+            <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Live Inspector &amp; Schedule Map</h3><p>Choose a date to compare every inspector's read-only appointment plan, or select one inspector to open their planned or actual route.</p></div><div class="live-location-actions"><span class="live-location-status" id="adminLiveLocationStatus">Waiting for active field devices.</span><input id="adminLiveRouteDate" type="date" aria-label="Map date"><button class="secondary" id="adminLiveLocationAllPlans" type="button" disabled>All inspectors’ jobs</button><button class="secondary" id="adminLiveLocationPlan" type="button" disabled>Selected inspector’s jobs</button><button class="secondary" id="adminLiveLocationHistory" type="button" disabled>Actual route</button><button class="secondary" id="adminLiveLocationShowAll" type="button">Live locations</button><button class="secondary" id="adminLiveLocationRefresh" type="button">Update now</button><div class="live-location-planner"><div class="planning-address-field"><input id="adminLiveCandidateAddress" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="adminPlanningSuggestions" maxlength="180" aria-label="Possible new job address" placeholder="Start typing a Michigan job address"><div class="planning-address-results" id="adminPlanningSuggestions" role="listbox" hidden></div></div><button class="primary" id="adminLiveCandidatePin" type="button">Calculate travel</button></div></div></div>
             <div class="planning-controls"><div class="field"><label for="adminPlanningInspector">Planning inspector</label><select id="adminPlanningInspector"><option value="">Select an inspector</option><option value="all">All inspectors</option></select></div><div class="field"><label for="adminPlanningOrigin">From scheduled/current job</label><select id="adminPlanningOrigin"><option value="">Select an inspector first</option></select></div></div>
             <section class="planning-result" id="adminPlanningResult" aria-live="polite" hidden></section>
             <p class="spectora-readonly-note" id="adminSpectoraScheduleStatus"><strong>SPECTORA · READ ONLY</strong><span>The planner may display synchronized appointment data but cannot change anything in Spectora.</span></p>
@@ -1066,7 +1066,7 @@
 
       <section class="console-view" data-admin-panel="requests">
         <div class="panel content-panel">
-          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-clipboard"></use></svg></span><div><h2>Inspector Requests</h2><p>PPE, tools, uniforms, supplies, training and feedback stay here until completed.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE OFFICE ALERTS</span></button></div>
+          <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-clipboard"></use></svg></span><div><h2>Inspector Requests</h2><p>PPE, tools, uniforms, supplies, training and feedback stay here until completed.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>Enable office alerts</span></button></div>
           <div class="form-grid" id="adminRequestFilters">
             <div class="field"><label for="adminRequestStatusFilter">Status</label><select id="adminRequestStatusFilter"><option value="active">All active</option><option value="new">New</option><option value="in-progress">In progress</option><option value="waiting">Waiting</option><option value="completed">Completed</option><option value="all">All history</option></select></div>
             <div class="field"><label for="adminRequestInspectorFilter">Inspector</label><select id="adminRequestInspectorFilter"><option value="all">All inspectors</option></select></div>
@@ -1107,7 +1107,7 @@
               <div class="attachment-list" id="adminAttachmentList" aria-live="polite"></div>
               <label class="check wide"><input id="adminUpdateAck" type="checkbox" checked><span><strong>Require confirmation</strong><br>The inspector must acknowledge or complete this item in the app.</span></label>
             </div>
-            <div class="form-actions"><button class="primary" id="adminPublishButton" type="submit"><svg class="app-icon"><use href="#icon-send"></use></svg><span>SEND TO MPI FIELD TOOLS</span></button><span class="status" id="adminPublishStatus"></span></div>
+            <div class="form-actions"><button class="primary" id="adminPublishButton" type="submit"><svg class="app-icon"><use href="#icon-send"></use></svg><span>Send to MPI Field Tools</span></button><span class="status" id="adminPublishStatus"></span></div>
           </form>
         </div>
       </section>
@@ -1115,10 +1115,10 @@
       <section class="console-view" data-admin-panel="updates">
         <div class="panel content-panel">
           <div id="adminInboxMailbox">
-            <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Messages</h2><p>Private team conversations, replies, attachments, delivery, and read status.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>ENABLE MESSAGE ALERTS</span></button></div>
+            <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-inbox"></use></svg></span><div><h2>Messages</h2><p>Private team conversations, replies, attachments, delivery, and read status.</p></div></div><button class="secondary" type="button" data-enable-office-alerts><svg class="app-icon"><use href="#icon-bell"></use></svg><span>Enable message alerts</span></button></div>
             <details class="admin-inbox-block admin-compose-block">
               <summary><div class="admin-inbox-title"><h3><svg class="app-icon"><use href="#icon-send"></use></svg> Compose message</h3><span>New private conversation</span></div></summary>
-              <form class="admin-inbox-compose" id="adminInboxComposeForm"><div><h3>New private message</h3><p>Choose one recipient. This will not broadcast to the rest of the team.</p></div><div class="form-grid"><div class="field"><label for="adminInboxComposeRecipient">To</label><select id="adminInboxComposeRecipient" required><option value="">Choose team member</option></select></div><div class="field"><label for="adminInboxComposeText">Message</label><textarea id="adminInboxComposeText" maxlength="1200" required placeholder="Write a private MPI message"></textarea></div><div class="field wide"><label for="adminInboxComposeFiles">Photos or PDF (optional)</label><input id="adminInboxComposeFiles" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple></div></div><div class="form-actions"><button class="primary" id="adminInboxComposeSend" type="submit"><svg class="app-icon"><use href="#icon-send"></use></svg><span>SEND PRIVATE MESSAGE</span></button><span class="status" id="adminInboxComposeStatus"></span></div></form>
+              <form class="admin-inbox-compose" id="adminInboxComposeForm"><div><h3>New private message</h3><p>Choose one recipient. This will not broadcast to the rest of the team.</p></div><div class="form-grid"><div class="field"><label for="adminInboxComposeRecipient">To</label><select id="adminInboxComposeRecipient" required><option value="">Choose team member</option></select></div><div class="field"><label for="adminInboxComposeText">Message</label><textarea id="adminInboxComposeText" maxlength="1200" required placeholder="Write a private MPI message"></textarea></div><div class="field wide"><label for="adminInboxComposeFiles">Photos or PDF (optional)</label><input id="adminInboxComposeFiles" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" multiple></div></div><div class="form-actions"><button class="primary" id="adminInboxComposeSend" type="submit"><svg class="app-icon"><use href="#icon-send"></use></svg><span>Send private message</span></button><span class="status" id="adminInboxComposeStatus"></span></div></form>
             </details>
             <section class="admin-inbox-block admin-conversation-list"><div class="admin-inbox-list-heading"><h3>Conversations</h3><span id="adminInboxSummary">Connecting…</span></div><div class="office-reply-list" id="adminUnifiedInboxList"><div class="empty">Connecting to the MPI inbox…</div></div></section>
             <details class="admin-inbox-block admin-update-archive"><summary><div class="admin-inbox-title"><h3>Company updates</h3><span id="adminSentSummary">Published update history</span></div></summary><div class="admin-sent-direct-list" id="adminSentMessagesList" hidden></div><div class="update-list" id="adminUpdatesList"><div class="empty">No office updates have been published.</div></div></details>
@@ -1131,10 +1131,10 @@
         <div class="panel content-panel" id="adminEquipmentDashboard">
           <div class="section-head"><div class="section-title"><span class="section-icon"><svg class="app-icon"><use href="#icon-briefcase"></use></svg></span><div><h2>MPI Equipment &amp; Issued Tools</h2><p>Prepare equipment for handover, record what is actually issued, and preserve every signed acknowledgment.</p></div></div></div>
           <div class="equipment-summary-grid" id="adminEquipmentSummary"><div class="empty">Equipment records are loading.</div></div>
-          <div class="equipment-toolbar"><label>Employee<select id="adminEquipmentEmployee"><option>Loading field team…</option></select></label><div class="equipment-toolbar-action"><button class="primary" id="adminCreateEquipmentAcknowledgment" type="button" disabled>CREATE ACKNOWLEDGMENT</button><span class="equipment-selection-status" id="adminEquipmentSelectionStatus">Select the tools being handed over today.</span></div></div>
+          <div class="equipment-toolbar"><label>Employee<select id="adminEquipmentEmployee"><option>Loading field team…</option></select></label><div class="equipment-toolbar-action"><button class="primary" id="adminCreateEquipmentAcknowledgment" type="button" disabled>Create acknowledgment</button><span class="equipment-selection-status" id="adminEquipmentSelectionStatus">Select the tools being handed over today.</span></div></div>
           <div class="equipment-record-list" id="adminEquipmentList"><div class="empty">Choose an employee to view equipment records.</div></div>
           <details class="equipment-add-panel">
-            <summary>ADD ANOTHER TOOL</summary>
+            <summary>Add another tool</summary>
             <form id="adminAddEquipmentForm">
               <div class="form-grid">
                 <div class="field"><label for="adminAddEquipmentEmployee">Employee</label><select name="employeeId" id="adminAddEquipmentEmployee" required></select></div>
@@ -1176,13 +1176,13 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-office-navigation.js?build=202"></script>
-  <script src="./mpi-shared.js?build=202"></script>
-  <script src="./mpi-equipment-images.js?build=202"></script>
-  <script src="./mpi-equipment.js?build=202"></script>
-  <script src="./mpi-planning.js?build=202"></script>
-  <script src="./mpi-owner-view.js?build=202"></script>
-  <script src="./admin.js?build=202"></script>
-  <script src="./mpi-equipment-admin.js?build=202"></script>
+  <script src="./mpi-office-navigation.js?build=203"></script>
+  <script src="./mpi-shared.js?build=203"></script>
+  <script src="./mpi-equipment-images.js?build=203"></script>
+  <script src="./mpi-equipment.js?build=203"></script>
+  <script src="./mpi-planning.js?build=203"></script>
+  <script src="./mpi-owner-view.js?build=203"></script>
+  <script src="./admin.js?build=203"></script>
+  <script src="./mpi-equipment-admin.js?build=203"></script>
 </body>
 </html>

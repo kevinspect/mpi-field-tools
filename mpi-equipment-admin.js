@@ -85,7 +85,7 @@
   function renderEquipmentSelectionState() {
     const selected = selectedPendingAssignments();
     createAcknowledgment.disabled = !assignmentSnapshotReady || selected.length === 0;
-    createAcknowledgment.textContent = selected.length ? `CREATE ACKNOWLEDGMENT (${selected.length})` : "CREATE ACKNOWLEDGMENT";
+    createAcknowledgment.textContent = selected.length ? `Create acknowledgment (${selected.length})` : "Create acknowledgment";
     if (selectionStatus) selectionStatus.textContent = selected.length
       ? `${selected.length} tool${selected.length === 1 ? "" : "s"} selected. The form will include only these items.`
       : "Select the tools being handed over today.";
