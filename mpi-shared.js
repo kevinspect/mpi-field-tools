@@ -282,7 +282,10 @@
     const candidateIndex = paidIndexes.find((index, paidPosition) => {
       const session = record.sessions[index];
       const clockedOut = timestampMilliseconds(session.clockedOutAt);
-      if (!Number.isFinite(clockedOut) || repairedEnds.has(String(session.clockedOutAt || ""))) return false;
+      // A restored session may later receive the inspector's genuine final
+      // Clock Off. Never run the same repaired session through recovery again
+      // or that valid final timestamp can be cleared by a stale schedule.
+      if (session.prematureClockOut || !Number.isFinite(clockedOut) || repairedEnds.has(String(session.clockedOutAt || ""))) return false;
       const laterSession = paidIndexes.slice(paidPosition + 1).some(laterIndex => timestampMilliseconds(record.sessions[laterIndex].clockedInAt) > clockedOut);
       const laterScheduledJob = scheduledStarts.some(start => start > clockedOut + 60 * 1000);
       return laterSession || laterScheduledJob;

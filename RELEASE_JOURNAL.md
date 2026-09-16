@@ -1,5 +1,16 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 212 — Final Clock-Off Reconciliation
+
+- Keeps the premature-clock-off repair one-time only so it cannot clear a later genuine final Clock Off.
+- Repairs an already affected day from the latest Clock Off recorded after the final job was completed.
+- Treats only genuinely remaining jobs as eligible evidence for a premature Clock Off.
+- Preserves the original 11:22 action and every later Clock Off event in the audit trail.
+
+### Validation record
+
+- Verified the genuine final Clock Off remains authoritative after an earlier repair, the existing day is reconciled without deleting audit data, and only unfinished jobs can trigger recovery.
+
 ## Build 211 — Simplified Job Map and Clock-Off Safeguard
 
 - Replaced the Office map's permanent Live, Job Plans, Actual Route, Update Now, and duplicated inspector controls with one clear date, one scheduled-job selector, and one **Show all jobs** action.

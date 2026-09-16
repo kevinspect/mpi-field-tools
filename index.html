@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="211">
+  <meta name="app-build" content="212">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5915,7 +5915,7 @@
     .field-inbox-thread-files { padding-left:43px; color:#8e8e93; font-size:7.5px; }
     .field-compose-card { border-radius:18px; }
   </style>
-  <link rel="stylesheet" href="./mpi-app-theme.css?build=211">
+  <link rel="stylesheet" href="./mpi-app-theme.css?build=212">
 </head>
 <body class="mpi-field-ui">
   <section class="mpi-access-choice" id="mpiAccessChoice" role="dialog" aria-modal="true" aria-labelledby="mpiAccessChoiceTitle" hidden>
@@ -8640,7 +8640,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 211</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 212</span></div>
         </section>
 
         <section class="panel settings-card app-diagnostics-card" id="appDiagnosticsCard" aria-labelledby="appDiagnosticsTitle">
@@ -8780,16 +8780,16 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=211"></script>
-  <script src="./mpi-shared.js?build=211"></script>
-  <script src="./mpi-equipment.js?build=211"></script>
-  <script src="./mpi-office-navigation.js?build=211"></script>
-  <script src="./mpi-owner-view.js?build=211"></script>
-  <script src="./mpi-tool-bag.js?build=211"></script>
-  <script src="./mpi-field-sync.js?build=211"></script>
-  <script src="./mpi-subcontractor.js?build=211"></script>
-  <script src="./mpi-comment-policy.js?build=211"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=211"></script>
+  <script src="./mpi-native-bridge.js?build=212"></script>
+  <script src="./mpi-shared.js?build=212"></script>
+  <script src="./mpi-equipment.js?build=212"></script>
+  <script src="./mpi-office-navigation.js?build=212"></script>
+  <script src="./mpi-owner-view.js?build=212"></script>
+  <script src="./mpi-tool-bag.js?build=212"></script>
+  <script src="./mpi-field-sync.js?build=212"></script>
+  <script src="./mpi-subcontractor.js?build=212"></script>
+  <script src="./mpi-comment-policy.js?build=212"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=212"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -16474,10 +16474,67 @@
           .filter(job => !workflowJobIsComplete(job));
       }
 
+      function reconcileFinalWorkflowClockOff(jobs = workflowScheduleJobs()) {
+        const record = loadWorkflowTimeClock();
+        const active = workflowActiveClockSession(record);
+        if (!record || !active || workflowClockOffRemainingJobs(jobs).length) return false;
+        const activity = loadWorkflowActivity()
+          .filter(item => item?.date === localDateKey() && item?.timestamp)
+          .sort((left, right) => new Date(left.timestamp) - new Date(right.timestamp));
+        const lastJobCompletedAt = activity
+          .filter(item => item.action === "Final job completion")
+          .map(item => new Date(item.timestamp).getTime())
+          .filter(Number.isFinite)
+          .at(-1) || 0;
+        const activeStartedAt = new Date(active.clockedInAt).getTime();
+        const dayComplete = workflowDayCompleteRecord();
+        const backupClockOut = workflowPaySessions(dayComplete?.timeClockBackup).at(-1)?.clockedOutAt || "";
+        const recordedClockOuts = activity
+          .filter(item => item.action === "Clocked off")
+          .map(item => ({
+            clockedOutAt: String(item.data?.clockedOutAt || item.timestamp || ""),
+            clockOutLocation: item.data?.clockOutLocation || null,
+            source: "workflow-activity"
+          }));
+        if (backupClockOut) recordedClockOuts.push({
+          clockedOutAt: String(backupClockOut),
+          clockOutLocation: workflowPaySessions(dayComplete?.timeClockBackup).at(-1)?.clockOutLocation || null,
+          source: "day-complete-backup"
+        });
+        const finalClockOff = recordedClockOuts
+          .filter(item => {
+            const timestamp = new Date(item.clockedOutAt).getTime();
+            return Number.isFinite(timestamp)
+              && timestamp > activeStartedAt
+              && (!lastJobCompletedAt || timestamp >= lastJobCompletedAt);
+          })
+          .sort((left, right) => new Date(left.clockedOutAt) - new Date(right.clockedOutAt))
+          .at(-1);
+        if (!finalClockOff) return false;
+        active.clockedOutAt = finalClockOff.clockedOutAt;
+        if (finalClockOff.clockOutLocation) active.clockOutLocation = finalClockOff.clockOutLocation;
+        record.finalClockOffReconciled = {
+          reconciledAt: new Date().toISOString(),
+          clockedOutAt: finalClockOff.clockedOutAt,
+          source: finalClockOff.source,
+          reason: "Restored the confirmed final Clock Off after all scheduled jobs were completed"
+        };
+        saveWorkflowTimeClock(record);
+        appendWorkflowEvent("Final clock off restored", {
+          clockedOutAt: finalClockOff.clockedOutAt,
+          source: finalClockOff.source,
+          auditPreserved: true
+        }, null);
+        queueWorkflowOperationsSync();
+        showToast(`Final Clock Off restored at ${workflowClock(finalClockOff.clockedOutAt)}`);
+        return true;
+      }
+
       function repairPrematureWorkflowClockOff(jobs = workflowScheduleJobs()) {
         const clock = loadWorkflowTimeClock();
-        if (!clock || !window.MPI_SHARED?.repairPrematureClockOff) return false;
-        const result = window.MPI_SHARED.repairPrematureClockOff(clock, jobs, localDateKey());
+        const remainingJobs = workflowClockOffRemainingJobs(jobs);
+        if (!clock || workflowDayCompleteRecord()?.completedAt || !remainingJobs.length || !window.MPI_SHARED?.repairPrematureClockOff) return false;
+        const result = window.MPI_SHARED.repairPrematureClockOff(clock, remainingJobs, localDateKey());
         if (!result?.repaired || !result.record) return false;
         saveWorkflowTimeClock(result.record);
         appendWorkflowEvent("Premature clock off corrected", {
@@ -18069,6 +18126,7 @@
       function renderWorkflowTodayJobs(jobs = workflowScheduleJobs(), calendarName = "Company schedule", { cached = false } = {}) {
         workflowCurrentJobs = workflowRoutableScheduleJobs(jobs)
           .sort((left, right) => scheduleJobTimestamp(left, "start") - scheduleJobTimestamp(right, "start"));
+        if (reconcileFinalWorkflowClockOff(workflowCurrentJobs)) renderWorkflowTimeClock();
         if (repairPrematureWorkflowClockOff(workflowCurrentJobs)) renderWorkflowTimeClock();
         if (!workflowJobsList || !workflowNextJob) return;
         const profile = loadWorkflowProfile();
