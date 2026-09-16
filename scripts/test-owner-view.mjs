@@ -140,13 +140,14 @@ try {
         assert.equal(await office.locator(".office-welcome p").textContent(), "Everything You Need Under One Roof!");
         const brand = await office.locator(".office-welcome").evaluate(node => {
           const photo = node.querySelector('img'), copy = node.querySelector('div'), box = node.getBoundingClientRect(), picture = photo.getBoundingClientRect(), text = copy.getBoundingClientRect(), style = getComputedStyle(photo);
-          return { width: box.width, imageWidth: picture.width, mask: style.maskImage, opacity: style.opacity, centreDifference: Math.abs(text.x + text.width / 2 - box.x - box.width / 2), fits: text.top >= box.top && text.bottom <= box.bottom, alignment: getComputedStyle(node).textAlign };
+          return { width: box.width, imageWidth: picture.width, mask: style.maskImage, opacity: style.opacity, fits: text.top >= box.top && text.bottom <= box.bottom && text.left >= box.left && text.right <= box.right, alignment: getComputedStyle(node).textAlign, background: getComputedStyle(node).backgroundColor };
         });
-        assert.ok(Math.abs(brand.imageWidth - brand.width) < 1, "Company house photograph spans the entire banner");
-        assert.equal(brand.mask, "none", "No extra blue fade obscures the website photograph");
-        assert.equal(brand.opacity, "1");
-        assert.equal(brand.alignment, "center");
-        assert.ok(brand.centreDifference < 1 && brand.fits, "Website copy is centred and fits at every supported viewport");
+        assert.ok(Math.abs(brand.imageWidth - brand.width * (viewport.width < 761 ? .48 : .58)) < 1, "House photograph uses the established compact MPI banner layout");
+        assert.ok(brand.mask.includes("14%"), "The lighter Build 207 photo fade is preserved");
+        assert.equal(brand.opacity, viewport.width < 761 ? "0.65" : "1", "Restoring the navy blend does not darken the photo beyond its previous transparency");
+        assert.equal(brand.background, "rgb(17, 24, 106)");
+        assert.equal(brand.alignment, "left");
+        assert.ok(brand.fits, "Updated service copy fits inside the compact banner at every supported viewport");
         assert.equal(await office.locator(".office-planning-drawer[open]").count(), 0, "Planning controls are available without cluttering the live view");
         assert.equal(await office.locator("a[aria-label='Return to Inspector App']").isVisible(), viewport.width < 761, "Inspector app link is removed from desktop admins, retained for phone return navigation");
         if (viewport.width >= 1100) {
