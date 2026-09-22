@@ -20,7 +20,10 @@
       troubleshooting: [],
       stop: [],
       workflow: [],
-      links: []
+      links: [],
+      sizeOptions: [],
+      quantityEnabled: false,
+      defaultQuantity: 1
     };
     return Object.freeze({
       ...defaults,
@@ -52,6 +55,40 @@
       troubleshooting: ["If a pocket or handle fails, transfer tools to secure storage and report the bag for replacement."],
       stop: ["Do not use when the base, handle, or closure can no longer retain the load."],
       workflow: ["Use the issued-tool list and end-of-job tool check to confirm everything is back in the vehicle."]
+    }),
+    tool({
+      id: "mpi-uniform-polo",
+      title: "MPI embroidered polo shirt",
+      model: "Black Michigan Property Inspections embroidered polo",
+      category: "Uniform & apparel",
+      aliases: "uniform shirt polo branded apparel clothing",
+      sizeOptions: ["M", "L", "XL"],
+      quantityEnabled: true,
+      purpose: "Provide the approved MPI field uniform shirt and record the exact size and quantity issued to the employee.",
+      when: ["Wear for assigned MPI inspections and company duties in accordance with the current uniform policy."],
+      setup: ["Confirm the selected size, quantity, logo condition, and general condition before handover."],
+      steps: ["Select the employee's size and quantity in the handover form.", "Confirm the employee received the listed items before signing."],
+      record: ["Size, quantity, issue date, employee, issuing administrator, and signed acknowledgment reference."],
+      limitations: ["The handover record documents issuance and return responsibility; it is not a payroll-deduction authorization."],
+      care: ["Follow the garment label, keep the embroidered logo presentable, and report loss or damage promptly."],
+      workflow: ["Include the polo in the signed equipment handover and update its status when returned or replaced."]
+    }),
+    tool({
+      id: "mpi-uniform-cap",
+      title: "MPI embroidered cap",
+      model: "Black New Era 39THIRTY MPI embroidered cap",
+      category: "Uniform & apparel",
+      aliases: "uniform hat cap branded apparel clothing new era",
+      sizeOptions: ["M", "L", "XL"],
+      quantityEnabled: true,
+      purpose: "Provide the approved MPI field cap and record the exact size and quantity issued to the employee.",
+      when: ["Wear for assigned MPI field work when appropriate and consistent with company appearance requirements."],
+      setup: ["Confirm the selected size, quantity, logo condition, and general condition before handover."],
+      steps: ["Select the employee's size and quantity in the handover form.", "Confirm the employee received the listed items before signing."],
+      record: ["Size, quantity, issue date, employee, issuing administrator, and signed acknowledgment reference."],
+      limitations: ["The cap is company apparel and is not protective headwear or a substitute for required PPE.", "The handover record is not a payroll-deduction authorization."],
+      care: ["Follow the product-care label, protect the embroidery and shape, and report loss or damage promptly."],
+      workflow: ["Include the cap in the signed equipment handover and update its status when returned or replaced."]
     }),
     tool({
       id: "gfci-tester",
@@ -548,7 +585,7 @@
   ]);
 
   window.MPI_EQUIPMENT = Object.freeze({
-    version: 2,
+    version: 3,
     owner: "Michigan Property Inspections, LLC",
     defaultEmployee: "Cory Leese",
     statuses,

@@ -46,7 +46,9 @@ const APP_SHELL = [
   "./equipment-images/garden-hose-50.jpg",
   "./equipment-images/leader-hose-15.jpg",
   "./equipment-images/drone-mini-4.jpg",
-  "./equipment-images/sewer-scope-scout-3-micro.jpg"
+  "./equipment-images/sewer-scope-scout-3-micro.jpg",
+  "./equipment-images/mpi-uniform-polo.jpg",
+  "./equipment-images/mpi-uniform-cap.jpg"
 ];
 
 async function fetchFresh(resource) {

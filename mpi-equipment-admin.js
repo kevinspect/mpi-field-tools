@@ -68,6 +68,28 @@
       .sort((left, right) => String(left.category || "").localeCompare(String(right.category || "")) || String(left.toolName || "").localeCompare(String(right.toolName || "")));
   }
 
+  function sizeOptionsFor(record) {
+    const stored = Array.isArray(record?.sizeOptions) ? record.sizeOptions : [];
+    const catalog = equipment.byId(record?.toolId)?.sizeOptions || [];
+    return [...new Set((stored.length ? stored : catalog).map(value => String(value || "").trim()).filter(Boolean))];
+  }
+
+  function usesQuantity(record) {
+    return record?.quantityEnabled === true || equipment.byId(record?.toolId)?.quantityEnabled === true;
+  }
+
+  function safeQuantity(value, fallback = 1) {
+    const quantity = Math.floor(Number(value));
+    return Number.isFinite(quantity) && quantity >= 1 ? Math.min(quantity, 99) : fallback;
+  }
+
+  function itemVariant(item) {
+    const parts = [];
+    if (item?.size) parts.push(`Size ${item.size}`);
+    if (item?.quantity) parts.push(`Qty ${safeQuantity(item.quantity)}`);
+    return parts.join(" · ");
+  }
+
   function statusTone(status) {
     if (status === "Not Issued") return "pending";
     if (status === "Issued") return "issued";
@@ -131,12 +153,16 @@
     }
     list.innerHTML = records.length ? records.map(record => {
       const guide = equipment.byId(record.toolId);
+      const sizeOptions = sizeOptionsFor(record);
+      const quantityEnabled = usesQuantity(record);
       return `<article class="equipment-record-card" data-equipment-assignment="${escapeHtml(record.id)}">
         <header><div class="equipment-record-identification"><img class="equipment-product-photo" src="${escapeHtml(guide?.image || `./equipment-images/${record.toolId}.jpg`)}" alt="${escapeHtml(record.brandModel || guide?.model || record.toolName || "MPI equipment")} product reference" loading="lazy"><div><span>${escapeHtml(record.category || "Company equipment")} · Product photo</span><h3>${escapeHtml(record.toolName || guide?.title || "MPI equipment")}</h3><p>${escapeHtml(record.brandModel || guide?.model || "Brand/model not recorded")}</p></div></div><b class="equipment-status ${statusTone(record.status)}">${escapeHtml(record.status || "Not Issued")}</b></header>
         <div class="equipment-record-fields">
           <label>Status<select data-equipment-status>${equipment.statuses.map(status => `<option ${status === record.status ? "selected" : ""}>${escapeHtml(status)}</option>`).join("")}</select></label>
           <label>Date issued<input data-equipment-date type="date" value="${escapeHtml(record.dateIssued || "")}"></label>
           <label>Serial / asset number<input data-equipment-serial maxlength="120" value="${escapeHtml(record.serialNumber || "")}" placeholder="Optional"></label>
+          ${sizeOptions.length ? `<label>Size<select data-equipment-size required><option value="">Select size</option>${sizeOptions.map(size => `<option value="${escapeHtml(size)}" ${size === record.size ? "selected" : ""}>${escapeHtml(size)}</option>`).join("")}</select></label>` : ""}
+          ${quantityEnabled ? `<label>Quantity<input data-equipment-quantity type="number" inputmode="numeric" min="1" max="99" step="1" value="${safeQuantity(record.quantity)}" required></label>` : ""}
           <label class="wide">Notes<textarea data-equipment-notes maxlength="700" placeholder="Optional assignment, condition, accessory or service note">${escapeHtml(record.notes || "")}</textarea></label>
         </div>
         <footer>${record.status === "Not Issued" ? `<label class="equipment-issue-select"><input type="checkbox" data-select-equipment-issue="${escapeHtml(record.id)}" ${selectedAssignmentIds.has(record.id) ? "checked" : ""}><span>INCLUDE IN THIS HANDOVER</span></label>` : ""}<button class="primary" type="button" data-save-equipment="${escapeHtml(record.id)}">SAVE TOOL</button>${guide ? `<a class="secondary" href="./?tool=${encodeURIComponent(guide.id)}#tool-guides">USER GUIDE</a>` : ""}<span class="status" data-equipment-save-status></span></footer>
@@ -188,6 +214,10 @@
           status: "Not Issued",
           dateIssued: "",
           serialNumber: "",
+          sizeOptions: item.sizeOptions || [],
+          size: "",
+          quantityEnabled: item.quantityEnabled === true,
+          quantity: item.quantityEnabled ? safeQuantity(item.defaultQuantity) : 1,
           notes: "",
           active: true,
           catalogVersion: equipment.version,
@@ -226,6 +256,8 @@
         status: card.querySelector("[data-equipment-status]").value,
         dateIssued: card.querySelector("[data-equipment-date]").value,
         serialNumber: card.querySelector("[data-equipment-serial]").value.trim().slice(0, 120),
+        size: card.querySelector("[data-equipment-size]")?.value || "",
+        quantity: safeQuantity(card.querySelector("[data-equipment-quantity]")?.value || record.quantity),
         notes: card.querySelector("[data-equipment-notes]").value.trim().slice(0, 700),
         updatedBy: currentUser.uid,
         updatedByName: currentProfile?.name || currentUser.displayName || "MPI Admin",
@@ -321,6 +353,8 @@
     const items = [...form.querySelectorAll("[data-ack-item]")].map(card => ({
       assignmentId: card.dataset.ackItem,
       receiptStatus: card.querySelector("input[type=radio]:checked")?.value || "",
+      size: card.querySelector("[data-ack-size]")?.value || "",
+      quantity: card.querySelector("[data-ack-quantity]") ? safeQuantity(card.querySelector("[data-ack-quantity]").value) : null,
       notes: card.querySelector("textarea").value.trim().slice(0, 500)
     }));
     return {
@@ -343,7 +377,12 @@
       <div class="equipment-ack-party"><label>Employee name<input name="employeeName" required maxlength="100" value="${escapeHtml(draft.employeeName || employeeName(personId))}"></label><label>Admin / witness name<input name="witnessName" required maxlength="100" value="${escapeHtml(draft.witnessName || currentProfile?.name || currentUser?.displayName || "")}"></label><div><span>Date and time</span><strong>${escapeHtml(friendlyDate(new Date(), true))}</strong></div></div>
       <div class="equipment-ack-items">${records.map(record => {
         const saved = (draft.items || []).find(item => item.assignmentId === record.id) || {};
-        return `<fieldset data-ack-item="${escapeHtml(record.id)}"><legend><strong>${escapeHtml(record.toolName)}</strong><span>${escapeHtml(record.brandModel || record.category || "MPI equipment")}</span></legend><div class="equipment-ack-options">${equipment.receiptStatuses.map(status => `<label><input type="radio" name="receipt-${escapeHtml(record.id)}" value="${escapeHtml(status)}" required ${saved.receiptStatus === status ? "checked" : ""}><span>${escapeHtml(status)}</span></label>`).join("")}</div><textarea maxlength="500" placeholder="Optional notes for this item">${escapeHtml(saved.notes || "")}</textarea></fieldset>`;
+        const sizeOptions = sizeOptionsFor(record);
+        const quantityEnabled = usesQuantity(record);
+        const selectedSize = saved.size || record.size || "";
+        const selectedQuantity = safeQuantity(saved.quantity || record.quantity);
+        const variantFields = sizeOptions.length || quantityEnabled ? `<div class="equipment-ack-variant">${sizeOptions.length ? `<label>Size<select data-ack-size required><option value="">Select size</option>${sizeOptions.map(size => `<option value="${escapeHtml(size)}" ${size === selectedSize ? "selected" : ""}>${escapeHtml(size)}</option>`).join("")}</select></label>` : ""}${quantityEnabled ? `<label>Quantity<input data-ack-quantity type="number" inputmode="numeric" min="1" max="99" step="1" value="${selectedQuantity}" required></label>` : ""}</div>` : "";
+        return `<fieldset data-ack-item="${escapeHtml(record.id)}"><legend><strong>${escapeHtml(record.toolName)}</strong><span>${escapeHtml(record.brandModel || record.category || "MPI equipment")}</span></legend>${variantFields}<div class="equipment-ack-options">${equipment.receiptStatuses.map(status => `<label><input type="radio" name="receipt-${escapeHtml(record.id)}" value="${escapeHtml(status)}" required ${saved.receiptStatus === status ? "checked" : ""}><span>${escapeHtml(status)}</span></label>`).join("")}</div><textarea maxlength="500" placeholder="Optional notes for this item">${escapeHtml(saved.notes || "")}</textarea></fieldset>`;
       }).join("")}</div>
       <blockquote>I acknowledge that I have received the MPI equipment identified above. I understand that this equipment remains the property of Michigan Property Inspections, LLC and is provided for company inspection work. I agree to take reasonable care of the equipment, report loss, damage or malfunction promptly, and return company equipment when requested or upon the end of my employment or assignment.</blockquote>
       <div class="equipment-signature-grid"><section><h3>Employee signature <b>Required</b></h3><canvas id="equipmentEmployeeSignature" aria-label="Employee signature pad"></canvas><button type="button" class="secondary" id="clearEquipmentEmployeeSignature">CLEAR SIGNATURE</button></section><section><h3>Admin / witness signature <span>Optional</span></h3><canvas id="equipmentWitnessSignature" aria-label="Admin or witness signature pad"></canvas><button type="button" class="secondary" id="clearEquipmentWitnessSignature">CLEAR SIGNATURE</button></section></div>
@@ -364,8 +403,8 @@
   }
 
   function acknowledgmentDocument(record) {
-    const rows = (record.items || []).map(item => `<tr><td>${escapeHtml(item.toolName)}</td><td>${escapeHtml(item.brandModel || "")}</td><td>${escapeHtml(item.receiptStatus)}</td><td>${escapeHtml(item.notes || "")}</td></tr>`).join("");
-    return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(record.reference)}</title><style>body{margin:0;background:#eef2f8;color:#11186a;font:14px Arial,sans-serif}.document{max-width:820px;margin:24px auto;background:#fff;border:1px solid #d8e0eb}.head{padding:28px;text-align:center;color:#fff;background:#11186a}.head img{width:82px}.head span{display:block;margin-top:10px;color:#dfc264;font-weight:800;letter-spacing:1.6px}.head h1{margin:7px 0 0;font-size:26px}.body{padding:25px}.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}.facts div{padding:12px;background:#f4f7fb;border:1px solid #d8e0eb}.facts span{display:block;color:#68728c;font-size:11px}.facts strong{display:block;margin-top:4px}table{width:100%;border-collapse:collapse}th,td{padding:9px;border:1px solid #d8e0eb;text-align:left;vertical-align:top}th{background:#eef3fa}.statement{margin:20px 0;padding:16px;border-left:4px solid #d3aa3f;background:#fff9e8;line-height:1.55}.signatures{display:grid;grid-template-columns:1fr 1fr;gap:18px}.signatures section{padding:14px;border:1px solid #d8e0eb}.signatures img{display:block;width:100%;height:100px;object-fit:contain;border-bottom:1px solid #11186a}.signatures span{display:block;margin-top:8px;font-weight:700}.foot{padding:18px;text-align:center;color:#68728c;background:#f4f7fb}@media print{body{background:#fff}.document{margin:0;border:0}}</style></head><body><main class="document"><header class="head"><img src="https://kevinspect.github.io/mpi-field-tools/mpi-logo.png" alt="MPI"><span>MICHIGAN PROPERTY INSPECTIONS, LLC</span><h1>Issued Tool Acknowledgment</h1></header><div class="body"><div class="facts"><div><span>Employee</span><strong>${escapeHtml(record.employeeName)}</strong></div><div><span>Date / time</span><strong>${escapeHtml(friendlyDate(record.submittedAtClient || record.submittedAt, true))}</strong></div><div><span>Admin / witness</span><strong>${escapeHtml(record.witnessName)}</strong></div><div><span>Reference</span><strong>${escapeHtml(record.reference)}</strong></div></div><table><thead><tr><th>Tool</th><th>Brand / model</th><th>Status</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table><p class="statement">${escapeHtml(record.statement)}</p><div class="signatures"><section>${record.employeeSignature ? `<img src="${record.employeeSignature}" alt="Employee signature">` : ""}<span>${escapeHtml(record.employeeName)} · Employee</span></section><section>${record.witnessSignature ? `<img src="${record.witnessSignature}" alt="Witness signature">` : ""}<span>${escapeHtml(record.witnessName)} · Admin / witness</span></section></div></div><footer class="foot">Michigan Property Inspections, LLC · Workflow Management System</footer></main></body></html>`;
+    const rows = (record.items || []).map(item => `<tr><td>${escapeHtml(item.toolName)}</td><td>${escapeHtml(item.brandModel || "")}</td><td>${escapeHtml(itemVariant(item) || "—")}</td><td>${escapeHtml(item.receiptStatus)}</td><td>${escapeHtml(item.notes || "")}</td></tr>`).join("");
+    return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(record.reference)}</title><style>body{margin:0;background:#eef2f8;color:#11186a;font:14px Arial,sans-serif}.document{max-width:820px;margin:24px auto;background:#fff;border:1px solid #d8e0eb}.head{padding:28px;text-align:center;color:#fff;background:#11186a}.head img{width:82px}.head span{display:block;margin-top:10px;color:#dfc264;font-weight:800;letter-spacing:1.6px}.head h1{margin:7px 0 0;font-size:26px}.body{padding:25px}.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}.facts div{padding:12px;background:#f4f7fb;border:1px solid #d8e0eb}.facts span{display:block;color:#68728c;font-size:11px}.facts strong{display:block;margin-top:4px}table{width:100%;border-collapse:collapse}th,td{padding:9px;border:1px solid #d8e0eb;text-align:left;vertical-align:top}th{background:#eef3fa}.statement{margin:20px 0;padding:16px;border-left:4px solid #d3aa3f;background:#fff9e8;line-height:1.55}.signatures{display:grid;grid-template-columns:1fr 1fr;gap:18px}.signatures section{padding:14px;border:1px solid #d8e0eb}.signatures img{display:block;width:100%;height:100px;object-fit:contain;border-bottom:1px solid #11186a}.signatures span{display:block;margin-top:8px;font-weight:700}.foot{padding:18px;text-align:center;color:#68728c;background:#f4f7fb}@media print{body{background:#fff}.document{margin:0;border:0}}</style></head><body><main class="document"><header class="head"><img src="https://kevinspect.github.io/mpi-field-tools/mpi-logo.png" alt="MPI"><span>MICHIGAN PROPERTY INSPECTIONS, LLC</span><h1>Issued Tool Acknowledgment</h1></header><div class="body"><div class="facts"><div><span>Employee</span><strong>${escapeHtml(record.employeeName)}</strong></div><div><span>Date / time</span><strong>${escapeHtml(friendlyDate(record.submittedAtClient || record.submittedAt, true))}</strong></div><div><span>Admin / witness</span><strong>${escapeHtml(record.witnessName)}</strong></div><div><span>Reference</span><strong>${escapeHtml(record.reference)}</strong></div></div><table><thead><tr><th>Tool</th><th>Brand / model</th><th>Size / quantity</th><th>Status</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table><p class="statement">${escapeHtml(record.statement)}</p><div class="signatures"><section>${record.employeeSignature ? `<img src="${record.employeeSignature}" alt="Employee signature">` : ""}<span>${escapeHtml(record.employeeName)} · Employee</span></section><section>${record.witnessSignature ? `<img src="${record.witnessSignature}" alt="Witness signature">` : ""}<span>${escapeHtml(record.witnessName)} · Admin / witness</span></section></div></div><footer class="foot">Michigan Property Inspections, LLC · Workflow Management System</footer></main></body></html>`;
   }
 
   function base64Utf8(value) {
@@ -379,7 +418,7 @@
     const subject = `MPI - ${record.employeeName.split(/\s+/)[0] || record.employeeName} Issued Tool Acknowledgment - ${friendlyDate(record.submittedAtClient || record.submittedAt)}`;
     const itemGroups = [];
     for (let index = 0; index < (record.items || []).length; index += 6) {
-      itemGroups.push((record.items || []).slice(index, index + 6).map((item, offset) => `${index + offset + 1}. ${item.toolName} — ${item.receiptStatus}${item.notes ? ` — ${item.notes}` : ""}`).join("\n"));
+      itemGroups.push((record.items || []).slice(index, index + 6).map((item, offset) => `${index + offset + 1}. ${item.toolName}${itemVariant(item) ? ` — ${itemVariant(item)}` : ""} — ${item.receiptStatus}${item.notes ? ` — ${item.notes}` : ""}`).join("\n"));
     }
     const payload = {
       source: "mpi-field-tools-form-email",
@@ -433,7 +472,7 @@
       statement: "I acknowledge that I have received the MPI equipment identified above. I understand that this equipment remains the property of Michigan Property Inspections, LLC and is provided for company inspection work. I agree to take reasonable care of the equipment, report loss, damage or malfunction promptly, and return company equipment when requested or upon the end of my employment or assignment.",
       items: draft.items.map(item => {
         const assignment = records.find(record => record.id === item.assignmentId);
-        return { assignmentId: item.assignmentId, toolId: assignment?.toolId || "", toolName: assignment?.toolName || "MPI tool", brandModel: assignment?.brandModel || "", category: assignment?.category || "", assignmentStatus: assignment?.status || "Not Issued", receiptStatus: item.receiptStatus, notes: item.notes };
+        return { assignmentId: item.assignmentId, toolId: assignment?.toolId || "", toolName: assignment?.toolName || "MPI tool", brandModel: assignment?.brandModel || "", category: assignment?.category || "", assignmentStatus: assignment?.status || "Not Issued", size: item.size || "", quantity: item.quantity ? safeQuantity(item.quantity) : null, receiptStatus: item.receiptStatus, notes: item.notes };
       }),
       catalogVersion: equipment.version,
       submittedAtClient: now.toISOString(),
@@ -449,7 +488,8 @@
         const assignment = records.find(value => value.id === item.assignmentId);
         const received = item.receiptStatus !== "Not Received";
         const nextStatus = !received ? "Not Issued" : item.receiptStatus === "Damaged / Issue Noted" ? "Damaged" : "Issued";
-        const update = { status: nextStatus, acknowledgmentReference: reference, acknowledgedAtClient: record.submittedAtClient, updatedBy: currentUser.uid, updatedByName: record.submittedByName, updatedAt: shared.serverTimestamp() };
+        const update = { status: nextStatus, size: item.size || assignment?.size || "", acknowledgmentReference: reference, acknowledgedAtClient: record.submittedAtClient, updatedBy: currentUser.uid, updatedByName: record.submittedByName, updatedAt: shared.serverTimestamp() };
+        if (item.quantity) update.quantity = safeQuantity(item.quantity);
         if (received && !assignment?.dateIssued) update.dateIssued = localDateKey(now);
         batch.set(shared.db.collection("equipmentAssignments").doc(item.assignmentId), update, { merge: true });
       });

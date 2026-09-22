@@ -3325,3 +3325,14 @@ Status: prepared August 26, 2026 as app Build 96.
 - Ignores an abandoned historical open session only when a later paid session for the same day was properly closed and supplies the validated total.
 - Continues to flag any past day that has no valid closed or recoverable paid-hours session.
 - Removes false weekly REVIEW warnings without deleting or rewriting the original audit records.
+
+## Build 217 web update — September 22, 2026
+
+- Added the exact MPI embroidered polo and New Era 39THIRTY cap photographs to the Equipment catalog.
+- Added required M, L and XL size choices and a 1–99 quantity field for both uniform items.
+- Carries size and quantity through Cory's Tool Bag, the signed handover record, printable document, and administration email.
+- Preserves the existing immutable equipment acknowledgment and audit history; the handover statement does not authorize payroll deductions.
+
+### Validation record
+
+- Passed the full native source/project validation suite, including the 29-item catalog, bundled photographs, signature enforcement, and size/quantity persistence.

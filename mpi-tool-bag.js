@@ -29,7 +29,8 @@
     status.textContent = `${bag.length} issued tool${bag.length === 1 ? "" : "s"} · guides stay with each tool. Equipment not yet handed over is not shown as issued.`;
     content.innerHTML = bag.length ? '<div class="tool-bag-grid">' + bag.map(record => {
       const guide = guideFor(record);
-      return `<article class="tool-bag-card">${guide?.image ? `<img src="${escape(guide.image)}" alt="${escape(record.toolName)}">` : ""}<h3>${escape(record.toolName)}</h3><p>${escape(record.status)}${record.serialNumber ? ` · ${escape(record.serialNumber)}` : ""}</p><p>${escape(record.brand || guide?.brand)} ${escape(record.model || guide?.model)}</p><button type="button" data-bag-guide="${escape(record.id)}" ${guide ? "" : "disabled"}>${guide ? "USER GUIDE" : "Guide not added yet"}</button></article>`;
+      const variant = [record.size ? `Size ${record.size}` : "", record.quantity ? `Qty ${record.quantity}` : ""].filter(Boolean).join(" · ");
+      return `<article class="tool-bag-card">${guide?.image ? `<img src="${escape(guide.image)}" alt="${escape(record.toolName)}">` : ""}<h3>${escape(record.toolName)}</h3><p>${escape(record.status)}${variant ? ` · ${escape(variant)}` : ""}${record.serialNumber ? ` · ${escape(record.serialNumber)}` : ""}</p><p>${escape(record.brand || guide?.brand)} ${escape(record.model || guide?.model)}</p><button type="button" data-bag-guide="${escape(record.id)}" ${guide ? "" : "disabled"}>${guide ? "USER GUIDE" : "Guide not added yet"}</button></article>`;
     }).join("") + '</div>' : '<article class="tool-bag-card"><h3>No issued tools yet</h3><p>Your issued items and their operating guides will appear here after the equipment handover is recorded.</p></article>';
   }
   function openGuide(id) {
