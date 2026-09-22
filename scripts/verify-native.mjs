@@ -477,15 +477,19 @@ await assertText(
 );
 
 await assertText(
-  "Cory equipment catalog contains the exact 27 planned tools",
+  "Cory equipment catalog contains the 27 planned tools and two MPI uniform items",
   "mpi-equipment.js",
-  source => (source.match(/\btool\(\{/g) || []).length === 27
+  source => (source.match(/\btool\(\{/g) || []).length === 29
     && source.includes('model: "Milwaukee 2224-20"')
     && source.includes('title: "Digital GFCI receptacle tester"')
     && source.includes('model: "DJI Mini 4"')
     && source.includes("Scout 3-Pro Plus Micro sewer scope")
-    && source.includes("never force the camera through an obstruction"),
-  "The planned equipment catalog or detailed sewer-scope guide is incomplete"
+    && source.includes("never force the camera through an obstruction")
+    && source.includes('id: "mpi-uniform-polo"')
+    && source.includes('id: "mpi-uniform-cap"')
+    && (source.match(/sizeOptions: \["M", "L", "XL"\]/g) || []).length === 2
+    && (source.match(/quantityEnabled: true/g) || []).length === 2,
+  "The planned equipment catalog, uniform choices, or detailed sewer-scope guide is incomplete"
 );
 
 await assertText(
@@ -533,6 +537,19 @@ await assertText(
 );
 
 await assertText(
+  "Uniform handover records size and quantity in the signed history",
+  "mpi-equipment-admin.js",
+  source => source.includes("function sizeOptionsFor(record)")
+    && source.includes('data-equipment-size')
+    && source.includes('data-equipment-quantity')
+    && source.includes('data-ack-size')
+    && source.includes('data-ack-quantity')
+    && source.includes("Size / quantity")
+    && source.includes("if (item.quantity) update.quantity"),
+  "The uniform size or quantity can be lost before the signed equipment record is saved"
+);
+
+await assertText(
   "Equipment cards use exact bundled product photos",
   "admin.html",
   source => source.includes(".equipment-product-photo")
@@ -551,15 +568,15 @@ await assertText(
 try {
   const catalog = await readFile(join(root, "mpi-equipment.js"), "utf8");
   const ids = [...catalog.matchAll(/^\s+id: "([^"]+)",$/gm)].map(match => match[1]);
-  if (ids.length !== 27) throw new Error(`expected 27 tool photos, found ${ids.length} catalog items`);
+  if (ids.length !== 29) throw new Error(`expected 29 equipment photos, found ${ids.length} catalog items`);
   for (const id of ids) {
     const photo = await readFile(join(root, "equipment-images", `${id}.jpg`));
     if (photo.length < 1000) throw new Error(`${id}.jpg is missing or incomplete`);
   }
-  console.log("PASS  All 27 individual equipment product photos are bundled");
+  console.log("PASS  All 29 individual equipment product photos are bundled");
 } catch (error) {
-  failures.push(`All 27 individual equipment product photos are bundled: ${error.message}`);
-  console.error("FAIL  All 27 individual equipment product photos are bundled");
+  failures.push(`All 29 individual equipment product photos are bundled: ${error.message}`);
+  console.error("FAIL  All 29 individual equipment product photos are bundled");
 }
 
 await assertText(
