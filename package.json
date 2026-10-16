@@ -10,6 +10,7 @@
     "native:sync": "pnpm run native:prepare && cap sync ios",
     "native:doctor": "node scripts/native-doctor.mjs",
     "native:verify": "pnpm run native:sync && node scripts/verify-native.mjs",
+    "native:verify:ipa": "node scripts/verify-release-ipa.mjs",
     "native:simulator": "node scripts/simulator-smoke.mjs",
     "native:device:compile": "xcodebuild -quiet -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath /tmp/mpi-field-tools-device-deriveddata CODE_SIGNING_ALLOWED=NO build",
     "native:open": "cap open ios"

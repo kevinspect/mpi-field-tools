@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="217">
+  <meta name="app-build" content="219">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -4642,6 +4642,11 @@
       cursor: pointer;
     }
     .workflow-lab-options button.secondary { color: #11186a; background: #edf5fc; border: 1px solid #cbdff1; }
+    #workflowExtraTaskForm, #workflowExtraTaskActive { margin-top: 16px; display: grid; gap: 12px; }
+    #workflowExtraTaskForm[hidden], #workflowExtraTaskActive[hidden] { display: none; }
+    #workflowExtraTaskForm label { color: #11186a; font-size: 13px; font-weight: 800; }
+    #workflowExtraTaskInput { width: 100%; min-height: 48px; padding: 11px 13px; border: 1px solid #b8c9df; border-radius: 10px; font: inherit; box-sizing: border-box; }
+    #workflowExtraTaskDescription { margin: 0; overflow-wrap: anywhere; font-size: 15px; font-weight: 700; }
     .workflow-lab-route { display: grid; gap: 12px; }
     .workflow-lab-destination { padding: 16px; color: #fff; background: linear-gradient(145deg, #0b1050, #11186a 70%, #254f9a); border: 1px solid rgba(180,135,32,.5); border-radius: 14px; }
     .workflow-lab-destination span { display: block; color: #e4c569; font-size: 9px; font-weight: 950; letter-spacing: .1em; text-transform: uppercase; }
@@ -5951,7 +5956,7 @@
     .field-inbox-thread-files { padding-left:43px; color:#8e8e93; font-size:7.5px; }
     .field-compose-card { border-radius:18px; }
   </style>
-  <link rel="stylesheet" href="./mpi-app-theme.css?build=217">
+  <link rel="stylesheet" href="./mpi-app-theme.css?build=219">
 </head>
 <body class="mpi-field-ui">
   <section class="mpi-access-choice" id="mpiAccessChoice" role="dialog" aria-modal="true" aria-labelledby="mpiAccessChoiceTitle" hidden>
@@ -6039,7 +6044,7 @@
       <a href="#comment-builder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4Z"/><path d="M8 8h8M8 12h5"/></svg><span><strong>Comment Creator</strong><small>Build a defect comment</small></span></a>
     </nav>
     <a class="home-office-link" id="officeConsoleCard" href="./admin.html" hidden>Open Office Console</a>
-    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">217</strong> · <em class="home-version-state checking" id="homeAppVersionStatus">Checking…</em></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
+    <div class="home-version-row"><span>MPI Field Tools · Build <strong id="appBuildNumber">219</strong> · <em class="home-version-state checking" id="homeAppVersionStatus">Checking…</em></span><a href="#settings">Settings</a><button id="checkForUpdatesBtn" type="button">Check for updates</button></div>
   </section>
 
   <section class="subcontractor-screen app-screen-view" id="subcontractor-home" data-app-screen="subcontractor-home" aria-labelledby="subcontractor-title" hidden>
@@ -6219,8 +6224,8 @@
             <button class="workflow-inline-ack" id="workflowArrivalReminderAckBtn" type="button">UNDERSTOOD</button>
           </div>
           <div class="workflow-clock-home-reminder" id="workflowClockHomeReminder" role="alert" hidden>
-            <strong>CLOCK OFF WHEN YOU ARRIVE HOME</strong>
-            <span>Keep the clock running during the final journey. When you arrive home, return here and tap CLOCK OFF.</span>
+            <strong>FINISH WORK TASKS</strong>
+            <span>Confirm all work tasks are finished, check your equipment, then Clock Off.</span>
           </div>
           <div class="workflow-arrival-error" id="workflowArrivalError" role="alert" hidden>
             <strong>PRACTICE LOCATION NOT VERIFIED</strong>
@@ -6231,7 +6236,7 @@
             <button class="workflow-secondary" id="workflowClockOffBtn" type="button" disabled>CLOCK OFF</button>
             <button class="workflow-secondary workflow-location-retry" id="workflowClockRetryLocationBtn" type="button" hidden>TRY LOCATION AGAIN</button>
           </div>
-          <p class="workflow-time-clock-note">The installed iPhone app records workday route points from Morning Ready until Clock Off. The web version records verified arrival and Clock Off locations.</p>
+          <p class="workflow-time-clock-note">The workday begins when you tap ARRIVED at the first job and ends when you finish your work tasks and Clock Off. The web version records arrival and Clock Off locations.</p>
         </section>
 
         <section class="workflow-card" id="workflowReadinessCard" aria-labelledby="workflow-readiness-title" hidden>
@@ -6317,7 +6322,7 @@
           </div>
           <div class="workflow-action-grid" id="workflowJobActions">
             <a class="workflow-action primary" id="workflowDirectionsBtn" href="https://maps.apple.com/" target="_blank" rel="noopener">DIRECTIONS</a>
-            <button class="workflow-action" id="workflowOnMyWayBtn" type="button">ON MY WAY</button>
+            <button class="workflow-action" id="workflowOnMyWayBtn" type="button" hidden>ON MY WAY</button>
             <a class="workflow-action secondary" id="workflowCallClientBtn" href="#">CALL CLIENT</a>
             <button class="workflow-action secondary" id="workflowMessageClientBtn" type="button">MESSAGE CLIENT</button>
             <button class="workflow-action primary full" id="workflowArrivedBtn" type="button">ARRIVED</button>
@@ -6350,7 +6355,6 @@
             <div class="workflow-lab-options">
               <button type="button" data-workflow-lab-choice="water-tech">WATER TECH</button>
               <button type="button" data-workflow-lab-choice="ims">IMS</button>
-              <button type="button" data-workflow-lab-choice="both">BOTH LABS</button>
               <button class="secondary" type="button" data-workflow-lab-choice="none" id="workflowNoLabBtn">CONTINUE TO NEXT JOB</button>
             </div>
           </div>
@@ -6379,8 +6383,29 @@
             </div>
             <div class="workflow-lab-complete" id="workflowLabCompleteMessage" hidden>
               <strong>LAB VISIT COMPLETE</strong>
-              <span>Head to your final destination. Remember to complete your End-of-Day Equipment Check and Clock Out when you arrive.</span>
+              <span>Continue to your next job or confirm that all work tasks are finished.</span>
             </div>
+          </div>
+        </section>
+
+        <section class="workflow-card workflow-lab-card" id="workflowFinishTasksCard" aria-labelledby="workflow-finish-tasks-title" hidden>
+          <div class="workflow-card-header">
+            <span class="workflow-profile-badge">After the final scheduled job</span>
+            <h3 id="workflow-finish-tasks-title">Are you finished all work tasks for the day?</h3>
+          </div>
+          <div class="workflow-lab-options" id="workflowFinishTasksChoices">
+            <button type="button" id="workflowFinishTasksYesBtn">YES — FINISHED WORK TASKS</button>
+            <button type="button" id="workflowFinishTasksNoBtn">NO — ANOTHER TASK OR ADDRESS</button>
+            <button type="button" id="workflowFinishTasksLabsBtn">VISIT LABS</button>
+          </div>
+          <form id="workflowExtraTaskForm" hidden>
+            <label for="workflowExtraTaskInput">What address or work task is next?</label>
+            <input id="workflowExtraTaskInput" type="text" maxlength="240" required autocomplete="off" placeholder="Address or task">
+            <button class="workflow-button" type="submit">START WORK TASK</button>
+          </form>
+          <div id="workflowExtraTaskActive" hidden>
+            <p id="workflowExtraTaskDescription"></p>
+            <button class="workflow-button" id="workflowExtraTaskDoneBtn" type="button">TASK COMPLETE</button>
           </div>
         </section>
 
@@ -8689,7 +8714,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 217</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 219</span></div>
           <div class="settings-status"><strong>App version</strong><span id="settingsAppVersionStatus">Checking…</span></div>
         </section>
 
@@ -8830,16 +8855,16 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=217"></script>
-  <script src="./mpi-shared.js?build=217"></script>
-  <script src="./mpi-equipment.js?build=217"></script>
-  <script src="./mpi-office-navigation.js?build=217"></script>
-  <script src="./mpi-owner-view.js?build=217"></script>
-  <script src="./mpi-tool-bag.js?build=217"></script>
-  <script src="./mpi-field-sync.js?build=217"></script>
-  <script src="./mpi-subcontractor.js?build=217"></script>
-  <script src="./mpi-comment-policy.js?build=217"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=217"></script>
+  <script src="./mpi-native-bridge.js?build=219"></script>
+  <script src="./mpi-shared.js?build=219"></script>
+  <script src="./mpi-equipment.js?build=219"></script>
+  <script src="./mpi-office-navigation.js?build=219"></script>
+  <script src="./mpi-owner-view.js?build=219"></script>
+  <script src="./mpi-tool-bag.js?build=219"></script>
+  <script src="./mpi-field-sync.js?build=219"></script>
+  <script src="./mpi-subcontractor.js?build=219"></script>
+  <script src="./mpi-comment-policy.js?build=219"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=219"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -9597,6 +9622,16 @@
       const workflowLabCompleteBtn = document.getElementById("workflowLabCompleteBtn");
       const workflowLabContinueBtn = document.getElementById("workflowLabContinueBtn");
       const workflowLabCompleteMessage = document.getElementById("workflowLabCompleteMessage");
+      const workflowFinishTasksCard = document.getElementById("workflowFinishTasksCard");
+      const workflowFinishTasksChoices = document.getElementById("workflowFinishTasksChoices");
+      const workflowFinishTasksYesBtn = document.getElementById("workflowFinishTasksYesBtn");
+      const workflowFinishTasksNoBtn = document.getElementById("workflowFinishTasksNoBtn");
+      const workflowFinishTasksLabsBtn = document.getElementById("workflowFinishTasksLabsBtn");
+      const workflowExtraTaskForm = document.getElementById("workflowExtraTaskForm");
+      const workflowExtraTaskInput = document.getElementById("workflowExtraTaskInput");
+      const workflowExtraTaskActive = document.getElementById("workflowExtraTaskActive");
+      const workflowExtraTaskDescription = document.getElementById("workflowExtraTaskDescription");
+      const workflowExtraTaskDoneBtn = document.getElementById("workflowExtraTaskDoneBtn");
       const workflowHomeCard = document.getElementById("workflowHomeCard");
       const workflowHomeEyebrow = document.getElementById("workflowHomeEyebrow");
       const workflowHomeTitle = document.getElementById("workflow-home-title");
@@ -15773,9 +15808,11 @@
         if (labStop) {
           if (labStop.stage === "travel") return "DRIVING TO LAB";
           if (labStop.stage === "arrived") return "AT LAB";
+          if (labStop.stage === "finished-work" || labStop.stage === "home-arrived") return "END-OF-DAY CHECKS";
+          if (labStop.stage === "extra-task-active") return "ADDITIONAL WORK TASK";
+          if (["finish-choice", "extra-task-entry"].includes(labStop.stage)) return "FINISHING WORK TASKS";
           if (labStop.stage === "proceed-home") return "READY TO DRIVE HOME";
           if (labStop.stage === "driving-home") return "DRIVING HOME";
-          if (labStop.stage === "home-arrived") return "END-OF-DAY CHECKS";
           if (labStop.stage === "done") return labStop.finalStop ? "DRIVING HOME / FINAL DESTINATION" : "DRIVING TO NEXT JOB";
           return "LAB STOP";
         }
@@ -15966,7 +16003,7 @@
 
         const readiness = workflowReadinessRecord();
         let clock = loadWorkflowTimeClock();
-        if (readiness && clock && recoverWorkflowTimeClockRecord(clock)) {
+        if (clock && recoverWorkflowTimeClockRecord(clock)) {
           saveWorkflowTimeClock(clock);
           repairs.push("A recoverable Hours Worked session was restored from preserved arrival records.");
           renderWorkflowTimeClock();
@@ -16417,7 +16454,7 @@
 
       function toggleWorkflowNachiTraining() {
         const profile = loadWorkflowProfile();
-        if (!profile || !isCoryWorkflowUser(profile) || !workflowReadinessRecord() || loadActiveJob()?.property) return;
+        if (!profile || !isCoryWorkflowUser(profile) || loadActiveJob()?.property) return;
         const now = new Date().toISOString();
         const record = loadWorkflowNachiTraining() || { date: localDateKey(), active: false, sessions: [] };
         if (record.active) {
@@ -16429,9 +16466,9 @@
           appendWorkflowEvent("NACHI training ended", { endedAt: now, trainingMinutes: totalMinutes }, null);
           if (!workflowNextScheduledJob()) {
             saveWorkflowLabStop({
-              date: localDateKey(), stage: "home-arrived", sourceJobId: "nachi-training", sourceProperty: "NACHI Training",
+              date: localDateKey(), stage: "finish-choice", sourceJobId: "nachi-training", sourceProperty: "NACHI Training",
               nextJobId: "", nextProperty: "", nextScheduledStart: "", finalStop: true, entryPoint: "nachi-training",
-              labs: [], currentIndex: 0, noLab: true, homeArrivedAt: now, createdAt: now
+              labs: [], currentIndex: 0, noLab: true, createdAt: now
             });
           }
           showToast(`NACHI Training ended · ${Math.floor(totalMinutes / 60)} hr ${totalMinutes % 60} min recorded`);
@@ -17037,7 +17074,7 @@
         if (!activeClock || (!allJobsComplete && !trainingDayComplete)) return false;
         const labStop = loadWorkflowLabStop();
         if (!labStop) return true;
-        return Boolean(labStop.finalStop && ["proceed-home", "driving-home", "home-arrived"].includes(labStop.stage));
+        return Boolean(labStop.finalStop && ["finish-choice", "extra-task-entry", "extra-task-active", "finished-work", "proceed-home", "driving-home", "home-arrived"].includes(labStop.stage));
       }
 
       function renderWorkflowTimeClock() {
@@ -17053,7 +17090,7 @@
         const hoursStarted = Boolean(record?.hoursWorkedStartedAt || sessions.length);
         workflowTimeClockCard.hidden = !profile;
         if (!profile) return;
-        workflowTimeClockBadge.textContent = active ? "Hours running" : hoursStarted ? "Clocked off" : readiness ? "Waiting for arrival" : "Not started";
+        workflowTimeClockBadge.textContent = active ? "Hours running" : hoursStarted ? "Clocked off" : "Waiting for arrival";
         workflowTimeClockLabel.textContent = "HOURS WORKED TODAY";
         workflowTimeClockValue.textContent = hoursStarted ? workflowWorkedCounter(record) : "0:00";
         if (workflowWeeklyHoursDetail) {
@@ -17067,29 +17104,28 @@
             ? `Started at ${workflowClock(active.clockedInAt)} · Arrival recorded`
             : hoursStarted
               ? `Clocked off at ${workflowClock(lastSession?.clockedOutAt)}`
-              : readiness
-                ? "Activity tracking is active for management. Paid hours begin when ARRIVED is tapped at the first inspection."
-                : "Complete Morning Readiness to begin the working-day activity record.";
-        workflowHoursPending.hidden = !readiness || hoursStarted;
+              : "Tap ARRIVED at the first job to begin the workday and paid hours.";
+        workflowHoursPending.hidden = hoursStarted;
         const jobs = workflowScheduleJobs();
         const allJobsComplete = jobs.length > 0 && jobs.every(job => workflowJobIsComplete(job));
         const remainingJobs = workflowClockOffRemainingJobs(jobs);
         const training = loadWorkflowNachiTraining();
         const trainingDayComplete = Boolean(isCoryWorkflowUser() && training && !training.active && training.sessions.length && !workflowNextScheduledJob(jobs));
         const finalReturn = loadWorkflowLabStop();
-        const returnedHome = finalReturn?.finalStop && finalReturn.stage === "home-arrived";
+        const finishedWork = finalReturn?.finalStop && ["finished-work", "home-arrived"].includes(finalReturn.stage);
         const equipmentConfirmed = workflowEndOfDayChecks.length > 0 && workflowEndOfDayChecks.every(check => check.checked);
-        const finalCloseoutBlocked = Boolean(active && (allJobsComplete || trainingDayComplete) && (!returnedHome || !equipmentConfirmed));
+        const finalCloseoutBlocked = Boolean(active && ((finalReturn?.finalStop && !finishedWork)
+          || ((allJobsComplete || trainingDayComplete) && (!finishedWork || !equipmentConfirmed))));
         if (workflowClockHomeReminder) {
           workflowClockHomeReminder.hidden = !workflowFinalTravelNeedsClockOff();
           const heading = workflowClockHomeReminder.querySelector("strong");
           const copy = workflowClockHomeReminder.querySelector("span");
-          if (heading) heading.textContent = returnedHome ? "COMPLETE THE EQUIPMENT CHECK" : "CLOCK OFF WHEN YOU ARRIVE HOME";
-          if (copy) copy.textContent = returnedHome
+          if (heading) heading.textContent = finishedWork ? "COMPLETE THE EQUIPMENT CHECK" : "FINISH WORK TASKS";
+          if (copy) copy.textContent = finishedWork
             ? "Confirm the end-of-day equipment below. Clock Off will unlock when every required item is accounted for."
-            : "Keep the clock running during the final journey. Confirm arrival before completing the equipment check and Clocking Out.";
+            : "Confirm all work tasks are finished before completing the equipment check and Clocking Off.";
         }
-        workflowArrivalReminderAckBtn.hidden = !readiness || hoursStarted || Boolean(record?.firstArrivalReminderAcknowledgedAt);
+        workflowArrivalReminderAckBtn.hidden = true;
         if (hoursStarted) clearWorkflowArrivalError();
         workflowClockOnBtn.hidden = true;
         workflowClockOnBtn.disabled = true;
@@ -17097,7 +17133,7 @@
         workflowClockOffBtn.textContent = remainingJobs.length
           ? `${remainingJobs.length} JOB${remainingJobs.length === 1 ? "" : "S"} REMAIN`
           : finalCloseoutBlocked
-          ? returnedHome ? "COMPLETE EQUIPMENT CHECK" : "CLOCK OFF AT HOME"
+          ? finishedWork ? "COMPLETE EQUIPMENT CHECK" : "FINISH WORK TASKS"
           : "CLOCK OFF";
         workflowClockOffBtn.hidden = !hoursStarted;
         workflowClockRetryLocationBtn.hidden = true;
@@ -17112,6 +17148,11 @@
         record.inspector = profile.name;
         record.inspectorId = profile.id;
         record.clockModel = WORKFLOW_CLOCK_MODEL;
+        const firstActivityStart = !record.hoursWorkedStartedAt;
+        if (firstActivityStart) {
+          record.activityStartedAt = arrivalAt;
+          record.activityStartSource = startSource === "nachi-training" ? "training-start" : "first-job-arrival";
+        }
         record.hoursWorkedStartedAt ||= arrivalAt;
         record.hoursWorkedJobId ||= String(job?.calendarEventId || job?.spectoraJobId || "");
         record.hoursWorkedProperty ||= String(job?.property || "");
@@ -17126,6 +17167,10 @@
           arrivalVerification
         });
         saveWorkflowTimeClock(record);
+        if (firstActivityStart) appendWorkflowEvent("Inspector activity started", {
+          startedAt: arrivalAt,
+          source: record.activityStartSource
+        }, job);
         appendWorkflowEvent("Hours worked started", {
           originalTimestamp: arrivalAt,
           recordedOffline: startSource === "offline-first-arrival",
@@ -17156,10 +17201,14 @@
         }
         const training = loadWorkflowNachiTraining();
         const trainingDayComplete = Boolean(isCoryWorkflowUser() && training && !training.active && training.sessions.length && !workflowNextScheduledJob(jobs));
+        const finalReturn = loadWorkflowLabStop();
+        if (finalReturn?.finalStop && !["finished-work", "home-arrived"].includes(finalReturn.stage)) {
+          showToast("Confirm all work tasks are finished before Clocking Off");
+          return;
+        }
         if (allJobsComplete || trainingDayComplete) {
-          const finalReturn = loadWorkflowLabStop();
-          if (!finalReturn?.finalStop || finalReturn.stage !== "home-arrived") {
-            showToast("Confirm ARRIVED HOME before Clocking Out");
+          if (!finalReturn?.finalStop || !["finished-work", "home-arrived"].includes(finalReturn.stage)) {
+            showToast("Confirm all work tasks are finished before Clocking Off");
             return;
           }
           if (!workflowEndOfDayChecks.length || !workflowEndOfDayChecks.every(check => check.checked)) {
@@ -17531,8 +17580,8 @@
         const remaining = workflowRemainingScheduledJobs();
         const postJob = record.entryPoint !== "morning-readiness"
           && (record.entryPoint === "after-job" || Boolean(record.sourceJobId) || Boolean(record.finalStop));
-        const homeJourneyStarted = ["proceed-home", "driving-home", "home-arrived"].includes(record.stage);
-        if (postJob && homeJourneyStarted && remaining.length) {
+        const finalCloseoutStarted = ["finish-choice", "extra-task-entry", "proceed-home", "driving-home", "home-arrived", "finished-work"].includes(record.stage);
+        if (postJob && finalCloseoutStarted && remaining.length) {
           const next = remaining[0];
           saveWorkflowLabStop(null);
           appendWorkflowEvent("Final return cancelled for added appointment", {
@@ -17541,8 +17590,9 @@
           }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
           return null;
         }
+        if (postJob && record.stage === "extra-task-active" && remaining.length) return record;
         let changed = false;
-        if (postJob && !homeJourneyStarted) {
+        if (postJob && !finalCloseoutStarted) {
           const next = remaining[0] || null;
           const shouldBeFinal = !next;
           if (Boolean(record.finalStop) !== shouldBeFinal) {
@@ -17559,7 +17609,7 @@
             changed = true;
           }
           if (shouldBeFinal && record.stage === "done") {
-            record.stage = "proceed-home";
+            record.stage = "finish-choice";
             changed = true;
           }
         }
@@ -17580,7 +17630,7 @@
         const lastCompleted = loadWorkflowHistory().filter(item => item.date === localDateKey()).at(-1)?.job || null;
         record = {
           date: localDateKey(),
-          stage: hoursStarted && !activeClock ? "home-arrived" : "proceed-home",
+          stage: hoursStarted && !activeClock ? "finished-work" : "finish-choice",
           sourceJobId: String(lastCompleted?.calendarEventId || ""),
           sourceProperty: String(lastCompleted?.property || ""),
           nextJobId: "",
@@ -17914,6 +17964,7 @@
           currentIndex: 0,
           createdAt: new Date().toISOString()
         };
+        if (record.finalStop) record.stage = "finish-choice";
         saveWorkflowLabStop(record);
         if (completedJob?.property) cancelFieldAlarmGroup(workflowDepartureAlarmGroup(completedJob));
         renderWorkflowApp();
@@ -17928,7 +17979,7 @@
             nextProperty: record.nextProperty
           }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
           if (record.finalStop) {
-            record.stage = "proceed-home";
+            record.stage = "finish-choice";
             record.noLab = true;
             record.noLabSelectedAt = new Date().toISOString();
             record.nextJobId = "";
@@ -17969,11 +18020,11 @@
           renderWorkflowApp();
           return;
         }
-        if (record.finalStop && ["proceed-home", "driving-home"].includes(record.stage)) {
-          renderWorkflowHomeReturn(record);
+        if (record.finalStop && ["finish-choice", "extra-task-entry", "extra-task-active", "proceed-home", "driving-home"].includes(record.stage)) {
+          renderWorkflowFinishTasks(record);
           return;
         }
-        if (record.finalStop && record.stage === "home-arrived") {
+        if (record.finalStop && ["finished-work", "home-arrived"].includes(record.stage)) {
           setWorkflowPrimaryCards(workflowDayCompleteCard);
           renderWorkflowDayComplete();
           return;
@@ -17990,18 +18041,18 @@
             ? `Start with ${record.nextProperty}, or choose a laboratory visit before the first inspection.`
             : "Choose Water Tech, IMS, or both laboratories for today’s required deliveries."
           : record.finalStop
-            ? "Do you need to visit a lab today? Complete any required lab delivery before the end-of-day equipment check and Clock Out."
-            : `Continue directly to ${record.nextProperty || "the next job"}, or choose an optional lab stop.`;
+            ? "Choose Water Tech or IMS for this lab visit."
+            : `Do you need to visit Water Tech or IMS before ${record.nextProperty || "the next job"}?`;
         workflowNoLabBtn.textContent = morningLabChoice
           ? record.nextProperty ? "START FIRST JOB INSTEAD" : "BACK TO TODAY'S JOBS"
-          : record.finalStop ? "NO LAB TODAY" : "CONTINUE TO NEXT JOB";
+          : record.finalStop ? "BACK TO WORK TASKS" : "NO LAB — NEXT JOB";
         if (record.stage === "choose") return;
         const lab = currentWorkflowLab(record);
         const isDone = record.stage === "done";
         workflowLabStepLabel.textContent = isDone ? "All selected labs complete" : `Lab ${record.currentIndex + 1} of ${record.labs.length}`;
         workflowLabName.textContent = isDone ? "Lab route complete" : lab?.name || "Laboratory";
         workflowLabAddress.textContent = isDone
-          ? (record.finalStop ? "Continue to your approved final destination." : `Continue to ${record.nextProperty || "the next inspection"}.`)
+          ? (record.finalStop ? "Confirm whether all work tasks are finished." : `Continue to ${record.nextProperty || "the next inspection"}.`)
           : lab?.address || "";
         workflowLabDirections.hidden = isDone;
         if (lab) workflowLabDirections.href = workflowMapsUrl(lab.address);
@@ -18019,11 +18070,9 @@
         workflowLabContinueBtn.hidden = !isDone;
         workflowLabCompleteMessage.hidden = !isDone;
         workflowLabCompleteMessage.classList.toggle("clock-off", Boolean(isDone && record.finalStop));
-        workflowLabCompleteMessage.querySelector("strong").textContent = isDone && record.finalStop
-          ? "CLOCK OFF WHEN YOU ARRIVE HOME"
-          : "LAB VISIT COMPLETE";
+        workflowLabCompleteMessage.querySelector("strong").textContent = "LAB VISIT COMPLETE";
         workflowLabCompleteMessage.querySelector("span").textContent = record.finalStop
-          ? "Keep the clock running during the final journey. When you arrive home, return to MPI Field Tools and tap CLOCK OFF."
+          ? "Confirm whether all work tasks are finished, then complete the equipment check and Clock Off."
           : `Continue to ${record.nextProperty || "your next scheduled inspection"}. The normal inspector workflow will resume.`;
         const plan = record.travelPlan || {};
         workflowLabWarning.hidden = !plan.lateByMinutes;
@@ -18064,7 +18113,7 @@
           record.stage = "travel";
           record.travelStartedAt = completedAt;
         } else {
-          record.stage = record.finalStop ? "proceed-home" : "done";
+          record.stage = record.finalStop ? "finish-choice" : "done";
           record.completedAt = completedAt;
         }
         saveWorkflowLabStop(record);
@@ -18076,7 +18125,7 @@
         if (!record) return;
         if (record.finalStop || !workflowRemainingScheduledJobs().length) {
           record.finalStop = true;
-          record.stage = "proceed-home";
+          record.stage = "finish-choice";
           record.nextJobId = "";
           record.nextProperty = "";
           record.nextScheduledStart = "";
@@ -18092,6 +18141,57 @@
           finalDestination: record.finalStop
         }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
         saveWorkflowLabStop(null);
+        renderWorkflowApp();
+      }
+
+      function renderWorkflowFinishTasks(record = loadWorkflowLabStop()) {
+        if (!record?.finalStop) return;
+        setWorkflowPrimaryCards(workflowFinishTasksCard);
+        workflowFinishTasksChoices.hidden = record.stage !== "finish-choice" && !["proceed-home", "driving-home"].includes(record.stage);
+        workflowExtraTaskForm.hidden = record.stage !== "extra-task-entry";
+        workflowExtraTaskActive.hidden = record.stage !== "extra-task-active";
+        workflowExtraTaskDescription.textContent = record.extraTask?.description || "";
+      }
+
+      function chooseWorkflowFinishTasks(choice) {
+        const record = normalizeWorkflowLabStop();
+        if (!record?.finalStop || !["finish-choice", "proceed-home", "driving-home"].includes(record.stage)) return;
+        if (choice === "labs") {
+          record.stage = "choose";
+        } else if (choice === "no") {
+          record.stage = "extra-task-entry";
+        } else if (choice === "yes") {
+          record.stage = "finished-work";
+          record.finishedWorkAt = new Date().toISOString();
+          appendWorkflowEvent("Finished work tasks", { finishedAt: record.finishedWorkAt }, { property: record.sourceProperty, calendarEventId: record.sourceJobId });
+        } else return;
+        saveWorkflowLabStop(record);
+        renderWorkflowApp();
+      }
+
+      function startWorkflowExtraTask(event) {
+        event.preventDefault();
+        const record = normalizeWorkflowLabStop();
+        const description = String(workflowExtraTaskInput.value || "").trim();
+        if (!record?.finalStop || record.stage !== "extra-task-entry" || !description) return;
+        const startedAt = new Date().toISOString();
+        record.stage = "extra-task-active";
+        record.extraTask = { description, startedAt };
+        saveWorkflowLabStop(record);
+        appendWorkflowEvent("Additional work task started", { description, startedAt }, { property: description, calendarEventId: record.sourceJobId });
+        workflowExtraTaskInput.value = "";
+        renderWorkflowApp();
+      }
+
+      function completeWorkflowExtraTask() {
+        const record = normalizeWorkflowLabStop();
+        if (!record?.finalStop || record.stage !== "extra-task-active" || !record.extraTask?.description) return;
+        const completedAt = new Date().toISOString();
+        record.extraTasks = [...(record.extraTasks || []), { ...record.extraTask, completedAt }];
+        appendWorkflowEvent("Additional work task completed", { ...record.extraTask, completedAt }, { property: record.extraTask.description, calendarEventId: record.sourceJobId });
+        record.extraTask = null;
+        record.stage = "finish-choice";
+        saveWorkflowLabStop(record);
         renderWorkflowApp();
       }
 
@@ -18248,7 +18348,7 @@
         workflowConnectSchedule.textContent = spectoraDayAvailable ? "Spectora · read only ✓" : savedCalendarToken() ? "Connected ✓" : "Connect schedule";
         workflowConnectSchedule.disabled = spectoraDayAvailable;
         workflowRefreshSchedule.hidden = !scheduleConnected && !workflowCurrentJobs.length;
-        workflowOptionalLabBtn.hidden = Boolean(loadActiveJob()) || Boolean(workflowDayCompleteRecord());
+        workflowOptionalLabBtn.hidden = !completedJobs.length || Boolean(loadActiveJob()) || Boolean(workflowDayCompleteRecord());
         workflowOptionalLabBtn.textContent = completedJobs.length
           ? remainingJobs.length
             ? "GO TO WATER TECH OR IMS LAB BEFORE NEXT JOB"
@@ -18262,7 +18362,7 @@
           nextCard.className = "workflow-next-job";
           const time = eventTimeLabel(next).time;
           const hasNotes = workflowJobNotesFor(next).length > 0;
-          const openLabel = completedJobs.length ? "OPEN NEXT JOB" : "START FIRST JOB";
+          const openLabel = completedJobs.length ? "OPEN NEXT JOB" : "OPEN FIRST JOB";
           nextCard.innerHTML = `<span>Next job</span><h4>${escapeHtml(next.location || next.summary || "Inspection appointment")}</h4><p>${escapeHtml(time)} · ${escapeHtml(workflowServiceLabel(next))}</p><div class="workflow-job-meta">${next.clientName ? `<span>${escapeHtml(next.clientName)}</span>` : ""}${next.spectoraJobId ? `<span>Job ${escapeHtml(next.spectoraJobId)}</span>` : ""}${hasNotes ? "<span>Job notes</span>" : ""}</div><button class="workflow-button" type="button" data-workflow-open-job="${escapeHtml(next.id || "")}">${openLabel}</button>`;
           workflowNextJob.appendChild(nextCard);
         } else if (workflowCurrentJobs.length) {
@@ -18691,8 +18791,8 @@
         workflowCallClientBtn.style.opacity = job.clientPhone ? "1" : ".45";
         workflowCallClientBtn.textContent = job.clientPhone ? "CALL CLIENT" : "CLIENT PHONE NOT LISTED";
         workflowMessageClientBtn.disabled = !job.clientPhone;
-        workflowOnMyWayBtn.hidden = status !== "scheduled";
-        workflowArrivedBtn.hidden = status !== "on-my-way";
+        workflowOnMyWayBtn.hidden = true;
+        workflowArrivedBtn.hidden = !["scheduled", "on-my-way"].includes(status);
         workflowStartInspectionBtn.hidden = status !== "arrived";
         workflowJobCompleteBtn.hidden = status !== "in-progress";
         workflowDirectionsBtn.hidden = job.isPractice || !["scheduled", "on-my-way", "arrived"].includes(status);
@@ -18933,13 +19033,9 @@
         try { localStorage.setItem(LAST_CLEARED_JOB_STORAGE_KEY, JSON.stringify({ job: completed, clearedAt: new Date().toISOString() })); } catch (_) {}
         try { localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY); } catch (_) {}
         renderActiveJob(null);
-        if (nextWorkflowAppointment(completed)) {
-          renderWorkflowApp();
-          showToast("Job closed — next inspection is ready");
-        } else {
-          beginWorkflowLabDecision(completed);
-          showToast("Final job closed — confirm whether a lab stop is needed");
-        }
+        const hasNextJob = Boolean(nextWorkflowAppointment(completed));
+        beginWorkflowLabDecision(completed);
+        showToast(hasNextJob ? "Job closed — confirm whether a lab visit is needed" : "Final job closed — confirm your remaining work tasks");
       }
 
       function updateWorkflowDayCompleteButton() {
@@ -18969,10 +19065,10 @@
         const active = loadActiveJob();
         const record = workflowDayCompleteRecord();
         const finalReturn = loadWorkflowLabStop();
-        const returnedHome = finalReturn?.finalStop && finalReturn.stage === "home-arrived";
-        const scheduleFinished = jobs.length ? jobs.every(job => workflowJobIsComplete(job)) : returnedHome;
+        const finishedWork = finalReturn?.finalStop && ["finished-work", "home-arrived"].includes(finalReturn.stage);
+        const scheduleFinished = jobs.length ? jobs.every(job => workflowJobIsComplete(job)) : finishedWork;
         const finished = Boolean(record?.completedAt);
-        const ready = !active?.property && (finished || (scheduleFinished && returnedHome));
+        const ready = !active?.property && (finished || (scheduleFinished && finishedWork));
         workflowDayCompleteCard.hidden = !ready;
         workflowDayCompleteCard.classList.toggle("is-finished", finished);
         workflowDayCompleteTitle.textContent = finished ? "DAY COMPLETE" : "End-of-day equipment check";
@@ -19101,6 +19197,9 @@
         "Lab route departure / continuation": "Continued after lab stop",
         "Lab stop skipped": "Continued without a lab stop",
         "No final lab stop required": "No final lab stop required",
+        "Additional work task started": "Additional work task started",
+        "Additional work task completed": "Additional work task completed",
+        "Finished work tasks": "Finished all work tasks",
         "Proceed home selected": "Final drive home started",
         "Arrived home / end location": "Arrived at final destination",
         "Final return workflow recovered": "End-of-day workflow restored",
@@ -19142,7 +19241,9 @@
         "Lab visit completed",
         "Lab route departure / continuation",
         "Lab stop skipped",
-        "No final lab stop required"
+        "No final lab stop required",
+        "Additional work task started",
+        "Additional work task completed"
       ]);
 
       function workflowEmailAddressIndex() {
@@ -19265,15 +19366,9 @@
         const completedHistory = loadWorkflowHistory().filter(item => item.date === localDateKey());
         const completedIds = new Set(completedHistory.map(item => item.job?.calendarEventId).filter(Boolean));
         const relevantJobs = workflowScheduleJobs().filter(job => completedIds.has(job.id));
-        const readiness = workflowReadinessRecord();
         const timeClock = loadWorkflowTimeClock();
         if (relevantJobs.length && !workflowPaySessions(timeClock).length) flags.push("Verified first-job arrival was not recorded, so Hours Worked did not start.");
         if (workflowActiveClockSession(timeClock)) flags.push("The inspector remained clocked on when the daily closeout was prepared.");
-        const firstStart = relevantJobs.map(job => scheduleJobTimestamp(job, "start")).filter(Boolean).sort((a, b) => a - b)[0];
-        if (relevantJobs.length && !readiness) flags.push("Morning readiness confirmation was not completed.");
-        if (readiness?.completedAt && firstStart && new Date(readiness.completedAt).getTime() > firstStart) {
-          flags.push("Morning readiness was completed after the first scheduled appointment.");
-        }
         relevantJobs.forEach(job => {
           const events = activity.filter(item => item.calendarEventId === job.id);
           const scheduled = scheduleJobTimestamp(job, "start");
@@ -19659,6 +19754,10 @@
           showToast("Clock off before signing off for the day");
           return;
         }
+        if (!loadWorkflowLabStop()?.finalStop || !["finished-work", "home-arrived"].includes(loadWorkflowLabStop()?.stage)) {
+          showToast("Confirm all work tasks are finished before signing off");
+          return;
+        }
         if (!workflowEndOfDayChecks.length || !workflowEndOfDayChecks.every(check => check.checked)) return;
         const profile = loadWorkflowProfile();
         const completedAt = new Date().toISOString();
@@ -19833,10 +19932,6 @@
         const jobs = workflowScheduleJobs();
         const activity = loadWorkflowActivity().filter(item => item.date === localDateKey());
         const now = Date.now();
-        const readiness = activity.find(item => item.action === "Morning readiness completed");
-        const firstStart = jobs.map(job => scheduleJobTimestamp(job, "start")).filter(Boolean).sort((a, b) => a - b)[0];
-        if (jobs.length && !readiness && firstStart && now >= firstStart) flags.push("Morning readiness has not been completed.");
-        if (readiness && firstStart && new Date(readiness.timestamp).getTime() > firstStart) flags.push("Morning readiness was completed after the first scheduled appointment.");
         jobs.forEach(job => {
           const jobEvents = activity.filter(item => item.calendarEventId === job.id);
           const scheduled = scheduleJobTimestamp(job, "start");
@@ -19930,7 +20025,7 @@
 
       function setWorkflowPrimaryCards(...visibleCards) {
         const visible = new Set(visibleCards.filter(Boolean));
-        [workflowIdentityCard, workflowReadinessCard, workflowNachiTrainingCard, workflowTodayCard, workflowJobCard, workflowEquipmentCard, workflowLabCard, workflowHomeCard, workflowDayCompleteCard]
+        [workflowIdentityCard, workflowReadinessCard, workflowNachiTrainingCard, workflowTodayCard, workflowJobCard, workflowEquipmentCard, workflowLabCard, workflowFinishTasksCard, workflowHomeCard, workflowDayCompleteCard]
           .forEach(card => { if (card) card.hidden = !visible.has(card); });
       }
 
@@ -19955,12 +20050,6 @@
           renderWorkflowJob(active);
           return;
         }
-        if (!readiness) {
-          setWorkflowPrimaryCards(workflowReadinessCard);
-          renderWorkflowNotificationReadiness();
-          updateWorkflowReadinessButton();
-          return;
-        }
         const completedDay = workflowDayCompleteRecord();
         if (completedDay?.completedAt && !workflowActiveClockSession()) {
           workflowTimeClockCard.hidden = false;
@@ -19972,11 +20061,7 @@
         const labStop = ensureWorkflowFinalReturnState();
         renderWorkflowTimeClock();
         if (labStop) {
-          if (labStop.finalStop && ["proceed-home", "driving-home"].includes(labStop.stage)) {
-            renderWorkflowHomeReturn(labStop);
-            return;
-          }
-          if (labStop.finalStop && labStop.stage === "home-arrived") {
+          if (labStop.finalStop && ["finished-work", "home-arrived"].includes(labStop.stage)) {
             setWorkflowPrimaryCards(workflowDayCompleteCard);
             renderWorkflowDayComplete();
             return;
@@ -20051,6 +20136,11 @@
         workflowLabCocInput.addEventListener("change", addWorkflowLabCocPhotos);
         workflowLabCocList.addEventListener("click", removeWorkflowLabCocPhoto);
         workflowLabContinueBtn.addEventListener("click", continueAfterWorkflowLab);
+        workflowFinishTasksYesBtn.addEventListener("click", () => chooseWorkflowFinishTasks("yes"));
+        workflowFinishTasksNoBtn.addEventListener("click", () => chooseWorkflowFinishTasks("no"));
+        workflowFinishTasksLabsBtn.addEventListener("click", () => chooseWorkflowFinishTasks("labs"));
+        workflowExtraTaskForm.addEventListener("submit", startWorkflowExtraTask);
+        workflowExtraTaskDoneBtn.addEventListener("click", completeWorkflowExtraTask);
         workflowProceedHomeBtn.addEventListener("click", startWorkflowHomeJourney);
         workflowArrivedHomeBtn.addEventListener("click", arriveWorkflowHome);
         workflowEndOfDayChecklist.addEventListener("change", () => {

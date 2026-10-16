@@ -37,6 +37,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
     <key>LSApplicationQueriesSchemes</key>
     <array>
         <string>com.googleusercontent.apps.258663854283-ea5jom5101rdnbj3cfb54rtaihn66bc9</string>
