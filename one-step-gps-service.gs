@@ -4,7 +4,11 @@
 var MPI_ONE_STEP_GPS = Object.freeze({
   API_ROOT: "https://track.onestepgps.com/v3/api/public",
   API_KEY_PROPERTY: "MPI_ONE_STEP_GPS_API_KEY",
-  CORY_VEHICLE_NAME: "2026 Ford Maverick XLT Hybrid"
+  CORY_VEHICLE_NAME: "2026 Ford Maverick XLT Hybrid",
+  LABS: [
+    { id: "water-tech", name: "Water Tech", latitude: 42.60173855226, longitude: -83.933302726036 },
+    { id: "ims", name: "IMS Laboratory", latitude: 42.568062566443, longitude: -83.442830516886 }
+  ]
 });
 
 function checkOneStepGpsConnection() {
@@ -251,6 +255,27 @@ function oneStepGpsDistanceMeters_(a, b) {
   return 6371000 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
+// A sustained stop at a known lab after the last matched inspection can
+// propose a final-task departure. Vehicle movement alone cannot verify that
+// Cory finished all work, so this never changes a clock or payroll record.
+function oneStepGpsCoryFinalLabStop_(stops, date, lastJobDeparture) {
+  if (lastJobDeparture === null || !isFinite(lastJobDeparture)) return null;
+  var candidates = (stops || []).filter(function (stop) {
+    return stop && isFinite(stop.start) && isFinite(stop.end) &&
+      stop.start >= lastJobDeparture && stop.end - stop.start >= 5 * 60000 &&
+      stop.end - lastJobDeparture <= 12 * 60 * 60000 &&
+      Utilities.formatDate(new Date(stop.start), "America/Detroit", "yyyy-MM-dd") === date &&
+      Utilities.formatDate(new Date(stop.end), "America/Detroit", "yyyy-MM-dd") === date;
+  }).map(function (stop) {
+    var lab = MPI_ONE_STEP_GPS.LABS.map(function (place) {
+      return { place: place, meters: oneStepGpsDistanceMeters_(stop.coordinates, { lat: place.latitude, lng: place.longitude }) };
+    }).filter(function (match) { return match.meters <= 200; })
+      .sort(function (a, b) { return a.meters - b.meters; })[0];
+    return lab ? { labId: lab.place.id, labName: lab.place.name, start: stop.start, end: stop.end } : null;
+  }).filter(Boolean).sort(function (a, b) { return b.end - a.end; });
+  return candidates[0] || null;
+}
+
 // Compare Cory's assigned Spectora inspection properties with sustained
 // vehicle stops. No customer address, coordinate or key leaves this function.
 function oneStepGpsCoryJobStopCoverage_() {
@@ -319,6 +344,8 @@ function oneStepGpsCoryJobStopCoverage_() {
     }).filter(Boolean);
     var firstArrival = matched.length ? Math.min.apply(null, matched.map(function (stop) { return stop.start; })) : null;
     var lastJobDeparture = matched.length ? Math.max.apply(null, matched.map(function (stop) { return stop.end; })) : null;
+    var allJobsMatched = dayJobs.length > 0 && matched.length === dayJobs.length;
+    var finalLab = allJobsMatched ? oneStepGpsCoryFinalLabStop_(stops, date, lastJobDeparture) : null;
     result.push({
       day: date,
       assignedJobs: dayJobs.length,
@@ -329,9 +356,14 @@ function oneStepGpsCoryJobStopCoverage_() {
       }).length,
       firstJobArrivalCandidate: firstArrival !== null ? new Date(firstArrival).toISOString() : null,
       lastJobDepartureCandidate: lastJobDeparture !== null ? new Date(lastJobDeparture).toISOString() : null,
-      candidateJobWindowMinutes: dayJobs.length > 0 && matched.length === dayJobs.length &&
+      candidateJobWindowMinutes: allJobsMatched &&
         firstArrival !== null && lastJobDeparture !== null
         ? Math.max(0, Math.round((lastJobDeparture - firstArrival) / 60000)) : null,
+      candidateLabName: finalLab ? finalLab.labName : null,
+      candidateLabArrival: finalLab ? new Date(finalLab.start).toISOString() : null,
+      candidateLabDeparture: finalLab ? new Date(finalLab.end).toISOString() : null,
+      candidateFinalTaskWindowMinutes: finalLab && firstArrival !== null
+        ? Math.max(0, Math.round((finalLab.end - firstArrival) / 60000)) : null,
       workdayEndVerified: false
     });
   }
@@ -360,6 +392,10 @@ function syncOneStepGpsCoryReview() {
       firstJobArrivalCandidate: day.firstJobArrivalCandidate,
       lastJobDepartureCandidate: day.lastJobDepartureCandidate,
       candidateJobWindowMinutes: day.candidateJobWindowMinutes,
+      candidateLabName: day.candidateLabName,
+      candidateLabArrival: day.candidateLabArrival,
+      candidateLabDeparture: day.candidateLabDeparture,
+      candidateFinalTaskWindowMinutes: day.candidateFinalTaskWindowMinutes,
       workdayEndVerified: false,
       generatedAt: generatedAt
     };

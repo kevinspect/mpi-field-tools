@@ -3256,13 +3256,13 @@
     const period = currentRange === "week" ? "this week" : currentRange === "yesterday" ? "yesterday" : "today";
     const canSeeGpsPlanning = ["owner", "admin"].includes(String(currentProfile?.role || "").toLowerCase());
     const cory = canSeeGpsPlanning ? inspectors.find(person => /^cory\b/i.test(String(person.name || "")) || shared.normalizeEmail(person.email) === "cory@michiganpropertyinspections.com") : null;
-    const gpsMinutes = cory ? gpsJobWindowMinutes(cory, currentRange) : 0;
-    statHoursLabel.textContent = gpsMinutes ? `Cory GPS job window ${period}` : `Recorded hours ${period}`;
+    const gpsMinutes = cory ? gpsPlanningWindowMinutes(cory, currentRange) : 0;
+    statHoursLabel.textContent = gpsMinutes ? `Cory GPS task window ${period}` : `Recorded hours ${period}`;
     stats.hours.textContent = gpsMinutes ? formatMinutes(gpsMinutes) : `${Math.floor(totalMinutes / 60)}:${String(totalMinutes % 60).padStart(2, "0")}`;
     if (statGpsEstimate) {
       statGpsEstimate.hidden = !cory;
       statGpsEstimate.textContent = gpsMinutes
-        ? `Planning estimate only · ${formatMinutes(totalMinutes)} recorded for payroll · travel/labs excluded`
+        ? `Planning estimate only · ${formatMinutes(totalMinutes)} recorded for payroll · unmatched tasks excluded`
         : `No complete GPS job window ${period}; recorded time only`;
     }
     const attentionItems = operationAttentionItems();
@@ -3300,13 +3300,13 @@
     const fieldEntries = entries.filter(entry => entry.kind !== "office");
     const cory = operativePeople().find(person => /^cory\b/i.test(String(person.name || "")) || shared.normalizeEmail(person.email) === "cory@michiganpropertyinspections.com");
     const coryMinutes = cory ? weeklyMinutes(cory) : 0;
-    const coryGpsMinutes = cory ? gpsJobWindowMinutes(cory, "week") : 0;
+    const coryGpsMinutes = cory ? gpsPlanningWindowMinutes(cory, "week") : 0;
     const coryOvertime = Math.max(0, coryMinutes - 40 * 60);
     const coryStatus = coryMinutes >= 40 * 60 ? "red" : coryMinutes >= 35 * 60 ? "amber" : coryGpsMinutes ? "gps-planning" : "green";
     const canSeeCoryHours = ["owner", "admin"].includes(String(currentProfile?.role || "").toLowerCase());
     const coryCounter = canSeeCoryHours && cory
       ? coryGpsMinutes
-        ? `<section class="cory-hours-card ${coryStatus}" aria-label="Cory weekly GPS job-site planning estimate"><div><span>CORY · GPS JOB-SITE WINDOW THIS WEEK</span><strong>${formatMinutes(coryGpsMinutes)}</strong><small>Planning estimate from first job arrival to last job departure. Travel, labs and extra tasks are excluded.</small></div><div class="cory-overtime"><span>RECORDED HOURS · PAYROLL</span><strong>${formatMinutes(coryMinutes)}</strong><small>${coryOvertime ? `${formatMinutes(coryOvertime)} recorded overtime` : "No overtime recorded"}. GPS estimate is not payroll time.</small></div></section>`
+        ? `<section class="cory-hours-card ${coryStatus}" aria-label="Cory weekly GPS matched-task planning estimate"><div><span>CORY · GPS MATCHED-TASK WINDOW THIS WEEK</span><strong>${formatMinutes(coryGpsMinutes)}</strong><small>From first job arrival to the last matched job or lab departure. Other tasks may extend the day.</small></div><div class="cory-overtime"><span>RECORDED HOURS · PAYROLL</span><strong>${formatMinutes(coryMinutes)}</strong><small>${coryOvertime ? `${formatMinutes(coryOvertime)} recorded overtime` : "No overtime recorded"}. GPS estimate is not payroll time.</small></div></section>`
         : `<section class="cory-hours-card ${coryStatus}" aria-label="Cory recorded weekly hours"><div><span>CORY · RECORDED HOURS THIS WEEK</span><strong>${formatMinutes(coryMinutes)}</strong><small>Clocked time and Admin corrections only. No complete GPS job-site estimate is available this week.</small></div><div class="cory-overtime"><span>RECORDED OVERTIME</span><strong>${formatMinutes(coryOvertime)}</strong><small>${coryOvertime ? "40-hour threshold exceeded" : "No overtime recorded"}</small></div></section>`
       : "";
     const gpsReview = canSeeCoryHours && cory ? coryGpsReviewCard(cory) : "";
@@ -3324,34 +3324,46 @@
     if (!days.length) return "";
     const assignedJobs = days.reduce((sum, day) => sum + Math.max(0, Number(day.assignedJobs) || 0), 0);
     const matchedJobs = days.reduce((sum, day) => sum + Math.max(0, Number(day.matchedJobStops) || 0), 0);
-    const estimatedMinutes = gpsJobWindowMinutes(person, "week");
+    const estimatedMinutes = gpsPlanningWindowMinutes(person, "week");
     const rows = days.filter(day => Number(day.assignedJobs) > 0 || Number(day.vehicleStopCount) > 0)
       .map(day => {
         const jobs = Math.max(0, Number(day.assignedJobs) || 0);
         const matched = Math.max(0, Number(day.matchedJobStops) || 0);
-        const completeJobMatch = jobs > 0 && matched === jobs && day.firstJobArrivalCandidate && day.lastJobDepartureCandidate;
-        const window = completeJobMatch
-          ? `${formatTime(day.firstJobArrivalCandidate)}–${formatTime(day.lastJobDepartureCandidate)} · ${formatMinutes(day.candidateJobWindowMinutes)} first-to-last job window`
+        const planningWindow = gpsDayPlanningWindow(day);
+        const window = planningWindow?.labName
+          ? `${formatTime(day.firstJobArrivalCandidate)}–${formatTime(planningWindow.departure)} · ${formatMinutes(planningWindow.minutes)} first job to ${planningWindow.labName} departure (proposed final task)`
+          : planningWindow
+          ? `${formatTime(day.firstJobArrivalCandidate)}–${formatTime(planningWindow.departure)} · ${formatMinutes(planningWindow.minutes)} first-to-last job window`
           : jobs > 0 ? `${matched}/${jobs} job locations matched; time window incomplete`
             : "Vehicle activity found, but no Cory-assigned Spectora job; not classified as work";
         return `<li><strong>${escapeHtml(formatDate(day.day))}</strong><span>${escapeHtml(jobs ? `${matched}/${jobs} jobs matched` : "No assigned job")}</span><small>${escapeHtml(window)}</small></li>`;
       }).join("");
     return `<section class="cory-gps-card" aria-label="Cory GPS and Spectora planning comparison">
-      <div class="cory-gps-heading"><div><span>GPS + SPECTORA · PLANNING CHECK</span><strong>${escapeHtml(`${matchedJobs}/${assignedJobs} assigned jobs matched`)}</strong><small>${estimatedMinutes ? `${escapeHtml(formatMinutes(estimatedMinutes))} total first-to-last job windows this week · estimate only` : "No complete job-site window to total"}</small></div><small>One Step GPS vehicle stops near Cory's Spectora inspections. These are suggested job-site times, not approved Hours Worked.</small></div>
+      <div class="cory-gps-heading"><div><span>GPS + SPECTORA · PLANNING CHECK</span><strong>${escapeHtml(`${matchedJobs}/${assignedJobs} assigned jobs matched`)}</strong><small>${estimatedMinutes ? `${escapeHtml(formatMinutes(estimatedMinutes))} total matched-task windows this week · estimate only` : "No complete job-site window to total"}</small></div><small>One Step GPS stops near Cory's inspections and known labs. A lab departure is proposed only when it follows the last matched job; it is not approved Hours Worked.</small></div>
       <ul>${rows || "<li><small>No classified job activity this week.</small></li>"}</ul>
-      <p>Travel, lab visits and extra tasks may extend the workday. No payroll or clock record was changed; review the final work task before approving hours.</p>
+      <p>Unmatched stops and extra tasks may extend the workday. GPS cannot prove all work ended; no payroll or clock record was changed. Review the final task before approving hours.</p>
     </section>`;
   }
 
-  function gpsJobWindowMinutes(person, range) {
+  function gpsDayPlanningWindow(day) {
+    const assigned = Number(day?.assignedJobs);
+    const matched = Number(day?.matchedJobStops);
+    const jobMinutes = Number(day?.candidateJobWindowMinutes);
+    if (!(assigned > 0 && matched === assigned && day.firstJobArrivalCandidate && day.lastJobDepartureCandidate && Number.isFinite(jobMinutes) && jobMinutes > 0)) return null;
+    const labMinutes = Number(day.candidateFinalTaskWindowMinutes);
+    const labDeparture = Date.parse(day.candidateLabDeparture || "");
+    const jobDeparture = Date.parse(day.lastJobDepartureCandidate);
+    if (day.candidateLabName && Number.isFinite(labDeparture) && labDeparture > jobDeparture && Number.isFinite(labMinutes) && labMinutes > jobMinutes) {
+      return { minutes: Math.round(labMinutes), departure: day.candidateLabDeparture, labName: String(day.candidateLabName) };
+    }
+    return { minutes: Math.round(jobMinutes), departure: day.lastJobDepartureCandidate, labName: "" };
+  }
+
+  function gpsPlanningWindowMinutes(person, range) {
     const dateKeys = new Set(rangeDateKeys(range));
     return (Array.isArray(person?.oneStepGpsReviewDays) ? person.oneStepGpsReviewDays : []).reduce((sum, day) => {
       if (!day || !dateKeys.has(day.day)) return sum;
-      const assigned = Number(day.assignedJobs);
-      const matched = Number(day.matchedJobStops);
-      const minutes = Number(day.candidateJobWindowMinutes);
-      if (!(assigned > 0 && matched === assigned && day.firstJobArrivalCandidate && day.lastJobDepartureCandidate && Number.isFinite(minutes) && minutes > 0)) return sum;
-      return sum + Math.round(minutes);
+      return sum + (gpsDayPlanningWindow(day)?.minutes || 0);
     }, 0);
   }
 
