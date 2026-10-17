@@ -50,6 +50,12 @@
     : window.firebase.initializeApp(MPI_FIREBASE_CONFIG);
   const auth = app.auth();
   const db = app.firestore();
+  // Safari's installed macOS web app can hold a Firestore WebChannel response
+  // open indefinitely even while the same account works in a browser tab.
+  // Use the supported long-polling transport only in that standalone shell.
+  const macInstalledWebApp = /Macintosh/.test(navigator.userAgent)
+    && (navigator.standalone === true || window.matchMedia?.("(display-mode: standalone)")?.matches);
+  if (macInstalledWebApp) db.settings({ experimentalForceLongPolling: true });
   const serverTimestamp = window.firebase.firestore.FieldValue.serverTimestamp;
   const arrayUnion = window.firebase.firestore.FieldValue.arrayUnion;
   const TEAM_STATUS_VALUES = new Set([

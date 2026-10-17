@@ -1,4 +1,4 @@
-const CACHE_NAME = "mpi-field-tools-shell-v219-office-gps-1";
+const CACHE_NAME = "mpi-field-tools-shell-v219-office-connect-1";
 const APP_SHELL = [
   "./", "./index.html", "./admin.html",
   "./mpi-app-theme.css", "./mpi-app-theme.css?build=219",
@@ -8,7 +8,7 @@ const APP_SHELL = [
   "./mpi-owner-view.js", "./mpi-owner-view.js?build=219",
   "./mpi-office-diagnostics.js", "./mpi-office-diagnostics.js?build=219",
   "./mpi-tool-bag.js", "./mpi-tool-bag.js?build=219",
-  "./mpi-shared.js", "./mpi-shared.js?build=219",
+  "./mpi-shared.js", "./mpi-shared.js?build=219", "./mpi-shared.js?build=219-office-connect-1",
   "./mpi-field-sync.js", "./mpi-field-sync.js?build=219",
   "./mpi-subcontractor.js", "./mpi-subcontractor.js?build=219",
   "./mpi-comment-ai.js", "./mpi-comment-ai.js?build=219",
