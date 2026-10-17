@@ -362,6 +362,18 @@
     .cory-hours-card strong { color:var(--navy); font-size:24px; }
     .cory-hours-card small { color:#606a85; font-size:9px; line-height:1.4; }
     .cory-overtime { padding-left:15px; border-left:1px solid rgba(17,24,106,.15); }
+    .cory-gps-card { display:grid; gap:12px; margin-bottom:14px; padding:16px 18px; background:#f5f7ff; border:1px solid #bcc8e3; border-radius:15px; }
+    .cory-gps-heading { display:flex; justify-content:space-between; align-items:start; gap:16px; }
+    .cory-gps-heading > div { display:grid; gap:4px; }
+    .cory-gps-heading span { color:#58627e; font-size:8px; font-weight:950; letter-spacing:.09em; }
+    .cory-gps-heading strong { color:var(--navy); font-size:18px; }
+    .cory-gps-heading small { max-width:310px; color:#606a85; font-size:9px; line-height:1.4; }
+    .cory-gps-card ul { display:grid; gap:7px; margin:0; padding:0; list-style:none; }
+    .cory-gps-card li { display:grid; grid-template-columns:100px 120px minmax(0,1fr); align-items:center; gap:10px; padding:9px 10px; background:#fff; border:1px solid #e1e6f0; border-radius:10px; }
+    .cory-gps-card li strong { color:var(--navy); font-size:10px; }
+    .cory-gps-card li span { color:#56617c; font-size:9px; font-weight:800; }
+    .cory-gps-card li small { color:#606a85; font-size:9px; line-height:1.4; }
+    .cory-gps-card p { margin:0; color:#606a85; font-size:9px; line-height:1.4; }
     .ops-sub { margin:6px 0 0; color:var(--muted); font-size:10.5px; line-height:1.5; }
     .fact-list { display:grid; gap:9px; }
     .fact { display:flex; align-items:flex-start; justify-content:space-between; gap:13px; padding-bottom:9px; border-bottom:1px solid #edf0f5; }
@@ -512,6 +524,8 @@
       .comment-usage-copy { grid-column:1/-1; }
       .comment-usage-metric:last-of-type { grid-column:1/-1; }
       .cory-hours-card { grid-template-columns:1fr; }
+      .cory-gps-heading { display:grid; }
+      .cory-gps-card li { grid-template-columns:1fr; gap:3px; }
       .cory-overtime { padding:12px 0 0; border-top:1px solid rgba(17,24,106,.15); border-left:0; }
       .form-grid { grid-template-columns:1fr; }
       .field.wide { grid-column:auto; }
@@ -1239,7 +1253,7 @@
   <script src="./mpi-owner-view.js?build=219"></script>
   <script src="./mpi-office-setup-policy.js?build=219-office-fix-1"></script>
   <script src="./mpi-office-diagnostics.js?build=219"></script>
-  <script src="./admin.js?build=219-office-fix-1"></script>
+  <script src="./admin.js?build=219-office-gps-1"></script>
   <script src="./mpi-equipment-admin.js?build=219"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = "mpi-field-tools-shell-v219-office-fix-1";
+const CACHE_NAME = "mpi-field-tools-shell-v219-office-gps-1";
 const APP_SHELL = [
   "./", "./index.html", "./admin.html",
   "./mpi-app-theme.css", "./mpi-app-theme.css?build=219",
@@ -17,7 +17,7 @@ const APP_SHELL = [
   "./mpi-equipment-images.js", "./mpi-equipment-images.js?build=219",
   "./mpi-equipment.js", "./mpi-equipment.js?build=219",
   "./mpi-equipment-admin.js", "./mpi-equipment-admin.js?build=219",
-  "./admin.js", "./admin.js?build=219-office-fix-1",
+  "./admin.js", "./admin.js?build=219-office-gps-1",
   "./mpi-planning.js", "./mpi-planning.js?build=219",
   "./site.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./mpi-logo.png", "./tool-thumbnails.png", "./mpi-email-template.html",
   "./equipment-images/inspection-tote.jpg",

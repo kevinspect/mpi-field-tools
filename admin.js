@@ -3295,11 +3295,37 @@
     const coryCounter = canSeeCoryHours && cory
       ? `<section class="cory-hours-card ${coryStatus}" aria-label="Cory weekly hours"><div><span>CORY · WEEKLY HOURS WORKED</span><strong>${formatMinutes(coryMinutes)}</strong><small>Uses the same effective payroll time and Admin corrections as the workweek report.</small></div><div class="cory-overtime"><span>OVERTIME HOURS WORKED</span><strong>${formatMinutes(coryOvertime)}</strong><small>${coryOvertime ? "40-hour threshold exceeded" : "No overtime recorded"}</small></div></section>`
       : "";
+    const gpsReview = canSeeCoryHours && cory ? coryGpsReviewCard(cory) : "";
     teamOverview.hidden = false;
     inspectorDetail.hidden = true;
     teamOverview.innerHTML = fieldEntries.length
-      ? `${coryCounter}<div class="team-group-title">Field Team <span>${fieldEntries.length} member${fieldEntries.length === 1 ? "" : "s"}</span></div>${fieldEntries.map(entry => entry.kind === "subcontractor" ? subcontractorOverviewRow(entry) : overviewRow(entry.person)).join("")}`
+      ? `${coryCounter}${gpsReview}<div class="team-group-title">Field Team <span>${fieldEntries.length} member${fieldEntries.length === 1 ? "" : "s"}</span></div>${fieldEntries.map(entry => entry.kind === "subcontractor" ? subcontractorOverviewRow(entry) : overviewRow(entry.person)).join("")}`
       : '<div class="empty">No field operations have synchronized yet.</div>';
+  }
+
+  function coryGpsReviewCard(person) {
+    const days = (Array.isArray(person.oneStepGpsReviewDays) ? person.oneStepGpsReviewDays : [])
+      .filter(day => day && rangeDateKeys("week").includes(day.day))
+      .sort((a, b) => a.day.localeCompare(b.day));
+    if (!days.length) return "";
+    const assignedJobs = days.reduce((sum, day) => sum + Math.max(0, Number(day.assignedJobs) || 0), 0);
+    const matchedJobs = days.reduce((sum, day) => sum + Math.max(0, Number(day.matchedJobStops) || 0), 0);
+    const rows = days.filter(day => Number(day.assignedJobs) > 0 || Number(day.vehicleStopCount) > 0)
+      .map(day => {
+        const jobs = Math.max(0, Number(day.assignedJobs) || 0);
+        const matched = Math.max(0, Number(day.matchedJobStops) || 0);
+        const completeJobMatch = jobs > 0 && matched === jobs && day.firstJobArrivalCandidate && day.lastJobDepartureCandidate;
+        const window = completeJobMatch
+          ? `${formatTime(day.firstJobArrivalCandidate)}–${formatTime(day.lastJobDepartureCandidate)} · ${formatMinutes(day.candidateJobWindowMinutes)} first-to-last job window`
+          : jobs > 0 ? `${matched}/${jobs} job locations matched; time window incomplete`
+            : "Vehicle activity found, but no Cory-assigned Spectora job; not classified as work";
+        return `<li><strong>${escapeHtml(formatDate(day.day))}</strong><span>${escapeHtml(jobs ? `${matched}/${jobs} jobs matched` : "No assigned job")}</span><small>${escapeHtml(window)}</small></li>`;
+      }).join("");
+    return `<section class="cory-gps-card" aria-label="Cory GPS and Spectora planning comparison">
+      <div class="cory-gps-heading"><div><span>GPS + SPECTORA · PLANNING CHECK</span><strong>${escapeHtml(`${matchedJobs}/${assignedJobs} assigned jobs matched`)}</strong></div><small>One Step GPS vehicle stops near Cory's Spectora inspections. These are suggested job-site times, not approved Hours Worked.</small></div>
+      <ul>${rows || "<li><small>No classified job activity this week.</small></li>"}</ul>
+      <p>Travel, lab visits and extra tasks may extend the workday. No payroll or clock record was changed; review the final work task before approving hours.</p>
+    </section>`;
   }
 
   function renderSubcontractorDetail(entry) {
