@@ -74,7 +74,6 @@ function checkOneStepGpsCoryTripHistory() {
   console.log(JSON.stringify(summary));
   return summary;
 }
-
 // Reads the current Monday-to-today period in one request. These counts are
 // evidence of vehicle activity only; they are not calculated work hours.
 function checkOneStepGpsCoryWeekTripHistory() {
@@ -419,15 +418,4 @@ function checkOneStepGpsCorySavedReview() {
   };
   console.log(JSON.stringify(summary));
   return summary;
-}
-
-// Install only after the first backfill and dashboard display are verified.
-function installOneStepGpsCoryRefresh() {
-  var handler = "syncOneStepGpsCoryReview";
-  var existing = ScriptApp.getProjectTriggers().filter(function (trigger) {
-    return trigger.getHandlerFunction() === handler;
-  });
-  if (existing.length > 1) throw new Error("Multiple Cory GPS refresh triggers already exist");
-  if (existing.length === 0) ScriptApp.newTrigger(handler).timeBased().everyHours(4).create();
-  return { ok: true, triggerCount: Math.max(1, existing.length), intervalHours: 4 };
 }
