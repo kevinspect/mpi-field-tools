@@ -3300,11 +3300,14 @@
     const fieldEntries = entries.filter(entry => entry.kind !== "office");
     const cory = operativePeople().find(person => /^cory\b/i.test(String(person.name || "")) || shared.normalizeEmail(person.email) === "cory@michiganpropertyinspections.com");
     const coryMinutes = cory ? weeklyMinutes(cory) : 0;
+    const coryGpsMinutes = cory ? gpsJobWindowMinutes(cory, "week") : 0;
     const coryOvertime = Math.max(0, coryMinutes - 40 * 60);
-    const coryStatus = coryMinutes >= 40 * 60 ? "red" : coryMinutes >= 35 * 60 ? "amber" : "green";
+    const coryStatus = coryMinutes >= 40 * 60 ? "red" : coryMinutes >= 35 * 60 ? "amber" : coryGpsMinutes ? "gps-planning" : "green";
     const canSeeCoryHours = ["owner", "admin"].includes(String(currentProfile?.role || "").toLowerCase());
     const coryCounter = canSeeCoryHours && cory
-      ? `<section class="cory-hours-card ${coryStatus}" aria-label="Cory recorded weekly hours"><div><span>CORY · RECORDED HOURS THIS WEEK</span><strong>${formatMinutes(coryMinutes)}</strong><small>Clocked time and Admin corrections only. GPS job-site estimates are shown below, not counted as payroll.</small></div><div class="cory-overtime"><span>RECORDED OVERTIME</span><strong>${formatMinutes(coryOvertime)}</strong><small>${coryOvertime ? "40-hour threshold exceeded" : "No overtime recorded"}</small></div></section>`
+      ? coryGpsMinutes
+        ? `<section class="cory-hours-card ${coryStatus}" aria-label="Cory weekly GPS job-site planning estimate"><div><span>CORY · GPS JOB-SITE WINDOW THIS WEEK</span><strong>${formatMinutes(coryGpsMinutes)}</strong><small>Planning estimate from first job arrival to last job departure. Travel, labs and extra tasks are excluded.</small></div><div class="cory-overtime"><span>RECORDED HOURS · PAYROLL</span><strong>${formatMinutes(coryMinutes)}</strong><small>${coryOvertime ? `${formatMinutes(coryOvertime)} recorded overtime` : "No overtime recorded"}. GPS estimate is not payroll time.</small></div></section>`
+        : `<section class="cory-hours-card ${coryStatus}" aria-label="Cory recorded weekly hours"><div><span>CORY · RECORDED HOURS THIS WEEK</span><strong>${formatMinutes(coryMinutes)}</strong><small>Clocked time and Admin corrections only. No complete GPS job-site estimate is available this week.</small></div><div class="cory-overtime"><span>RECORDED OVERTIME</span><strong>${formatMinutes(coryOvertime)}</strong><small>${coryOvertime ? "40-hour threshold exceeded" : "No overtime recorded"}</small></div></section>`
       : "";
     const gpsReview = canSeeCoryHours && cory ? coryGpsReviewCard(cory) : "";
     teamOverview.hidden = false;
