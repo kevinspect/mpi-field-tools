@@ -11,6 +11,9 @@
   const storageKey = uid => `${STORAGE_PREFIX}${String(uid || "unknown")}`;
   const isMac = (platform = "", userAgent = "", touchPoints = 0) => /mac/i.test(`${platform} ${userAgent}`) && Number(touchPoints || 0) < 2;
   const isInstalled = (standalone = false, displayModeStandalone = false) => Boolean(standalone || displayModeStandalone);
-  const ready = checks => ["installed", "version", "notifications", "messaging", "liveUpdates", "adminServices"].every(key => checks?.[key] === true);
-  return Object.freeze({ VERSION, STORAGE_PREFIX, HEALTH_INTERVAL_MS, eligible, storageKey, isMac, isInstalled, ready });
+  // Optional alerts and transient messaging failures must not lock authorized
+  // office staff out of otherwise reachable admin services.
+  const ready = checks => ["installed", "version", "adminServices"].every(key => checks?.[key] === true);
+  const fullyHealthy = checks => ["installed", "version", "notifications", "messaging", "liveUpdates", "adminServices"].every(key => checks?.[key] === true);
+  return Object.freeze({ VERSION, STORAGE_PREFIX, HEALTH_INTERVAL_MS, eligible, storageKey, isMac, isInstalled, ready, fullyHealthy });
 });

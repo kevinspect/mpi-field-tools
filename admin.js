@@ -272,8 +272,9 @@
 
   function renderOfficeSetupResult(checks) {
     const ready = officeSetupPolicy.ready(checks);
-    adminOnboardingStepLabel.textContent = ready ? "Setup complete" : "Action required";
-    adminOnboardingBody.innerHTML = `<h2 id="adminOnboardingTitle">${ready ? "MPI OFFICE IS READY" : checks.installed ? "FINISH SETTING UP MPI OFFICE" : "ADD MPI OFFICE TO THE DOCK"}</h2><p>${ready ? "This Mac has passed the office setup checks." : checks.installed ? "Complete the item marked below, then check again." : "Apple requires this installation step. In Safari, choose File > Add to Dock, click Add, then open MPI Office from its new Dock icon."}</p><ul class="admin-setup-checks">${setupCheckItems(checks)}</ul><p class="admin-onboarding-status" data-onboarding-save-status>${escapeHtml(checks.summary || "")}</p>`;
+    const fullyHealthy = officeSetupPolicy.fullyHealthy(checks);
+    adminOnboardingStepLabel.textContent = fullyHealthy ? "Setup complete" : ready ? "Office access ready" : "Action required";
+    adminOnboardingBody.innerHTML = `<h2 id="adminOnboardingTitle">${fullyHealthy ? "MPI OFFICE IS READY" : ready ? "MPI OFFICE CAN OPEN" : checks.installed ? "FINISH SETTING UP MPI OFFICE" : "ADD MPI OFFICE TO THE DOCK"}</h2><p>${fullyHealthy ? "This Mac has passed the office setup checks." : ready ? "Office access is working. Marked alerts or messaging items can be repaired in Settings without blocking the dashboard." : checks.installed ? "Complete the item marked below, then check again." : "Apple requires this installation step. In Safari, choose File > Add to Dock, click Add, then open MPI Office from its new Dock icon."}</p><ul class="admin-setup-checks">${setupCheckItems(checks)}</ul><p class="admin-onboarding-status" data-onboarding-save-status>${escapeHtml(checks.summary || "")}</p>`;
     adminOnboardingNext.hidden = false;
     adminOnboardingNext.disabled = false;
     adminOnboardingNext.dataset.officeSetupAction = ready ? "open" : checks.installed && !checks.version ? "update" : "run";
@@ -311,8 +312,11 @@
         checks.version = Number(latest.build) > 0 && Number(latest.build) <= environment.installedBuild;
         checks.details.version = checks.version ? `Build ${environment.installedBuild} is current.` : `Build ${latest.build || "unknown"} is required; reload MPI Office.`;
       } catch (_) { checks.details.version = "The production version could not be verified."; }
-      checks.notifications = requestPermission ? await enableOfficeAlerts(adminOnboardingNext, true) : window.Notification?.permission === "granted" && Boolean(savedOfficePushToken());
-      checks.details.notifications = checks.notifications ? "Permission and MPI notification registration verified." : "Choose Allow when macOS asks, or enable MPI Office in System Settings > Notifications.";
+      const savedNotificationRegistration = window.Notification?.permission === "granted" && Boolean(savedOfficePushToken());
+      checks.notifications = savedNotificationRegistration || (requestPermission
+        ? await boundedOfficeSetup(enableOfficeAlerts(adminOnboardingNext, true), 15000).catch(() => false)
+        : false);
+      checks.details.notifications = checks.notifications ? "Notification permission and device registration are present." : "Choose Allow when macOS asks, or enable MPI Office in System Settings > Notifications.";
       try {
         const health = await boundedOfficeSetup(shared.messagingHealth(), 31000);
         checks.messaging = health?.backend === "connected" && health?.authentication === "verified" && health?.listener === "connected";
@@ -328,7 +332,11 @@
       } catch (_) {
         checks.details.adminServices = "Office authorization, requests or To-Dos could not be verified.";
       }
-      checks.summary = officeSetupPolicy.ready(checks) ? "All required checks passed." : "No company data was changed. Correct the marked item and run the check again.";
+      checks.summary = officeSetupPolicy.fullyHealthy(checks)
+        ? "All setup checks passed."
+        : officeSetupPolicy.ready(checks)
+          ? "Office access is ready. Marked features need attention; no company data was changed."
+          : "No company data was changed. Correct the marked item and run the check again.";
       if (showResult) renderOfficeSetupResult(checks);
       return checks;
     } finally {
