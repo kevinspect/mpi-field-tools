@@ -311,7 +311,7 @@ await assertText(
   "index.html",
   source => source.includes("Boolean(defectInput.value.trim() || selectedCommentPhoto)")
     && source.includes("if (!note && !photo)")
-    && source.includes("ADD A PHOTO, ENTER A FIELD NOTE, OR USE BOTH.")
+    && source.includes("ADD A PHOTO, NOTE THE EXACT CONDITION, OR USE BOTH.")
     && !/<textarea id="defectInput"[^>]*required/.test(source),
   "The Comment Builder still requires text or does not recognize photo evidence"
 );

@@ -78,14 +78,12 @@ function checkOneStepGpsCoryTripHistory() {
   console.log(JSON.stringify(summary));
   return summary;
 }
-// Reads the current Monday-to-today period in one request. These counts are
+// Reads the current Sunday-to-today period in one request. These counts are
 // evidence of vehicle activity only; they are not calculated work hours.
 function checkOneStepGpsCoryWeekTripHistory() {
-  var today = Utilities.formatDate(new Date(), "America/Detroit", "yyyy-MM-dd");
-  var parts = today.split("-").map(Number);
-  var todayUtc = Date.UTC(parts[0], parts[1] - 1, parts[2]);
-  var mondayUtc = todayUtc - ((new Date(todayUtc).getUTCDay() + 6) % 7) * 86400000;
-  var from = new Date(mondayUtc - 86400000).toISOString();
+  var bounds = oneStepGpsWeekBounds_();
+  var todayUtc = bounds.todayUtc;
+  var from = new Date(bounds.sundayUtc - 86400000).toISOString();
   var to = new Date(todayUtc + 172800000).toISOString();
   var devices = oneStepGpsFetch_("/device-info?device_id=1&display_name=1");
   var deviceId = oneStepGpsCoryDevices_(devices)[0].device_id;
@@ -96,7 +94,7 @@ function checkOneStepGpsCoryWeekTripHistory() {
   var route = oneStepGpsFetch_("/route/drive-stop" + query);
   if (!route || !Array.isArray(route.drive_stop_list)) throw new Error("One Step GPS returned an unexpected trip history");
   var result = [];
-  for (var utc = mondayUtc; utc <= todayUtc; utc += 86400000) {
+  for (var utc = bounds.sundayUtc; utc <= todayUtc; utc += 86400000) {
     var date = new Date(utc).toISOString().slice(0, 10);
     var items = route.drive_stop_list.filter(function (item) {
       return item && item.time_from &&
@@ -152,16 +150,13 @@ function oneStepGpsCoryProfile_() {
 // logging customer addresses, route coordinates, or employee identifiers.
 function checkOneStepGpsCoryScheduleCoverage() {
   var profile = oneStepGpsCoryProfile_().fields;
-  var today = Utilities.formatDate(new Date(), "America/Detroit", "yyyy-MM-dd");
-  var parts = today.split("-").map(Number);
-  var todayUtc = Date.UTC(parts[0], parts[1] - 1, parts[2]);
-  var weekday = new Date(todayUtc).getUTCDay();
-  var mondayUtc = todayUtc - ((weekday + 6) % 7) * 86400000;
+  var bounds = oneStepGpsWeekBounds_();
+  var todayUtc = bounds.todayUtc;
   var scheduledDays = Array.isArray(profile.spectoraScheduleDays) ? profile.spectoraScheduleDays : [];
   var operationDays = Array.isArray(profile.operationsDays) ? profile.operationsDays : [];
   if (profile.operationsCurrent && profile.operationsCurrent.date) operationDays.push(profile.operationsCurrent);
   var summary = [];
-  for (var utc = mondayUtc; utc <= todayUtc; utc += 86400000) {
+  for (var utc = bounds.sundayUtc; utc <= todayUtc; utc += 86400000) {
     var date = new Date(utc).toISOString().slice(0, 10);
     var schedule = scheduledDays.filter(function (day) { return day && day.date === date; })[0] || {};
     var operation = operationDays.filter(function (day) { return day && day.date === date; })[0] || {};
@@ -185,13 +180,11 @@ function checkOneStepGpsCoryScheduleCoverage() {
 // Reads Spectora through MPI's existing GET-only connector. Only counts and
 // address availability are logged; client names and addresses stay private.
 function checkOneStepGpsCorySpectoraCoverage() {
-  var today = Utilities.formatDate(new Date(), "America/Detroit", "yyyy-MM-dd");
-  var parts = today.split("-").map(Number);
-  var todayUtc = Date.UTC(parts[0], parts[1] - 1, parts[2]);
-  var mondayUtc = todayUtc - ((new Date(todayUtc).getUTCDay() + 6) % 7) * 86400000;
+  var bounds = oneStepGpsWeekBounds_();
+  var todayUtc = bounds.todayUtc;
   var records = fetchSpectoraInspections_();
   var summary = [];
-  for (var utc = mondayUtc; utc <= todayUtc; utc += 86400000) {
+  for (var utc = bounds.sundayUtc; utc <= todayUtc; utc += 86400000) {
     var date = new Date(utc).toISOString().slice(0, 10);
     var datedJobs = records.filter(function (record) {
       var attributes = record && record.attributes || {};
@@ -232,12 +225,12 @@ function oneStepGpsInspectionHasInspector_(record, personName) {
   return names.indexOf(normalizedPersonName_(personName)) >= 0;
 }
 
-function oneStepGpsWeekBounds_() {
-  var today = Utilities.formatDate(new Date(), "America/Detroit", "yyyy-MM-dd");
+function oneStepGpsWeekBounds_(date) {
+  var today = Utilities.formatDate(date || new Date(), "America/Detroit", "yyyy-MM-dd");
   var parts = today.split("-").map(Number);
   var todayUtc = Date.UTC(parts[0], parts[1] - 1, parts[2]);
-  var mondayUtc = todayUtc - ((new Date(todayUtc).getUTCDay() + 6) % 7) * 86400000;
-  return { todayUtc: todayUtc, mondayUtc: mondayUtc };
+  var sundayUtc = todayUtc - new Date(todayUtc).getUTCDay() * 86400000;
+  return { todayUtc: todayUtc, sundayUtc: sundayUtc };
 }
 
 function oneStepGpsValidCoordinate_(value, limit) {
@@ -280,7 +273,7 @@ function oneStepGpsCoryFinalLabStop_(stops, date, lastJobDeparture) {
 // vehicle stops. No customer address, coordinate or key leaves this function.
 function oneStepGpsCoryJobStopCoverage_() {
   var bounds = oneStepGpsWeekBounds_();
-  var from = new Date(bounds.mondayUtc - 86400000).toISOString();
+  var from = new Date(bounds.sundayUtc - 86400000).toISOString();
   var to = new Date(bounds.todayUtc + 172800000).toISOString();
   var spectoraQuery = "?filter[datetime_greater_than]=" + encodeURIComponent(from)
     + "&filter[datetime_less_than]=" + encodeURIComponent(to)
@@ -327,7 +320,7 @@ function oneStepGpsCoryJobStopCoverage_() {
     };
   }).filter(function (item) { return isFinite(item.start) && isFinite(item.end) && item.end > item.start; });
   var result = [];
-  for (var utc = bounds.mondayUtc; utc <= bounds.todayUtc; utc += 86400000) {
+  for (var utc = bounds.sundayUtc; utc <= bounds.todayUtc; utc += 86400000) {
     var date = new Date(utc).toISOString().slice(0, 10);
     var dayJobs = jobs.filter(function (job) { return job.date === date; });
     var matched = dayJobs.map(function (job) {
@@ -443,8 +436,8 @@ function checkOneStepGpsCorySavedReview() {
   var profile = oneStepGpsCoryProfile_().fields;
   var days = Array.isArray(profile.oneStepGpsReviewDays) ? profile.oneStepGpsReviewDays : [];
   var thisWeek = oneStepGpsWeekBounds_();
-  var monday = new Date(thisWeek.mondayUtc).toISOString().slice(0, 10);
-  var current = days.filter(function (day) { return day && day.day >= monday; });
+  var sunday = new Date(thisWeek.sundayUtc).toISOString().slice(0, 10);
+  var current = days.filter(function (day) { return day && day.day >= sunday; });
   var summary = {
     ok: true,
     savedCurrentWeekDays: current.length,

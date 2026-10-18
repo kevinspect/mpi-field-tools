@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="219">
+  <meta name="app-build" content="220">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -5956,7 +5956,7 @@
     .field-inbox-thread-files { padding-left:43px; color:#8e8e93; font-size:7.5px; }
     .field-compose-card { border-radius:18px; }
   </style>
-  <link rel="stylesheet" href="./mpi-app-theme.css?build=219">
+  <link rel="stylesheet" href="./mpi-app-theme.css?build=220">
 </head>
 <body class="mpi-field-ui">
   <section class="mpi-access-choice" id="mpiAccessChoice" role="dialog" aria-modal="true" aria-labelledby="mpiAccessChoiceTitle" hidden>
@@ -6814,7 +6814,7 @@
           <div class="panel-heading">
             <div>
               <h2 id="comment-note-title">Add inspection evidence</h2>
-              <p id="comment-note-help">ADD A PHOTO, ENTER A FIELD NOTE, OR USE BOTH.</p>
+              <p id="comment-note-help">ADD A PHOTO, NOTE THE EXACT CONDITION, OR USE BOTH.</p>
             </div>
             <span class="step-count" id="commentModeBadge">Online</span>
           </div>
@@ -6848,7 +6848,7 @@
             <label for="defectInput" id="comment-note-label">Field note (optional when a photo is added)</label>
             <textarea id="defectInput" maxlength="900" placeholder="Example: The heating and cooling systems did not operate when the thermostat controls were activated. The furnace and air conditioner did not respond at either thermostat."></textarea>
             <div class="example-row">
-              <span>Stick to visible conditions and test results.</span>
+              <span>Describe what and where; include any test result. A photo alone cannot show how equipment operated.</span>
               <button class="example-btn" id="commentExampleBtn" type="button">Use example</button>
             </div>
           </div>
@@ -8714,7 +8714,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 219</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 220</span></div>
           <div class="settings-status"><strong>App version</strong><span id="settingsAppVersionStatus">Checking…</span></div>
         </section>
 
@@ -8855,16 +8855,16 @@
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-messaging-compat.js"></script>
-  <script src="./mpi-native-bridge.js?build=219"></script>
-  <script src="./mpi-shared.js?build=219"></script>
-  <script src="./mpi-equipment.js?build=219"></script>
-  <script src="./mpi-office-navigation.js?build=219"></script>
-  <script src="./mpi-owner-view.js?build=219"></script>
-  <script src="./mpi-tool-bag.js?build=219"></script>
-  <script src="./mpi-field-sync.js?build=219"></script>
-  <script src="./mpi-subcontractor.js?build=219"></script>
-  <script src="./mpi-comment-policy.js?build=219"></script>
-  <script type="module" src="./mpi-comment-ai.js?build=219"></script>
+  <script src="./mpi-native-bridge.js?build=220"></script>
+  <script src="./mpi-shared.js?build=220"></script>
+  <script src="./mpi-equipment.js?build=220"></script>
+  <script src="./mpi-office-navigation.js?build=220"></script>
+  <script src="./mpi-owner-view.js?build=220"></script>
+  <script src="./mpi-tool-bag.js?build=220"></script>
+  <script src="./mpi-field-sync.js?build=220"></script>
+  <script src="./mpi-subcontractor.js?build=220"></script>
+  <script src="./mpi-comment-policy.js?build=220"></script>
+  <script type="module" src="./mpi-comment-ai.js?build=220"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     (() => {
@@ -16776,13 +16776,13 @@
       function workflowWeekDateKeys() {
         const today = new Date();
         today.setHours(12, 0, 0, 0);
-        const weekday = today.getDay() || 7;
-        const monday = new Date(today);
-        monday.setDate(today.getDate() - weekday + 1);
+        const weekday = today.getDay();
+        const sunday = new Date(today);
+        sunday.setDate(today.getDate() - weekday);
         const keys = [];
         for (let index = 0; index < 7; index += 1) {
-          const day = new Date(monday);
-          day.setDate(monday.getDate() + index);
+          const day = new Date(sunday);
+          day.setDate(sunday.getDate() + index);
           const key = localDateKey(day);
           if (key <= localDateKey()) keys.push(key);
         }
@@ -19641,7 +19641,7 @@
 
       async function sendWorkflowWeeklySummaryIfDue() {
         const today = new Date().getDay();
-        if (![5, 6, 0].includes(today)) return false;
+        if (![5, 6].includes(today)) return false;
         const closeout = workflowDayCompleteRecord();
         if (!closeout?.completedAt || closeout.date !== localDateKey()) return false;
         const period = workflowWeeklySummaryPeriod();
@@ -24711,6 +24711,12 @@
         commentOutput.style.overflowY = commentOutput.scrollHeight <= desiredHeight + 2 ? "hidden" : "auto";
       }
 
+      function commentReviewNote(type = commentType) {
+        return type === "limit"
+          ? "Review the limitation, effect, and recommendation for property-specific accuracy before copying it into Spectora."
+          : "Review the observation, implication, and recommendation for property-specific accuracy before copying it into Spectora.";
+      }
+
       function setCommentType(type) {
         commentType = type;
         activeCommentRequestId = "";
@@ -24724,7 +24730,7 @@
           ? "Add a photo, enter a field note, or use both. The secure online builder creates property-specific limitation wording for review in Spectora."
           : "Add a photo, enter a field note, or use both. The secure online builder creates a specific observation, implication, and recommendation without adding unsupported property facts.";
         commentNoteTitle.textContent = "Add inspection evidence";
-        commentNoteHelp.textContent = "ADD A PHOTO, ENTER A FIELD NOTE, OR USE BOTH.";
+        commentNoteHelp.textContent = "ADD A PHOTO, NOTE THE EXACT CONDITION, OR USE BOTH.";
         commentNoteLabel.textContent = "Field note (optional when a photo is added)";
         defectInput.placeholder = limitation
           ? "Example: Stored items in front of the electrical panel restricted access and prevented a full inspection."
@@ -24735,9 +24741,7 @@
         commentOutput.placeholder = limitation
           ? "Your formatted limitation comment will appear here after you add a photo, enter a field note, or use both."
           : "Your formatted defect comment will appear here after you add a photo, enter a field note, or use both.";
-        commentResultNote.textContent = limitation
-          ? "Review the limitation, effect, and recommendation for property-specific accuracy before copying it into Spectora."
-          : "Review the observation, implication, and recommendation for property-specific accuracy before copying it into Spectora.";
+        commentResultNote.textContent = commentReviewNote();
         commentPrivacyNote.textContent = "Internet and MPI company sign-in are required. Use this only when the approved Spectora template does not already contain the right comment.";
         commentOutput.value = "";
         commentOutput.scrollTop = 0;
@@ -24853,6 +24857,7 @@
         activeCommentRequestId = "";
         activeCommentRequestSignature = "";
         commentFailureActions.hidden = true;
+        commentResultNote.textContent = commentReviewNote();
         defectInput.focus();
       });
 
@@ -24919,12 +24924,14 @@
           }));
           copyCommentBtn.disabled = false;
           commentModeBadge.textContent = "Ready";
+          commentResultNote.textContent = commentReviewNote();
           showToast("MPI comment ready for review");
         } catch (error) {
           if (error?.mpiFallbackAllowed && note) {
             commentOutput.value = normalizeGeneratedCommentOutput(buildMpiComment(note, commentArea.value, commentType));
             copyCommentBtn.disabled = false;
             commentModeBadge.textContent = "On-device backup";
+            commentResultNote.textContent = "Backup draft from your field note only. Check the implication and recommendation closely before copying it into Spectora.";
             commentFailureActions.hidden = true;
             window.MPI_COMMENT_AI?.recordLocalFallback?.({
               id: error.requestId || activeCommentRequestId,

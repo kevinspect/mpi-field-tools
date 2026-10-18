@@ -1,5 +1,13 @@
 # MPI Field Tools — Six-Hour Improvement Journal
 
+## Build 220 — MPI Comment Builder private pilot
+
+- Tightened defect comment guidance using MPI's existing report style and examples without bundling customer reports into the app.
+- Built and Apple-distribution-signed the iPhone package. `pnpm native:verify:ipa` passed, including the production APNs entitlement and matching provisioning profile; Apple's package validation also passed.
+- Uploaded build 220 to App Store Connect on October 17, 2026 and added it only to the existing Kevin and Cory internal TestFlight groups. Installation on their phones is not yet confirmed.
+- Revoked the temporary App Store Connect signing key and removed its downloaded private-key file after distribution. The user's Mac keychain search list was restored.
+- This remains a private TestFlight pilot, not an approved or live MPI Custom App. Remote push delivery remains unverified.
+
 ## Build 217 — Managed Training & CPI/CMI Control
 
 - Replaced automatic InterNACHI transcript/qualification pulling with a focused CPI or CMI confirmation controlled by MPI management.

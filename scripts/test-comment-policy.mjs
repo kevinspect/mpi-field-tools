@@ -12,6 +12,15 @@ assert.match(policy.PROMPT_VERSION, /^mpi-comment-v\d/);
 assert.match(policy.SYSTEM_INSTRUCTION, /examine the whole image/i);
 assert.match(policy.SYSTEM_INSTRUCTION, /multiple sentences/i);
 assert.match(policy.SYSTEM_INSTRUCTION, /inspector's factual field observation is authoritative/i);
+assert.match(policy.SYSTEM_INSTRUCTION, /one practical action/i);
+assert.match(policy.SYSTEM_INSTRUCTION, /do not repeat the observation/i);
+assert.match(policy.SYSTEM_INSTRUCTION, /do not infer a test from a photograph/i);
+assert.match(policy.SYSTEM_INSTRUCTION, /MPI's report SOP/i);
+assert.match(policy.SYSTEM_INSTRUCTION, /template style/i);
+assert.match(policy.SYSTEM_INSTRUCTION, /substitute a common template defect/i);
+assert.match(policy.SYSTEM_INSTRUCTION, /contact a qualified professional/i);
+assert.match(policy.SYSTEM_INSTRUCTION, /do not call an inaccessible component "not present/i);
+assert.doesNotMatch(policy.SYSTEM_INSTRUCTION, /\b(?:Warner Rd|Interstate 94 Service Dr|Overton St|Auburndale)\b/i, "No customer address from supplied reports is bundled in the prompt");
 
 const photo = { inlineData: { mimeType: "image/jpeg", data: "REAL-IMAGE-BYTES" } };
 const photoOnly = policy.buildRequest({ id: "photo-only", preparedPhoto: photo });
@@ -32,8 +41,9 @@ assert.match(combined.requestContent[0], /Active leak in ceiling utility closet/
 
 for (const example of ["Loose GFCI", "Active leak in ceiling utility closet", "Daylight visible around window frame"]) {
   const request = policy.buildRequest({ id: example, note: example, componentInstruction: "Use Component - Defect." });
-  assert.match(request.prompt, /Use sufficient detail for an actual inspection report/);
+  assert.match(request.prompt, /Write a concise, complete report comment/);
   assert.match(request.prompt, /Component - Defect/);
+  assert.doesNotMatch(request.prompt, /Request ID:/, "Request identifiers are kept out of report-writing prompts");
 }
 for (const defect of ["electrical defect", "exterior siding deterioration", "ceiling moisture staining", "roof flashing defect", "foundation crack"]) {
   const request = policy.buildRequest({ id: defect, preparedPhoto: photo, componentInstruction: `Evaluate this ${defect}.` });
@@ -41,6 +51,7 @@ for (const defect of ["electrical defect", "exterior siding deterioration", "cei
   assert.match(request.prompt, new RegExp(defect));
 }
 assert.match(serviceSource, /gemini-3\.8-flash/);
+assert.match(serviceSource, /maxOutputTokens: 1200/, "Quality changes do not alter the model call's output ceiling");
 assert.match(serviceSource, /originalImageWidth/);
 assert.match(serviceSource, /aiRequestContainedImage/);
 assert.match(serviceSource, /return `\$\{title\}\\n\$\{labels\[0\]\}: \$\{observation\}\\n\$\{labels\[1\]\}: \$\{implication\}\\n\$\{labels\[2\]\}: \$\{recommendation\}`/, "Output fields are consecutive with no blank lines");

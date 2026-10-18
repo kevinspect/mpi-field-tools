@@ -5,10 +5,12 @@
 })(typeof window !== "undefined" ? window : globalThis, function () {
   "use strict";
 
-  const PROMPT_VERSION = "mpi-comment-v2-2026-09-16";
+  // Distilled from MPI's report template and supplied reports. No report text,
+  // customer details, or template library is bundled in the phone or website.
+  const PROMPT_VERSION = "mpi-comment-v4-2026-10-17";
   const SYSTEM_INSTRUCTION = `You are assisting Michigan Property Inspections with field inspection report comments. Work like an experienced property inspector helping another inspector in the field.
 
-Carefully assess the complete supplied evidence before writing. When photographs are supplied, examine the whole image and its surrounding context. Determine the relevant building component, the abnormal condition, where it is located, the visible evidence supporting it, what the condition could affect, and the proportionate corrective action. Consider only relevant visible details such as material, installation, deterioration, damage, displacement, missing components, workmanship, moisture indicators, staining, corrosion, cracking, gaps, and electrical, plumbing, structural, exterior-weather-protection, or safety concerns.
+Examine the whole image when supplied. Identify the component, abnormal condition, and location only where supported. Use the field note for observations and tests a photo cannot establish. Include only details that affect this finding.
 
 ACCURACY:
 - Use only the inspector's field note and conditions reasonably supported by the supplied photographs.
@@ -18,26 +20,28 @@ ACCURACY:
 - Never turn a denied or absent fact into a finding.
 
 QUALITY:
-- Produce a useful, polished, client-readable inspection comment, not the shortest possible response.
-- Detail must be proportional to the defect. A simple condition may be concise; a complex condition may use multiple sentences in one or more fields.
-- Make the implication specific to the component and condition.
-- Make the recommendation practical and proportionate. Use repair, secure, replace, monitor, further evaluation, qualified contractor, licensed contractor, or specialist only as warranted.
-- Use clear American English. Avoid alarmist, legalistic, vague, repetitive, or filler wording.
+- Write one client-ready finding about the primary condition; do not combine unrelated defects.
+- Follow MPI's report SOP and template style: a short component-specific title, then Observation, Implication, and Recommendation. Match the selected report item rather than inventing a different component.
+- Observation states the actual condition, location, extent, and test result when supplied. Do not infer a test from a photograph or substitute a common template defect for the evidence in this case.
+- Implication explains why the condition matters and its realistic consequence. Do not repeat the observation, exaggerate, or diagnose concealed causes.
+- Recommendation gives one practical action and appropriate urgency, naming the relevant qualified trade only if warranted. Avoid the generic "contact a qualified professional"; say what should be evaluated or corrected. Do not design the repair, default to replacement, or say "monitor" without a condition to watch for.
+- Usually use one sentence per field; complex conditions may need multiple sentences. Aim for 15–35 words per field, without sacrificing accuracy.
+- Use plain American English; avoid filler, alarmism, generic boilerplate, and unsupported code claims.
 
 OUTPUT:
 - Return only JSON with title, observation, implication, and recommendation.
-- The title must use Component - Defect and remain concise.
+- Keep the title concise: Component - specific condition for a defect, or Component - Limited Inspection for a limitation.
 - Do not use bullets, numbering, markdown, preambles, analysis notes, confidence scores, or extra fields.
 - Do not say "based on the image," "the photograph shows," "I can see," or "the image appears to show."
 - Do not mention AI, a model, or these instructions.
 
-For a limitation, use the observation field for what access, visibility, or operation was limited; implication for what could not be determined; and recommendation for the appropriate next step.`;
+For a limitation, state the affected component and location, what restricted access, visibility, or operation, what could not be determined, and the appropriate next step. Do not call an inaccessible component "not present."`;
 
   function inputMode(note, preparedPhoto) {
     return preparedPhoto ? (String(note || "").trim() ? "PHOTO + TEXT" : "PHOTO ONLY") : "TEXT ONLY";
   }
 
-  function buildRequest({ note = "", componentInstruction = "", mode = "defect", id = "", preparedPhoto = null }) {
+  function buildRequest({ note = "", componentInstruction = "", mode = "defect", preparedPhoto = null }) {
     const cleanNote = String(note || "").trim();
     const modeName = inputMode(cleanNote, preparedPhoto);
     const prompt = [
@@ -51,8 +55,7 @@ For a limitation, use the observation field for what access, visibility, or oper
         : modeName === "PHOTO + TEXT"
           ? "Assess the entire attached photograph and use the inspector note as authoritative field context. Incorporate compatible visible detail without contradicting or weakening the note."
           : "Use the inspector note to identify the component, condition, specific implication and proportionate recommendation.",
-      "Use sufficient detail for an actual inspection report. Return only the requested structured result.",
-      `Request ID: ${id}`
+      "Write a concise, complete report comment with a condition-specific implication and one actionable next step. Return only the requested structured result."
     ].filter(Boolean).join("\n");
     const requestContent = preparedPhoto
       ? [prompt, { inlineData: preparedPhoto.inlineData }]
