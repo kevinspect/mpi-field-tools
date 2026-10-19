@@ -1662,16 +1662,19 @@
     const signature = [...plotted.map(item => `${item.person.id}:${item.location.latitude}:${item.location.longitude}`),
       truck ? `cory-truck:${truck.latitude}:${truck.longitude}` : "",
       ...coryScheduledMapLocations().map(([latitude, longitude]) => `cory-job:${latitude}:${longitude}`)].sort().join("|");
-    if (signature !== liveLocationMapSignature && liveLocationMapMode === "all" && !liveLocationRouteVisible) {
+    const frameAfterResize = signature !== liveLocationMapSignature && liveLocationMapMode === "all" && !liveLocationRouteVisible;
+    if (frameAfterResize) {
       liveLocationMapSignature = signature;
-      frameAllLiveLocations(map, plotted);
     } else if (liveLocationMapMode === "focus" && !liveLocationRouteVisible) {
       const selected = plotted.find(item => item.person.id === selectedLiveLocationPersonId);
       if (selected) map.panTo([selected.location.latitude, selected.location.longitude]);
     }
     updateLiveLocationControls();
     updateOperationalClocks();
-    window.setTimeout(() => map.invalidateSize(), 0);
+    window.setTimeout(() => {
+      map.invalidateSize();
+      if (frameAfterResize && liveLocationMapMode === "all" && !liveLocationRouteVisible) frameAllLiveLocations(map, plotted);
+    }, 0);
   }
 
   function hideHistoricalRoute({ keepSelection = true } = {}) {

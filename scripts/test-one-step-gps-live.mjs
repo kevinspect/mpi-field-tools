@@ -59,9 +59,10 @@ providerStatus = 429;
 cached = { vehicleStatus: "Moving", lastAttemptAt: new Date(Date.now() - 180000).toISOString() };
 assert.throws(() => context.refreshOneStepGpsCoryLive_(), /status 429/);
 assert.ok(cached.lastErrorAt);
+assert.ok(Date.parse(cached.rateLimitUntilAt) - Date.now() > 59 * 60000, "429 must pause provider calls for an hour");
 const readsAfterError = providerReads;
-assert.equal(context.refreshOneStepGpsCoryLive_().cached, true);
-assert.equal(providerReads, readsAfterError, "provider errors must back off for two minutes");
+assert.equal(context.refreshOneStepGpsCoryLive_().rateLimited, true);
+assert.equal(providerReads, readsAfterError, "provider 429 must not retry during the cooldown");
 const readsBeforeUnauthorized = providerReads;
 
 context.response_ = value => value;

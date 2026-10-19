@@ -88,10 +88,16 @@ function refreshOneStepGpsCoryLive_() {
   lock.waitLock(10000);
   try {
     var current = oneStepGpsLiveDocument_();
+    var now = Date.now();
+    // The provider does not send quota/reset headers. After HTTP 429, wait a
+    // full hour from that response so background and office reads stop together.
+    var rateLimitUntil = Date.parse(current && current.rateLimitUntilAt || "");
+    if (Number.isFinite(rateLimitUntil) && rateLimitUntil > now) {
+      return { cached: true, rateLimited: true, refreshSeconds: Math.ceil((rateLimitUntil - now) / 1000) };
+    }
     var intervalMs = current && current.vehicleStatus === "Stationary" ? Math.max(movingIntervalMs, 120000) :
       current && current.vehicleStatus === "Moving" ? movingIntervalMs : Math.max(movingIntervalMs, 120000);
     if (current && current.lastErrorAt) intervalMs = Math.max(intervalMs, 120000);
-    var now = Date.now();
     var lastAttempt = Date.parse(current && current.lastAttemptAt || "");
     if (Number.isFinite(lastAttempt) && now - lastAttempt < intervalMs) return { cached: true, refreshSeconds: Math.ceil(intervalMs / 1000) };
     var key = PropertiesService.getScriptProperties().getProperty(MPI_ONE_STEP_GPS.API_KEY_PROPERTY);
@@ -100,12 +106,16 @@ function refreshOneStepGpsCoryLive_() {
       var response = UrlFetchApp.fetch(MPI_ONE_STEP_GPS.API_ROOT + "/device/" + encodeURIComponent(MPI_ONE_STEP_GPS.CORY_DEVICE_ID) + "?latest_point=true", {
         method: "get", headers: { Authorization: "Bearer " + key, Accept: "application/json" }, muteHttpExceptions: true
       });
-      if (response.getResponseCode() !== 200) throw new Error("One Step GPS live read failed with status " + response.getResponseCode());
+      if (response.getResponseCode() !== 200) {
+        var readError = new Error("One Step GPS live read failed with status " + response.getResponseCode());
+        readError.rateLimited = response.getResponseCode() === 429;
+        throw readError;
+      }
       var device = JSON.parse(response.getContentText() || "null");
       if (!device || String(device.device_id) !== MPI_ONE_STEP_GPS.CORY_DEVICE_ID) throw new Error("One Step GPS device identity mismatch");
       var point = device.latest_device_point;
       if (!oneStepGpsValidLivePoint_(point)) point = device.latest_accurate_device_point;
-      var update = { lastAttemptAt: new Date(now).toISOString(), lastErrorAt: null };
+      var update = { lastAttemptAt: new Date(now).toISOString(), lastErrorAt: null, rateLimitUntilAt: null };
       if (oneStepGpsValidLivePoint_(point)) {
         var speed = point.device_point_detail && point.device_point_detail.speed;
         var speedValue = speed && Number(speed.value);
@@ -130,7 +140,13 @@ function refreshOneStepGpsCoryLive_() {
       oneStepGpsWriteLive_(update);
       return { cached: false, hasValidPoint: Boolean(update.gpsAt), refreshSeconds: Math.ceil(intervalMs / 1000) };
     } catch (error) {
-      try { oneStepGpsWriteLive_({ lastAttemptAt: new Date(now).toISOString(), lastErrorAt: new Date(now).toISOString() }); } catch (_) {}
+      try {
+        oneStepGpsWriteLive_({
+          lastAttemptAt: new Date(now).toISOString(),
+          lastErrorAt: new Date(now).toISOString(),
+          rateLimitUntilAt: error.rateLimited ? new Date(now + 60 * 60000).toISOString() : null
+        });
+      } catch (_) {}
       throw error;
     }
   } finally {
