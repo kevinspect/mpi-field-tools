@@ -4,6 +4,8 @@
 var MPI_ONE_STEP_GPS = Object.freeze({
   API_ROOT: "https://track.onestepgps.com/v3/api/public",
   API_KEY_PROPERTY: "MPI_ONE_STEP_GPS_API_KEY",
+  LIVE_HOURLY_LIMIT_PROPERTY: "MPI_ONE_STEP_GPS_HOURLY_LIMIT",
+  CORY_DEVICE_ID: "6ljQwIubNfqQJk81f07-0F",
   CORY_VEHICLE_NAME: "2026 Ford Maverick XLT Hybrid",
   LABS: [
     { id: "water-tech", name: "Water Tech", latitude: 42.60173855226, longitude: -83.933302726036 },
@@ -15,6 +17,40 @@ function checkOneStepGpsConnection() {
   var devices = oneStepGpsFetch_("/device-info?device_id=1&display_name=1");
   var matches = oneStepGpsCoryDevices_(devices);
   return { ok: true, matchingVehicleCount: matches.length, accessibleVehicleCount: devices.length };
+}
+
+// Safe live-point diagnostic: verifies the real tracker and API allowance
+// without disclosing the key or coordinates in logs.
+function checkOneStepGpsCoryLivePoint() {
+  var devices = oneStepGpsFetch_("/device-info?device_id=1&display_name=1");
+  var deviceId = String(oneStepGpsCoryDevices_(devices)[0].device_id);
+  var key = PropertiesService.getScriptProperties().getProperty(MPI_ONE_STEP_GPS.API_KEY_PROPERTY);
+  if (!key) throw new Error("One Step GPS key is not configured");
+  var response = UrlFetchApp.fetch(MPI_ONE_STEP_GPS.API_ROOT + "/device/" + encodeURIComponent(deviceId) + "?latest_point=true", {
+    method: "get",
+    headers: { Authorization: "Bearer " + key, Accept: "application/json" },
+    muteHttpExceptions: true
+  });
+  var headers = response.getAllHeaders();
+  var limits = {};
+  Object.keys(headers).forEach(function (name) {
+    if (/^(x-)?(rate-?limit|ratelimit)[-_]/i.test(name)) limits[name] = String(headers[name]).slice(0, 80);
+  });
+  var device = response.getResponseCode() === 200 ? JSON.parse(response.getContentText() || "null") : null;
+  var point = device && (device.latest_device_point || device.latest_accurate_device_point);
+  var summary = {
+    httpStatus: response.getResponseCode(),
+    deviceId: deviceId,
+    deviceIdMatches: Boolean(device && String(device.device_id) === deviceId),
+    hasPoint: Boolean(point),
+    hasValidPosition: Boolean(point && typeof point.lat === "number" && isFinite(point.lat) && typeof point.lng === "number" && isFinite(point.lng)),
+    trackerTime: point && point.dt_tracker || null,
+    pointFields: point ? Object.keys(point).filter(function (field) { return ["dt_tracker", "dt_server", "lat", "lng", "speed", "device_state", "device_point_detail"].indexOf(field) >= 0; }) : [],
+    driveStatus: point && point.device_state && point.device_state.drive_status || null,
+    rateLimitHeaders: limits
+  };
+  console.log(JSON.stringify(summary));
+  return summary;
 }
 
 function oneStepGpsFetch_(pathAndQuery) {
@@ -36,6 +72,90 @@ function oneStepGpsCoryDevices_(devices) {
   });
   if (matches.length !== 1) throw new Error("Cory's tracked vehicle could not be identified unambiguously");
   return matches;
+}
+
+// This is invoked only by the authenticated office-only POST route. The shared
+// Firestore record and script lock prevent a provider request per dashboard.
+// No automatic provider reads occur until MPI's actual key allowance is set.
+function refreshOneStepGpsCoryLive_() {
+  var limitText = PropertiesService.getScriptProperties().getProperty(MPI_ONE_STEP_GPS.LIVE_HOURLY_LIMIT_PROPERTY);
+  if (!/^(0|[1-9][0-9]*)$/.test(String(limitText || "").trim())) throw new Error("One Step GPS hourly key allowance has not been verified");
+  var configuredLimit = Number(limitText);
+  if (!Number.isSafeInteger(configuredLimit) || (configuredLimit !== 0 && configuredLimit < 24)) throw new Error("One Step GPS hourly key allowance has not been verified");
+  var availablePerHour = configuredLimit === 0 ? Infinity : configuredLimit - 12; // provider uses 0 for unlimited; otherwise reserve 12 calls/hour
+  var movingIntervalMs = Math.max(30000, Math.ceil(3600000 / availablePerHour));
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var current = oneStepGpsLiveDocument_();
+    var intervalMs = current && current.vehicleStatus === "Stationary" ? Math.max(movingIntervalMs, 120000) :
+      current && current.vehicleStatus === "Moving" ? movingIntervalMs : Math.max(movingIntervalMs, 120000);
+    if (current && current.lastErrorAt) intervalMs = Math.max(intervalMs, 120000);
+    var now = Date.now();
+    var lastAttempt = Date.parse(current && current.lastAttemptAt || "");
+    if (Number.isFinite(lastAttempt) && now - lastAttempt < intervalMs) return { cached: true, refreshSeconds: Math.ceil(intervalMs / 1000) };
+    var key = PropertiesService.getScriptProperties().getProperty(MPI_ONE_STEP_GPS.API_KEY_PROPERTY);
+    if (!key) throw new Error("One Step GPS key is not configured");
+    try {
+      var response = UrlFetchApp.fetch(MPI_ONE_STEP_GPS.API_ROOT + "/device/" + encodeURIComponent(MPI_ONE_STEP_GPS.CORY_DEVICE_ID) + "?latest_point=true", {
+        method: "get", headers: { Authorization: "Bearer " + key, Accept: "application/json" }, muteHttpExceptions: true
+      });
+      if (response.getResponseCode() !== 200) throw new Error("One Step GPS live read failed with status " + response.getResponseCode());
+      var device = JSON.parse(response.getContentText() || "null");
+      if (!device || String(device.device_id) !== MPI_ONE_STEP_GPS.CORY_DEVICE_ID) throw new Error("One Step GPS device identity mismatch");
+      var point = device.latest_device_point;
+      if (!oneStepGpsValidLivePoint_(point)) point = device.latest_accurate_device_point;
+      var update = { lastAttemptAt: new Date(now).toISOString(), lastErrorAt: null };
+      if (oneStepGpsValidLivePoint_(point)) {
+        var speed = point.device_point_detail && point.device_point_detail.speed;
+        var speedValue = speed && Number(speed.value);
+        var speedUnit = String(speed && speed.unit || "").toLowerCase();
+        var status = point.device_state && point.device_state.drive_status === "off" ? "Stationary" :
+          (speedUnit === "km/h" || speedUnit === "mph") && Number.isFinite(speedValue) && speedValue > 1 ? "Moving" : "Unknown";
+        update.latitude = point.lat;
+        update.longitude = point.lng;
+        update.gpsAt = new Date(point.dt_tracker).toISOString();
+        update.vehicleStatus = status;
+        update.deviceId = MPI_ONE_STEP_GPS.CORY_DEVICE_ID;
+        update.source = "One Step GPS";
+      }
+      oneStepGpsWriteLive_(update);
+      return { cached: false, hasValidPoint: Boolean(update.gpsAt), refreshSeconds: Math.ceil(intervalMs / 1000) };
+    } catch (error) {
+      try { oneStepGpsWriteLive_({ lastAttemptAt: new Date(now).toISOString(), lastErrorAt: new Date(now).toISOString() }); } catch (_) {}
+      throw error;
+    }
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function oneStepGpsValidLivePoint_(point) {
+  var trackerMs = Date.parse(point && point.dt_tracker || "");
+  return Boolean(point && typeof point.lat === "number" && isFinite(point.lat) && Math.abs(point.lat) <= 90 &&
+    typeof point.lng === "number" && isFinite(point.lng) && Math.abs(point.lng) <= 180 &&
+    Number.isFinite(trackerMs) && trackerMs <= Date.now() + 120000);
+}
+
+function oneStepGpsLiveDocument_() {
+  var url = "https://firestore.googleapis.com/v1/projects/" + MPI_PUSH.PROJECT_ID + "/databases/(default)/documents/adminTruckLocations/cory";
+  var response = UrlFetchApp.fetch(url, { method: "get", headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() }, muteHttpExceptions: true });
+  if (response.getResponseCode() === 404) return null;
+  if (response.getResponseCode() !== 200) throw new Error("Truck cache read failed with status " + response.getResponseCode());
+  return oneStepGpsDecodeFirestoreValue_({ mapValue: { fields: JSON.parse(response.getContentText() || "{}").fields || {} } });
+}
+
+function oneStepGpsWriteLive_(fields) {
+  var url = "https://firestore.googleapis.com/v1/projects/" + MPI_PUSH.PROJECT_ID + "/databases/(default)/documents/adminTruckLocations/cory";
+  var paths = Object.keys(fields).map(function (name) { return "updateMask.fieldPaths=" + encodeURIComponent(name); }).join("&");
+  var encoded = {};
+  Object.keys(fields).forEach(function (name) { encoded[name] = firestoreValue_(fields[name]); });
+  var response = UrlFetchApp.fetch(url + "?" + paths, {
+    method: "patch", contentType: "application/json",
+    headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+    payload: JSON.stringify({ fields: encoded }), muteHttpExceptions: true
+  });
+  if (response.getResponseCode() !== 200) throw new Error("Truck cache write failed with status " + response.getResponseCode());
 }
 
 // Read-only diagnostic for a single Michigan workday. It deliberately returns

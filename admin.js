@@ -48,6 +48,8 @@
   const liveLocationMapElement = document.getElementById("adminLiveLocationMap");
   const liveLocationList = document.getElementById("adminLiveLocationList");
   const liveLocationStatus = document.getElementById("adminLiveLocationStatus");
+  const coryTruckStatus = document.getElementById("adminCoryTruckStatus");
+  const centerCoryTruck = document.getElementById("adminCenterCoryTruck");
   const liveLocationRefresh = document.getElementById("adminLiveLocationRefresh");
   const liveLocationHistory = document.getElementById("adminLiveLocationHistory");
   const liveLocationPlan = document.getElementById("adminLiveLocationPlan");
@@ -162,6 +164,7 @@
   let selectedInspectorId = "all";
   let selectedOperationDate = "";
   let unsubscribePeople = null;
+  let unsubscribeCoryTruck = null;
   let unsubscribeUpdates = null;
   let unsubscribeReplies = null;
   let unsubscribeFieldMessages = null;
@@ -203,6 +206,14 @@
   let liveLocationMarkers = new Map();
   let liveLocationMapSignature = "";
   let liveLocationAgeTimer = 0;
+  let coryTruckRecord = null;
+  let coryTruckMarker = null;
+  let coryTruckLayer = null;
+  let coryTruckInViewport = false;
+  let coryTruckSubscriptionReady = false;
+  let coryTruckRefreshTimer = 0;
+  let coryTruckRequestInFlight = false;
+  let coryTruckLastRequestAt = 0;
   let adminDataRecoveryTimer = 0;
   let selectedLiveLocationPersonId = "";
   let liveLocationMapMode = "all";
@@ -1251,7 +1262,98 @@
     }
     liveLocationLayer = window.L.layerGroup().addTo(liveLocationMap);
     liveLocationRouteLayer = window.L.layerGroup().addTo(liveLocationMap);
+    coryTruckLayer = window.L.layerGroup().addTo(liveLocationMap);
     return liveLocationMap;
+  }
+
+  function coryTruckPoint() {
+    const latitude = Number(coryTruckRecord?.latitude);
+    const longitude = Number(coryTruckRecord?.longitude);
+    const gpsAt = asDate(coryTruckRecord?.gpsAt);
+    if (!gpsAt || !Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return null;
+    return { latitude, longitude, gpsAt };
+  }
+
+  function coryTruckAge(point = coryTruckPoint()) {
+    if (!point) return { tone: "unavailable", label: "GPS unavailable" };
+    const minutes = Math.max(0, Math.floor((Date.now() - point.gpsAt.getTime()) / 60000));
+    if (minutes < 2) return { tone: "current", label: "Current" };
+    if (minutes < 5) return { tone: "delayed", label: `Delayed · ${minutes} min old` };
+    return { tone: "stale", label: `Stale · ${minutes} min old` };
+  }
+
+  function coryTruckPopup(point, age) {
+    const michiganTime = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Detroit", dateStyle: "medium", timeStyle: "short"
+    }).format(point.gpsAt);
+    const vehicleStatus = ["Moving", "Stationary"].includes(coryTruckRecord?.vehicleStatus) ? coryTruckRecord.vehicleStatus : "Unknown";
+    return `<strong>Cory – Company Truck</strong><br>Inspector: Cory<br>Location source: One Step GPS – Company Truck<br>GPS last updated: ${escapeHtml(michiganTime)} Michigan time<br>GPS status: ${escapeHtml(age.label)}<br>Vehicle status: ${escapeHtml(vehicleStatus)}<br>Location: ${point.latitude.toFixed(5)}, ${point.longitude.toFixed(5)}`;
+  }
+
+  function renderCoryTruckMarker() {
+    const point = coryTruckPoint();
+    const age = coryTruckAge(point);
+    if (coryTruckStatus) {
+      coryTruckStatus.className = age.tone;
+      coryTruckStatus.textContent = point ? `Cory's truck · ${age.label}` : "Cory's truck · GPS unavailable";
+    }
+    if (centerCoryTruck) centerCoryTruck.disabled = !point;
+    if (!coryTruckLayer || !window.L) return;
+    if (!point) {
+      if (coryTruckMarker) coryTruckLayer.removeLayer(coryTruckMarker);
+      coryTruckMarker = null;
+      return;
+    }
+    const icon = window.L.divIcon({
+      className: "",
+      html: `<span class="mpi-truck-marker ${age.tone}" aria-label="Cory's company truck"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h11a2 2 0 0 1 2 2v3h2.7l2.3 3v5h-2a2.5 2.5 0 0 1-5 0H9a2.5 2.5 0 0 1-5 0H2V7a2 2 0 0 1 1-2Zm13 7v3h3v-1l-1.5-2H16ZM6.5 17a1 1 0 0 0 0 2 1 1 0 0 0 0-2Zm10 0a1 1 0 0 0 0 2 1 1 0 0 0 0-2Z"/></svg></span>`,
+      iconSize: [38, 38], iconAnchor: [19, 19]
+    });
+    if (!coryTruckMarker) {
+      coryTruckMarker = window.L.marker([point.latitude, point.longitude], { icon }).addTo(coryTruckLayer);
+    } else {
+      coryTruckMarker.setLatLng([point.latitude, point.longitude]);
+      coryTruckMarker.setIcon(icon);
+    }
+    coryTruckMarker.bindPopup(coryTruckPopup(point, age));
+  }
+
+  function coryTruckMapIsActive() {
+    return Boolean(currentUser && shared.isAdminRole(currentProfile) && coryTruckSubscriptionReady &&
+      currentAdminView === "operations" && coryTruckInViewport && !document.hidden &&
+      window.matchMedia("(min-width: 900px)").matches && !dashboard.hidden);
+  }
+
+  async function requestCoryTruckRefresh() {
+    if (!coryTruckMapIsActive() || coryTruckRequestInFlight) return;
+    const minimumBrowserGap = coryTruckRecord ? 30000 : 300000;
+    if (Date.now() - coryTruckLastRequestAt < minimumBrowserGap) return;
+    coryTruckRequestInFlight = true;
+    coryTruckLastRequestAt = Date.now();
+    try {
+      const idToken = await currentUser.getIdToken();
+      await fetch(shared.pushEndpoint, {
+        method: "POST", mode: "no-cors", cache: "no-store",
+        headers: { "Content-Type": "text/plain;charset=UTF-8" },
+        body: JSON.stringify({ source: "mpi-one-step-live", requestId: `truck-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, idToken })
+      });
+    } catch (_) {
+      // Firestore's shared point remains visible with its tracker-based age.
+    } finally {
+      coryTruckRequestInFlight = false;
+    }
+  }
+
+  function syncCoryTruckRefresh() {
+    window.clearInterval(coryTruckRefreshTimer);
+    coryTruckRefreshTimer = 0;
+    if (!coryTruckMapIsActive()) return;
+    requestCoryTruckRefresh();
+    coryTruckRefreshTimer = window.setInterval(() => {
+      if (!coryTruckMapIsActive()) { syncCoryTruckRefresh(); return; }
+      requestCoryTruckRefresh();
+      renderCoryTruckMarker();
+    }, 30000);
   }
 
   function liveLocationValues() {
@@ -1270,6 +1372,7 @@
     liveLocationMapMode = "all";
     if (plotted.length === 1) map.setView([plotted[0].location.latitude, plotted[0].location.longitude], 10);
     else if (plotted.length > 1) map.fitBounds(plotted.map(item => [item.location.latitude, item.location.longitude]), { padding: [38, 38], maxZoom: 10 });
+    else if (coryTruckPoint()) map.setView([coryTruckPoint().latitude, coryTruckPoint().longitude], 10);
     else map.setView([42.62, -83.25], 8);
   }
 
@@ -1327,8 +1430,9 @@
     if (spectoraScheduleStatus) spectoraScheduleStatus.innerHTML = spectoraDays
       ? `<strong>SPECTORA · READ ONLY</strong><span>${escapeHtml(spectoraDays)} synchronized inspector-day record${spectoraDays === 1 ? "" : "s"}. Route planning can display these appointments; no app action can alter Spectora.</span>`
       : '<strong>SPECTORA · READ ONLY</strong><span>Protected Spectora schedule feed is not connected yet. The route planner may temporarily use an inspector\'s synchronized phone/calendar schedule and will label that fallback clearly.</span>';
-    const current = values.filter(item => item.location && item.age.tone === "current");
-    const delayed = values.filter(item => item.location && item.age.tone !== "current");
+    const phoneValues = values.filter(item => !(coryTruckPoint() && /^cor[ey] leese$/i.test(canonicalTeamName(item.person))));
+    const current = phoneValues.filter(item => item.location && item.age.tone === "current");
+    const delayed = phoneValues.filter(item => item.location && item.age.tone !== "current");
     liveLocationList.innerHTML = values.length ? values.map(item => {
       const tone = !item.state.active ? "off-duty" : item.location ? item.age.tone : "unavailable";
       const locationDetail = !item.state.active
@@ -1342,11 +1446,12 @@
       const operational = operationalContextHtml(item.person, item.person?.operationsCurrent, "em");
       return `<button type="button" class="live-location-person ${escapeHtml(tone)}${selected}" data-live-location-person="${escapeHtml(item.person.id)}" aria-pressed="${selected ? "true" : "false"}"><span class="live-location-dot" aria-hidden="true"></span><div><strong>${escapeHtml(canonicalTeamName(item.person))}</strong><span>${escapeHtml(locationDetail)}</span>${operational}</div><b>${escapeHtml(item.state.status.replace(/_/g, " "))}</b></button>`;
     }).join("") : '<div class="empty">No active field users are configured.</div>';
-    liveLocationStatus.textContent = current.length
+    const phoneStatus = current.length
       ? `${current.length} current position${current.length === 1 ? "" : "s"}${delayed.length ? ` · ${delayed.length} delayed` : ""}`
       : delayed.length
         ? `${delayed.length} delayed position${delayed.length === 1 ? "" : "s"}`
         : "Waiting for an active field device to share its location.";
+    liveLocationStatus.textContent = coryTruckPoint() ? `${phoneStatus} · Cory truck ${coryTruckAge().label.toLowerCase()}` : phoneStatus;
 
     const map = ensureLiveLocationMap();
     if (!map || !liveLocationLayer) {
@@ -1355,7 +1460,9 @@
     }
     liveLocationLayer.clearLayers();
     liveLocationMarkers = new Map();
-    const plotted = values.filter(item => item.location);
+    // A real truck point replaces Cory's phone pin on this admin map only.
+    // Field actions and phone-based audit records remain untouched.
+    const plotted = values.filter(item => item.location && !(coryTruckPoint() && /^cor[ey] leese$/i.test(canonicalTeamName(item.person))));
     plotted.forEach(item => {
       const name = canonicalTeamName(item.person);
       const icon = window.L.divIcon({ className: "", html: `<span class="mpi-live-marker">${escapeHtml(initials(name))}</span>`, iconSize: [34, 34], iconAnchor: [17, 17] });
@@ -1363,6 +1470,7 @@
       liveLocationLayer.addLayer(marker);
       liveLocationMarkers.set(item.person.id, marker);
     });
+    renderCoryTruckMarker();
     const signature = plotted.map(item => `${item.person.id}:${item.location.latitude}:${item.location.longitude}`).sort().join("|");
     if (signature !== liveLocationMapSignature && liveLocationMapMode === "all" && !liveLocationRouteVisible) {
       liveLocationMapSignature = signature;
@@ -2592,6 +2700,7 @@
     if (commentUsagePanel) commentUsagePanel.hidden = name !== "operations" || !isPrimaryOwner();
     if (name === "operations") renderCommentUsageAllowance();
     if (name === "requests") markNewRequestsReviewed();
+    syncCoryTruckRefresh();
   }
 
   function correctionDraftIsActive() {
@@ -4007,6 +4116,8 @@
   function startAdminData() {
     window.clearTimeout(adminDataRecoveryTimer);
     unsubscribePeople?.();
+    unsubscribeCoryTruck?.();
+    coryTruckSubscriptionReady = false;
     unsubscribeUpdates?.();
     unsubscribeReplies?.();
     unsubscribeFieldMessages?.();
@@ -4015,9 +4126,21 @@
     messageReceiptCache.clear();
     if (!liveLocationAgeTimer) liveLocationAgeTimer = window.setInterval(() => {
       renderLiveLocationMap();
+      renderCoryTruckMarker();
       updateOperationalClocks();
       // Map ages and clocks are local. Route reads require an explicit request.
     }, 60000);
+    unsubscribeCoryTruck = shared.db.collection("adminTruckLocations").doc("cory").onSnapshot(snapshot => {
+      coryTruckRecord = snapshot.exists ? snapshot.data() : null;
+      coryTruckSubscriptionReady = true;
+      renderLiveLocationMap();
+      syncCoryTruckRefresh();
+    }, () => {
+      coryTruckSubscriptionReady = false;
+      coryTruckRecord = null;
+      renderCoryTruckMarker();
+      syncCoryTruckRefresh();
+    });
     unsubscribePeople = shared.db.collection("users").orderBy("name").onSnapshot(snapshot => {
       people = snapshot.docs.map(doc => {
         const value = { id: doc.id, ...doc.data() };
@@ -4521,6 +4644,21 @@
   window.addEventListener("mpi-repair-office-setup", () => repairOfficeSetupButton?.click());
   window.MPI_OFFICE_SETUP = Object.freeze({ show: showOfficeSetupIntro, verify: verifyOfficeSetup, environment: officeSetupEnvironment });
 
+  centerCoryTruck?.addEventListener("click", () => {
+    const point = coryTruckPoint();
+    const map = ensureLiveLocationMap();
+    if (!point || !map) return;
+    map.setView([point.latitude, point.longitude], 15);
+    coryTruckMarker?.openPopup();
+  });
+  if (liveLocationMapElement && "IntersectionObserver" in window) {
+    new IntersectionObserver(entries => {
+      coryTruckInViewport = Boolean(entries[0]?.isIntersecting);
+      syncCoryTruckRefresh();
+    }, { threshold: 0.01 }).observe(liveLocationMapElement);
+  } else coryTruckInViewport = true;
+  document.addEventListener("visibilitychange", syncCoryTruckRefresh);
+  window.addEventListener("resize", syncCoryTruckRefresh);
   tabButtons.forEach(button => button.addEventListener("click", () => showView(button.dataset.adminView)));
   brandHomeButton?.addEventListener("click", () => {
     showView("operations");
@@ -5061,6 +5199,12 @@
       authCard.hidden = false;
       if (user && profile && !shared.isAdminRole(profile)) authStatus.textContent = `${user.email || "This account"} has inspector access only. An owner can change the account role from Team Accounts.`;
       unsubscribePeople?.();
+      unsubscribeCoryTruck?.();
+      unsubscribeCoryTruck = null;
+      coryTruckSubscriptionReady = false;
+      coryTruckRecord = null;
+      renderCoryTruckMarker();
+      syncCoryTruckRefresh();
       unsubscribeUpdates?.();
       unsubscribeReplies?.();
       unsubscribeReplies = null;

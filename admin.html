@@ -268,6 +268,13 @@
     .live-location-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
     .live-location-head h3 { margin:0; color:var(--navy); font-size:18px; }
     .live-location-head p { margin:5px 0 0; color:var(--muted); font-size:10px; line-height:1.45; }
+    .truck-map-control { display:flex; align-items:center; gap:9px; flex-wrap:wrap; justify-content:flex-end; }
+    .truck-map-control span { color:var(--muted); font-size:10px; font-weight:750; }
+    .truck-map-control span.delayed { color:#9a6713; }
+    .truck-map-control span.stale,.truck-map-control span.unavailable { color:#9a332d; }
+    .truck-map-control button { min-height:34px; padding:7px 10px; border:1px solid #b9c7de; border-radius:9px; color:var(--navy); background:#fff; font-size:10px; font-weight:850; cursor:pointer; }
+    .truck-map-control button:disabled { opacity:.55; cursor:default; }
+    @media (max-width:899px) { .truck-map-control { display:none; } }
     .live-location-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px; }
     .live-location-actions .secondary { min-height:40px; white-space:nowrap; }
     .live-location-actions input { min-height:40px; max-width:150px; padding:7px 9px; color:var(--navy); background:#fff; border:1px solid #cbdff0; border-radius:10px; font-size:9px; font-weight:850; }
@@ -313,6 +320,10 @@
     .spectora-readonly-note { display:flex; align-items:flex-start; gap:8px; margin:10px 0 0; padding:9px 11px; color:#42506f; background:#eef6fc; border:1px solid #c9dff0; border-radius:10px; font-size:9px; line-height:1.45; }
     .spectora-readonly-note strong { flex:0 0 auto; color:var(--navy); }
     .mpi-live-marker { display:grid; width:34px; height:34px; place-items:center; color:#fff; background:var(--navy); border:3px solid #e0b94e; border-radius:50%; box-shadow:0 4px 12px rgba(17,24,106,.35); font-size:10px; font-weight:950; }
+    .mpi-truck-marker { display:grid; width:38px; height:38px; place-items:center; color:#fff; background:#146b80; border:3px solid #fff; border-radius:10px; box-shadow:0 4px 14px rgba(4,41,59,.42); }
+    .mpi-truck-marker.delayed { background:#a66a0a; }
+    .mpi-truck-marker.stale { background:#8a3535; }
+    .mpi-truck-marker svg { width:23px; height:23px; fill:currentColor; }
     .leaflet-popup-content { color:var(--ink); font:11px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
     .leaflet-popup-content strong { color:var(--navy); }
     .inspector-sync.stale { color:#9a332d !important; }
@@ -1095,7 +1106,7 @@
           </section>
           <div class="office-operations-grid">
             <section class="live-location-panel" id="adminLiveLocationPanel" aria-labelledby="adminLiveLocationTitle">
-              <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Job map</h3><p>Choose a date, view scheduled jobs, or plan a possible job.</p></div></div>
+              <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Job map</h3><p>Choose a date, view scheduled jobs, or plan a possible job.</p></div><div class="truck-map-control"><span id="adminCoryTruckStatus" role="status">Cory's truck · GPS unavailable</span><button id="adminCenterCoryTruck" type="button" disabled>Center on truck</button></div></div>
               <div class="office-map-toolbar office-map-simple-controls">
                 <div class="field office-map-date"><label for="adminLiveRouteDate">Date</label><input id="adminLiveRouteDate" type="date" aria-label="Map date"></div>
                 <div class="field office-map-job"><label for="adminLiveJobSelect">Select a job</label><select id="adminLiveJobSelect"><option value="">Choose a scheduled job</option></select></div>
@@ -1256,7 +1267,7 @@
   <script src="./mpi-owner-view.js?build=220"></script>
   <script src="./mpi-office-setup-policy.js?build=220-office-fix-1"></script>
   <script src="./mpi-office-diagnostics.js?build=220"></script>
-  <script src="./admin.js?build=220-office-sunday-week-1"></script>
+  <script src="./admin.js?build=220-cory-truck-1"></script>
   <script src="./mpi-equipment-admin.js?build=220"></script>
 </body>
 </html>

@@ -58,6 +58,13 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "owner";
     }
 
+    // A server-owned current vehicle point; inspectors and anonymous users
+    // cannot read it, and no browser client can write or alter it.
+    match /adminTruckLocations/{truckId} {
+      allow get: if isAdmin() && truckId == "cory";
+      allow list, create, update, delete: if false;
+    }
+
     match /users/{userId} {
       allow create: if (signedIn()
         && request.auth.uid == userId

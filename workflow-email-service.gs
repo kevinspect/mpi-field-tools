@@ -35,6 +35,8 @@ var MPI_SPECTORA = Object.freeze({
   MAX_PAGES: 10
 });
 
+var MPI_TRUCK_LIVE_SOURCE = "mpi-one-step-live";
+
 function doGet(event) {
   var parameters = event && event.parameter ? event.parameter : {};
   if (parameters.action === "status") {
@@ -55,6 +57,7 @@ function doPost(event) {
     var source = safeText_(input.source, 80);
     if (source === MPI_PUSH.SOURCE) return handlePushRequest_(input, requestId);
     if (source === MPI_SPECTORA.SOURCE) return handleSpectoraRefresh_(input, requestId);
+    if (source === MPI_TRUCK_LIVE_SOURCE) return handleOneStepGpsLiveRequest_(input, requestId);
     if (!requestId || (source !== MPI_EMAIL.SOURCE && source !== MPI_EMAIL.WEEKLY_SOURCE && source !== "mpi-field-tools-form-email")) throw new Error("Request was not accepted");
 
     if (source === MPI_EMAIL.SOURCE) {
@@ -98,6 +101,32 @@ function doPost(event) {
     if (requestId) writeStatus_(requestId, { ok: false, status: "failed", requestId: requestId, message: message });
     return response_({ ok: false, status: "failed", requestId: requestId, message: message });
   }
+}
+
+function handleOneStepGpsLiveRequest_(input, requestId) {
+  try {
+    if (!requestId) throw new Error("Truck refresh request ID is missing");
+    var sender = verifyFirebaseUser_(safeText_(input.idToken, 5000));
+    if (!sender || !sender.emailVerified || !isMpiCompanyEmail_(sender.email) || !isAuthorizedOfficeGpsReader_(sender)) {
+      throw new Error("Office GPS access could not be verified");
+    }
+    var result = refreshOneStepGpsCoryLive_();
+    return response_({ ok: true, status: result.cached ? "current" : "refreshed", requestId: requestId, refreshSeconds: result.refreshSeconds });
+  } catch (error) {
+    return response_({ ok: false, status: "failed", requestId: requestId, message: safeText_(error && error.message ? error.message : "Truck refresh failed", 180) });
+  }
+}
+
+function isAuthorizedOfficeGpsReader_(sender) {
+  var uid = String(sender && sender.uid || "");
+  if (!/^[A-Za-z0-9_-]{6,128}$/.test(uid)) return false;
+  var url = "https://firestore.googleapis.com/v1/projects/" + MPI_PUSH.PROJECT_ID + "/databases/(default)/documents/users/" + encodeURIComponent(uid);
+  var response = UrlFetchApp.fetch(url, { method: "get", headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() }, muteHttpExceptions: true });
+  if (response.getResponseCode() !== 200) return false;
+  var fields = JSON.parse(response.getContentText() || "{}").fields || {};
+  return fields.active && fields.active.booleanValue === true &&
+    fields.role && ["owner", "admin"].indexOf(fields.role.stringValue) >= 0 &&
+    fields.email && String(fields.email.stringValue || "").toLowerCase() === sender.email;
 }
 
 function handlePushRequest_(input, requestId) {
@@ -422,6 +451,24 @@ function buildSpectoraSchedules_(records) {
       notes: notes,
       status: attributes.confirmed === true ? "confirmed" : "scheduled",
       services: uniqueStrings_(services)
+    });
+  });
+  // Spectora can put several assigned inspectors in one comma-separated field.
+  // Keep the original schedule and project each shared job to each named person.
+  Object.keys(schedules).forEach(function (key) {
+    var days = schedules[key];
+    Object.keys(days).forEach(function (date) {
+      days[date].forEach(function (job) {
+        var assigned = {};
+        splitSpectoraList_(job.inspectorName).forEach(function (name) {
+          var personKey = normalizedPersonName_(name);
+          if (!personKey || personKey === key || assigned[personKey]) return;
+          assigned[personKey] = true;
+          if (!schedules[personKey]) schedules[personKey] = {};
+          if (!schedules[personKey][date]) schedules[personKey][date] = [];
+          schedules[personKey][date].push(Object.assign({}, job, { inspectorName: name }));
+        });
+      });
     });
   });
   return schedules;
