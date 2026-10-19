@@ -1541,12 +1541,22 @@
     });
   }
 
+  function coryScheduledMapLocations() {
+    const date = liveRouteDate?.value || dateKey();
+    const plan = allSchedulePlansForDate(date).find(item => /^cor[ey] leese$/i.test(canonicalTeamName(item.person)));
+    return (plan?.jobs || []).filter(job => !/cancel|delete/i.test(String(job.status || "")))
+      .filter(job => job.latitude !== null && job.latitude !== "" && job.longitude !== null && job.longitude !== "")
+      .map(job => [Number(job.latitude), Number(job.longitude)])
+      .filter(([latitude, longitude]) => Number.isFinite(latitude) && Number.isFinite(longitude));
+  }
+
   function frameAllLiveLocations(map, plotted = liveLocationValues().filter(item => item.location)) {
     if (!map) return;
     liveLocationMapMode = "all";
     const truck = coryTruckPoint();
     const locations = plotted.map(item => [item.location.latitude, item.location.longitude]);
     if (truck) locations.push([truck.latitude, truck.longitude]);
+    locations.push(...coryScheduledMapLocations());
     if (locations.length === 1) map.setView(locations[0], 11);
     else if (locations.length > 1) map.fitBounds(locations, { padding: [38, 38], maxZoom: 11 });
     else map.setView([42.62, -83.25], 8);
@@ -1650,7 +1660,8 @@
     renderCoryScheduledJobMarkers();
     const truck = coryTruckPoint();
     const signature = [...plotted.map(item => `${item.person.id}:${item.location.latitude}:${item.location.longitude}`),
-      truck ? `cory-truck:${truck.latitude}:${truck.longitude}` : ""].sort().join("|");
+      truck ? `cory-truck:${truck.latitude}:${truck.longitude}` : "",
+      ...coryScheduledMapLocations().map(([latitude, longitude]) => `cory-job:${latitude}:${longitude}`)].sort().join("|");
     if (signature !== liveLocationMapSignature && liveLocationMapMode === "all" && !liveLocationRouteVisible) {
       liveLocationMapSignature = signature;
       frameAllLiveLocations(map, plotted);
