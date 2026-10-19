@@ -1,8 +1,8 @@
-const CACHE_NAME = "mpi-field-tools-shell-v220-cory-job-monitor-2";
+const CACHE_NAME = "mpi-field-tools-shell-v220-cory-job-monitor-3";
 const APP_SHELL = [
   "./", "./index.html", "./admin.html",
   "./mpi-app-theme.css", "./mpi-app-theme.css?build=220",
-  "./mpi-office-workbench.css", "./mpi-office-workbench.css?build=220", "./brand-assets/mpi-website-header.jpg",
+  "./mpi-office-workbench.css", "./mpi-office-workbench.css?build=220-map-first", "./brand-assets/mpi-website-header.jpg",
   "./mpi-native-bridge.js", "./mpi-native-bridge.js?build=220",
   "./mpi-office-navigation.js", "./mpi-office-navigation.js?build=220",
   "./mpi-owner-view.js", "./mpi-owner-view.js?build=220",

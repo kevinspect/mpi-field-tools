@@ -13,6 +13,8 @@ body.office-workbench .office-welcome > div { position: relative; max-width: 49%
 body.office-workbench .office-welcome span { color: #efd17b; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; }
 body.office-workbench .office-welcome h2 { margin: 7px 0 5px; font-size: clamp(20px,2vw,28px); font-weight: 650; letter-spacing: -.035em; color: white; }
 body.office-workbench .office-welcome p { margin: 0; color: #e1e5f5; font-size: 12px; }
+/* Operations opens on the working map; the brand is already in the header. */
+body.office-workbench .office-operations-content > .office-welcome { display: none; }
 body.office-workbench .stat-grid { grid-column: 1; grid-template-columns: repeat(4,minmax(0,1fr)); margin-bottom: 22px; background: white; border: 1px solid #e5e7ef; border-radius: 16px; box-shadow: none; }
 body.office-workbench .stat { min-height: 80px; padding: 16px 18px; }
 body.office-workbench .stat-title { padding-right: 20px; }
