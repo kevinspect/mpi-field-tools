@@ -138,6 +138,14 @@ function refreshOneStepGpsCoryLive_() {
   }
 }
 
+// One shared background tick preserves job-presence evidence when no office
+// browser is open. The same lock/cache and verified provider quota apply.
+function monitorOneStepGpsCoryLive() {
+  var result = refreshOneStepGpsCoryLive_();
+  console.log(JSON.stringify({ ok: true, cached: Boolean(result.cached), hasValidPoint: Boolean(result.hasValidPoint) }));
+  return result;
+}
+
 function oneStepGpsCoryJobMonitor_(previous, point) {
   var sampleAt = Date.parse(point && point.gpsAt || "");
   if (!Number.isFinite(sampleAt) || Date.now() - sampleAt > 5 * 60000) return null;
