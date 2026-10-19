@@ -118,6 +118,14 @@ function refreshOneStepGpsCoryLive_() {
         update.vehicleStatus = status;
         update.deviceId = MPI_ONE_STEP_GPS.CORY_DEVICE_ID;
         update.source = "One Step GPS";
+        // Keep only Cory's current-day job-presence evidence in the office-only
+        // truck document. Repeated/stale tracker points never advance a visit.
+        try {
+          var monitor = oneStepGpsCoryJobMonitor_(current && current.jobMonitor, update);
+          if (monitor) update.jobMonitor = monitor;
+        } catch (_) {
+          // A schedule lookup must never prevent the live truck point updating.
+        }
       }
       oneStepGpsWriteLive_(update);
       return { cached: false, hasValidPoint: Boolean(update.gpsAt), refreshSeconds: Math.ceil(intervalMs / 1000) };
@@ -128,6 +136,54 @@ function refreshOneStepGpsCoryLive_() {
   } finally {
     lock.releaseLock();
   }
+}
+
+function oneStepGpsCoryJobMonitor_(previous, point) {
+  var sampleAt = Date.parse(point && point.gpsAt || "");
+  if (!Number.isFinite(sampleAt) || Date.now() - sampleAt > 5 * 60000) return null;
+  var date = Utilities.formatDate(new Date(sampleAt), "America/Detroit", "yyyy-MM-dd");
+  var profile = oneStepGpsCoryProfile_().fields;
+  var day = (Array.isArray(profile.spectoraScheduleDays) ? profile.spectoraScheduleDays : [])
+    .filter(function (item) { return item && item.date === date; })[0];
+  var jobs = (Array.isArray(day && day.jobs) ? day.jobs : []).filter(function (job) {
+    return job && !/cancel|delete/i.test(String(job.status || "")) &&
+      oneStepGpsValidCoordinate_(job.latitude, 90) && oneStepGpsValidCoordinate_(job.longitude, 180) &&
+      Boolean(job.id || job.spectoraJobId);
+  });
+  var old = previous && previous.date === date ? previous : {};
+  var last = Date.parse(old.lastProcessedAt || "");
+  if (Number.isFinite(last) && sampleAt <= last) return null;
+  var distances = jobs.map(function (job) {
+    return { id: String(job.id || job.spectoraJobId), meters: oneStepGpsDistanceMeters_(
+      { lat: point.latitude, lng: point.longitude }, { lat: job.latitude, lng: job.longitude }) };
+  }).sort(function (left, right) { return left.meters - right.meters; });
+  // Do not attribute a single tracker location to two nearby job properties.
+  var nearest = distances[0] && distances[0].meters <= 150 &&
+    (!distances[1] || distances[1].meters - distances[0].meters >= 75) ? distances[0].id : "";
+  var previousVisits = Array.isArray(old.jobs) ? old.jobs : [];
+  var visits = jobs.map(function (job) {
+    var id = String(job.id || job.spectoraJobId);
+    var before = previousVisits.filter(function (visit) { return visit && visit.id === id; })[0] || {};
+    var visit = { id: id, arrivedAt: before.arrivedAt || null, departedAt: before.departedAt || null,
+      insideSince: before.insideSince || null, outsideSince: before.outsideSince || null,
+      lastInsideAt: before.lastInsideAt || null };
+    var distance = distances.filter(function (item) { return item.id === id; })[0].meters;
+    if (nearest === id) {
+      visit.lastInsideAt = point.gpsAt;
+      visit.outsideSince = null;
+      if (!visit.insideSince) visit.insideSince = point.gpsAt;
+      if (!visit.arrivedAt && sampleAt - Date.parse(visit.insideSince) >= 30000) visit.arrivedAt = visit.insideSince;
+    } else if (visit.arrivedAt && !visit.departedAt && distance > 250) {
+      if (!visit.outsideSince) visit.outsideSince = point.gpsAt;
+      if (sampleAt - Date.parse(visit.outsideSince) >= 30000) visit.departedAt = visit.outsideSince;
+    } else if (distance <= 250) {
+      visit.outsideSince = null;
+    } else {
+      visit.insideSince = null;
+    }
+    return visit;
+  });
+  return { date: date, lastProcessedAt: point.gpsAt, jobs: visits };
 }
 
 function oneStepGpsValidLivePoint_(point) {

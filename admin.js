@@ -211,6 +211,7 @@
   let coryTruckMarker = null;
   let coryTruckLayer = null;
   let coryJobRouteLayer = null;
+  let coryScheduledJobsLayer = null;
   let coryJobRouteController = null;
   let coryJobRouteGeneration = 0;
   let coryJobRouteLast = null;
@@ -1269,6 +1270,7 @@
     liveLocationRouteLayer = window.L.layerGroup().addTo(liveLocationMap);
     coryTruckLayer = window.L.layerGroup().addTo(liveLocationMap);
     coryJobRouteLayer = window.L.layerGroup().addTo(liveLocationMap);
+    coryScheduledJobsLayer = window.L.layerGroup().addTo(liveLocationMap);
     return liveLocationMap;
   }
 
@@ -1290,10 +1292,60 @@
 
   function selectedCoryJobStop() {
     const selection = parseMapJobValue(selectedMapJobValue);
-    if (!selection || (liveRouteDate?.value || dateKey()) < dateKey()) return null;
+    if (!selection) return null;
     const stop = liveLocationPlannedStops.find(item => item.person?.id === selection.personId &&
       String(item.job?.id || item.job?.spectoraJobId || "") === selection.jobId);
     return stop && /^cor[ey] leese$/i.test(canonicalTeamName(stop.person)) ? stop : null;
+  }
+
+  function coryVisitFor(stop) {
+    const monitor = coryTruckRecord?.jobMonitor;
+    if (!monitor || monitor.date !== (liveRouteDate?.value || dateKey())) return null;
+    const id = String(stop?.job?.id || stop?.job?.spectoraJobId || "");
+    return (Array.isArray(monitor.jobs) ? monitor.jobs : []).find(visit => visit?.id === id) || null;
+  }
+
+  function coryPreviousStop(stop) {
+    const ordered = liveLocationPlannedStops.filter(item => item.person?.id === stop.person?.id)
+      .sort((left, right) => left.index - right.index);
+    const index = ordered.findIndex(item => item.job === stop.job);
+    return index > 0 ? ordered[index - 1] : null;
+  }
+
+  function coryDwellStatus(stop, point, age) {
+    const visit = coryVisitFor(stop);
+    if (!visit?.arrivedAt) return null;
+    const arrived = asDate(visit.arrivedAt);
+    if (!arrived) return null;
+    const departed = asDate(visit.departedAt);
+    if (departed) return { arrived, departed, active: false, until: departed };
+    const lastInside = asDate(visit.lastInsideAt);
+    const close = point && age.tone !== "stale" && distanceMiles(point, stop.coordinates) <= .125;
+    return { arrived, departed: null, active: Boolean(close), until: close ? new Date() : lastInside || arrived };
+  }
+
+  function renderCoryScheduledJobMarkers() {
+    if (!coryScheduledJobsLayer || !window.L) return;
+    coryScheduledJobsLayer.clearLayers();
+    if (liveLocationRouteVisible) return;
+    const date = liveRouteDate?.value || dateKey();
+    const plan = allSchedulePlansForDate(date).find(item => /^cor[ey] leese$/i.test(canonicalTeamName(item.person)));
+    if (!plan) return;
+    plan.jobs.forEach((job, index) => {
+      const latitude = Number(job.latitude);
+      const longitude = Number(job.longitude);
+      if (job.latitude === null || job.longitude === null || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
+      const icon = window.L.divIcon({ className: "", html: `<span class="mpi-plan-marker">${index + 1}</span>`, iconSize: [34, 34], iconAnchor: [17, 17] });
+      const marker = window.L.marker([latitude, longitude], { icon })
+        .bindPopup(`<strong>Cory · Job ${index + 1}</strong><br>${escapeHtml(scheduleAddress(job))}<br>${escapeHtml(formatTime(job.scheduledStart))}<br>Select this job to see the drive and ETA.`);
+      marker.on("click", () => {
+        if (!liveJobSelect) return;
+        const jobId = String(job.id || job.spectoraJobId || `${date}-${index + 1}`);
+        liveJobSelect.value = mapJobValue(plan.person.id, jobId);
+        showSelectedMapJob();
+      });
+      marker.addTo(coryScheduledJobsLayer);
+    });
   }
 
   function clearCoryJobRoute({ hideEstimate = true } = {}) {
@@ -1320,20 +1372,46 @@
     }
     const point = coryTruckPoint();
     const age = coryTruckAge(point);
-    if (!point || age.tone === "stale") {
+    const date = liveRouteDate?.value || dateKey();
+    const dwell = coryDwellStatus(stop, point, age);
+    if (dwell) {
       clearCoryJobRoute({ hideEstimate: false });
-      showCoryJobEta(`<strong>Truck-to-job ETA paused</strong><span>${point ? "Cory's truck GPS is stale" : "Waiting for Cory's truck GPS"}. Select this job again when a fresh position arrives.</span>`, true);
+      const minutes = Math.max(0, Math.floor((dwell.until.getTime() - dwell.arrived.getTime()) / 60000));
+      const duration = `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
+      showCoryJobEta(dwell.active
+        ? `<strong>At selected job since ${escapeHtml(formatTime(dwell.arrived))} · ${escapeHtml(duration)}</strong><span>GPS-confirmed truck presence near this property. Duration updates while GPS remains current.</span><small>Truck location last reported ${escapeHtml(formatTime(point.gpsAt))}. This is vehicle evidence, not approved work time.</small>`
+        : `<strong>Last confirmed at job: ${escapeHtml(duration)}</strong><span>${dwell.departed ? `Truck departure detected around ${escapeHtml(formatTime(dwell.departed))}.` : `Current presence is not confirmed; last matched GPS point ${escapeHtml(formatTime(dwell.until))}.`}</span><small>No payroll or Spectora record was changed.</small>`, !dwell.departed);
+      if (force && point && liveLocationMap) liveLocationMap.fitBounds([[point.latitude, point.longitude], [stop.coordinates.latitude, stop.coordinates.longitude]], { padding: [54, 54], maxZoom: 14 });
       return;
     }
+    const previous = coryPreviousStop(stop);
+    const previousVisit = previous && coryVisitFor(previous);
+    const departure = asDate(previousVisit?.departedAt);
+    const planned = Boolean(previous && !departure);
+    if (date !== dateKey() && !planned) {
+      clearCoryJobRoute({ hideEstimate: false });
+      showCoryJobEta(`<strong>Live truck ETA is for today only</strong><span>Select a later job to compare the planned drive between appointments.</span>`, true);
+      return;
+    }
+    if (!planned && (!point || age.tone === "stale")) {
+      clearCoryJobRoute({ hideEstimate: false });
+      showCoryJobEta(`<strong>Live truck ETA paused</strong><span>${point ? "Cory's truck GPS is stale" : "Waiting for Cory's truck GPS"}. The office will recalculate when a fresh position arrives.</span>`, true);
+      return;
+    }
+    const origin = planned ? previous.coordinates : point;
+    const mode = planned ? "planned" : "live";
+    const context = planned
+      ? `Job ${previous.index + 1} → job ${stop.index + 1}; departure from the previous job is not yet GPS-confirmed.`
+      : departure ? `Departed previous job around ${formatTime(departure)} (GPS-confirmed).` : "Drive from Cory's current truck location.";
     const jobKey = selectedMapJobValue;
-    const pointKey = `${point.latitude}:${point.longitude}:${point.gpsAt.toISOString()}`;
+    const pointKey = `${mode}:${origin.latitude}:${origin.longitude}:${planned ? "" : point.gpsAt.toISOString()}`;
     if (!force && coryJobRouteLast?.jobKey === jobKey && coryJobRouteLast.pointKey === pointKey && !coryJobRouteLast.failed) return;
-    if (!force && coryJobRouteLast?.jobKey === jobKey && Date.now() - coryJobRouteLast.calculatedAt < 60000) {
+    if (!planned && !force && coryJobRouteLast?.jobKey === jobKey && coryJobRouteLast.mode === mode && Date.now() - coryJobRouteLast.calculatedAt < 60000) {
       // Keep the road estimate bounded to one request per minute per office view.
       // A short dashed connector makes the line start at the newer truck point.
       coryJobRouteLast.connector && coryJobRouteLayer.removeLayer(coryJobRouteLast.connector);
       coryJobRouteLast.connector = window.L.polyline([
-        [point.latitude, point.longitude],
+        [origin.latitude, origin.longitude],
         [coryJobRouteLast.origin.latitude, coryJobRouteLast.origin.longitude]
       ], { color: "#146b80", weight: 3, opacity: .8, dashArray: "4 7" }).addTo(coryJobRouteLayer);
       return;
@@ -1343,29 +1421,31 @@
     const controller = new AbortController();
     coryJobRouteController = controller;
     const timeout = window.setTimeout(() => controller.abort(), 14000);
-    showCoryJobEta(`<strong>Calculating drive from Cory's truck…</strong><small>Selected job: ${escapeHtml(scheduleAddress(stop.job))}</small>`);
+    showCoryJobEta(`<strong>Calculating ${planned ? "planned job-to-job" : "live truck-to-job"} drive…</strong><small>${escapeHtml(context)}</small>`);
     try {
-      const travel = await window.MPI_PLANNING.roadTravel(point, stop.coordinates, controller.signal);
+      const travel = await window.MPI_PLANNING.roadTravel(origin, stop.coordinates, controller.signal);
       if (generation !== coryJobRouteGeneration || selectedMapJobValue !== jobKey) return;
       if (!Array.isArray(travel.geometry) || travel.geometry.length < 2 || !Number.isFinite(travel.minutes)) throw new Error("Road route unavailable");
       coryJobRouteLayer.clearLayers();
       const line = window.L.polyline(travel.geometry.map(([longitude, latitude]) => [latitude, longitude]), {
         color: "#146b80", weight: 6, opacity: .9, lineJoin: "round"
-      }).bindPopup(`<strong>Cory's truck → selected job</strong><br>${escapeHtml(travel.miles.toFixed(1))} miles · about ${escapeHtml(travel.minutes)} minutes<br>Planning estimate; no live traffic`).addTo(coryJobRouteLayer);
-      coryJobRouteLast = { jobKey, pointKey, origin: point, calculatedAt: Date.now(), line, connector: null };
-      const arrival = new Date(Date.now() + travel.minutes * 60000);
-      showCoryJobEta(`<strong>About ${escapeHtml(travel.minutes)} min · ${escapeHtml(travel.miles.toFixed(1))} miles</strong><span>ETA around ${escapeHtml(formatTime(arrival))} if leaving now</span><small>Road estimate without live traffic · truck GPS ${escapeHtml(formatTime(point.gpsAt))}${age.tone === "delayed" ? " · GPS delayed" : ""}. The route refreshes as the truck moves.</small>`);
+      }).bindPopup(`<strong>${planned ? "Previous job" : "Cory's truck"} → selected job</strong><br>${escapeHtml(travel.miles.toFixed(1))} miles · about ${escapeHtml(travel.minutes)} minutes<br>Road estimate; no live traffic`).addTo(coryJobRouteLayer);
+      coryJobRouteLast = { jobKey, pointKey, mode, origin, calculatedAt: Date.now(), line, connector: null };
+      const scheduledDeparture = asDate(previous?.job?.scheduledEnd);
+      const arrival = new Date((planned && scheduledDeparture && scheduledDeparture.getTime() > Date.now() ? scheduledDeparture.getTime() : Date.now()) + travel.minutes * 60000);
+      showCoryJobEta(`<strong>${planned ? "Planned drive" : "Live truck route"}: about ${escapeHtml(travel.minutes)} min · ${escapeHtml(travel.miles.toFixed(1))} miles</strong><span>${planned ? `Planned ETA around ${escapeHtml(formatTime(arrival))}; ${escapeHtml(context)}` : `Current ETA around ${escapeHtml(formatTime(arrival))}. ${escapeHtml(context)}`}</span><small>Road estimate without live traffic${planned ? "; not an actual departure" : ` · truck GPS ${escapeHtml(formatTime(point.gpsAt))}${age.tone === "delayed" ? " · delayed" : ""}`}. Not approved work time.</small>`);
       if (force && liveLocationMap) liveLocationMap.fitBounds([
-        [point.latitude, point.longitude], [stop.coordinates.latitude, stop.coordinates.longitude]
+        [origin.latitude, origin.longitude], [stop.coordinates.latitude, stop.coordinates.longitude],
+        ...(!planned && point ? [] : point ? [[point.latitude, point.longitude]] : [])
       ], { padding: [54, 54], maxZoom: 13 });
     } catch (error) {
       if (generation !== coryJobRouteGeneration || selectedMapJobValue !== jobKey) return;
       coryJobRouteLayer.clearLayers();
-      const line = window.L.polyline([[point.latitude, point.longitude], [stop.coordinates.latitude, stop.coordinates.longitude]], {
+      const line = window.L.polyline([[origin.latitude, origin.longitude], [stop.coordinates.latitude, stop.coordinates.longitude]], {
         color: "#a66a0a", weight: 4, opacity: .85, dashArray: "7 7"
       }).addTo(coryJobRouteLayer);
-      coryJobRouteLast = { jobKey, pointKey, origin: point, calculatedAt: Date.now(), line, connector: null, failed: true };
-      showCoryJobEta(`<strong>Road ETA temporarily unavailable</strong><span>Dashed line shows the direct connection only; it is not a driving route.</span><small>Truck GPS ${escapeHtml(formatTime(point.gpsAt))}. No appointment or time record changed.</small>`, true);
+      coryJobRouteLast = { jobKey, pointKey, mode, origin, calculatedAt: Date.now(), line, connector: null, failed: true };
+      showCoryJobEta(`<strong>Road ETA temporarily unavailable</strong><span>Dashed line is a direct connection, not a driving route.</span><small>${escapeHtml(context)} No appointment or time record changed.</small>`, true);
     } finally {
       window.clearTimeout(timeout);
       if (coryJobRouteController === controller) coryJobRouteController = null;
@@ -1443,6 +1523,7 @@
       if (!coryTruckMapIsActive()) { syncCoryTruckRefresh(); return; }
       requestCoryTruckRefresh();
       renderCoryTruckMarker();
+      if (selectedCoryJobStop()) updateCoryJobRoute();
     }, 30000);
   }
 
@@ -1460,9 +1541,11 @@
   function frameAllLiveLocations(map, plotted = liveLocationValues().filter(item => item.location)) {
     if (!map) return;
     liveLocationMapMode = "all";
-    if (plotted.length === 1) map.setView([plotted[0].location.latitude, plotted[0].location.longitude], 10);
-    else if (plotted.length > 1) map.fitBounds(plotted.map(item => [item.location.latitude, item.location.longitude]), { padding: [38, 38], maxZoom: 10 });
-    else if (coryTruckPoint()) map.setView([coryTruckPoint().latitude, coryTruckPoint().longitude], 10);
+    const truck = coryTruckPoint();
+    const locations = plotted.map(item => [item.location.latitude, item.location.longitude]);
+    if (truck) locations.push([truck.latitude, truck.longitude]);
+    if (locations.length === 1) map.setView(locations[0], 11);
+    else if (locations.length > 1) map.fitBounds(locations, { padding: [38, 38], maxZoom: 11 });
     else map.setView([42.62, -83.25], 8);
   }
 
@@ -1561,7 +1644,10 @@
       liveLocationMarkers.set(item.person.id, marker);
     });
     renderCoryTruckMarker();
-    const signature = plotted.map(item => `${item.person.id}:${item.location.latitude}:${item.location.longitude}`).sort().join("|");
+    renderCoryScheduledJobMarkers();
+    const truck = coryTruckPoint();
+    const signature = [...plotted.map(item => `${item.person.id}:${item.location.latitude}:${item.location.longitude}`),
+      truck ? `cory-truck:${truck.latitude}:${truck.longitude}` : ""].sort().join("|");
     if (signature !== liveLocationMapSignature && liveLocationMapMode === "all" && !liveLocationRouteVisible) {
       liveLocationMapSignature = signature;
       frameAllLiveLocations(map, plotted);
@@ -2235,6 +2321,7 @@
       liveLocationPlannedStops = located.map(item => ({ ...item, person, name: canonicalTeamName(person), color: PLAN_COLORS[0] }));
       liveLocationCandidate = null;
       liveLocationRouteVisible = true;
+      coryScheduledJobsLayer?.clearLayers();
       liveLocationMapMode = "plan";
       if (latLngs.length === 1) liveLocationMap.setView(latLngs[0], 13);
       else liveLocationMap.fitBounds(latLngs, { padding: [42, 42], maxZoom: 12 });
