@@ -366,7 +366,10 @@
   function maybeStartAdminOnboarding() {
     if (!currentUser || !officeSetupPolicy?.eligible(currentProfile) || !adminOnboarding) return;
     const environment = officeSetupEnvironment();
-    if (!environment.mac) return;
+    // A signed-in office user may open the read-only map in a browser without
+    // installing the Dock app. Keep the setup wizard for the installed app;
+    // it must not obscure Brooke's or Kevin's browser dashboard.
+    if (!environment.mac || !environment.installed) return;
     const record = officeSetupRecord();
     if (record.version !== officeSetupPolicy.VERSION || !record.ready) {
       showOfficeSetupIntro(false);
@@ -1433,7 +1436,7 @@
       coryJobRouteLast = { jobKey, pointKey, mode, origin, calculatedAt: Date.now(), line, connector: null };
       const scheduledDeparture = asDate(previous?.job?.scheduledEnd);
       const arrival = new Date((planned && scheduledDeparture && scheduledDeparture.getTime() > Date.now() ? scheduledDeparture.getTime() : Date.now()) + travel.minutes * 60000);
-      showCoryJobEta(`<strong>${planned ? "Planned drive" : "Live truck route"}: about ${escapeHtml(travel.minutes)} min · ${escapeHtml(travel.miles.toFixed(1))} miles</strong><span>${planned ? `Planned ETA around ${escapeHtml(formatTime(arrival))}; ${escapeHtml(context)}` : `Current ETA around ${escapeHtml(formatTime(arrival))}. ${escapeHtml(context)}`}</span><small>Road estimate without live traffic${planned ? "; not an actual departure" : ` · truck GPS ${escapeHtml(formatTime(point.gpsAt))}${age.tone === "delayed" ? " · delayed" : ""}`}. Not approved work time.</small>`);
+      showCoryJobEta(`<strong>${planned ? "Planned drive" : "Live truck route"}: about ${escapeHtml(travel.minutes)} min · ${escapeHtml(travel.miles.toFixed(1))} miles</strong><span>${planned ? `Estimated arrival around ${escapeHtml(formatTime(arrival))} ${scheduledDeparture && scheduledDeparture.getTime() > Date.now() ? "after the scheduled finish of job " + (previous.index + 1) : "if leaving the previous job now"}; ${escapeHtml(context)}` : `Current ETA around ${escapeHtml(formatTime(arrival))}. ${escapeHtml(context)}`}</span><small>Road estimate without live traffic${planned ? "; not an actual departure" : ` · truck GPS ${escapeHtml(formatTime(point.gpsAt))}${age.tone === "delayed" ? " · delayed" : ""}`}. Not approved work time.</small>`);
       if (force && liveLocationMap) liveLocationMap.fitBounds([
         [origin.latitude, origin.longitude], [stop.coordinates.latitude, stop.coordinates.longitude],
         ...(!planned && point ? [] : point ? [[point.latitude, point.longitude]] : [])
