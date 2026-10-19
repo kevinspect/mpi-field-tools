@@ -1,6 +1,9 @@
 /* Office-only workbench. The field app retains its existing design. */
 body.office-workbench { background: #f4f5f9; }
 body.office-workbench .content-panel { padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+body.office-workbench .office-operations-content { display: flex; flex-direction: column; }
+body.office-workbench .office-operations-content > * { width: 100%; }
+body.office-workbench .office-operations-content > .office-operations-grid { order: -1; margin-bottom: 18px; }
 body.office-workbench .dashboard { gap: 0; }
 body.office-workbench .console-view { grid-column: 1; }
 body.office-workbench .section-head { margin: 0 0 18px; }
