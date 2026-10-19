@@ -50,6 +50,7 @@
   const liveLocationStatus = document.getElementById("adminLiveLocationStatus");
   const coryTruckStatus = document.getElementById("adminCoryTruckStatus");
   const centerCoryTruck = document.getElementById("adminCenterCoryTruck");
+  const coryJobEta = document.getElementById("adminCoryJobEta");
   const liveLocationRefresh = document.getElementById("adminLiveLocationRefresh");
   const liveLocationHistory = document.getElementById("adminLiveLocationHistory");
   const liveLocationPlan = document.getElementById("adminLiveLocationPlan");
@@ -209,6 +210,10 @@
   let coryTruckRecord = null;
   let coryTruckMarker = null;
   let coryTruckLayer = null;
+  let coryJobRouteLayer = null;
+  let coryJobRouteController = null;
+  let coryJobRouteGeneration = 0;
+  let coryJobRouteLast = null;
   let coryTruckInViewport = false;
   let coryTruckSubscriptionReady = false;
   let coryTruckRefreshTimer = 0;
@@ -1263,6 +1268,7 @@
     liveLocationLayer = window.L.layerGroup().addTo(liveLocationMap);
     liveLocationRouteLayer = window.L.layerGroup().addTo(liveLocationMap);
     coryTruckLayer = window.L.layerGroup().addTo(liveLocationMap);
+    coryJobRouteLayer = window.L.layerGroup().addTo(liveLocationMap);
     return liveLocationMap;
   }
 
@@ -1280,6 +1286,90 @@
     if (minutes < 2) return { tone: "current", label: "Current" };
     if (minutes < 5) return { tone: "delayed", label: `Delayed · ${minutes} min old` };
     return { tone: "stale", label: `Stale · ${minutes} min old` };
+  }
+
+  function selectedCoryJobStop() {
+    const selection = parseMapJobValue(selectedMapJobValue);
+    if (!selection || (liveRouteDate?.value || dateKey()) < dateKey()) return null;
+    const stop = liveLocationPlannedStops.find(item => item.person?.id === selection.personId &&
+      String(item.job?.id || item.job?.spectoraJobId || "") === selection.jobId);
+    return stop && /^cor[ey] leese$/i.test(canonicalTeamName(stop.person)) ? stop : null;
+  }
+
+  function clearCoryJobRoute({ hideEstimate = true } = {}) {
+    coryJobRouteGeneration += 1;
+    coryJobRouteController?.abort();
+    coryJobRouteController = null;
+    coryJobRouteLast = null;
+    coryJobRouteLayer?.clearLayers();
+    if (coryJobEta && hideEstimate) coryJobEta.hidden = true;
+  }
+
+  function showCoryJobEta(content, warning = false) {
+    if (!coryJobEta) return;
+    coryJobEta.hidden = false;
+    coryJobEta.classList.toggle("warning", warning);
+    coryJobEta.innerHTML = content;
+  }
+
+  async function updateCoryJobRoute({ force = false } = {}) {
+    const stop = selectedCoryJobStop();
+    if (!stop?.coordinates || !coryJobRouteLayer || !window.MPI_PLANNING?.roadTravel) {
+      clearCoryJobRoute();
+      return;
+    }
+    const point = coryTruckPoint();
+    const age = coryTruckAge(point);
+    if (!point || age.tone === "stale") {
+      clearCoryJobRoute({ hideEstimate: false });
+      showCoryJobEta(`<strong>Truck-to-job ETA paused</strong><span>${point ? "Cory's truck GPS is stale" : "Waiting for Cory's truck GPS"}. Select this job again when a fresh position arrives.</span>`, true);
+      return;
+    }
+    const jobKey = selectedMapJobValue;
+    const pointKey = `${point.latitude}:${point.longitude}:${point.gpsAt.toISOString()}`;
+    if (!force && coryJobRouteLast?.jobKey === jobKey && coryJobRouteLast.pointKey === pointKey && !coryJobRouteLast.failed) return;
+    if (!force && coryJobRouteLast?.jobKey === jobKey && Date.now() - coryJobRouteLast.calculatedAt < 60000) {
+      // Keep the road estimate bounded to one request per minute per office view.
+      // A short dashed connector makes the line start at the newer truck point.
+      coryJobRouteLast.connector && coryJobRouteLayer.removeLayer(coryJobRouteLast.connector);
+      coryJobRouteLast.connector = window.L.polyline([
+        [point.latitude, point.longitude],
+        [coryJobRouteLast.origin.latitude, coryJobRouteLast.origin.longitude]
+      ], { color: "#146b80", weight: 3, opacity: .8, dashArray: "4 7" }).addTo(coryJobRouteLayer);
+      return;
+    }
+    const generation = ++coryJobRouteGeneration;
+    coryJobRouteController?.abort();
+    const controller = new AbortController();
+    coryJobRouteController = controller;
+    const timeout = window.setTimeout(() => controller.abort(), 14000);
+    showCoryJobEta(`<strong>Calculating drive from Cory's truck…</strong><small>Selected job: ${escapeHtml(scheduleAddress(stop.job))}</small>`);
+    try {
+      const travel = await window.MPI_PLANNING.roadTravel(point, stop.coordinates, controller.signal);
+      if (generation !== coryJobRouteGeneration || selectedMapJobValue !== jobKey) return;
+      if (!Array.isArray(travel.geometry) || travel.geometry.length < 2 || !Number.isFinite(travel.minutes)) throw new Error("Road route unavailable");
+      coryJobRouteLayer.clearLayers();
+      const line = window.L.polyline(travel.geometry.map(([longitude, latitude]) => [latitude, longitude]), {
+        color: "#146b80", weight: 6, opacity: .9, lineJoin: "round"
+      }).bindPopup(`<strong>Cory's truck → selected job</strong><br>${escapeHtml(travel.miles.toFixed(1))} miles · about ${escapeHtml(travel.minutes)} minutes<br>Planning estimate; no live traffic`).addTo(coryJobRouteLayer);
+      coryJobRouteLast = { jobKey, pointKey, origin: point, calculatedAt: Date.now(), line, connector: null };
+      const arrival = new Date(Date.now() + travel.minutes * 60000);
+      showCoryJobEta(`<strong>About ${escapeHtml(travel.minutes)} min · ${escapeHtml(travel.miles.toFixed(1))} miles</strong><span>ETA around ${escapeHtml(formatTime(arrival))} if leaving now</span><small>Road estimate without live traffic · truck GPS ${escapeHtml(formatTime(point.gpsAt))}${age.tone === "delayed" ? " · GPS delayed" : ""}. The route refreshes as the truck moves.</small>`);
+      if (force && liveLocationMap) liveLocationMap.fitBounds([
+        [point.latitude, point.longitude], [stop.coordinates.latitude, stop.coordinates.longitude]
+      ], { padding: [54, 54], maxZoom: 13 });
+    } catch (error) {
+      if (generation !== coryJobRouteGeneration || selectedMapJobValue !== jobKey) return;
+      coryJobRouteLayer.clearLayers();
+      const line = window.L.polyline([[point.latitude, point.longitude], [stop.coordinates.latitude, stop.coordinates.longitude]], {
+        color: "#a66a0a", weight: 4, opacity: .85, dashArray: "7 7"
+      }).addTo(coryJobRouteLayer);
+      coryJobRouteLast = { jobKey, pointKey, origin: point, calculatedAt: Date.now(), line, connector: null, failed: true };
+      showCoryJobEta(`<strong>Road ETA temporarily unavailable</strong><span>Dashed line shows the direct connection only; it is not a driving route.</span><small>Truck GPS ${escapeHtml(formatTime(point.gpsAt))}. No appointment or time record changed.</small>`, true);
+    } finally {
+      window.clearTimeout(timeout);
+      if (coryJobRouteController === controller) coryJobRouteController = null;
+    }
   }
 
   function coryTruckPopup(point, age) {
@@ -1485,6 +1575,7 @@
   }
 
   function hideHistoricalRoute({ keepSelection = true } = {}) {
+    clearCoryJobRoute();
     liveLocationRouteVisible = false;
     liveLocationPlanVisible = false;
     liveLocationAllPlansVisible = false;
@@ -1500,6 +1591,7 @@
   }
 
   function focusLiveLocationPerson(personId) {
+    clearCoryJobRoute();
     const item = liveLocationValues().find(value => value.person.id === personId);
     if (!item) return;
     if (selectedLiveLocationPersonId !== personId) hideHistoricalRoute({ keepSelection: true });
@@ -1843,6 +1935,7 @@
       hideHistoricalRoute({ keepSelection: true });
       return false;
     }
+    clearCoryJobRoute();
     const requestedDate = liveRouteDate?.value || dateKey();
     let selectedDate = requestedDate;
     let plans = allSchedulePlansForDate(selectedDate);
@@ -2049,6 +2142,7 @@
   planningInspector?.addEventListener("change", () => { planningOrigin.innerHTML = ""; invalidatePlanningResult(); renderPlanningControls(); });
   planningOrigin?.addEventListener("change", invalidatePlanningResult);
   liveRouteDate?.addEventListener("change", () => {
+    clearCoryJobRoute();
     selectedMapJobValue = "";
     planningOrigin.innerHTML = "";
     invalidatePlanningResult();
@@ -2105,6 +2199,7 @@
       hideHistoricalRoute({ keepSelection: true });
       return;
     }
+    clearCoryJobRoute();
     if (liveLocationRouteVisible) {
       liveLocationRouteVisible = false;
       liveLocationAllPlansVisible = false;
@@ -2158,6 +2253,7 @@
   }
 
   function showAllLiveLocations() {
+    clearCoryJobRoute();
     liveLocationRouteLayer?.clearLayers();
     liveLocationRouteVisible = false;
     liveLocationPlanVisible = false;
@@ -2172,6 +2268,7 @@
   }
 
   async function showSelectedMapJob() {
+    clearCoryJobRoute();
     selectedMapJobValue = String(liveJobSelect?.value || "");
     applyMapJobSelectionToPlanner(selectedMapJobValue);
     invalidatePlanningResult();
@@ -2196,6 +2293,7 @@
     liveLocationMap.setView([stop.coordinates.latitude, stop.coordinates.longitude], 14);
     liveLocationRouteStatus.innerHTML = `<strong>${escapeHtml(scheduleAddress(stop.job))}</strong> · ${escapeHtml(canonicalTeamName(stop.person))} · ${escapeHtml(formatTime(stop.job.scheduledStart))}. This planning view is read only.`;
     liveLocationRouteStatus.dataset.result = "success";
+    await updateCoryJobRoute({ force: true });
   }
 
   async function requestLiveLocationRefresh() {
@@ -4115,6 +4213,7 @@
 
   function startAdminData() {
     window.clearTimeout(adminDataRecoveryTimer);
+    clearCoryJobRoute();
     unsubscribePeople?.();
     unsubscribeCoryTruck?.();
     coryTruckSubscriptionReady = false;
@@ -4127,6 +4226,7 @@
     if (!liveLocationAgeTimer) liveLocationAgeTimer = window.setInterval(() => {
       renderLiveLocationMap();
       renderCoryTruckMarker();
+      updateCoryJobRoute().catch(() => false);
       updateOperationalClocks();
       // Map ages and clocks are local. Route reads require an explicit request.
     }, 60000);
@@ -4135,11 +4235,13 @@
       coryTruckSubscriptionReady = true;
       renderLiveLocationMap();
       syncCoryTruckRefresh();
+      updateCoryJobRoute().catch(() => false);
     }, () => {
       coryTruckSubscriptionReady = false;
       coryTruckRecord = null;
       renderCoryTruckMarker();
       syncCoryTruckRefresh();
+      updateCoryJobRoute().catch(() => false);
     });
     unsubscribePeople = shared.db.collection("users").orderBy("name").onSnapshot(snapshot => {
       people = snapshot.docs.map(doc => {
@@ -5192,6 +5294,7 @@
     const retryConnection = document.getElementById("adminRetryConnection");
     if (retryConnection) retryConnection.hidden = !user || !error;
     if (!user || !profile || !shared.isAdminRole(profile)) {
+      clearCoryJobRoute();
       if (settingsButton) settingsButton.hidden = true;
       dashboard.hidden = true;
       accountPill.hidden = true;

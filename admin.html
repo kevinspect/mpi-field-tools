@@ -317,6 +317,11 @@
     .operational-context { display:block; margin-top:5px; color:#2775b9 !important; font-weight:900 !important; }
     .live-location-route-note { min-height:18px; margin:9px 0 0; color:var(--muted); font-size:9px; line-height:1.4; }
     .live-location-route-note strong { color:var(--navy); }
+    .truck-job-eta { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin:10px 0 0; padding:11px 13px; border:1px solid #b8dbe2; border-radius:11px; background:#eaf6f8; color:#174b5a; font-size:11px; line-height:1.4; }
+    .truck-job-eta[hidden] { display:none; }
+    .truck-job-eta strong { color:#0d4050; font-size:12px; }
+    .truck-job-eta small { flex-basis:100%; color:#506675; font-size:9px; }
+    .truck-job-eta.warning { border-color:#e3cd9b; background:#fff8e8; color:#71520d; }
     .spectora-readonly-note { display:flex; align-items:flex-start; gap:8px; margin:10px 0 0; padding:9px 11px; color:#42506f; background:#eef6fc; border:1px solid #c9dff0; border-radius:10px; font-size:9px; line-height:1.45; }
     .spectora-readonly-note strong { flex:0 0 auto; color:var(--navy); }
     .mpi-live-marker { display:grid; width:34px; height:34px; place-items:center; color:#fff; background:var(--navy); border:3px solid #e0b94e; border-radius:50%; box-shadow:0 4px 12px rgba(17,24,106,.35); font-size:10px; font-weight:950; }
@@ -1115,6 +1120,7 @@
               <div class="office-map-legacy-controls" hidden aria-hidden="true"><button id="adminLiveLocationRefresh" type="button">Update now</button><button id="adminLiveLocationShowAll" type="button">Live</button><button id="adminLiveLocationHistory" type="button" disabled>Actual route</button><button id="adminLiveLocationPlan" type="button" disabled>Selected inspector’s jobs</button></div>
               <span class="live-location-status" id="adminLiveLocationStatus">Waiting for active field devices.</span>
               <div class="live-location-map" id="adminLiveLocationMap" aria-label="Map of current inspector locations and read-only job plans"></div>
+              <div class="truck-job-eta" id="adminCoryJobEta" role="status" aria-live="polite" hidden></div>
               <p class="live-location-route-note" id="adminLiveLocationRouteStatus">Choose a date, then show all jobs or select one scheduled job.</p>
               <div class="live-location-list" id="adminLiveLocationList" hidden aria-hidden="true"><div class="empty">Waiting for inspector locations.</div></div>
               <section class="office-planning-drawer" aria-labelledby="adminPlanningTitle">
@@ -1267,7 +1273,7 @@
   <script src="./mpi-owner-view.js?build=220"></script>
   <script src="./mpi-office-setup-policy.js?build=220-office-fix-1"></script>
   <script src="./mpi-office-diagnostics.js?build=220"></script>
-  <script src="./admin.js?build=220-cory-truck-1"></script>
+  <script src="./admin.js?build=220-cory-truck-route-1"></script>
   <script src="./mpi-equipment-admin.js?build=220"></script>
 </body>
 </html>
