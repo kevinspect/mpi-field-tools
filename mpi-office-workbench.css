@@ -145,6 +145,7 @@ body.office-workbench .office-check-status[data-state='deferred'] { color: #6570
 body.office-workbench .workday-review-card { border-left: 4px solid #d3a822; }
 body.office-workbench .workday-review-card.approved { border-left-color: #28765e; background: #fbfefc; }
 body.office-workbench .workday-review-card.questioned { border-left-color: #b54848; background: #fffdfd; }
+body.office-workbench .workday-review-card.needs-time-check { border-left-color: #b94b42; background: #fffdfd; }
 body.office-workbench .workday-review-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 body.office-workbench .workday-review-heading h3 { margin: 2px 0 0; }
 body.office-workbench .workday-review-totals { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin: 16px 0; }
