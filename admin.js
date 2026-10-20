@@ -1435,8 +1435,13 @@
       }).bindPopup(`<strong>${planned ? "Previous job" : "Cory's truck"} → selected job</strong><br>${escapeHtml(travel.miles.toFixed(1))} miles · about ${escapeHtml(travel.minutes)} minutes<br>Road estimate; no live traffic`).addTo(coryJobRouteLayer);
       coryJobRouteLast = { jobKey, pointKey, mode, origin, calculatedAt: Date.now(), line, connector: null };
       const scheduledDeparture = asDate(previous?.job?.scheduledEnd);
-      const arrival = new Date((planned && scheduledDeparture && scheduledDeparture.getTime() > Date.now() ? scheduledDeparture.getTime() : Date.now()) + travel.minutes * 60000);
-      showCoryJobEta(`<strong>${planned ? "Planned drive" : "Live truck route"}: about ${escapeHtml(travel.minutes)} min · ${escapeHtml(travel.miles.toFixed(1))} miles</strong><span>${planned ? `Estimated arrival around ${escapeHtml(formatTime(arrival))} ${scheduledDeparture && scheduledDeparture.getTime() > Date.now() ? "after the scheduled finish of job " + (previous.index + 1) : "if leaving the previous job now"}; ${escapeHtml(context)}` : `Current ETA around ${escapeHtml(formatTime(arrival))}. ${escapeHtml(context)}`}</span><small>Road estimate without live traffic${planned ? "; not an actual departure" : ` · truck GPS ${escapeHtml(formatTime(point.gpsAt))}${age.tone === "delayed" ? " · delayed" : ""}`}. Not approved work time.</small>`);
+      const arrival = planned ? scheduledDeparture && new Date(scheduledDeparture.getTime() + travel.minutes * 60000)
+        : new Date(Date.now() + travel.minutes * 60000);
+      const timing = planned
+        ? arrival ? `Scheduled-plan arrival around ${formatTime(arrival)} if departing job ${previous.index + 1} at its scheduled finish; ${context}`
+          : `Arrival time awaits a confirmed departure from job ${previous.index + 1}; ${context}`
+        : `Current ETA around ${formatTime(arrival)}. ${context}`;
+      showCoryJobEta(`<strong>${planned ? "Planned drive" : "Live truck route"}: about ${escapeHtml(travel.minutes)} min · ${escapeHtml(travel.miles.toFixed(1))} miles</strong><span>${escapeHtml(timing)}</span><small>Road estimate without live traffic${planned ? "; not an actual departure" : ` · truck GPS ${escapeHtml(formatTime(point.gpsAt))}${age.tone === "delayed" ? " · delayed" : ""}`}. Not approved work time.</small>`);
       if (force && liveLocationMap) liveLocationMap.fitBounds([
         [origin.latitude, origin.longitude], [stop.coordinates.latitude, stop.coordinates.longitude],
         ...(!planned && point ? [] : point ? [[point.latitude, point.longitude]] : [])

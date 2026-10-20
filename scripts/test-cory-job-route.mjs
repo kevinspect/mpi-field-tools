@@ -68,6 +68,10 @@ context.selectedMapJobValue = JSON.stringify(["cory", "job-2"]);
 await context.updateCoryJobRoute({ force: true });
 assert.equal(routes.at(-1).origin.latitude, 42.6, "Before departure, job 2 routes from job 1 rather than claiming the truck left");
 assert.match(eta.innerHTML, /Planned drive.*departure from the previous job is not yet GPS-confirmed/i);
+context.liveLocationPlannedStops[0].job.scheduledEnd = new Date(Date.now() - 3 * 3600000).toISOString();
+await context.updateCoryJobRoute({ force: true });
+assert.match(eta.innerHTML, /Scheduled-plan arrival around/i, "A past scheduled job must not get a false live ETA from now");
+assert.doesNotMatch(eta.innerHTML, /if leaving the previous job now/i);
 
 const departure = new Date(Date.now() - 120000).toISOString();
 context.coryTruckRecord.jobMonitor = { date: "2026-10-19", jobs: [{ id: "job-1", arrivedAt: new Date(Date.now() - 3600000).toISOString(), departedAt: departure }] };
@@ -90,7 +94,7 @@ context.coryTruckRecord.jobMonitor = null;
 context.selectedMapJobValue = JSON.stringify(["kevin", "job-1"]);
 await context.updateCoryJobRoute({ force: true });
 assert.equal(eta.hidden, true, "Other inspectors' jobs do not use Cory's truck");
-assert.equal(routes.length, 4);
+assert.equal(routes.length, 5);
 
 context.selectedMapJobValue = JSON.stringify(["cory", "job-1"]);
 context.window.MPI_PLANNING.roadTravel = async () => { throw new Error("Router unavailable"); };
