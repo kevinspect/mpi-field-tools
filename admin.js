@@ -3616,10 +3616,8 @@
     statHoursLabel.textContent = gpsMinutes ? `Cory GPS task window ${period}` : `Recorded hours ${period}`;
     stats.hours.textContent = gpsMinutes ? formatMinutes(gpsMinutes) : `${Math.floor(totalMinutes / 60)}:${String(totalMinutes % 60).padStart(2, "0")}`;
     if (statGpsEstimate) {
-      statGpsEstimate.hidden = !cory;
-      statGpsEstimate.textContent = gpsMinutes
-        ? `Planning estimate only · ${formatMinutes(totalMinutes)} recorded for payroll · unmatched tasks excluded`
-        : `No complete GPS job window ${period}; recorded time only`;
+      statGpsEstimate.hidden = true;
+      statGpsEstimate.textContent = "";
     }
     const attentionItems = operationAttentionItems();
     stats.alerts.textContent = String(attentionItems.length);
