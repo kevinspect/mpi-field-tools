@@ -31,6 +31,7 @@ const state = {
   cancelFieldAlarmGroup: () => {},
   workflowDepartureAlarmGroup: () => "departure",
   renderWorkflowApp: () => {},
+  resetWorkflowEndOfDayChecks: () => {},
   renderWorkflowLabStop: () => {},
   updateWorkflowLabTravelPlan: () => {},
   appendWorkflowEvent: (action, data) => { events.push({ action, data }); },

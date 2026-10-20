@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#11186A">
-  <meta name="app-build" content="220">
+  <meta name="app-build" content="221">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MPI Field Tools">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -6327,7 +6327,7 @@
             <button class="workflow-action secondary" id="workflowMessageClientBtn" type="button">MESSAGE CLIENT</button>
             <button class="workflow-action primary full" id="workflowArrivedBtn" type="button">ARRIVED</button>
             <button class="workflow-action primary full" id="workflowStartInspectionBtn" type="button">START INSPECTION</button>
-            <button class="workflow-action primary full" id="workflowJobCompleteBtn" type="button">JOB COMPLETE</button>
+            <button class="workflow-action primary full" id="workflowJobCompleteBtn" type="button">FINISH JOB · CHECK TOOLS</button>
           </div>
           <p class="workflow-integration-note" id="workflowSpectoraNote" hidden><strong>Workflow:</strong> Start Inspection records the exact time and keeps this app on the current job.</p>
           <button class="workflow-job-back" id="workflowBackToJobs" type="button">← Back to today’s jobs</button>
@@ -6337,12 +6337,19 @@
           <div class="workflow-card-header">
             <p class="eyebrow">Before leaving</p>
             <h3 id="workflow-equipment-title">Used tools back on the truck</h3>
-            <p id="workflowEquipmentJob">Confirm the equipment used at this inspection has been recovered.</p>
+            <p id="workflowEquipmentJob">Check the property and truck. Every tool used at this inspection must be accounted for before the job can be completed.</p>
           </div>
-          <p class="workflow-equipment-confirmation">ALL USED TOOLS AND EQUIPMENT ARE BACK ON THE TRUCK</p>
-          <div id="workflowEquipmentChecklist" hidden></div>
-          <div id="workflowSpecialtyEquipment" hidden></div>
-          <button class="workflow-button" id="workflowEquipmentCompleteBtn" type="button">CONFIRM</button>
+          <p class="workflow-equipment-confirmation">PHYSICALLY CHECK BEFORE LEAVING THE PROPERTY</p>
+          <div class="workflow-checklist" id="workflowEquipmentChecklist">
+            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="hand-tools"><span>Hand tools, probes, and accessories used are back on the truck.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="inspection-devices"><span>Cameras, meters, tablets, and testing devices used are accounted for.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="ladders-safety"><span>Ladders and safety gear used are back and secured.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="power-samples"><span>Batteries, chargers, samples, and test kits used are accounted for.</span></label>
+            <label class="workflow-check"><input type="checkbox" data-workflow-equipment="property-sweep"><span>I checked the property and vehicle; no MPI tools were left behind.</span></label>
+          </div>
+          <div class="workflow-equipment-specialty" id="workflowSpecialtyEquipment" hidden></div>
+          <button class="workflow-button" id="workflowEquipmentCompleteBtn" type="button" disabled>CONFIRM TOOLS &amp; COMPLETE JOB</button>
+          <p class="workflow-integration-note" id="workflowEquipmentStatus" role="status">Check every item before completing this job. If anything is missing, contact the office.</p>
         </section>
 
         <section class="workflow-card workflow-lab-card" id="workflowLabCard" aria-labelledby="workflow-lab-title" hidden>
@@ -6424,7 +6431,7 @@
           <div class="workflow-day-complete-mark">✓</div>
           <div class="workflow-card-header">
             <h3 id="workflow-day-complete-title">End-of-day equipment check</h3>
-            <p id="workflowDayCompleteIntro">Physically confirm the company’s major equipment before signing off.</p>
+            <p id="workflowDayCompleteIntro">Physically confirm the company’s major equipment before Clock Off or signing off.</p>
           </div>
           <div class="workflow-finished-summary" id="workflowFinishedSummary" hidden>
             <div class="workflow-finished-stat"><span>Clocked out</span><strong id="workflowFinishedClockTime">—</strong></div>
@@ -6443,7 +6450,7 @@
             <label class="workflow-check"><input type="checkbox" data-workflow-eod-equipment="power"><span>Battery packs and chargers</span></label>
           </div>
           <button class="workflow-button" id="workflowDayCompleteBtn" type="button" disabled>SIGN OFF FOR DAY</button>
-          <p class="workflow-integration-note" id="workflowDayCompleteStatus">Confirm every listed item to sign off.</p>
+          <p class="workflow-integration-note" id="workflowDayCompleteStatus">Confirm every listed item before Clock Off.</p>
         </section>
       </div>
 
@@ -8714,7 +8721,7 @@
           <h2>App status</h2>
           <p>The current version and offline readiness are checked automatically.</p>
           <div class="settings-status"><strong>Connection and offline status</strong><span id="settingsOfflineStatus">Checking…</span></div>
-          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 220</span></div>
+          <div class="settings-status"><strong>Installed build</strong><span id="settingsInstalledBuild">Build 221</span></div>
           <div class="settings-status"><strong>App version</strong><span id="settingsAppVersionStatus">Checking…</span></div>
         </section>
 
@@ -9600,9 +9607,9 @@
       const workflowEquipmentCard = document.getElementById("workflowEquipmentCard");
       const workflowEquipmentJob = document.getElementById("workflowEquipmentJob");
       const workflowEquipmentChecklist = document.getElementById("workflowEquipmentChecklist");
-      const workflowEquipmentChecks = [...document.querySelectorAll("[data-workflow-equipment]")];
       const workflowSpecialtyEquipment = document.getElementById("workflowSpecialtyEquipment");
       const workflowEquipmentCompleteBtn = document.getElementById("workflowEquipmentCompleteBtn");
+      const workflowEquipmentStatus = document.getElementById("workflowEquipmentStatus");
       const workflowLabCard = document.getElementById("workflowLabCard");
       const workflowLabBadge = document.getElementById("workflowLabBadge");
       const workflowLabIntro = document.getElementById("workflowLabIntro");
@@ -17068,7 +17075,6 @@
         const activeClock = Boolean(workflowActiveClockSession());
         const jobs = workflowScheduleJobs();
         const allJobsComplete = jobs.length > 0 && jobs.every(job => workflowJobIsComplete(job));
-        const remainingJobs = workflowClockOffRemainingJobs(jobs);
         const training = loadWorkflowNachiTraining();
         const trainingDayComplete = Boolean(isCoryWorkflowUser() && training && !training.active && training.sessions.length && !workflowNextScheduledJob(jobs));
         if (!activeClock || (!allJobsComplete && !trainingDayComplete)) return false;
@@ -17109,13 +17115,15 @@
         const jobs = workflowScheduleJobs();
         const allJobsComplete = jobs.length > 0 && jobs.every(job => workflowJobIsComplete(job));
         const remainingJobs = workflowClockOffRemainingJobs(jobs);
+        const currentJobPending = Boolean(loadActiveJob()?.property);
         const training = loadWorkflowNachiTraining();
         const trainingDayComplete = Boolean(isCoryWorkflowUser() && training && !training.active && training.sessions.length && !workflowNextScheduledJob(jobs));
         const finalReturn = loadWorkflowLabStop();
         const finishedWork = finalReturn?.finalStop && ["finished-work", "home-arrived"].includes(finalReturn.stage);
-        const equipmentConfirmed = workflowEndOfDayChecks.length > 0 && workflowEndOfDayChecks.every(check => check.checked);
+        const equipmentConfirmed = workflowEndOfDayConfirmed();
         const finalCloseoutBlocked = Boolean(active && ((finalReturn?.finalStop && !finishedWork)
-          || ((allJobsComplete || trainingDayComplete) && (!finishedWork || !equipmentConfirmed))));
+          || ((allJobsComplete || trainingDayComplete) && !finishedWork)
+          || !equipmentConfirmed));
         if (workflowClockHomeReminder) {
           workflowClockHomeReminder.hidden = !workflowFinalTravelNeedsClockOff();
           const heading = workflowClockHomeReminder.querySelector("strong");
@@ -17129,11 +17137,13 @@
         if (hoursStarted) clearWorkflowArrivalError();
         workflowClockOnBtn.hidden = true;
         workflowClockOnBtn.disabled = true;
-        workflowClockOffBtn.disabled = !active || workflowTimeClockInFlight || remainingJobs.length > 0 || finalCloseoutBlocked;
-        workflowClockOffBtn.textContent = remainingJobs.length
+        workflowClockOffBtn.disabled = !active || workflowTimeClockInFlight || currentJobPending || remainingJobs.length > 0 || finalCloseoutBlocked;
+        workflowClockOffBtn.textContent = currentJobPending
+          ? "COMPLETE CURRENT JOB"
+          : remainingJobs.length
           ? `${remainingJobs.length} JOB${remainingJobs.length === 1 ? "" : "S"} REMAIN`
           : finalCloseoutBlocked
-          ? finishedWork ? "COMPLETE EQUIPMENT CHECK" : "FINISH WORK TASKS"
+          ? (finishedWork || (!allJobsComplete && !trainingDayComplete && !finalReturn)) ? "COMPLETE EQUIPMENT CHECK" : "FINISH WORK TASKS"
           : "CLOCK OFF";
         workflowClockOffBtn.hidden = !hoursStarted;
         workflowClockRetryLocationBtn.hidden = true;
@@ -17190,6 +17200,12 @@
         const record = loadWorkflowTimeClock();
         const active = workflowActiveClockSession(record);
         if (!record || !active) return;
+        const currentJob = loadActiveJob();
+        if (currentJob?.property) {
+          renderWorkflowJob(currentJob);
+          showToast("Complete the current job's tool check before Clocking Off");
+          return;
+        }
         const jobs = workflowScheduleJobs();
         const allJobsComplete = jobs.length > 0 && jobs.every(job => workflowJobIsComplete(job));
         const remainingJobs = workflowClockOffRemainingJobs(jobs);
@@ -17211,18 +17227,21 @@
             showToast("Confirm all work tasks are finished before Clocking Off");
             return;
           }
-          if (!workflowEndOfDayChecks.length || !workflowEndOfDayChecks.every(check => check.checked)) {
-            showToast("Complete the end-of-day equipment check before Clocking Out");
-            return;
-          }
+        }
+        if (!workflowEndOfDayConfirmed()) {
+          showToast("Complete the end-of-day equipment check before Clocking Out");
+          return;
         }
         workflowTimeClockInFlight = true;
         renderWorkflowTimeClock();
         const clockedOutAt = new Date().toISOString();
         const location = await requestWorkflowClockLocation();
+        const equipment = workflowEndOfDayChecks.map(check => check.dataset.workflowEodEquipment);
         active.clockedOutAt = clockedOutAt;
         active.clockOutLocation = location;
+        active.endOfDayEquipmentCheck = { date: localDateKey(), equipment, confirmedAt: clockedOutAt };
         saveWorkflowTimeClock(record);
+        appendWorkflowEvent("End-of-day equipment check confirmed", { equipment, confirmedAt: clockedOutAt }, null);
         appendWorkflowEvent("Clocked off", {
           clockedOutAt,
           worked: workflowWorkedDuration(record, new Date(clockedOutAt).getTime()),
@@ -17518,7 +17537,7 @@
         if (!addedJobs.length) return false;
         archiveWorkflowCloseout(record);
         try { localStorage.removeItem(WORKFLOW_DAY_COMPLETE_STORAGE_KEY); } catch (_) {}
-        workflowEndOfDayChecks.forEach(check => { check.checked = false; check.disabled = false; });
+        resetWorkflowEndOfDayChecks();
         const reopenedAt = new Date().toISOString();
         appendWorkflowEvent("Working day reopened for added appointment", {
           reopenedAt,
@@ -17949,6 +17968,7 @@
       }
 
       function beginWorkflowLabDecision(completedJob = null) {
+        resetWorkflowEndOfDayChecks();
         const next = nextWorkflowAppointment(completedJob);
         const record = {
           date: localDateKey(),
@@ -18157,8 +18177,10 @@
         const record = normalizeWorkflowLabStop();
         if (!record?.finalStop || !["finish-choice", "proceed-home", "driving-home"].includes(record.stage)) return;
         if (choice === "labs") {
+          resetWorkflowEndOfDayChecks();
           record.stage = "choose";
         } else if (choice === "no") {
+          resetWorkflowEndOfDayChecks();
           record.stage = "extra-task-entry";
         } else if (choice === "yes") {
           record.stage = "finished-work";
@@ -18465,6 +18487,11 @@
       function updateWorkflowStage(job, status, action, data = {}) {
         if (!job?.property || !WORKFLOW_STAGES.includes(status)) return null;
         if (status !== "completed" && rejectLockedWorkflowJob(job)) return null;
+        if (status === "completed") {
+          const checks = workflowAllEquipmentChecks();
+          if (job.workflowStatus !== "equipment" || workflowEquipmentCard.dataset.jobKey !== workflowEquipmentJobKey(job)
+            || !checks.length || !checks.every(check => check.checked)) return null;
+        }
         const now = String(data?.originalTimestamp || new Date().toISOString());
         job.workflowStatus = status;
         job.workflowTimestamps = { ...(job.workflowTimestamps || {}), [status]: now };
@@ -18969,12 +18996,14 @@
         const job = loadActiveJob();
         if (!job?.property) return;
         if (rejectLockedWorkflowJob(job)) return;
+        workflowEquipmentCard.dataset.jobKey = "";
         updateWorkflowStage(job, "equipment", "Job Complete selected");
         renderWorkflowEquipment(loadActiveJob());
       }
 
       function specialtyEquipmentForJob(job) {
-        const text = `${workflowServiceLabel(job)} ${(job.services || []).join(" ")}`.toLowerCase();
+        const services = Array.isArray(job?.services) ? job.services : [job?.services || ""];
+        const text = `${workflowServiceLabel(job)} ${services.join(" ")}`.toLowerCase();
         const items = [];
         if (/sewer/.test(text)) items.push(["sewer-camera", "Sewer camera returned to the vehicle."]);
         if (/radon/.test(text)) items.push(["radon-equipment", "Radon equipment accounted for."]);
@@ -18989,24 +19018,60 @@
       function renderWorkflowEquipment(job = loadActiveJob()) {
         setWorkflowPrimaryCards(workflowEquipmentCard);
         workflowEquipmentJob.textContent = `${job?.property || "Current job"} · ${workflowServiceLabel(job)}`;
+        const jobKey = workflowEquipmentJobKey(job);
+        if (workflowEquipmentCard.dataset.jobKey !== jobKey) {
+          workflowEquipmentCard.dataset.jobKey = jobKey;
+          workflowEquipmentChecklist.querySelectorAll("[data-workflow-equipment]").forEach(check => { check.checked = false; });
+          const specialty = specialtyEquipmentForJob(job || {});
+          workflowSpecialtyEquipment.replaceChildren(...specialty.map(([id, label]) => {
+            const row = document.createElement("label");
+            row.className = "workflow-check";
+            const check = document.createElement("input");
+            check.type = "checkbox";
+            check.dataset.workflowEquipment = id;
+            const copy = document.createElement("span");
+            copy.textContent = label;
+            row.append(check, copy);
+            return row;
+          }));
+          workflowSpecialtyEquipment.hidden = specialty.length === 0;
+        }
         updateWorkflowEquipmentButton();
       }
 
+      function workflowEquipmentJobKey(job) {
+        return String(job?.calendarEventId || job?.spectoraJobId || `${job?.property || ""}|${job?.scheduledStart || ""}`);
+      }
+
       function workflowAllEquipmentChecks() {
-        return [];
+        return [...workflowEquipmentCard.querySelectorAll("[data-workflow-equipment]")];
       }
 
       function updateWorkflowEquipmentButton() {
-        workflowEquipmentCompleteBtn.disabled = false;
-        workflowEquipmentCompleteBtn.textContent = "CONFIRM";
+        const checks = workflowAllEquipmentChecks();
+        const confirmed = checks.filter(check => check.checked).length;
+        const ready = checks.length > 0 && confirmed === checks.length;
+        workflowEquipmentCompleteBtn.disabled = !ready;
+        workflowEquipmentCompleteBtn.textContent = ready ? "CONFIRM TOOLS & COMPLETE JOB" : `CHECK TOOLS · ${confirmed}/${checks.length}`;
+        workflowEquipmentStatus.textContent = ready
+          ? "All listed tools are accounted for. Confirm to complete this job."
+          : `Check all ${checks.length} items before completing this job. If anything is missing, contact the office.`;
       }
 
       function completeWorkflowEquipment() {
         const job = loadActiveJob();
         if (!job?.property) return;
         if (rejectLockedWorkflowJob(job)) return;
+        if (job.workflowStatus !== "equipment") return;
+        const checks = workflowAllEquipmentChecks();
+        if (workflowEquipmentCard.dataset.jobKey !== workflowEquipmentJobKey(job) || !checks.length || !checks.every(check => check.checked)) {
+          updateWorkflowEquipmentButton();
+          showToast("Account for every tool before completing this job");
+          return;
+        }
         const confirmedAt = new Date().toISOString();
-        const completed = updateWorkflowStage(job, "completed", "Used tools back on truck confirmed", { confirmedAt });
+        const equipmentChecks = checks.map(check => check.dataset.workflowEquipment);
+        const completed = updateWorkflowStage(job, "completed", "Used tools back on truck confirmed", { confirmedAt, equipmentChecks });
         if (!completed) return;
         if (completed.isPractice) {
           appendWorkflowEvent("Phone setup practice completed", { practice: true, completedAt: confirmedAt, locationVerified: true }, completed);
@@ -19027,7 +19092,7 @@
           showToast("Practice passed — no company records or email were created");
           return;
         }
-        appendWorkflowEvent("Final job completion", { usedToolsConfirmedAt: confirmedAt }, completed);
+        appendWorkflowEvent("Final job completion", { usedToolsConfirmedAt: confirmedAt, equipmentChecks }, completed);
         cancelFieldAlarmGroup(workflowDepartureAlarmGroup(completed));
         storeWorkflowHistory(completed);
         try { localStorage.setItem(LAST_CLEARED_JOB_STORAGE_KEY, JSON.stringify({ job: completed, clearedAt: new Date().toISOString() })); } catch (_) {}
@@ -19038,11 +19103,22 @@
         showToast(hasNextJob ? "Job closed — confirm whether a lab visit is needed" : "Final job closed — confirm your remaining work tasks");
       }
 
+      function resetWorkflowEndOfDayChecks() {
+        workflowDayCompleteCard.dataset.eodDate = "";
+        workflowEndOfDayChecks.forEach(check => { check.checked = false; check.disabled = false; });
+      }
+
+      function workflowEndOfDayConfirmed() {
+        return workflowDayCompleteCard.dataset.eodDate === localDateKey()
+          && workflowEndOfDayChecks.length > 0
+          && workflowEndOfDayChecks.every(check => check.checked);
+      }
+
       function updateWorkflowDayCompleteButton() {
         const record = workflowDayCompleteRecord();
         const clockActive = Boolean(workflowActiveClockSession());
         const checked = workflowEndOfDayChecks.filter(check => check.checked).length;
-        const allConfirmed = workflowEndOfDayChecks.length > 0 && checked === workflowEndOfDayChecks.length;
+        const allConfirmed = workflowEndOfDayConfirmed();
         workflowEndOfDayChecks.forEach(check => { check.disabled = Boolean(record); });
         if (record) {
           const saved = ["console-synced", "sent"].includes(record.emailStatus);
@@ -19069,12 +19145,21 @@
         const scheduleFinished = jobs.length ? jobs.every(job => workflowJobIsComplete(job)) : finishedWork;
         const finished = Boolean(record?.completedAt);
         const ready = !active?.property && (finished || (scheduleFinished && finishedWork));
+        if (!record && ready && workflowDayCompleteCard.dataset.eodDate !== localDateKey()) {
+          const lastPaid = workflowPaySessions(loadWorkflowTimeClock()).at(-1);
+          const savedCheck = lastPaid?.clockedOutAt && lastPaid?.endOfDayEquipmentCheck?.date === localDateKey()
+            ? lastPaid.endOfDayEquipmentCheck : null;
+          workflowEndOfDayChecks.forEach(check => { check.checked = Boolean(savedCheck?.equipment?.includes(check.dataset.workflowEodEquipment)); });
+          workflowDayCompleteCard.dataset.eodDate = localDateKey();
+        } else if (!record && !ready) {
+          workflowDayCompleteCard.dataset.eodDate = "";
+        }
         workflowDayCompleteCard.hidden = !ready;
         workflowDayCompleteCard.classList.toggle("is-finished", finished);
         workflowDayCompleteTitle.textContent = finished ? "DAY COMPLETE" : "End-of-day equipment check";
         workflowDayCompleteIntro.textContent = finished
           ? "Your workday is closed. Tomorrow’s workflow will open automatically."
-          : "Physically confirm the company’s major equipment before signing off.";
+          : "Physically confirm the company’s major equipment before Clock Off or signing off.";
         workflowFinishedSummary.hidden = !finished;
         workflowEndOfDayChecklist.hidden = finished;
         if (finished) {
@@ -19096,7 +19181,7 @@
         if (!record?.completedAt) {
           workflowDayCompleteStatus.textContent = workflowActiveClockSession()
             ? "Confirm the equipment, then Clock Off before signing off for the day."
-            : "Confirm every listed item to sign off.";
+            : "Confirm every listed item before signing off.";
         } else {
           const signedOff = new Date(record.completedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
           if (["console-synced", "sent"].includes(record.emailStatus)) {
@@ -19758,7 +19843,7 @@
           showToast("Confirm all work tasks are finished before signing off");
           return;
         }
-        if (!workflowEndOfDayChecks.length || !workflowEndOfDayChecks.every(check => check.checked)) return;
+        if (!workflowEndOfDayConfirmed()) return;
         const profile = loadWorkflowProfile();
         const completedAt = new Date().toISOString();
         const equipment = workflowEndOfDayChecks.map(check => check.dataset.workflowEodEquipment);
@@ -20111,6 +20196,9 @@
           renderWorkflowTodayJobs();
         });
         workflowEquipmentCompleteBtn.addEventListener("click", completeWorkflowEquipment);
+        workflowEquipmentCard.addEventListener("change", event => {
+          if (event.target.matches("[data-workflow-equipment]")) updateWorkflowEquipmentButton();
+        });
         workflowOptionalLabBtn.addEventListener("click", () => {
           try {
             const receipt = JSON.parse(localStorage.getItem(LAST_CLEARED_JOB_STORAGE_KEY) || "null");

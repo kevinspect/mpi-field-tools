@@ -1,4 +1,4 @@
-const CACHE_NAME = "mpi-field-tools-shell-v220-cory-future-route-3";
+const CACHE_NAME = "mpi-field-tools-shell-v221-required-equipment-checks-1";
 const APP_SHELL = [
   "./", "./index.html", "./admin.html",
   "./mpi-app-theme.css", "./mpi-app-theme.css?build=220",

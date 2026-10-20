@@ -3344,3 +3344,9 @@ Status: prepared August 26, 2026 as app Build 96.
 ### Validation record
 
 - Passed the full native source/project validation suite, including the 29-item catalog, bundled photographs, signature enforcement, and size/quantity persistence.
+
+## Build 221 — Required equipment checks — October 19, 2026
+
+- Before an inspector can complete a job in MPI Field Tools, they must physically confirm five tool/property-sweep items, plus any service-specific equipment shown for that job. The completion action stays disabled until all items are checked; the confirmation and item IDs are included in the job event.
+- Clock Off now requires a fresh end-of-day equipment check for the current day. A still-active job blocks Clock Off even if an outside schedule marks it complete. The end-of-day check is recorded with the clock-out session and reset if more work is added.
+- These checks do not alter Spectora records. The web source and unsigned native bundle are prepared separately from TestFlight distribution; an Apple-distribution-signed IPA must pass `native:verify:ipa` before upload.
