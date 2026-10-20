@@ -4116,6 +4116,24 @@
     const latest = review.latest;
     const counts = jobCounts(day);
     const drive = driveTimeForDay(day, person);
+    const clock = effectiveTimeClockFor(person, day);
+    const clockStart = clock?.effectiveHoursWorkedStartedAt || day.timeClock?.hoursWorkedStartedAt || "";
+    const clockEnd = effectiveClockOut(person, day);
+    const worked = workedMinutes(person, day);
+    const gpsDay = (Array.isArray(person.oneStepGpsReviewDays) ? person.oneStepGpsReviewDays : []).find(item => item?.day === day.date);
+    const gpsWindow = gpsDayPlanningWindow(gpsDay);
+    const gpsGap = gpsWindow ? Math.max(0, gpsWindow.minutes - worked) : 0;
+    const corrections = correctionsFor(person, day);
+    const timeIssues = workedTimeAuditForDay(person, day).issues;
+    const needsTimeCheck = Boolean(gpsWindow && operationDayIsClosed(day) && gpsGap > 15);
+    const gpsSummary = gpsWindow
+      ? `<div class="workday-verify-source"><span>TRUCK + JOB STOPS · CROSS-CHECK</span><strong>${escapeHtml(formatTime(gpsDay.firstJobArrivalCandidate))}–${escapeHtml(formatTime(gpsWindow.departure))}</strong><small>${escapeHtml(formatMinutes(gpsWindow.minutes))} matched-task window · ${Math.max(0, Number(gpsDay.matchedJobStops) || 0)}/${Math.max(0, Number(gpsDay.assignedJobs) || 0)} jobs matched${gpsWindow.labName ? ` · ends at ${escapeHtml(gpsWindow.labName)}` : ""}</small></div>`
+      : `<div class="workday-verify-source"><span>TRUCK + JOB STOPS · CROSS-CHECK</span><strong>Not available</strong><small>${gpsDay ? `${Math.max(0, Number(gpsDay.matchedJobStops) || 0)}/${Math.max(0, Number(gpsDay.assignedJobs) || 0)} jobs matched; no complete window` : "No GPS job-stop comparison for this day"}</small></div>`;
+    const timeCheck = timeIssues.length
+      ? `<p class="workday-verify-alert">Clock record needs review: ${escapeHtml(timeIssues.map(item => item.message).join(" "))}</p>`
+      : needsTimeCheck
+        ? `<p class="workday-verify-alert">Check the ${escapeHtml(formatMinutes(gpsGap))} gap: the truck's matched-job window is longer than recorded hours. Confirm the first arrival and final task before approving.</p>`
+        : `<p class="workday-verify-note">${gpsWindow ? "GPS is a cross-check, not payroll time. Travel and other work may extend the recorded day." : "Review the clock record and jobs before approving. GPS cannot verify this day."}</p>`;
     const tone = review.decision === "approved" ? "neutral" : review.decision === "questioned" ? "alert" : review.decision === "pending" ? "waiting" : "";
     const previous = latest
       ? `<p class="ops-sub">Last reviewed by ${escapeHtml(latest.reviewedByName || latest.reviewedByEmail || "MPI Admin")} · ${escapeHtml(formatDateTime(latest.reviewedAt))}${latest.note ? ` · ${escapeHtml(latest.note)}` : ""}</p>`
@@ -4125,8 +4143,11 @@
       <div class="quick-messages"><button type="button" data-workday-review="approved">APPROVE WORKDAY</button><button type="button" data-workday-review="questioned">QUESTION WORKDAY</button></div>
       <span class="status" data-workday-review-status>Review includes the effective Hours Worked, Drive Time, unique jobs and final Clock Off shown here.</span>`;
     return `<article class="ops-card full workday-review-card ${escapeHtml(review.decision)}" data-workday-review-revision="${escapeHtml(review.revision)}">
-      <div class="workday-review-heading"><div><p class="ops-eyebrow">Required Admin review</p><h3>Workday Approval</h3></div><span class="status-badge ${tone}">${escapeHtml(review.label)}</span></div>
-      <div class="workday-review-totals"><div><span>Effective hours</span><strong>${formatMinutes(workedMinutes(person, day))}</strong></div><div><span>Drive time</span><strong>${formatMinutes(drive?.totalMinutes)}</strong></div><div><span>Jobs</span><strong>${counts.complete} / ${counts.total}</strong></div><div><span>Final Clock Off</span><strong>${escapeHtml(formatTime(effectiveClockOut(person, day)))}</strong></div></div>
+      <div class="workday-review-heading"><div><p class="ops-eyebrow">One-place daily review · ${escapeHtml(formatDate(day.date))}</p><h3>Verify workday</h3></div><span class="status-badge ${tone}">${escapeHtml(review.label)}</span></div>
+      <div class="workday-verify-sources"><div class="workday-verify-source"><span>RECORDED HOURS · PAYROLL</span><strong>${escapeHtml(formatTime(clockStart))}–${escapeHtml(formatTime(clockEnd))}</strong><small>${escapeHtml(formatMinutes(worked))} effective hours${corrections.length ? ` · ${corrections.length} management correction${corrections.length === 1 ? "" : "s"}` : ""}</small></div>${gpsSummary}</div>
+      ${timeCheck}
+      <div class="workday-review-totals"><div><span>Drive time</span><strong>${formatMinutes(drive?.totalMinutes)}</strong></div><div><span>Jobs complete</span><strong>${counts.complete} / ${counts.total}</strong></div><div><span>Final Clock Off</span><strong>${escapeHtml(formatTime(clockEnd))}</strong></div><div><span>Latest correction</span><strong>${corrections.length ? `${escapeHtml(corrections.at(-1).targetAction)} · ${escapeHtml(formatTime(corrections.at(-1).correctedValue))}` : "None"}</strong></div></div>
+      <div class="workday-verify-actions"><button type="button" data-prefill-workday-correction="Hours Worked start">CORRECT START</button><button type="button" data-prefill-workday-correction="Hours Worked end">CORRECT END</button><small>Corrections require a reason and preserve the original record.</small></div>
       ${previous}${controls}
     </article>`;
   }
@@ -4205,6 +4226,25 @@
     form.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  function prefillWorkdayTimeAdjustment(button) {
+    const form = document.getElementById("adminCorrectionForm");
+    const person = people.find(item => item.id === selectedInspectorId);
+    const day = selectedOperationDay(person);
+    if (!form || !day) return;
+    const action = button.dataset.prefillWorkdayCorrection;
+    if (!["Hours Worked start", "Hours Worked end"].includes(action)) return;
+    const clock = effectiveTimeClockFor(person, day);
+    const currentValue = action === "Hours Worked start"
+      ? clock?.effectiveHoursWorkedStartedAt || day.timeClock?.hoursWorkedStartedAt
+      : effectiveClockOut(person, day);
+    form.querySelector("#adminCorrectionAction").value = action;
+    form.querySelector("#adminCorrectionJob").value = "";
+    form.querySelector("#adminCorrectionValue").value = currentValue ? businessLocalDateTimeValue(currentValue) : "";
+    form.querySelector("#adminCorrectionReason").value = "";
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
+    form.querySelector("#adminCorrectionValue").focus({ preventScroll: true });
+  }
+
   function renderInspectorDetail(person) {
     const days = selectedDays(person);
     const day = selectedOperationDay(person, days);
@@ -4248,9 +4288,9 @@
     inspectorDetail.innerHTML = `
       <div class="detail-hero"><div class="detail-person">${avatarHtml(person, "large")}<div><p class="ops-eyebrow">Inspector operations</p><h2>${escapeHtml(person.name || person.email)}</h2>${shared.teamQualification?.(person) ? `<p>${escapeHtml(shared.teamQualification(person))}</p>` : ""}<p>${escapeHtml(person.email || "")} · Viewing ${escapeHtml(day?.date ? formatDate(day.date) : "no recorded day")} · ${escapeHtml(syncAgeLabel(person, day))}</p></div></div><div><span class="status-badge ${statusClass(day?.liveStatus, alerts)}">${escapeHtml(day?.liveStatus || "NOT STARTED")}</span>${operationalContextHtml(person, day)}<button class="detail-back" type="button" data-back-overview>← All inspectors</button></div></div>
       <div class="ops-grid">
+        ${workdayReviewHtml(person, day)}
         <article class="ops-card span-6"><p class="ops-eyebrow">Current job</p><strong class="ops-primary">${escapeHtml(current?.property || "No job currently open")}</strong><p class="ops-sub">${current ? `Scheduled ${formatTime(current.scheduledStart)} · ${escapeHtml(current.arrivalPerformance || "Arrival not recorded")} · ${escapeHtml(String(current.status || "scheduled").replace(/-/g, " "))}` : "The inspector is not inside an active job workflow."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Arrived</span><strong>${escapeHtml(formatTime(currentArrivedAt))}</strong></div><div class="fact"><span>Inspection started</span><strong>${escapeHtml(formatTime(currentStartedAt))}</strong></div><div class="fact"><span>Time at property</span><strong>${timeAtProperty}</strong></div></div></article>
         <article class="ops-card span-6"><p class="ops-eyebrow">Next appointment</p><strong class="ops-primary">${escapeHtml(next?.property || "No remaining appointment")}</strong><p class="ops-sub">${next ? `${formatTime(next.scheduledStart)} · ${escapeHtml(next.arrivalPerformance || "On schedule")}` : "The scheduled job list is complete."}</p><div class="fact-list" style="margin-top:13px"><div class="fact"><span>Estimated drive</span><strong>${current?.departurePlan?.estimatedDriveMinutes ? `${current.departurePlan.estimatedDriveMinutes} min` : "—"}</strong></div><div class="fact"><span>Required departure</span><strong>${escapeHtml(formatTime(current?.departurePlan?.leaveBy))}</strong></div><div class="fact"><span>Schedule status</span><strong>${alerts.some(item => /late|affect next/i.test(item)) ? "ATTENTION REQUIRED" : "ON SCHEDULE"}</strong></div></div></article>
-        ${workdayReviewHtml(person, day)}
         <article class="ops-card"><p class="ops-eyebrow">${currentRange === "week" ? "Hours worked this week" : currentRange === "yesterday" ? "Hours worked yesterday" : "Hours worked today"}</p><strong class="ops-primary">${formatMinutes(hours)}</strong><p class="ops-sub">${currentRange === "week" ? `${days.length} recorded day${days.length === 1 ? "" : "s"} included · selected day ${formatDate(day?.date)}` : `Started ${formatTime(effectiveHoursStart)} · ${clockOut ? `Frozen at ${formatTime(clockOut)}` : activityCanRun ? "Running now" : "Not started"}${timeAdjusted ? " · Management adjusted" : ""}`}</p>${timeAudit.issues.length ? `<div class="alert-item" style="margin-top:12px">${escapeHtml(timeAudit.issues.map(item => item.message).join(" "))}</div>` : ""}</article>
         <article class="ops-card"><p class="ops-eyebrow">Activity window</p><strong class="ops-primary">${formatMinutes(activityMinutes)}</strong><p class="ops-sub">Morning readiness ${formatTime(activityStart)} · End ${formatTime(clockOut)}</p></article>
         <article class="ops-card"><p class="ops-eyebrow">Weekly hours</p><strong class="ops-primary">${formatMinutes(weekly)}</strong><p class="ops-sub">Current Sunday-to-today total${weekly >= 38 * 60 ? " · Review threshold approaching" : ""}. Open a day below to inspect or correct its source times.</p>${weeklyDayBreakdownHtml(person, "hours")}</article>
@@ -5381,6 +5421,11 @@
     const jobCorrection = event.target.closest("[data-prefill-job-correction]");
     if (jobCorrection) {
       prefillJobTimeAdjustment(jobCorrection);
+      return;
+    }
+    const workdayCorrection = event.target.closest("[data-prefill-workday-correction]");
+    if (workdayCorrection) {
+      prefillWorkdayTimeAdjustment(workdayCorrection);
       return;
     }
     const reverseCorrection = event.target.closest("[data-reverse-correction]");
