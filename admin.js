@@ -4880,7 +4880,10 @@
     });
     const width = photo.naturalWidth || photo.width;
     const height = photo.naturalHeight || photo.height;
-    const crop = Math.min(width, height);
+    const portrait = height > width * 1.2;
+    const crop = Math.min(width, height) * (portrait ? 0.55 : 1);
+    const cropX = (width - crop) / 2;
+    const cropY = portrait ? (height - crop) * 0.18 : (height - crop) / 2;
     let size = 360;
     let quality = 0.82;
     for (let attempt = 0; attempt < 4; attempt += 1) {
@@ -4890,8 +4893,8 @@
       if (!context) throw new Error("This browser could not prepare the photo.");
       context.fillStyle = "#fff";
       context.fillRect(0, 0, size, size);
-      // Keep the face in the upper half of a portrait instead of centering on the shirt.
-      context.drawImage(photo, (width - crop) / 2, Math.max(0, (height - crop) * 0.15), crop, crop, 0, 0, size, size);
+      // Portraits get a tighter upper-body crop so the face stays clear in small avatars.
+      context.drawImage(photo, cropX, cropY, crop, crop, 0, 0, size, size);
       const result = canvas.toDataURL("image/jpeg", quality); // Re-encoding removes original EXIF/GPS metadata.
       if (result.length <= 180000) return result;
       size = Math.max(220, size - 45);
