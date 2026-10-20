@@ -5131,10 +5131,10 @@
     if (action === "update") {
       adminOnboardingNext.disabled = true;
       adminOnboardingNext.textContent = "LOADING CURRENT VERSION…";
-      try {
-        const registration = await navigator.serviceWorker?.getRegistration?.();
-        await registration?.update?.();
-      } catch (_) {}
+      // Do not hold the reload behind a stalled service-worker update.
+      Promise.resolve(navigator.serviceWorker?.getRegistration?.())
+        .then(registration => registration?.update?.())
+        .catch(() => {});
       const url = new URL(window.location.href);
       url.searchParams.set("release", String(Date.now()));
       window.location.replace(url.href);
