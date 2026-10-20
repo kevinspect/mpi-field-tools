@@ -1051,7 +1051,7 @@
     }
   </style>
   <link rel="stylesheet" href="./mpi-app-theme.css?build=220">
-  <link rel="stylesheet" href="./mpi-office-workbench.css?build=220-workday-quick-review-3">
+  <link rel="stylesheet" href="./mpi-office-workbench.css?build=220-inline-issue-review-1">
 </head>
 <body class="mpi-office-ui office-workbench">
   <script>if (new URLSearchParams(location.search).get("field") === "1") document.body.classList.add("field-equipment-console");</script>
@@ -1124,7 +1124,7 @@
         <article class="panel stat"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-clock"></use></svg></span><span id="statHoursLabel">Recorded hours today</span></div><strong id="statHours">0:00</strong><small class="stat-note" id="statGpsEstimate" hidden></small></article>
         <button class="panel stat attention-stat" id="adminAttentionToggle" type="button" aria-expanded="false" aria-controls="adminAttentionPanel"><div class="stat-title"><span class="stat-icon"><svg class="app-icon"><use href="#icon-alert"></use></svg></span><span>Needs attention</span></div><strong id="statAlerts">0</strong><span class="attention-stat-hint">View issues</span></button>
       </div>
-          <section class="attention-panel" id="adminAttentionPanel" aria-live="polite" hidden><div class="attention-panel-head"><div><h3>Items requiring attention</h3><p>Open an item to review it. The count clears as each item is resolved.</p></div><button class="secondary compact" id="adminAttentionClose" type="button">Close</button></div><div class="attention-list" id="adminAttentionList"></div></section>
+          <section class="attention-panel" id="adminAttentionPanel" aria-live="polite" hidden><div class="attention-panel-head"><div><h3>Items requiring attention</h3><p>Enter corrected times and approve here. Resolved issues clear after saving; other items have a Details button.</p></div><button class="secondary compact" id="adminAttentionClose" type="button">Close</button></div><div class="attention-list" id="adminAttentionList"></div></section>
           <div class="operations-toolbar">
             <div><p class="ops-eyebrow">Reporting period</p><div class="range-picker" id="adminRangePicker" role="group" aria-label="Reporting period"><button class="active" type="button" data-range="today">Today</button><button type="button" data-range="yesterday">Yesterday</button><button type="button" data-range="week">This week</button></div></div>
             <div class="field"><label for="adminInspectorSelector">Inspector view</label><select id="adminInspectorSelector"><option value="all">All inspectors</option></select></div>
@@ -1300,7 +1300,7 @@
   <script src="./mpi-owner-view.js?build=220"></script>
   <script src="./mpi-office-setup-policy.js?build=220-office-fix-1"></script>
   <script src="./mpi-office-diagnostics.js?build=220"></script>
-  <script src="./admin.js?build=220-workday-quick-review-2"></script>
+  <script src="./admin.js?build=220-inline-issue-review-1"></script>
   <script src="./mpi-equipment-admin.js?build=220"></script>
 </body>
 </html>

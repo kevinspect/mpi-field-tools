@@ -2860,6 +2860,8 @@
       return arrivalReviewHistory(person, eventId).at(-1)?.decision === "approved" ? eventId : "";
     }).filter(Boolean));
     const alerts = dayReview.decision === "approved" ? [] : (Array.isArray(day?.alerts) ? day.alerts.filter(alert => {
+      const job = (day?.jobs || []).find(item => String(alert || "").startsWith(`${item.property || ""}:`));
+      if (job && /no Start Inspection event is recorded/i.test(String(alert || "")) && effectiveActionTime(person, day, "Inspection started", job.id)) return false;
       if (!/arrival location requires management review/i.test(String(alert || ""))) return true;
       return (day?.jobs || []).some(job => {
         const evidence = job?.arrivalLocation;
@@ -2878,21 +2880,47 @@
     if (dayReview.decision !== "approved") workedTimeAuditForDay(person, day).issues.forEach(issue => alerts.push(`${formatDate(day.date)}: ${issue.message}`));
     if (dayReview.decision === "pending") alerts.push("Completed workday hours are awaiting Admin approval.");
     if (dayReview.decision === "questioned") alerts.push("Workday hours have been questioned and require follow-up.");
+    const gpsGap = gpsReviewGapForDay(person, day);
+    if (gpsGap > 15 && !(dayReview.decision === "approved" && dayReview.latest?.gpsGapAcknowledged)) {
+      alerts.push(`GPS matched-task window exceeds recorded hours by ${formatMinutes(gpsGap)}; verify or explain the difference.`);
+    }
     return [...new Set(alerts)].slice(0, 10);
+  }
+
+  function gpsReviewGapForDay(person, day) {
+    if (!day?.date || !operationDayIsClosed(day)) return 0;
+    const gpsDay = (Array.isArray(person?.oneStepGpsReviewDays) ? person.oneStepGpsReviewDays : []).find(item => item?.day === day.date);
+    const window = gpsDayPlanningWindow(gpsDay);
+    return window ? Math.max(0, window.minutes - workedMinutes(person, day)) : 0;
+  }
+
+  function isWorkdayAttentionMessage(message) {
+    return /workday hours|approval|GPS matched-task window|clock record needs review|time correction/i.test(String(message || ""));
+  }
+
+  function missingInspectionStartJob(day, message) {
+    if (!/no Start Inspection event is recorded/i.test(String(message || ""))) return null;
+    return (day?.jobs || []).find(job => String(message || "").startsWith(`${job.property || ""}:`)) || null;
   }
 
   function operationAttentionItems() {
     const workflow = operativePeople().flatMap(person => {
       const day = latestDay(person);
       if (!day) return [];
-      return meaningfulAlerts(person, day).map((message, index) => ({
+      const alerts = meaningfulAlerts(person, day);
+      const workdayMessages = alerts.filter(isWorkdayAttentionMessage);
+      const otherItems = alerts.filter(message => !isWorkdayAttentionMessage(message)).map((message, index) => ({
         id: `workflow-${person.id}-${day.date}-${index}`,
         kind: "workflow",
         personId: person.id,
         date: day.date,
         name: person.name || person.email || "MPI field user",
-        message
+        message,
+        jobId: missingInspectionStartJob(day, message)?.id || ""
       }));
+      return workdayMessages.length
+        ? [{ id: `workday-${person.id}-${day.date}`, kind: "workday", personId: person.id, date: day.date, name: person.name || person.email || "MPI field user", message: workdayMessages.join(" ") }, ...otherItems]
+        : otherItems;
     });
     const safety = unreadSafetyAlerts().map(item => ({
       id: `safety-${item.id}`,
@@ -2911,7 +2939,121 @@
 
   function renderAttentionPanel(items = operationAttentionItems()) {
     if (!attentionList) return;
-    attentionList.innerHTML = items.length ? items.map(item => `<button class="attention-item" type="button" data-attention-kind="${escapeHtml(item.kind)}" data-attention-person="${escapeHtml(item.personId || "")}" data-attention-date="${escapeHtml(item.date || "")}" data-attention-message="${escapeHtml(item.message || "")}"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.message)}</span><b>OPEN ›</b></button>`).join("") : '<div class="clear-item">✓ All attention items are resolved.</div>';
+    const editing = attentionList.querySelector("form:focus-within");
+    const draft = editing ? { id: editing.dataset.attentionIssueId, values: [...editing.elements].filter(input => input.name).map(input => [input.name, input.value]), focus: document.activeElement?.name } : null;
+    attentionList.innerHTML = items.length ? items.map(item => {
+      const person = people.find(entry => entry.id === item.personId);
+      const day = person && operationDays(person).find(entry => entry.date === item.date);
+      const job = day?.jobs?.find(entry => entry.id === item.jobId);
+      const closed = operationDayIsClosed(day);
+      let form = "";
+      if (item.kind === "workday" && person && day) {
+        const clock = effectiveTimeClockFor(person, day);
+        const start = clock?.effectiveHoursWorkedStartedAt || day.timeClock?.hoursWorkedStartedAt || "";
+        const end = effectiveClockOut(person, day);
+        const gap = gpsReviewGapForDay(person, day);
+        form = `<form class="attention-inline-form" data-attention-issue-id="${escapeHtml(item.id)}" data-attention-form="workday"><div class="attention-time-fields"><label>Work started<input type="datetime-local" name="start" value="${escapeHtml(start ? businessLocalDateTimeValue(start) : "")}" required></label><label>Work finished<input type="datetime-local" name="end" value="${escapeHtml(end ? businessLocalDateTimeValue(end) : "")}" required></label></div><label>Correction reason / approval note<textarea name="note" maxlength="500" placeholder="Explain any changed time${gap > 15 ? ` or the ${formatMinutes(gap)} GPS difference` : ""}"></textarea></label><div class="attention-inline-actions"><button class="primary" type="submit" ${closed ? "" : "disabled"}>SAVE TIMES & APPROVE</button><small>${closed ? "If times are unchanged, this approves the recorded day. Changes require a reason and keep an audit trail." : "The inspector must Clock Off before this day can be approved."}</small></div><span class="status" data-attention-status role="status"></span></form>`;
+      } else if (item.kind === "workflow" && job && person && day) {
+        form = `<form class="attention-inline-form" data-attention-issue-id="${escapeHtml(item.id)}" data-attention-form="inspection-start"><div class="attention-time-fields"><label>Actual inspection start<input type="datetime-local" name="start" value="" required></label></div><label>Reason / approval note<textarea name="note" maxlength="500" placeholder="Why this time is being added" required></textarea></label><div class="attention-inline-actions"><button class="primary" type="submit">${closed ? "SAVE TIME & APPROVE WORKDAY" : "SAVE TIME & CLEAR ISSUE"}</button><small>${closed ? "The recorded workday will also be approved if its clock record passes review." : "The day is still open; this fixes the missing time now. Workday approval follows Clock Off."}</small></div><span class="status" data-attention-status role="status"></span></form>`;
+      }
+      return `<article class="attention-action-card" data-attention-kind="${escapeHtml(item.kind)}" data-attention-person="${escapeHtml(item.personId || "")}" data-attention-date="${escapeHtml(item.date || "")}" data-attention-message="${escapeHtml(item.message || "")}" data-attention-job="${escapeHtml(item.jobId || "")}"><div class="attention-item"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.message)}</span><button type="button" data-attention-open>DETAILS ›</button></div>${form}</article>`;
+    }).join("") : '<div class="clear-item">✓ All attention items are resolved.</div>';
+    if (draft) {
+      const form = [...attentionList.querySelectorAll("form[data-attention-issue-id]")].find(entry => entry.dataset.attentionIssueId === draft.id);
+      if (form) {
+        draft.values.forEach(([name, value]) => { const input = [...form.elements].find(entry => entry.name === name); if (input) input.value = value; });
+        [...form.elements].find(entry => entry.name === draft.focus)?.focus({ preventScroll: true });
+      }
+    }
+  }
+
+  function inlineAttentionCorrection(person, day, action, value, reason, job = null) {
+    const original = (day.activity || []).find(item => item.action === action && (!job || eventJobId(item) === job.id));
+    const sessions = Array.isArray(day.timeClock?.sessions) ? day.timeClock.sessions : [];
+    const originalValue = action === "Hours Worked start"
+      ? sessions.find(item => item.clockedInAt)?.clockedInAt || day.timeClock?.hoursWorkedStartedAt || ""
+      : action === "Hours Worked end"
+        ? sessions.slice().reverse().find(item => item.clockedOutAt)?.clockedOutAt || ""
+        : original?.timestamp || rawActionTime(day, action, job?.id) || "";
+    return {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      date: day.date, targetAction: action, targetEventId: original?.id || "", jobId: job?.id || "",
+      property: job?.property || original?.property || "", originalValue,
+      correctedValue: value, reason, correctedAt: new Date().toISOString(),
+      correctedById: currentUser.uid, correctedByEmail: shared.normalizeEmail(currentUser.email),
+      correctedByName: currentProfile.name || currentUser.displayName || "MPI Admin"
+    };
+  }
+
+  function inlineAttentionReview(person, day, note, gpsGapAcknowledged = false) {
+    const counts = jobCounts(day);
+    const drive = driveTimeForDay(day, person);
+    return {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      date: day.date, revision: workdayReviewRevision(person, day), decision: "approved", note,
+      gpsGapAcknowledged, effectiveWorkedMinutes: workedMinutes(person, day),
+      driveMinutes: Number(drive?.totalMinutes) || 0, completedJobs: counts.complete,
+      totalJobs: counts.total, effectiveClockedOutAt: effectiveClockOut(person, day),
+      reviewedAt: new Date().toISOString(), reviewedById: currentUser.uid,
+      reviewedByEmail: shared.normalizeEmail(currentUser.email),
+      reviewedByName: currentProfile.name || currentUser.displayName || "MPI Admin"
+    };
+  }
+
+  async function saveInlineAttention(form) {
+    const card = form.closest("[data-attention-kind]");
+    const person = people.find(item => item.id === card?.dataset.attentionPerson);
+    const day = person && operationDays(person).find(item => item.date === card.dataset.attentionDate);
+    const status = form.querySelector("[data-attention-status]");
+    const button = form.querySelector('button[type="submit"]');
+    if (!person || !day || !status || !button || !shared.isAdminRole(currentProfile)) return;
+    const fail = message => { status.textContent = message; status.className = "status error"; };
+    const note = form.elements.namedItem("note")?.value.trim().slice(0, 500) || "";
+    const startInput = form.elements.namedItem("start")?.value || "";
+    const start = startInput ? businessLocalDateTimeToIso(startInput) : "";
+    const corrections = [];
+    if (form.dataset.attentionForm === "inspection-start") {
+      const job = day.jobs?.find(item => item.id === card.dataset.attentionJob);
+      if (!job || !start || !note || !startInput.startsWith(day.date)) { fail("Enter the actual inspection start on this job's date and a reason."); return; }
+      const arrival = asDate(effectiveActionTime(person, day, "Arrived", job.id));
+      const completion = asDate(effectiveActionTime(person, day, "Final job completion", job.id));
+      if ((arrival && asDate(start) < arrival) || (completion && asDate(start) > completion)) { fail("The inspection start must be between arrival and job completion."); return; }
+      corrections.push(inlineAttentionCorrection(person, day, "Inspection started", start, note, job));
+    } else if (form.dataset.attentionForm === "workday") {
+      const endInput = form.elements.namedItem("end")?.value || "";
+      const end = endInput ? businessLocalDateTimeToIso(endInput) : "";
+      if (!operationDayIsClosed(day)) { fail("The inspector must Clock Off before approval."); return; }
+      if (!start || !end || !startInput.startsWith(day.date) || ![day.date, shiftDateKey(day.date, 1)].some(date => endInput.startsWith(date)) || asDate(end) <= asDate(start) || asDate(end) - asDate(start) > 18 * 3600000) { fail("Enter a valid start and finish on this workday (18 hours maximum)."); return; }
+      const clock = effectiveTimeClockFor(person, day);
+      const priorStart = clock?.effectiveHoursWorkedStartedAt || day.timeClock?.hoursWorkedStartedAt || "";
+      const priorEnd = effectiveClockOut(person, day);
+      if (!asDate(priorStart) || Math.abs(asDate(priorStart) - asDate(start)) >= 60000) corrections.push(inlineAttentionCorrection(person, day, "Hours Worked start", start, note));
+      if (!asDate(priorEnd) || Math.abs(asDate(priorEnd) - asDate(end)) >= 60000) corrections.push(inlineAttentionCorrection(person, day, "Hours Worked end", end, note));
+      if (corrections.length && !note) { fail("Add a reason for the time correction before approving."); return; }
+    } else return;
+    const preview = { ...person, adminCorrections: [...(person.adminCorrections || []), ...corrections] };
+    const willApprove = operationDayIsClosed(day);
+    if (willApprove && workedTimeAuditForDay(preview, day).issues.length) { fail("The clock record still needs review. Check the start and finish times before approving."); return; }
+    const gpsGap = willApprove ? gpsReviewGapForDay(preview, day) : 0;
+    if (willApprove && gpsGap > 15 && !note) { fail(`Explain the ${formatMinutes(gpsGap)} GPS difference before approving.`); return; }
+    const review = willApprove ? inlineAttentionReview(preview, day, note, gpsGap > 15) : null;
+    const updates = { operationsUpdatedAt: shared.serverTimestamp() };
+    if (corrections.length) updates.adminCorrections = shared.arrayUnion(...corrections);
+    if (review) { updates.workdayReviews = shared.arrayUnion(review); updates.workdayReviewsUpdatedAt = shared.serverTimestamp(); }
+    button.disabled = true;
+    status.textContent = "Saving and checking the issue…";
+    status.className = "status";
+    try {
+      await shared.db.collection("users").doc(person.id).update(updates);
+      if (corrections.length) person.adminCorrections = preview.adminCorrections;
+      if (review) person.workdayReviews = [...(person.workdayReviews || []), review];
+      renderOperations();
+      const remains = operationAttentionItems().some(item => item.kind === card.dataset.attentionKind && item.personId === person.id && item.date === day.date && (!item.jobId || item.jobId === card.dataset.attentionJob));
+      if (remains) { status.textContent = "Saved. Another check is still needed for this day."; status.className = "status success"; }
+    } catch (error) {
+      button.disabled = false;
+      fail(error.message || "The issue could not be saved.");
+    }
   }
 
   function showView(name) {
@@ -4125,7 +4267,7 @@
     const gpsGap = gpsWindow ? Math.max(0, gpsWindow.minutes - worked) : 0;
     const corrections = correctionsFor(person, day);
     const timeIssues = workedTimeAuditForDay(person, day).issues;
-    const needsTimeCheck = Boolean(gpsWindow && operationDayIsClosed(day) && gpsGap > 15);
+    const needsTimeCheck = Boolean(gpsWindow && operationDayIsClosed(day) && gpsGap > 15 && !(review.decision === "approved" && latest?.gpsGapAcknowledged));
     const gpsSummary = gpsWindow
       ? `<div class="workday-verify-source"><span>TRUCK + JOB STOPS · CROSS-CHECK</span><strong>${escapeHtml(formatTime(gpsDay.firstJobArrivalCandidate))}–${escapeHtml(formatTime(gpsWindow.departure))}</strong><small>${escapeHtml(formatMinutes(gpsWindow.minutes))} matched-task window · ${Math.max(0, Number(gpsDay.matchedJobStops) || 0)}/${Math.max(0, Number(gpsDay.assignedJobs) || 0)} jobs matched${gpsWindow.labName ? ` · ends at ${escapeHtml(gpsWindow.labName)}` : ""}</small></div>`
       : `<div class="workday-verify-source"><span>TRUCK + JOB STOPS · CROSS-CHECK</span><strong>Not available</strong><small>${gpsDay ? `${Math.max(0, Number(gpsDay.matchedJobStops) || 0)}/${Math.max(0, Number(gpsDay.assignedJobs) || 0)} jobs matched; no complete window` : "No GPS job-stop comparison for this day"}</small></div>`;
@@ -4169,6 +4311,12 @@
       status.className = "status error";
       return;
     }
+    const gpsGap = gpsReviewGapForDay(person, day);
+    if (decision === "approved" && gpsGap > 15 && !note) {
+      status.textContent = `Explain the ${formatMinutes(gpsGap)} GPS difference before approving.`;
+      status.className = "status error";
+      return;
+    }
     button.disabled = true;
     const counts = jobCounts(day);
     const drive = driveTimeForDay(day, person);
@@ -4178,6 +4326,7 @@
       revision: workdayReviewRevision(person, day),
       decision,
       note,
+      gpsGapAcknowledged: decision === "approved" && gpsGap > 15,
       effectiveWorkedMinutes: workedMinutes(person, day),
       driveMinutes: Number(drive?.totalMinutes) || 0,
       completedJobs: counts.complete,
@@ -5069,6 +5218,7 @@
     attentionToggle?.focus();
   });
   attentionList?.addEventListener("click", event => {
+    if (!event.target.closest("[data-attention-open]")) return;
     const item = event.target.closest("[data-attention-kind]");
     if (!item) return;
     if (item.dataset.attentionKind === "safety") {
@@ -5096,6 +5246,12 @@
           : inspectorDetail?.querySelector(".alert-list");
       (target || inspectorDetail)?.scrollIntoView({ behavior: "smooth", block: "center" });
     });
+  });
+  attentionList?.addEventListener("submit", event => {
+    const form = event.target.closest("[data-attention-form]");
+    if (!form) return;
+    event.preventDefault();
+    saveInlineAttention(form);
   });
   dashboard.addEventListener("change", event => {
     const input = event.target.closest("[data-chat-files]");
