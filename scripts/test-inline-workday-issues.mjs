@@ -17,9 +17,22 @@ const context = {
   effectiveClockOut: () => "2026-10-19T21:00:00Z", gpsReviewGapForDay: () => 60,
   businessLocalDateTimeValue: value => value.replace("Z", "").slice(0, 16),
   formatMinutes: value => `${value} min`, escapeHtml,
-  document: { activeElement: null }
+  document: { activeElement: null }, currentUser: { uid: "office-1", email: "office@example.com" },
+  currentProfile: { name: "Office" },
+  shared: {
+    isAdminRole: () => true, normalizeEmail: value => value,
+    arrayUnion: (...values) => ({ values }), serverTimestamp: () => "server-time",
+    db: { collection: () => ({ doc: () => ({ update: async updates => { context.savedUpdates = updates; } }) }) }
+  },
+  asDate: value => value ? new Date(value) : null,
+  businessLocalDateTimeToIso: value => new Date(Date.parse(`${value}:00Z`) + 4 * 3600000).toISOString(),
+  shiftDateKey: () => "2026-10-20",
+  workedTimeAuditForDay: () => ({ issues: [] }),
+  workdayReviewRevision: () => "revision-2", workedMinutes: () => 360,
+  jobCounts: () => ({ complete: 1, total: 1 }), driveTimeForDay: () => ({ totalMinutes: 0 }),
+  renderOperations: () => { context.rerendered = true; }, operationAttentionItems: () => []
 };
-runInNewContext(`${source.slice(start, end)}\nthis.render = renderAttentionPanel;`, context);
+runInNewContext(`${source.slice(start, end)}\nthis.render = renderAttentionPanel; this.save = saveInlineAttention;`, context);
 context.render([
   { id: "workday-1", kind: "workday", personId: person.id, date: day.date, name: "Cory", message: "GPS difference" },
   { id: "job-1", kind: "workflow", personId: person.id, date: day.date, jobId: "job-1", name: "Cory", message: "No Start Inspection event" }
@@ -36,4 +49,30 @@ assert.match(source, /gpsGapAcknowledged/);
 assert.match(source, /adminCorrections = shared\.arrayUnion/);
 assert.match(source, /workdayReviews = shared\.arrayUnion/);
 
-console.log("PASS issues list offers inline time correction and auditable approval without opening inspector detail");
+const status = { textContent: "", className: "" };
+const button = { disabled: false };
+const card = { dataset: { attentionKind: "workday", attentionPerson: person.id, attentionDate: day.date } };
+const fields = { start: { value: "2026-10-19T11:00" }, end: { value: "2026-10-19T17:00" }, note: { value: "GPS also included an unrelated stop." } };
+const form = {
+  dataset: { attentionForm: "workday" },
+  elements: { namedItem: name => fields[name] },
+  closest: () => card,
+  querySelector: selector => selector === "[data-attention-status]" ? status : button
+};
+await context.save(form);
+assert.equal(context.savedUpdates.workdayReviews.values[0].decision, "approved");
+assert.equal(context.savedUpdates.workdayReviews.values[0].gpsGapAcknowledged, true);
+assert.equal(context.savedUpdates.adminCorrections, undefined, "unchanged times must not create corrections");
+assert.equal(person.workdayReviews.length, 1);
+assert.equal(context.rerendered, true);
+
+fields.start.value = "2026-10-19T10:00";
+fields.note.value = "Corrected against the inspected job log.";
+button.disabled = false;
+await context.save(form);
+assert.equal(context.savedUpdates.adminCorrections.values.length, 1);
+assert.equal(context.savedUpdates.adminCorrections.values[0].targetAction, "Hours Worked start");
+assert.equal(context.savedUpdates.workdayReviews.values[0].decision, "approved");
+assert.equal(person.adminCorrections.length, 1);
+
+console.log("PASS issues list offers inline correction and saves auditable approval without opening inspector detail");
