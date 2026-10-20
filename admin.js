@@ -1553,6 +1553,7 @@
   function frameAllLiveLocations(map, plotted = liveLocationValues().filter(item => item.location)) {
     if (!map) return;
     liveLocationMapMode = "all";
+    map.stop();
     const truck = coryTruckPoint();
     const locations = plotted.map(item => [item.location.latitude, item.location.longitude]);
     if (truck) locations.push([truck.latitude, truck.longitude]);
@@ -1674,7 +1675,7 @@
     window.setTimeout(() => {
       map.invalidateSize();
       if (frameAfterResize && liveLocationMapMode === "all" && !liveLocationRouteVisible) frameAllLiveLocations(map, plotted);
-    }, 0);
+    }, 400);
   }
 
   function hideHistoricalRoute({ keepSelection = true } = {}) {
