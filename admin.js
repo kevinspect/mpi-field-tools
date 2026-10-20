@@ -4132,7 +4132,7 @@
     const timeCheck = timeIssues.length
       ? `<p class="workday-verify-alert">Clock record needs review: ${escapeHtml(timeIssues.map(item => item.message).join(" "))}</p>`
       : needsTimeCheck
-        ? `<p class="workday-verify-alert">Check the ${escapeHtml(formatMinutes(gpsGap))} gap: the truck's matched-job window is longer than recorded hours. Confirm the first arrival and final task before approving.</p>`
+        ? `<p class="workday-verify-alert">${review.decision === "approved" ? "Previously approved, but please recheck" : "Check"} the ${escapeHtml(formatMinutes(gpsGap))} gap: the truck's matched-job window is longer than recorded hours. Confirm the first arrival and final task${review.decision === "approved" ? "; correct and re-approve if needed." : " before approving."}</p>`
         : `<p class="workday-verify-note">${gpsWindow ? "GPS is a cross-check, not payroll time. Travel and other work may extend the recorded day." : "Review the clock record and jobs before approving. GPS cannot verify this day."}</p>`;
     const tone = review.decision === "approved" ? "neutral" : review.decision === "questioned" ? "alert" : review.decision === "pending" ? "waiting" : "";
     const previous = latest
@@ -4142,7 +4142,7 @@
       <label class="field">Approval or question note<textarea data-workday-review-note maxlength="500" placeholder="Optional for approval. Required when questioning the day."></textarea></label>
       <div class="quick-messages"><button type="button" data-workday-review="approved">APPROVE WORKDAY</button><button type="button" data-workday-review="questioned">QUESTION WORKDAY</button></div>
       <span class="status" data-workday-review-status>Review includes the effective Hours Worked, Drive Time, unique jobs and final Clock Off shown here.</span>`;
-    return `<article class="ops-card full workday-review-card ${escapeHtml(review.decision)}" data-workday-review-revision="${escapeHtml(review.revision)}">
+    return `<article class="ops-card full workday-review-card ${escapeHtml(review.decision)}${timeIssues.length || needsTimeCheck ? " needs-time-check" : ""}" data-workday-review-revision="${escapeHtml(review.revision)}">
       <div class="workday-review-heading"><div><p class="ops-eyebrow">One-place daily review · ${escapeHtml(formatDate(day.date))}</p><h3>Verify workday</h3></div><span class="status-badge ${tone}">${escapeHtml(review.label)}</span></div>
       <div class="workday-verify-sources"><div class="workday-verify-source"><span>RECORDED HOURS · PAYROLL</span><strong>${escapeHtml(formatTime(clockStart))}–${escapeHtml(formatTime(clockEnd))}</strong><small>${escapeHtml(formatMinutes(worked))} effective hours${corrections.length ? ` · ${corrections.length} management correction${corrections.length === 1 ? "" : "s"}` : ""}</small></div>${gpsSummary}</div>
       ${timeCheck}

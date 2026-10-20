@@ -34,12 +34,17 @@ assert.match(markup, /Verify workday/);
 assert.match(markup, /RECORDED HOURS · PAYROLL/);
 assert.match(markup, /TRUCK \+ JOB STOPS · CROSS-CHECK/);
 assert.match(markup, /Check the 387 min gap/);
+assert.match(markup, /needs-time-check/);
 assert.match(markup, /1 management correction/);
 assert.match(markup, /data-prefill-workday-correction="Hours Worked start"/);
 assert.match(markup, /data-prefill-workday-correction="Hours Worked end"/);
 assert.match(markup, /APPROVE WORKDAY/);
 assert.match(markup, /QUESTION WORKDAY/);
 assert.doesNotMatch(markup, /automatically approved/i);
+
+context.workdayReviewState = () => ({ decision: "approved", label: "APPROVED", revision: "revision-1", latest: null });
+assert.match(context.render(person, day), /Previously approved, but please recheck the 387 min gap/);
+context.workdayReviewState = () => ({ decision: "pending", label: "AWAITING APPROVAL", revision: "revision-1", latest: null });
 
 context.gpsDayPlanningWindow = () => null;
 assert.match(context.render(person, day), /no complete window/);
