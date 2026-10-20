@@ -158,6 +158,7 @@
   let currentUser = null;
   let currentProfile = null;
   let people = [];
+  const personPhotoStatus = new Map();
   let updates = [];
   let currentRange = "today";
   let currentAdminView = "operations";
@@ -215,6 +216,7 @@
   let coryJobRouteController = null;
   let coryJobRouteGeneration = 0;
   let coryJobRouteLast = null;
+  let coryHomeStartCache = null;
   let coryTruckInViewport = false;
   let coryTruckSubscriptionReady = false;
   let coryTruckRefreshTimer = 0;
@@ -1315,6 +1317,17 @@
     return index > 0 ? ordered[index - 1] : null;
   }
 
+  async function coryHomeStart(person) {
+    // Use the office-approved home/end address for future dates. A truck parked
+    // there today is not a reliable starting coordinate after it moves away.
+    const address = String(person?.approvedEndAddress || "").trim();
+    if (!address) return null;
+    if (coryHomeStartCache?.address === address) return coryHomeStartCache.coordinates;
+    const coordinates = await censusGeocodeScheduleAddress(address);
+    coryHomeStartCache = { address, coordinates };
+    return coordinates;
+  }
+
   function coryDwellStatus(stop, point, age) {
     const visit = coryVisitFor(stop);
     if (!visit?.arrivedAt) return null;
@@ -1390,10 +1403,17 @@
     const previous = coryPreviousStop(stop);
     const previousVisit = previous && coryVisitFor(previous);
     const departure = asDate(previousVisit?.departedAt);
-    const planned = Boolean(previous && !departure);
-    if (date !== dateKey() && !planned) {
+    const future = date > dateKey();
+    const homeStart = future && !previous;
+    const planned = homeStart || Boolean(previous && (future || !departure));
+    if (date < dateKey() && !planned) {
       clearCoryJobRoute({ hideEstimate: false });
-      showCoryJobEta(`<strong>Live truck ETA is for today only</strong><span>Select a later job to compare the planned drive between appointments.</span>`, true);
+      showCoryJobEta(`<strong>No live ETA for a past date</strong><span>Select a future date for a home-to-first-job or job-to-job plan.</span>`, true);
+      return;
+    }
+    if (homeStart && !String(stop.person?.approvedEndAddress || "").trim()) {
+      clearCoryJobRoute({ hideEstimate: false });
+      showCoryJobEta(`<strong>Home-to-first-job plan needs Cory's approved home address</strong><span>Add it in Team before relying on a future-day drive estimate.</span>`, true);
       return;
     }
     if (!planned && (!point || age.tone === "stale")) {
@@ -1401,13 +1421,16 @@
       showCoryJobEta(`<strong>Live truck ETA paused</strong><span>${point ? "Cory's truck GPS is stale" : "Waiting for Cory's truck GPS"}. The office will recalculate when a fresh position arrives.</span>`, true);
       return;
     }
-    const origin = planned ? previous.coordinates : point;
-    const mode = planned ? "planned" : "live";
-    const context = planned
+    let origin = planned ? previous?.coordinates : point;
+    const mode = homeStart ? "home-plan" : planned ? "job-plan" : "live";
+    const context = homeStart
+      ? `Cory's approved home start → job ${stop.index + 1}; this is a future schedule plan, not his live truck position.`
+      : planned
       ? `Job ${previous.index + 1} → job ${stop.index + 1}; departure from the previous job is not yet GPS-confirmed.`
       : departure ? `Departed previous job around ${formatTime(departure)} (GPS-confirmed).` : "Drive from Cory's current truck location.";
     const jobKey = selectedMapJobValue;
-    const pointKey = `${mode}:${origin.latitude}:${origin.longitude}:${planned ? "" : point.gpsAt.toISOString()}`;
+    const pointKey = homeStart ? `${mode}:${String(stop.person.approvedEndAddress).trim()}`
+      : `${mode}:${origin.latitude}:${origin.longitude}:${planned ? "" : point.gpsAt.toISOString()}`;
     if (!force && coryJobRouteLast?.jobKey === jobKey && coryJobRouteLast.pointKey === pointKey && !coryJobRouteLast.failed) return;
     if (!planned && !force && coryJobRouteLast?.jobKey === jobKey && coryJobRouteLast.mode === mode && Date.now() - coryJobRouteLast.calculatedAt < 60000) {
       // Keep the road estimate bounded to one request per minute per office view.
@@ -1424,36 +1447,49 @@
     const controller = new AbortController();
     coryJobRouteController = controller;
     const timeout = window.setTimeout(() => controller.abort(), 14000);
-    showCoryJobEta(`<strong>Calculating ${planned ? "planned job-to-job" : "live truck-to-job"} drive…</strong><small>${escapeHtml(context)}</small>`);
+    showCoryJobEta(`<strong>Calculating ${homeStart ? "future home-to-first-job" : planned ? "planned job-to-job" : "live truck-to-job"} drive…</strong><small>${escapeHtml(context)}</small>`);
     try {
+      if (homeStart) {
+        origin = await coryHomeStart(stop.person);
+        if (generation !== coryJobRouteGeneration || selectedMapJobValue !== jobKey) return;
+        if (!origin) throw new Error("Cory's approved home address could not be located.");
+      }
       const travel = await window.MPI_PLANNING.roadTravel(origin, stop.coordinates, controller.signal);
       if (generation !== coryJobRouteGeneration || selectedMapJobValue !== jobKey) return;
       if (!Array.isArray(travel.geometry) || travel.geometry.length < 2 || !Number.isFinite(travel.minutes)) throw new Error("Road route unavailable");
       coryJobRouteLayer.clearLayers();
       const line = window.L.polyline(travel.geometry.map(([longitude, latitude]) => [latitude, longitude]), {
         color: "#146b80", weight: 6, opacity: .9, lineJoin: "round"
-      }).bindPopup(`<strong>${planned ? "Previous job" : "Cory's truck"} → selected job</strong><br>${escapeHtml(travel.miles.toFixed(1))} miles · about ${escapeHtml(travel.minutes)} minutes<br>Road estimate; no live traffic`).addTo(coryJobRouteLayer);
+      }).bindPopup(`<strong>${homeStart ? "Cory's approved home" : planned ? "Previous job" : "Cory's truck"} → selected job</strong><br>${escapeHtml(travel.miles.toFixed(1))} miles · about ${escapeHtml(travel.minutes)} minutes<br>Road estimate; no live traffic`).addTo(coryJobRouteLayer);
+      if (homeStart) window.L.circleMarker([origin.latitude, origin.longitude], {
+        radius: 8, color: "#fff", weight: 2, fillColor: "#146b80", fillOpacity: 1
+      }).bindPopup("Cory's approved home start · future route planning only").addTo(coryJobRouteLayer);
       coryJobRouteLast = { jobKey, pointKey, mode, origin, calculatedAt: Date.now(), line, connector: null };
       const scheduledDeparture = asDate(previous?.job?.scheduledEnd);
+      const scheduledStart = asDate(stop.job?.scheduledStart);
+      const leaveHomeBy = homeStart && scheduledStart ? new Date(scheduledStart.getTime() - travel.minutes * 60000) : null;
       const arrival = planned ? scheduledDeparture && new Date(scheduledDeparture.getTime() + travel.minutes * 60000)
         : new Date(Date.now() + travel.minutes * 60000);
-      const timing = planned
+      const timing = homeStart
+        ? leaveHomeBy ? `To reach job 1 by its scheduled ${formatTime(scheduledStart)} start, leave home by about ${formatTime(leaveHomeBy)}. Actual arrival depends on departure and traffic.`
+          : "Add a scheduled start time to calculate when Cory should leave home."
+        : planned
         ? arrival ? `Scheduled-plan arrival around ${formatTime(arrival)} if departing job ${previous.index + 1} at its scheduled finish; ${context}`
-          : `Arrival time awaits a confirmed departure from job ${previous.index + 1}; ${context}`
+          : `An arrival time needs job ${previous.index + 1}'s scheduled finish; ${context}`
         : `Current ETA around ${formatTime(arrival)}. ${context}`;
-      showCoryJobEta(`<strong>${planned ? "Planned drive" : "Live truck route"}: about ${escapeHtml(travel.minutes)} min · ${escapeHtml(travel.miles.toFixed(1))} miles</strong><span>${escapeHtml(timing)}</span><small>Road estimate without live traffic${planned ? "; not an actual departure" : ` · truck GPS ${escapeHtml(formatTime(point.gpsAt))}${age.tone === "delayed" ? " · delayed" : ""}`}. Not approved work time.</small>`);
+      showCoryJobEta(`<strong>${homeStart ? "Future home → first job" : planned ? "Planned job-to-job drive" : "Live truck route"}: about ${escapeHtml(travel.minutes)} min · ${escapeHtml(travel.miles.toFixed(1))} miles</strong><span>${escapeHtml(timing)}</span><small>Road estimate without live traffic${planned ? "; not an actual departure or live ETA" : ` · truck GPS ${escapeHtml(formatTime(point.gpsAt))}${age.tone === "delayed" ? " · delayed" : ""}`}. Not approved work time.</small>`);
       if (force && liveLocationMap) liveLocationMap.fitBounds([
         [origin.latitude, origin.longitude], [stop.coordinates.latitude, stop.coordinates.longitude],
-        ...(!planned && point ? [] : point ? [[point.latitude, point.longitude]] : [])
+        ...(!future && planned && point ? [[point.latitude, point.longitude]] : [])
       ], { padding: [54, 54], maxZoom: 13 });
     } catch (error) {
       if (generation !== coryJobRouteGeneration || selectedMapJobValue !== jobKey) return;
       coryJobRouteLayer.clearLayers();
-      const line = window.L.polyline([[origin.latitude, origin.longitude], [stop.coordinates.latitude, stop.coordinates.longitude]], {
+      const line = origin ? window.L.polyline([[origin.latitude, origin.longitude], [stop.coordinates.latitude, stop.coordinates.longitude]], {
         color: "#a66a0a", weight: 4, opacity: .85, dashArray: "7 7"
-      }).addTo(coryJobRouteLayer);
+      }).addTo(coryJobRouteLayer) : null;
       coryJobRouteLast = { jobKey, pointKey, mode, origin, calculatedAt: Date.now(), line, connector: null, failed: true };
-      showCoryJobEta(`<strong>Road ETA temporarily unavailable</strong><span>Dashed line is a direct connection, not a driving route.</span><small>${escapeHtml(context)} No appointment or time record changed.</small>`, true);
+      showCoryJobEta(`<strong>${homeStart && !origin ? "Home start could not be located" : "Road ETA temporarily unavailable"}</strong><span>${origin ? "Dashed line is a direct connection, not a driving route." : "Confirm Cory's approved home/end address in Team."}</span><small>${escapeHtml(context)} No appointment or time record changed.</small>`, true);
     } finally {
       window.clearTimeout(timeout);
       if (coryJobRouteController === controller) coryJobRouteController = null;
@@ -1944,7 +1980,9 @@
     const addresses = jobs.map(scheduleAddress).filter(Boolean);
     if (!addresses.length) return "";
     const current = liveLocationRecord(person);
-    const origin = current ? `${current.latitude},${current.longitude}` : String(person?.approvedEndAddress || addresses[0]);
+    const futureCoryHome = (liveRouteDate?.value || dateKey()) > dateKey() && /^cor[ey] leese$/i.test(canonicalTeamName(person))
+      ? String(person?.approvedEndAddress || "").trim() : "";
+    const origin = futureCoryHome || (current ? `${current.latitude},${current.longitude}` : String(person?.approvedEndAddress || addresses[0]));
     const destination = addresses.at(-1);
     const waypoints = addresses.length > 1 ? addresses.slice(0, -1).join("|") : "";
     return `https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}${waypoints ? `&waypoints=${encodeURIComponent(waypoints)}` : ""}`;
@@ -3096,7 +3134,7 @@
     const openId = peopleList.querySelector('.person-card[open]')?.dataset.personId || '';
     const activeField = peopleList.contains(document.activeElement) ? document.activeElement : null;
     const activePersonId = activeField?.closest('[data-person-id]')?.dataset.personId;
-    const activeAttribute = activeField ? [...activeField.attributes].find(item => item.name.startsWith('data-person-') && item.name !== 'data-person-id')?.name : '';
+    const activeAttribute = activeField && activeField.type !== 'file' ? [...activeField.attributes].find(item => item.name.startsWith('data-person-') && item.name !== 'data-person-id')?.name : '';
     const activeValue = activeField?.type === 'checkbox' ? activeField.checked : activeField?.value;
     const selection = activeField && typeof activeField.selectionStart === 'number' ? [activeField.selectionStart,activeField.selectionEnd] : null;
     const expandedContactId = activeField?.closest('.person-profile-details[open]') ? activePersonId : '';
@@ -3117,6 +3155,7 @@
           <label class="check" style="padding:8px"><input data-person-active type="checkbox" ${person.active !== false ? "checked" : ""} ${person.role === "owner" ? "disabled" : ""}><span>Active</span></label>
         </div>
         <details class="person-profile-details" ${person.id === expandedContactId ? "open" : ""}><summary>Contact, emergency &amp; professional profile</summary><div class="person-controls"><input data-person-job-title aria-label="Job title for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.jobTitle || "")}" maxlength="80" placeholder="Job title" ${person.role === "owner" ? "disabled" : ""}><input data-person-personal-address aria-label="Personal address for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.personalAddress || "")}" maxlength="180" placeholder="Personal address" ${person.role === "owner" ? "disabled" : ""}><input data-person-emergency-name aria-label="Emergency contact for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.emergencyContactName || "")}" maxlength="80" placeholder="Emergency contact" ${person.role === "owner" ? "disabled" : ""}><input data-person-emergency-phone aria-label="Emergency phone for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.emergencyContactPhone || "")}" maxlength="30" placeholder="Emergency phone" ${person.role === "owner" ? "disabled" : ""}><input data-person-transcript-url aria-label="InterNACHI record link for ${escapeHtml(person.name || person.email)}" value="${escapeHtml(person.nachiTranscriptUrl || "")}" maxlength="500" placeholder="Official InterNACHI profile / credential link" ${person.role === "owner" ? "disabled" : ""}>${person.nachiTranscriptUrl ? `<a class="secondary" href="${escapeHtml(person.nachiTranscriptUrl)}" target="_blank" rel="noopener">OPEN OFFICIAL RECORD</a>` : ""}</div></details>
+        ${person.role !== "owner" ? `<div class="person-photo-control"><label>Profile photo for ${escapeHtml(canonicalTeamName(person))}<input type="file" data-person-photo accept="image/*" aria-label="Change profile photo for ${escapeHtml(canonicalTeamName(person))}"></label><span class="status" data-person-photo-status role="status">${escapeHtml(personPhotoStatus.get(person.id) || "Photo is visible only to signed-in MPI staff.")}</span></div>` : ""}
         ${person.role === "subcontractor" ? `<div class="subcontractor-access-actions"><button class="secondary" type="button" data-copy-subcontractor-link="${escapeHtml(person.id)}">COPY APP ACTIVATION LINK</button><button class="danger" type="button" data-revoke-subcontractor="${escapeHtml(person.id)}">REVOKE SUBCONTRACTOR ACCESS</button><span class="status" data-subcontractor-access-status></span></div>` : ""}
         </div>
       </details>`;
@@ -4802,6 +4841,7 @@
   }
 
   async function updatePerson(event) {
+    if (event.target.matches?.("[data-person-photo]")) return;
     const card = event.target.closest("[data-person-id]");
     if (!card || !shared.isAdminRole(currentProfile)) return;
     const person = people.find(item => item.id === card.dataset.personId);
@@ -4822,6 +4862,71 @@
       await shared.db.collection("users").doc(person.id).set({ role, active, inspectorId, phone, approvedEndAddress, jobTitle, personalAddress, emergencyContactName, emergencyContactPhone, nachiTranscriptUrl, updatedAt: shared.serverTimestamp(), updatedBy: currentUser.uid }, { merge: true });
     } catch (error) {
       authStatus.textContent = error.message || "The account change could not be saved.";
+    }
+  }
+
+  async function preparedStaffPhoto(file) {
+    if (!file?.type?.startsWith("image/")) throw new Error("Choose an image file.");
+    if (file.size > 12 * 1024 * 1024) throw new Error("Choose a photo smaller than 12 MB.");
+    const source = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("That photo could not be read."));
+      reader.readAsDataURL(file);
+    });
+    const photo = await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("That photo could not be opened."));
+      image.src = source;
+    });
+    const width = photo.naturalWidth || photo.width;
+    const height = photo.naturalHeight || photo.height;
+    const crop = Math.min(width, height);
+    let size = 360;
+    let quality = 0.82;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = size;
+      const context = canvas.getContext("2d", { alpha: false });
+      if (!context) throw new Error("This browser could not prepare the photo.");
+      context.fillStyle = "#fff";
+      context.fillRect(0, 0, size, size);
+      // Keep the face in the upper half of a portrait instead of centering on the shirt.
+      context.drawImage(photo, (width - crop) / 2, Math.max(0, (height - crop) * 0.15), crop, crop, 0, 0, size, size);
+      const result = canvas.toDataURL("image/jpeg", quality); // Re-encoding removes original EXIF/GPS metadata.
+      if (result.length <= 180000) return result;
+      size = Math.max(220, size - 45);
+      quality = Math.max(0.62, quality - 0.07);
+    }
+    throw new Error("That photo could not be made small enough. Try another photo.");
+  }
+
+  async function updatePersonPhoto(input) {
+    const card = input.closest("[data-person-id]");
+    const person = people.find(item => item.id === card?.dataset.personId);
+    const file = input.files?.[0];
+    if (!file || !person || person.role === "owner" || !shared.isAdminRole(currentProfile)) return;
+    const status = message => {
+      personPhotoStatus.set(person.id, message);
+      const field = card?.querySelector("[data-person-photo-status]");
+      if (field) field.textContent = message;
+    };
+    input.disabled = true;
+    status("Preparing profile photo…");
+    try {
+      const profilePhoto = await preparedStaffPhoto(file);
+      status("Saving profile photo…");
+      const batch = shared.db.batch();
+      batch.update(shared.db.collection("users").doc(person.id), { profilePhoto, updatedAt: shared.serverTimestamp(), updatedBy: currentUser.uid });
+      batch.set(shared.db.collection("teamDirectory").doc(person.id), { profilePhoto, updatedAt: shared.serverTimestamp() }, { merge: true });
+      await batch.commit();
+      status("Profile photo saved for MPI staff.");
+    } catch (error) {
+      status(error?.message || "Profile photo could not be saved.");
+    } finally {
+      input.value = "";
+      input.disabled = false;
     }
   }
 
@@ -5103,7 +5208,10 @@
     event.preventDefault();
     sendInspectorMessage(formElement);
   });
-  peopleList.addEventListener("change", updatePerson);
+  peopleList.addEventListener("change", event => {
+    if (event.target.matches?.("[data-person-photo]")) updatePersonPhoto(event.target);
+    else updatePerson(event);
+  });
   peopleList.addEventListener("toggle", event => {
     const opened = event.target;
     if (!opened.matches?.(".person-card[open]")) return;

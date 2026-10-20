@@ -17,12 +17,13 @@ const line = (points, style) => ({ points, style, bindPopup(value) { this.popup 
 const now = new Date();
 const context = vm.createContext({
   Date, Number, String, Math, AbortController, console,
-  window: { L: { polyline: line }, MPI_PLANNING: { roadTravel: async (origin, destination) => {
+  window: { L: { polyline: line, circleMarker: line }, MPI_PLANNING: { roadTravel: async (origin, destination) => {
     routes.push({ origin, destination });
     return { miles: 12.4, minutes: 22, geometry: [[origin.longitude, origin.latitude], [destination.longitude, destination.latitude]] };
   } }, setTimeout, clearTimeout },
   coryTruckRecord: { latitude: 42.5, longitude: -83.1, gpsAt: now.toISOString() },
   coryJobRouteLayer: routeLayer, coryJobRouteController: null, coryJobRouteGeneration: 0, coryJobRouteLast: null,
+  coryHomeStartCache: null,
   coryJobEta: eta, liveLocationMap: map, liveRouteDate: { value: "2026-10-19" }, dateKey: () => "2026-10-19",
   selectedMapJobValue: JSON.stringify(["cory", "job-1"]),
   liveLocationPlannedStops: [
@@ -37,6 +38,7 @@ const context = vm.createContext({
   asDate: value => value ? new Date(value) : null,
   distanceMiles: (left, right) => Math.hypot(left.latitude - right.latitude, left.longitude - right.longitude) * 69
 });
+context.censusGeocodeScheduleAddress = async () => ({ latitude: 42.34566, longitude: -83.42533 });
 vm.runInContext(functions, context);
 
 await context.updateCoryJobRoute({ force: true });
@@ -67,7 +69,7 @@ context.coryTruckRecord.gpsAt = new Date().toISOString();
 context.selectedMapJobValue = JSON.stringify(["cory", "job-2"]);
 await context.updateCoryJobRoute({ force: true });
 assert.equal(routes.at(-1).origin.latitude, 42.6, "Before departure, job 2 routes from job 1 rather than claiming the truck left");
-assert.match(eta.innerHTML, /Planned drive.*departure from the previous job is not yet GPS-confirmed/i);
+assert.match(eta.innerHTML, /Planned job-to-job drive.*departure from the previous job is not yet GPS-confirmed/i);
 context.liveLocationPlannedStops[0].job.scheduledEnd = new Date(Date.now() - 3 * 3600000).toISOString();
 await context.updateCoryJobRoute({ force: true });
 assert.match(eta.innerHTML, /Scheduled-plan arrival around/i, "A past scheduled job must not get a false live ETA from now");
@@ -91,10 +93,29 @@ assert.match(eta.innerHTML, /Last confirmed at job.*Current presence is not conf
 
 context.coryTruckRecord.gpsAt = new Date().toISOString();
 context.coryTruckRecord.jobMonitor = null;
+context.liveRouteDate.value = "2026-10-20";
+context.liveLocationPlannedStops[0].person.approvedEndAddress = "Cory's approved home address";
+context.liveLocationPlannedStops[0].job.scheduledStart = "2026-10-20T14:00:00.000Z";
+context.liveLocationPlannedStops[0].job.scheduledEnd = "2026-10-20T16:00:00.000Z";
+context.liveLocationPlannedStops[1].job.scheduledStart = "2026-10-20T17:00:00.000Z";
+context.coryTruckRecord.gpsAt = new Date(Date.now() - 30 * 60000).toISOString();
+context.selectedMapJobValue = JSON.stringify(["cory", "job-1"]);
+await context.updateCoryJobRoute({ force: true });
+assert.equal(routes.at(-1).origin.latitude, 42.34566, "Future first job routes from Cory's saved home, not the stale truck");
+assert.match(eta.innerHTML, /Future home → first job.*leave home by about/i);
+assert.doesNotMatch(eta.innerHTML, /Current ETA around/i, "Future schedule cannot be presented as a live ETA");
+assert.equal(layers.length, 2, "Future first leg marks Cory's approved home on the map");
+context.selectedMapJobValue = JSON.stringify(["cory", "job-2"]);
+await context.updateCoryJobRoute({ force: true });
+assert.equal(routes.at(-1).origin.latitude, 42.6, "Future second job routes from the first scheduled job");
+assert.match(eta.innerHTML, /Planned job-to-job drive.*Scheduled-plan arrival around/i);
+
+context.liveRouteDate.value = "2026-10-19";
+context.coryTruckRecord.gpsAt = new Date().toISOString();
 context.selectedMapJobValue = JSON.stringify(["kevin", "job-1"]);
 await context.updateCoryJobRoute({ force: true });
 assert.equal(eta.hidden, true, "Other inspectors' jobs do not use Cory's truck");
-assert.equal(routes.length, 5);
+assert.equal(routes.length, 7);
 
 context.selectedMapJobValue = JSON.stringify(["cory", "job-1"]);
 context.window.MPI_PLANNING.roadTravel = async () => { throw new Error("Router unavailable"); };

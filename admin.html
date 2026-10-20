@@ -242,6 +242,10 @@
     .person-main strong,.person-main small { display:block; overflow-wrap:anywhere; }
     .person-main strong { color:var(--navy); }
     .person-main small { margin-top:4px; color:var(--muted); font-size:10px; }
+    .person-photo-control { grid-column:1/-1; display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:10px; }
+    .person-photo-control label { display:grid; gap:5px; color:var(--navy); font-size:10px; font-weight:850; }
+    .person-photo-control input { max-width:260px; font-size:10px; }
+    .person-photo-control .status { color:var(--muted); font-size:10px; }
     .person-role-badge { display:inline-flex; min-height:21px; align-items:center; margin-bottom:6px; padding:3px 7px; color:#46506f; background:#edf1f7; border-radius:999px; font-size:8px; font-weight:950; letter-spacing:.06em; text-transform:uppercase; }
     .person-role-badge.subcontractor { color:#fff; background:var(--blue); }
     .person-role-badge.owner,.person-role-badge.admin { color:#6d4c00; background:#fff1c5; }
@@ -1111,7 +1115,7 @@
           </section>
           <div class="office-operations-grid">
             <section class="live-location-panel" id="adminLiveLocationPanel" aria-labelledby="adminLiveLocationTitle">
-              <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Live truck and job map</h3><p>Cory's truck and today's job pins appear automatically. Select a job for its planned or live drive and ETA.</p></div><div class="truck-map-control"><span id="adminCoryTruckStatus" role="status">Cory's truck · GPS unavailable</span><button id="adminCenterCoryTruck" type="button" disabled>Center on truck</button></div></div>
+              <div class="live-location-head"><div><h3 id="adminLiveLocationTitle">Live truck and job map</h3><p>Cory's truck and the selected day's jobs appear automatically. Future routes start at his approved home, then continue job to job.</p></div><div class="truck-map-control"><span id="adminCoryTruckStatus" role="status">Cory's truck · GPS unavailable</span><button id="adminCenterCoryTruck" type="button" disabled>Center on truck</button></div></div>
               <div class="office-map-toolbar office-map-simple-controls">
                 <div class="field office-map-date"><label for="adminLiveRouteDate">Date</label><input id="adminLiveRouteDate" type="date" aria-label="Map date"></div>
                 <div class="field office-map-job"><label for="adminLiveJobSelect">Select a job</label><select id="adminLiveJobSelect"><option value="">Choose a scheduled job</option></select></div>
@@ -1273,7 +1277,7 @@
   <script src="./mpi-owner-view.js?build=220"></script>
   <script src="./mpi-office-setup-policy.js?build=220-office-fix-1"></script>
   <script src="./mpi-office-diagnostics.js?build=220"></script>
-  <script src="./admin.js?build=220-cory-job-monitor-6"></script>
+  <script src="./admin.js?build=220-cory-future-route-1"></script>
   <script src="./mpi-equipment-admin.js?build=220"></script>
 </body>
 </html>
