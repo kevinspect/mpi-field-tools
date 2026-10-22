@@ -413,10 +413,24 @@
     .cory-gps-heading strong { color:var(--navy); font-size:18px; }
     .cory-gps-heading small { max-width:310px; color:#606a85; font-size:9px; line-height:1.4; }
     .cory-gps-card ul { display:grid; gap:7px; margin:0; padding:0; list-style:none; }
-    .cory-gps-card li { display:grid; grid-template-columns:100px 120px minmax(0,1fr); align-items:center; gap:10px; padding:9px 10px; background:#fff; border:1px solid #e1e6f0; border-radius:10px; }
-    .cory-gps-card li strong { color:var(--navy); font-size:10px; }
-    .cory-gps-card li span { color:#56617c; font-size:9px; font-weight:800; }
-    .cory-gps-card li small { color:#606a85; font-size:9px; line-height:1.4; }
+    .cory-gps-card > ul > li { background:#fff; border:1px solid #e1e6f0; border-radius:10px; overflow:hidden; }
+    .cory-gps-day summary { display:grid; grid-template-columns:100px 120px minmax(0,1fr) 15px; align-items:center; gap:10px; padding:9px 10px; cursor:pointer; list-style:none; }
+    .cory-gps-day summary::-webkit-details-marker { display:none; }
+    .cory-gps-day summary:hover,.cory-gps-day summary:focus-visible { background:#edf3ff; outline:2px solid #8098ca; outline-offset:-2px; }
+    .cory-gps-day summary strong { color:var(--navy); font-size:10px; }
+    .cory-gps-day summary span { color:#56617c; font-size:9px; font-weight:800; }
+    .cory-gps-day summary small { color:#606a85; font-size:9px; line-height:1.4; }
+    .cory-gps-day summary b { color:var(--blue); font-size:15px; transition:transform .15s ease; }
+    .cory-gps-day details[open] summary b { transform:rotate(180deg); }
+    .cory-gps-day-detail { display:grid; gap:7px; padding:12px; border-top:1px solid #e1e6f0; background:#fafbff; }
+    .cory-gps-day-detail h4 { margin:6px 0 0; color:var(--navy); font-size:10px; }
+    .cory-gps-day-detail ol { display:grid; gap:6px; margin:0; padding-left:20px; }
+    .cory-gps-day-detail ol li { display:flex; flex-wrap:wrap; gap:4px 9px; font-size:9px; }
+    .cory-gps-day-detail ol li strong { color:var(--navy); }
+    .cory-gps-day-detail ol li span { color:#56617c; }
+    .cory-gps-day-detail ol li small { width:100%; color:#606a85; }
+    .cory-gps-day-detail button { justify-self:start; margin-top:3px; padding:7px 10px; color:var(--blue); background:#edf3ff; border:1px solid #bdcbea; border-radius:8px; font-size:9px; font-weight:800; cursor:pointer; }
+    .cory-gps-day-detail button:hover,.cory-gps-day-detail button:focus-visible { background:#dce9ff; outline:2px solid #8098ca; }
     .cory-gps-card p { margin:0; color:#606a85; font-size:9px; line-height:1.4; }
     .ops-sub { margin:6px 0 0; color:var(--muted); font-size:10.5px; line-height:1.5; }
     .fact-list { display:grid; gap:9px; }
@@ -569,7 +583,9 @@
       .comment-usage-metric:last-of-type { grid-column:1/-1; }
       .cory-hours-card { grid-template-columns:1fr; }
       .cory-gps-heading { display:grid; }
-      .cory-gps-card li { grid-template-columns:1fr; gap:3px; }
+      .cory-gps-day summary { grid-template-columns:1fr 15px; gap:3px; }
+      .cory-gps-day summary strong,.cory-gps-day summary span,.cory-gps-day summary small { grid-column:1; }
+      .cory-gps-day summary b { grid-column:2; grid-row:1/4; }
       .cory-overtime { padding:12px 0 0; border-top:1px solid rgba(17,24,106,.15); border-left:0; }
       .form-grid { grid-template-columns:1fr; }
       .field.wide { grid-column:auto; }
@@ -1300,7 +1316,7 @@
   <script src="./mpi-owner-view.js?build=220"></script>
   <script src="./mpi-office-setup-policy.js?build=220-office-fix-1"></script>
   <script src="./mpi-office-diagnostics.js?build=220"></script>
-  <script src="./admin.js?build=221-office-update-2"></script>
+  <script src="./admin.js?build=221-gps-details-1"></script>
   <script src="./mpi-equipment-admin.js?build=220"></script>
 </body>
 </html>

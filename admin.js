@@ -3825,6 +3825,10 @@
       .map(day => {
         const jobs = Math.max(0, Number(day.assignedJobs) || 0);
         const matched = Math.max(0, Number(day.matchedJobStops) || 0);
+        const scheduled = scheduleDayFor(person, day.day);
+        const scheduledJobs = Array.isArray(scheduled?.jobs) ? scheduled.jobs : [];
+        const phoneDay = operationDays(person).find(item => item?.date === day.day);
+        const phoneActions = Array.isArray(phoneDay?.activity) ? phoneDay.activity.length : 0;
         const planningWindow = gpsDayPlanningWindow(day);
         const window = planningWindow?.labName
           ? `${formatTime(day.firstJobArrivalCandidate)}–${formatTime(planningWindow.departure)} · ${formatMinutes(planningWindow.minutes)} first job to ${planningWindow.labName} departure (proposed final task)`
@@ -3832,7 +3836,19 @@
           ? `${formatTime(day.firstJobArrivalCandidate)}–${formatTime(planningWindow.departure)} · ${formatMinutes(planningWindow.minutes)} first-to-last job window`
           : jobs > 0 ? `${matched}/${jobs} job locations matched; time window incomplete`
             : "Vehicle activity found, but no Cory-assigned Spectora job; not classified as work";
-        return `<li><strong>${escapeHtml(formatDate(day.day))}</strong><span>${escapeHtml(jobs ? `${matched}/${jobs} jobs matched` : "No assigned job")}</span><small>${escapeHtml(window)}</small></li>`;
+        const scheduleDetails = scheduledJobs.length
+          ? `<ol>${scheduledJobs.map(job => `<li><strong>${escapeHtml(formatTime(job.scheduledStart) || "Time not listed")}</strong><span>${escapeHtml(job.propertyAddress || job.property || "Address not listed")}</span>${job.services?.length ? `<small>${escapeHtml(job.services.join(" · "))}</small>` : ""}</li>`).join("")}</ol>`
+          : `<p>${jobs ? "The assigned-job count is available, but the schedule details are not synced here." : "No Cory-assigned Spectora inspection is listed for this date."}</p>`;
+        const gpsTimes = day.firstJobArrivalCandidate && day.lastJobDepartureCandidate
+          ? `<p>Matched job-site stop candidates: ${escapeHtml(formatTime(day.firstJobArrivalCandidate))} first arrival · ${escapeHtml(formatTime(day.lastJobDepartureCandidate))} last departure.</p>`
+          : "<p>No complete first-arrival/last-departure pair is available.</p>";
+        const lab = day.candidateLabName && day.candidateLabArrival && day.candidateLabDeparture
+          ? `<p>Known-lab stop candidate: ${escapeHtml(day.candidateLabName)} · ${escapeHtml(formatTime(day.candidateLabArrival))}–${escapeHtml(formatTime(day.candidateLabDeparture))}.</p>`
+          : "<p>No known-lab stop was matched in this GPS comparison. This does not rule out a pickup or another lab visit.</p>";
+        const phone = phoneDay
+          ? `<p>Phone workday: ${escapeHtml(phoneActions ? `${phoneActions} recorded action${phoneActions === 1 ? "" : "s"}` : "no actions synced for this date")}.</p><button type="button" data-open-gps-workday="${escapeHtml(day.day)}" data-gps-person="${escapeHtml(person.id || "")}">Open phone workday details</button>`
+          : "<p>No phone workday has synced for this date.</p>";
+        return `<li class="cory-gps-day"><details><summary><strong>${escapeHtml(formatDate(day.day))}</strong><span>${escapeHtml(jobs ? `${matched}/${jobs} jobs matched` : "No assigned job")}</span><small>${escapeHtml(window)}</small><b aria-hidden="true">⌄</b></summary><div class="cory-gps-day-detail"><h4>Scheduled inspections</h4>${scheduleDetails}<h4>Truck evidence</h4><p>${escapeHtml(Math.max(0, Number(day.vehicleStopCount) || 0))} sustained vehicle stops recorded for the date. The GPS summary does not identify which individual inspection matched.</p>${gpsTimes}${lab}<h4>Phone activity</h4>${phone}</div></details></li>`;
       }).join("");
     return `<section class="cory-gps-card" aria-label="Cory GPS and Spectora planning comparison">
       <div class="cory-gps-heading"><div><span>GPS + SPECTORA · PLANNING CHECK</span><strong>${escapeHtml(`${matchedJobs}/${assignedJobs} assigned jobs matched`)}</strong><small>${estimatedMinutes ? `${escapeHtml(formatMinutes(estimatedMinutes))} total matched-task windows this week · estimate only` : "No complete job-site window to total"}</small></div><small>One Step GPS stops near Cory's inspections and known labs. A lab departure is proposed only when it follows the last matched job; it is not approved Hours Worked.</small></div>
@@ -5491,6 +5507,15 @@
     if (person) focusLiveLocationPerson(person.dataset.liveLocationPerson);
   });
   teamOverview.addEventListener("click", event => {
+    const gpsWorkday = event.target.closest("[data-open-gps-workday]");
+    if (gpsWorkday) {
+      selectedInspectorId = gpsWorkday.dataset.gpsPerson;
+      selectedOperationDate = gpsWorkday.dataset.openGpsWorkday;
+      currentRange = "week";
+      inspectorSelector.value = selectedInspectorId;
+      renderOperations();
+      return;
+    }
     const office = event.target.closest("[data-open-office]");
     if (office) {
       selectedInspectorId = office.dataset.openOffice;
